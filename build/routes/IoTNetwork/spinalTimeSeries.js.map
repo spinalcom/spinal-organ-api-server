@@ -1,0 +1,1 @@
+{"version":3,"file":"spinalTimeSeries.js","sourceRoot":"","sources":["../../../src/routes/IoTNetwork/spinalTimeSeries.ts"],"names":[],"mappings":";AAAA;;;;;;;;;;;;;;;;;;;;;;GAsBG;;AAEH,qEAAiE;AAEjE,IAAI,QAAQ,GAAG,IAAI,CAAC;AACpB,SAAS,WAAW;IAClB,IAAI,QAAQ,KAAK,IAAI,EAAE;QACrB,QAAQ,GAAG,IAAI,iDAAuB,EAAE,CAAC;KAC1C;IACD,OAAO,QAAQ,CAAC;AAClB,CAAC;AACD,kBAAe,WAAW,CAAA"}
