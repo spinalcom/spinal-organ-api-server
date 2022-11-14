@@ -26,12 +26,11 @@ import { Server } from 'http';
 import { spinalCore, FileSystem } from 'spinal-core-connectorjs_type';
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { SpinalContext, SpinalGraph, SpinalNode } from 'spinal-model-graph';
-import { runSocketServer } from 'spinal-organ-api-pubsub'
-const Q = require('q')
+import { runSocketServer } from 'spinal-organ-api-pubsub';
+const Q = require('q');
 
 // get the config
 import config from './config';
-const { SpinalServiceUser } = require('spinal-service-user');
 
 class SpinalAPIMiddleware {
   static instance: SpinalAPIMiddleware = null;
@@ -46,12 +45,18 @@ class SpinalAPIMiddleware {
     return SpinalAPIMiddleware.instance;
   }
 
-
   constructor() {
     this.loadedPtr = new Map();
     // connection string to connect to spinalhub
-    const connect_opt = `http://${config.spinalConnector.user}:${config.spinalConnector.password}@${config.spinalConnector.host}:${config.spinalConnector.port}/`;
-    // FileSystem._disp = true
+    const protocol = config.spinalConnector.protocol
+      ? config.spinalConnector.protocol
+      : 'http';
+    const host =
+      config.spinalConnector.host +
+      (config.spinalConnector.port ? `:${config.spinalConnector.port}` : '');
+    const login = `${config.spinalConnector.user}:${config.spinalConnector.password}`;
+    const connect_opt = `${protocol}://${login}@${host}/`;
+    console.log(`start connect to hub: ${protocol}://${host}/`);
 
     // initialize the connection
     this.conn = spinalCore.connect(connect_opt);
@@ -139,17 +144,11 @@ class SpinalAPIMiddleware {
     return prom;
   }
 
-
   runSocketServer(server: Server) {
-
     this._waitConnection().then((result) => {
-
       runSocketServer(server, this.conn, SpinalGraphService.getGraph());
-
-    })
-
+    });
   }
-
 
   _waitConnection(): Promise<Boolean> {
     const deferred = Q.defer();

@@ -24,13 +24,13 @@
 
 const config = {
   spinalConnector: {
+    protocol: process.env.SPINALHUB_PROTOCOL || 'http', // user id
     user: process.env.SPINAL_USER_ID, // user id
     password: process.env.SPINAL_PASSWORD, // user password
     host: process.env.SPINALHUB_IP, // can be an ip address
     port: process.env.SPINALHUB_PORT, // port
   },
   api: {
-    host: process.env.REQUESTS_HOST, // internal port
     port: process.env.REQUESTS_PORT, // internal port
   },
   file: {
