@@ -30,6 +30,7 @@ import * as _ from 'lodash';
 import * as bodyParser from 'body-parser';
 import type SpinalAPIMiddleware from './spinalAPIMiddleware';
 import routes from './routes/routes';
+import morgan = require('morgan');
 
 function APIServer(
   logger,
@@ -60,11 +61,25 @@ function APIServer(
       return bodyParserTicket(req, res, next);
     return bodyParserDefault(req, res, next);
   });
-  // app.use(morgan('dev'));
+  if (process.env.LOG_BODY) {
+    morgan.token('body-req', (req) => {
+      return req.method === 'POST' || req.method === 'PUT'
+        ? // @ts-ignore
+          JSON.stringify(req.body, null, 2)
+        : '';
+    });
+    app.use(
+      '/api/*',
+      morgan(
+        ':method :url :status :response-time ms - :res[content-length] :body-req'
+      )
+    );
+  } else {
+    app.use('/api/*', morgan('dev'));
+  }
 
   routes(logger, app, spinalAPIMiddleware);
-  app.use('/admin', express.static('public'));
-
+  // app.use('/admin', express.static('public'));
   // app.use(function (req, res, next) {
   //   var pathUrl = req.path;
   //   if (pathUrl !== '/') {
