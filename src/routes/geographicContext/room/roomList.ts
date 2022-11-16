@@ -23,7 +23,7 @@
  */
 
 
-import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { Room } from '../interfacesGeoContext'
 import { SpinalNode } from 'spinal-model-graph';

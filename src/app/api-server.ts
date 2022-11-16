@@ -29,30 +29,37 @@ import * as _ from 'lodash';
 
 import * as bodyParser from 'body-parser';
 import type SpinalAPIMiddleware from './spinalAPIMiddleware';
-import routes from './routes/routes';
+import routes from '../routes/routes';
 import morgan = require('morgan');
 
-function APIServer(
-  logger,
-  spinalAPIMiddleware: SpinalAPIMiddleware
-): express.Express {
+
+
+export function useLogger(app: express.Application, log_body: boolean | string) {
+  if (log_body) {
+    morgan.token('body-req', (req) => {
+      return req.method === 'POST' || req.method === 'PUT'
+        ? // @ts-ignore
+        JSON.stringify(req.body, null, 2)
+        : '';
+    });
+    app.use('/api/*', morgan(':method :url :status :response-time ms - :res[content-length] :body-req'));
+  } else {
+    app.use('/api/*', morgan('dev'));
+  }
+}
+
+
+function APIServer(logger, spinalAPIMiddleware: SpinalAPIMiddleware): express.Express {
   const app = express();
   // enable files upload
-  app.use(
-    fileUpload({
-      createParentPath: true,
-    })
-  );
+  app.use(fileUpload({ createParentPath: true }));
 
   app.use(cors());
   app.disable('x-powered-by');
-  app.use(
-    bodyParser.urlencoded({
-      extended: true,
-    })
-  );
+  app.use(bodyParser.urlencoded({ extended: true }));
   const bodyParserDefault = bodyParser.json();
   const bodyParserTicket = bodyParser.json({ limit: '500mb' });
+
   app.use((req, res, next) => {
     if (
       req.originalUrl === '/api/v1/node/convert_base_64' ||
@@ -61,22 +68,8 @@ function APIServer(
       return bodyParserTicket(req, res, next);
     return bodyParserDefault(req, res, next);
   });
-  if (process.env.LOG_BODY) {
-    morgan.token('body-req', (req) => {
-      return req.method === 'POST' || req.method === 'PUT'
-        ? // @ts-ignore
-          JSON.stringify(req.body, null, 2)
-        : '';
-    });
-    app.use(
-      '/api/*',
-      morgan(
-        ':method :url :status :response-time ms - :res[content-length] :body-req'
-      )
-    );
-  } else {
-    app.use('/api/*', morgan('dev'));
-  }
+
+  useLogger(app, process.env.LOG_BODY);
 
   routes(logger, app, spinalAPIMiddleware);
   // app.use('/admin', express.static('public'));

@@ -22,11 +22,11 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import SpinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import {spinalNomenclatureService} from "spinal-env-viewer-plugin-nomenclature-service"
+import { spinalNomenclatureService } from "spinal-env-viewer-plugin-nomenclature-service"
 
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
@@ -68,8 +68,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
         staticId: context.getId().get(),
         name: context.getName().get(),
         type: context.getType().get(),
-        }
-        } catch (error) {
+      }
+    } catch (error) {
       console.error(error)
       res.status(400).send("ko")
     }

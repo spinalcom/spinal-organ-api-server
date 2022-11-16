@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import SpinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { NetworkService, ConfigService } from 'spinal-model-bmsnetwork';
 import getInstance from '../networkService';

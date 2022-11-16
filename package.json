@@ -3,14 +3,14 @@
   "description": "REST API for SpinalCom BOS",
   "repository": {},
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf build && tsc",
     "start": "npm run build && node index.js",
     "dev": "npm run build && NODE_ENV=dev nodemon index.js",
     "test": "NODE_ENV=test mocha --check-leaks -r ts-node/register -r tsconfig-paths/register \"test/**/*.spec.ts\""
   },
   "license": "UNLICENSED",
   "version": "1.0.1",
-  "main": "index.js",
+  "main": "build/lib/index.js",
   "dependencies": {
     "body-parser": "^1.19.0",
     "chalk": "^2.4.1",

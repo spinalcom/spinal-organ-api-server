@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import spinalAPIMiddleware from '../../spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {

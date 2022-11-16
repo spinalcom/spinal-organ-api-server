@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import spinalAPIMiddleware from '../../spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
 import { NodeAttribut, Attributs } from './interfacesAttributs'

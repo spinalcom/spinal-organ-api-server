@@ -23,12 +23,11 @@
  */
 
 import * as express from 'express';
-import type SpinalAPIMiddleware from '../spinalAPIMiddleware';
-function routes(
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: SpinalAPIMiddleware
-) {
+// import type SpinalAPIMiddleware from '../app/spinalAPIMiddleware';
+
+import { ISpinalAPIMiddleware } from "../interfaces";
+
+function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   //contexts routes
 
   require('./contexts/contextList')(logger, app, spinalAPIMiddleware);

@@ -24,7 +24,7 @@
 
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 // const spinalServiceTimeSeries = require('../../spinalTimeSeries')();
-import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { CurrentValue } from '../interfacesEndpointAndTimeSeries'
 import { NetworkService } from 'spinal-model-bmsnetwork'

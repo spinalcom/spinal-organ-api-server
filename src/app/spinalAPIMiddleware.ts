@@ -27,12 +27,13 @@ import { spinalCore, FileSystem } from 'spinal-core-connectorjs_type';
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { SpinalContext, SpinalGraph, SpinalNode } from 'spinal-model-graph';
 import { runSocketServer } from 'spinal-organ-api-pubsub';
+import { ISpinalAPIMiddleware } from '../interfaces/ISpinalAPIMiddleware';
 const Q = require('q');
 
 // get the config
 import config from './config';
 
-class SpinalAPIMiddleware {
+class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
   static instance: SpinalAPIMiddleware = null;
   loadedPtr: Map<number, any>;
   conn: spinal.FileSystem;

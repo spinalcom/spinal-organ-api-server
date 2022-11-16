@@ -23,7 +23,7 @@
  */
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service'
 import { NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service/dist/Models/constants";
-import spinalAPIMiddleware from '../../spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 
 import * as express from 'express';
@@ -84,13 +84,13 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
   app.post("/api/v1/node/:IdNode/category/:IdCategory/attribut/create", async (req, res, next) => {
     try {
-      
+
       let node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10));
       var test = false
-          //@ts-ignore
+      //@ts-ignore
       SpinalGraphService._addNode(node)
       let category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10));
-         //@ts-ignore
+      //@ts-ignore
       SpinalGraphService._addNode(category)
       let attributeLabel = req.body.attributeLabel;
       let attributeValue = req.body.attributeValue;
@@ -98,19 +98,19 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
       let attributeUnit = req.body.attributeUnit;
 
       let childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
-      
-           for (const children of childrens) {
-             if (children.getId().get() === category.getId().get()) { 
-               test = true;
-                const created = await serviceDocumentation.addAttributeByCategoryName(node, category.getName().get(), attributeLabel, attributeValue, attributeType, attributeUnit);
-                if (created === undefined) {
-                        return res.status(400).send("not found");
-                }
-             }
-           }
-        if (test === false) {
+
+      for (const children of childrens) {
+        if (children.getId().get() === category.getId().get()) {
+          test = true;
+          const created = await serviceDocumentation.addAttributeByCategoryName(node, category.getName().get(), attributeLabel, attributeValue, attributeType, attributeUnit);
+          if (created === undefined) {
+            return res.status(400).send("not found");
+          }
+        }
+      }
+      if (test === false) {
         return res.status(400).send("this category does not belong to this node");
-      } 
+      }
     } catch (error) {
       console.log(error);
       return res.status(400).send("ko");

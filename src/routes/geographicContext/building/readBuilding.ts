@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { Building } from '../interfacesGeoContext';
 import { SpinalNode } from 'spinal-model-graph';

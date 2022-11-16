@@ -23,7 +23,7 @@
  */
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
-import spinalAPIMiddleware from '../../spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import {
   SpinalContext,
   SpinalNode,

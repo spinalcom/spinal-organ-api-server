@@ -24,7 +24,7 @@
 
 var proxy = require('express-http-proxy');
 
-import config from '../../../config';
+import config from '../../../app/config';
 import morgan = require('morgan');
 function createUrl(urlStr, port) {
   urlStr = urlStr.startsWith('http') ? urlStr : `http://${urlStr}`;

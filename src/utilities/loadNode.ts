@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 import { SpinalNode } from 'spinal-model-graph';
-import spinalAPIMiddleware from '../spinalAPIMiddleware';
+import spinalAPIMiddleware from '../app/spinalAPIMiddleware';
 
 export function _load(arrayofServerId): Promise<SpinalNode<any>[]> {
   return Promise.all(arrayofServerId.map(item => {

@@ -24,7 +24,7 @@
 
 import { SpinalContext, SpinalNode } from 'spinal-model-graph';
 
-import SpinalAPIMiddleware from '../../spinalAPIMiddleware';
+import SpinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 const BIM_FILE_CONTEXT_NAME = 'BimFileContext';
 const BIM_FILE_CONTEXT_RELATION = 'hasBimFile';
 const BIM_FILE_RELATION = 'hasBimContext';
@@ -34,7 +34,7 @@ module.exports = class BimObjectUtils {
   context: Promise<SpinalContext> = null;
 
   static instance: BimObjectUtils = undefined;
-  constructor() {}
+  constructor() { }
   static getInstance() {
     return typeof BimObjectUtils.instance !== 'undefined'
       ? BimObjectUtils.instance

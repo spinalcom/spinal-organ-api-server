@@ -22,15 +22,13 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import * as swaggerUi from 'swagger-ui-express';
-import * as swaggerJSDoc from 'swagger-jsdoc';
-import { swaggerOption } from './swaggerOption';
-import { getListRequest } from './listRequest';
-import * as fs from 'fs';
-const redoc = require('redoc-express');
+
 import config from './config';
 import APIServer from './api-server';
 import SpinalAPIMiddleware from './spinalAPIMiddleware';
+import { getSwaggerDocs, initSwagger } from '../swagger'
+
+
 
 function Requests(logger) {
   async function initSpinalHub() {
@@ -44,53 +42,17 @@ function Requests(logger) {
     let api = APIServer(logger, spinalAPIMiddleware);
 
     // TODO add swagger specs here for external documentation and for the organ to ask for it
-    api.use('/swagger-spec', (req, res) => {
-      res.json(swaggerDocs);
-    });
-
-    fs.writeFile(
-      './swagger-spec.json',
-      JSON.stringify(swaggerDocs, null, 2),
-      (err) => {
-        if (err) {
-          return console.error(err);
-        }
-      }
-    );
-
-    // add swagger docs to API
-    api.use(
-      '/spinalcom-api-docs',
-      swaggerUi.serve,
-      swaggerUi.setup(swaggerDocs, swaggerUiOpts)
-    );
-    api.get('/docs/swagger.json', (req, res) => {
-      res.send(swaggerDocs);
-    });
-    api.get(
-      '/spinalcom-api-redoc-docs',
-      redoc({
-        title: 'API Docs',
-        specUrl: '/docs/swagger.json',
-      })
-    );
+    initSwagger(api)
 
     // serve logo.png file
     api.get('/logo.png', (req, res) => {
       res.sendFile('spinalcore.png', { root: process.cwd() + '/uploads' });
     });
+
     return api;
   }
 
-  let swaggerDocs = swaggerJSDoc(swaggerOption);
-  let swaggerUiOpts = {
-    explorer: true,
-    openapi: '3.0.1',
-    produces: ['application/json'],
-    swaggerOptions: swaggerOption,
-    customCss:
-      '.topbar-wrapper img {content: url(/logo.png);} .swagger-ui .topbar {background: #dbdbdb;}',
-  };
+
 
   return {
     // TODO host should be configurable
@@ -113,9 +75,7 @@ function Requests(logger) {
       SpinalAPIMiddleware.getInstance().runSocketServer(server);
     },
 
-    getSwaggerDocs: (): Object => {
-      return swaggerDocs;
-    },
+    getSwaggerDocs,
   };
 }
 

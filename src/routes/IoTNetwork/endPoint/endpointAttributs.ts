@@ -24,7 +24,7 @@
 
 import { NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service/dist/Models/constants";
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { EndPointNodeAttribut } from '../interfacesEndpointAndTimeSeries'
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {

@@ -28,14 +28,14 @@ import {
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
 import { FileSystem } from 'spinal-core-connectorjs_type';
-import spinalAPIMiddleware from '../../spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { serviceTicketPersonalized } from 'spinal-service-ticket';
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import { ServiceUser } from 'spinal-service-user';
 var http = require('http');
 var fs = require('fs');
-import config from '../../config';
+import config from '../../app/config';
 
 module.exports = function (
   logger,

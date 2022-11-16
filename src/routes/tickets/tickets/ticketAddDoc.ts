@@ -27,7 +27,7 @@ import {
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
 import { FileSystem } from 'spinal-core-connectorjs_type';
-import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { Step } from '../interfacesWorkflowAndTickets';
 import { serviceTicketPersonalized } from 'spinal-service-ticket';

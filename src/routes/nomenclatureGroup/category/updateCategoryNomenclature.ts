@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import SpinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
@@ -92,14 +92,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
             name: req.body.newNameCategory,
             icon: req.body.newNameIcon
           }
-         var categoryUpdated = await groupManagerService.updateCategory(category.getId().get(), dataObject)
-         var info = {
-          dynamicId: categoryUpdated._server_id,
-          staticId: categoryUpdated.getId().get(),
-          name: categoryUpdated.getName().get(),
-          type: categoryUpdated.getType().get(),
-          icon: categoryUpdated.info.icon.get()
-        };
+          var categoryUpdated = await groupManagerService.updateCategory(category.getId().get(), dataObject)
+          var info = {
+            dynamicId: categoryUpdated._server_id,
+            staticId: categoryUpdated.getId().get(),
+            name: categoryUpdated.getName().get(),
+            type: categoryUpdated.getType().get(),
+            icon: categoryUpdated.info.icon.get()
+          };
         } else {
           res.status(400).send("node is not type of AttributeConfigurationGroupContext ");
         }

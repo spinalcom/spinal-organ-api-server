@@ -22,11 +22,11 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import SpinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import {spinalNomenclatureService} from "spinal-env-viewer-plugin-nomenclature-service"
+import { spinalNomenclatureService } from "spinal-env-viewer-plugin-nomenclature-service"
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
   /**
@@ -76,7 +76,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
       //@ts-ignore
       SpinalGraphService._addNode(context)
       if (context.getType().get() === "AttributeConfigurationGroupContext") {
-        var category = await spinalNomenclatureService.createCategory(req.body.categoryName,req.body.iconName,context.getId().get())
+        var category = await spinalNomenclatureService.createCategory(req.body.categoryName, req.body.iconName, context.getId().get())
         var info = {
           dynamicId: category._server_id,
           staticId: category.getId().get(),
@@ -84,7 +84,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
           type: category.getType().get(),
           icon: category.info.icon.get()
         };
-        
+
         // groupManagerService.addCategory(context.getId().get(), req.body.categoryName, req.body.iconName)
       } else {
         res.status(400).send("node is not type of AttributeConfigurationGroupContext ");

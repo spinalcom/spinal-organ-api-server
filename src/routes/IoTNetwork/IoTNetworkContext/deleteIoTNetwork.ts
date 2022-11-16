@@ -23,7 +23,7 @@
  */
 
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import SpinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {

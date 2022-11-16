@@ -24,7 +24,7 @@
 
 import { SpinalContext, SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service'
 import spinalServiceTimeSeries from '../spinalTimeSeries'
-import SpinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import { CurrentValue } from '../interfacesEndpointAndTimeSeries'
 import asyncIteratorToArray from '../../../utilities/asyncToArray'
 import { verifDate } from "../../../utilities/dateFunctions";

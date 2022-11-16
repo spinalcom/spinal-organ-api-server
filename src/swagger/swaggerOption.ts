@@ -21,7 +21,7 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import { getListRequest } from "./listRequest";
+import { getListRequest } from "../listRequest";
 
 
 export const swaggerOption = {

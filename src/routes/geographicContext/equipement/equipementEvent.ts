@@ -23,7 +23,7 @@
  */
 
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { SpinalEventService } from "spinal-env-viewer-task-service";
 import { Event } from '../../calendar/interfacesContextsEvents'
