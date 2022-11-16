@@ -122,7 +122,7 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   require('./BIM/scenes/default')(logger, app);
   require('./BIM/scenes/item')(logger, app);
   require('./BIM/bimFileContext')(logger, app, spinalAPIMiddleware);
-  require('./BIM/viewer/viewer')(logger, app);
+  require('./BIM/viewer/viewer')(logger, app, spinalAPIMiddleware);
   require('./BIM/getBimObjectsInfo')(logger, app);
 
   // tickets routes

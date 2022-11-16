@@ -29,7 +29,7 @@ export interface IConfig {
         password: string;
         host: string;
         port: number | string;
-    },
+    }
     api: {
         port: number | string;
     },

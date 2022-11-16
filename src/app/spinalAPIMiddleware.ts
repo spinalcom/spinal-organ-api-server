@@ -27,6 +27,7 @@ import { spinalCore, FileSystem } from 'spinal-core-connectorjs_type';
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { SpinalContext, SpinalGraph, SpinalNode } from 'spinal-model-graph';
 import { runSocketServer } from 'spinal-organ-api-pubsub';
+import { IConfig } from 'src/interfaces';
 import { ISpinalAPIMiddleware } from '../interfaces/ISpinalAPIMiddleware';
 const Q = require('q');
 
@@ -38,6 +39,8 @@ class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
   loadedPtr: Map<number, any>;
   conn: spinal.FileSystem;
   iteratorGraph = this.geneGraph();
+  config: IConfig = config;
+
   // singleton class
   static getInstance() {
     if (SpinalAPIMiddleware.instance === null) {
@@ -49,14 +52,11 @@ class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
   constructor() {
     this.loadedPtr = new Map();
     // connection string to connect to spinalhub
-    const protocol = config.spinalConnector.protocol
-      ? config.spinalConnector.protocol
-      : 'http';
-    const host =
-      config.spinalConnector.host +
-      (config.spinalConnector.port ? `:${config.spinalConnector.port}` : '');
-    const login = `${config.spinalConnector.user}:${config.spinalConnector.password}`;
+    const protocol = this.config.spinalConnector.protocol ? this.config.spinalConnector.protocol : 'http';
+    const host = this.config.spinalConnector.host + (this.config.spinalConnector.port ? `:${this.config.spinalConnector.port}` : '');
+    const login = `${this.config.spinalConnector.user}:${this.config.spinalConnector.password}`;
     const connect_opt = `${protocol}://${login}@${host}/`;
+
     console.log(`start connect to hub: ${protocol}://${host}/`);
 
     // initialize the connection

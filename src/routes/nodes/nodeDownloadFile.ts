@@ -72,7 +72,9 @@ module.exports = function (
     try {
       await spinalAPIMiddleware.getGraph();
       var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
-      var p = await down(node);
+      const host = spinalAPIMiddleware.config.spinalConnector.host;
+      const port = spinalAPIMiddleware.config.spinalConnector.port;
+      var p = await down(node, host, port);
       res.download(p, (error) => { });
     } catch (error) {
       console.log(error);
@@ -81,23 +83,21 @@ module.exports = function (
   });
 };
 
-function down(node): Promise<string> {
+function down(node, host, port): Promise<string> {
   return new Promise((resolve, reject) => {
     node.load((argPath) => {
       const p = `${__dirname}/${node.name.get()}`;
       const f = fs.createWriteStream(p);
 
-      http.get(
-        `http://${config.spinalConnector.host}:${config.spinalConnector.port}/sceen/_?u=${argPath._server_id}`,
-        function (response) {
-          response.pipe(f);
-          response.on('end', async () => {
-            resolve(p);
-          });
-          response.on('error', function (err) {
-            console.log(err);
-          });
-        }
+      http.get(`http://${host}:${port}/sceen/_?u=${argPath._server_id}`, function (response) {
+        response.pipe(f);
+        response.on('end', async () => {
+          resolve(p);
+        });
+        response.on('error', function (err) {
+          console.log(err);
+        });
+      }
       );
     });
   });

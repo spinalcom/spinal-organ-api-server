@@ -24,7 +24,6 @@
 
 var proxy = require('express-http-proxy');
 
-import config from '../../../app/config';
 import morgan = require('morgan');
 function createUrl(urlStr, port) {
   urlStr = urlStr.startsWith('http') ? urlStr : `http://${urlStr}`;
@@ -33,11 +32,8 @@ function createUrl(urlStr, port) {
   return url;
 }
 
-module.exports = function (logger, app) {
-  let hubUrl = createUrl(
-    config.spinalConnector.host,
-    config.spinalConnector.port
-  );
+module.exports = function (logger, app, spinalAPIMiddleware) {
+  let hubUrl = createUrl(spinalAPIMiddleware.config.spinalConnector.host, spinalAPIMiddleware.config.spinalConnector.port);
   const proxyHub = proxy(hubUrl.origin, {
     limit: '1tb', // 1 tb
     proxyReqPathResolver: function (req) {

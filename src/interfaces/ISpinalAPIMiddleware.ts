@@ -26,6 +26,7 @@ import { SpinalGraph } from "spinal-model-graph";
 import { IConfig } from "./IConfig";
 
 export interface ISpinalAPIMiddleware {
+    config: IConfig;
     conn: spinal.FileSystem;
     loadedPtr: Map<number, any>;
     getGraph(profileId?: string): Promise<SpinalGraph>;
