@@ -13,6 +13,7 @@ declare class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
     constructor();
     private geneGraph;
     getGraph(): Promise<SpinalGraph<any>>;
+    getProfileGraph(): Promise<SpinalGraph>;
     load<T extends spinal.Model>(server_id: number): Promise<T>;
     loadPtr<T extends spinal.Model>(ptr: spinal.File<T> | spinal.Ptr<T> | spinal.Pbr<T>): Promise<T>;
     runSocketServer(server: Server): void;

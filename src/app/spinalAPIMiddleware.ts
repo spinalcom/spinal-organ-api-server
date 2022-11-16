@@ -98,6 +98,10 @@ class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
     return g.value;
   }
 
+  getProfileGraph(): Promise<SpinalGraph> {
+    return this.getGraph();
+  }
+
   load<T extends spinal.Model>(server_id: number): Promise<T> {
     if (!server_id) {
       return Promise.reject('Invalid serverId');

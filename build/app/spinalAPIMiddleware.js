@@ -103,6 +103,9 @@ class SpinalAPIMiddleware {
             return g.value;
         });
     }
+    getProfileGraph() {
+        return this.getGraph();
+    }
     load(server_id) {
         if (!server_id) {
             return Promise.reject('Invalid serverId');
