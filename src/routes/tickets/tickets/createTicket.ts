@@ -26,7 +26,7 @@ import {
   SpinalNode,
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
-import { FileSystem, Lst, Ptr } from 'spinal-core-connectorjs_type';
+import { File, FileSystem, Lst, Ptr } from 'spinal-core-connectorjs_type';
 import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
 import { Step } from '../interfacesWorkflowAndTickets';
@@ -37,7 +37,6 @@ import { awaitSync } from '../../../utilities/awaitSync';
 import { _load } from '../../../utilities/loadNode';
 import { LocalFileData } from 'get-file-object-from-local-path';
 import * as bodyParser from 'body-parser';
-
 
 module.exports = function (
   logger,
@@ -125,6 +124,8 @@ module.exports = function (
       const [node, workflowById, processById]: SpinalNode<any>[] = await _load(
         arrayofServerId
       );
+      if (!node) return res.status(400).send('invalid nodeDynamicId');
+
       //@ts-ignore
       SpinalGraphService._addNode(node);
       if (workflowById === undefined && processById === undefined) {
@@ -160,7 +161,9 @@ module.exports = function (
             node.getId().get()
           );
         } else {
-          res.status(400).send('the workflow does not contain this process');
+          return res
+            .status(400)
+            .send('the workflow does not contain this process');
         }
       } else {
         //@ts-ignore
@@ -176,7 +179,9 @@ module.exports = function (
               node.getId().get()
             );
           } else {
-            res.status(400).send('the workflow does not contain this process');
+            return res
+              .status(400)
+              .send('the workflow does not contain this process');
           }
         }
       }
@@ -205,13 +210,36 @@ module.exports = function (
       }
 
       if (req.body.images && req.body.images.length > 0) {
-        const objImage = new Lst(req.body.images);
-        realNodeTicket.info.add_attr('images', new Ptr(objImage));
+        // const objImage = new Lst(req.body.images);
+        // realNodeTicket.info.add_attr('images', new Ptr(objImage));
 
         for (const image of req.body.images) {
           // @ts-ignore
-          var user = { username: 'admin', userId: 0 };
-          await serviceDocumentation.addNote(realNodeTicket, user, image.value);
+          var user = {
+            username: realNodeTicket.info?.declarer_id?.get() || 'user',
+            userId: 0,
+          };
+          const base64Image = image.value as string;
+          // check if data base64
+          if (base64Image.startsWith('data:image/png;base64')) {
+            const imageData = base64Image.replace(
+              /^data:image\/\w+;base64,/,
+              ''
+            );
+            const imageBufferData = Buffer.from(imageData, 'base64');
+            await serviceDocumentation.addFileAsNote(
+              realNodeTicket,
+              { name: image.name, buffer: imageBufferData },
+              user
+            );
+          }
+          // else {
+          //   await serviceDocumentation.addNote(
+          //     realNodeTicket,
+          //     user,
+          //     image.value
+          //   );
+          // }
         }
       }
 
@@ -232,12 +260,10 @@ module.exports = function (
       //     console.log("filedata", fileData);
       //   });
       // }
-
-
     } catch (error) {
-      console.log(error);
-      res.status(400).send({ ko: error });
+      console.error(error);
+      return res.status(400).send({ ko: error });
     }
-    res.json(info);
+    return res.json(info);
   });
 };
