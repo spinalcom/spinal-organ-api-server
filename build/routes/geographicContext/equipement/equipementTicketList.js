@@ -36,6 +36,7 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const Constants_1 = require("spinal-service-ticket/dist/Constants");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -72,7 +73,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         let nodes = [];
         try {
             yield spinalAPIMiddleware.getGraph();
-            var equipement = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var equipement = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(equipement);
             if (equipement.getType().get() === 'BIMObject') {
@@ -219,7 +221,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
             res.status(400).send('ko');
         }
         res.json(nodes);

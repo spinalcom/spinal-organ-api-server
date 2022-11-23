@@ -27,8 +27,10 @@ import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { Workflow } from '../interfacesWorkflowAndTickets'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
   * @swagger
@@ -62,7 +64,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
   app.get("/api/v1/workflow/:id/read", async (req, res, next) => {
     try {
-      var workflow: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var workflow: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
 
       if (workflow.getType().get() === "SpinalSystemServiceTicket") {
         var info: Workflow = {
@@ -77,8 +80,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
       }
 
     } catch (error) {
-      console.log(error);
-      res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(info);
   })

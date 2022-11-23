@@ -25,7 +25,9 @@
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/workflow/{id}/nodeTypeList:
@@ -59,7 +61,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
   app.get("/api/v1/workflow/:id/nodeTypeList", async (req, res, next) => {
 
     try {
-      var workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       var SpinalContextId = workflow.getId().get();
       if (workflow.getType().get() === "SpinalSystemServiceTicket") {
         var type_list = await SpinalGraphService.browseAndClassifyByTypeInContext(SpinalContextId, SpinalContextId);
@@ -68,7 +71,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         res.status(400).send("this context is not a SpinalSystemServiceTicket");
       }
     } catch (error) {
-      console.log(error);
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("context not found");
     }
     res.json(type_list.types);

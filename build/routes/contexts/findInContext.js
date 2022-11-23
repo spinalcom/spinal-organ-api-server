@@ -35,6 +35,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const findOneInContext_1 = require("../../utilities/findOneInContext");
 const spinal_core_connectorjs_type_1 = require("spinal-core-connectorjs_type");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -83,6 +84,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post('/api/v1/find_node_in_context', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         var _a;
         try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
             var info;
             yield spinalAPIMiddleware.getGraph();
             const tab = req.body.array;
@@ -93,7 +95,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             function verifyContext(paramContext) {
                 return __awaiter(this, void 0, void 0, function* () {
                     if (typeof spinal_core_connectorjs_type_1.FileSystem._objects[paramContext] !== 'undefined') {
-                        return (context = yield spinalAPIMiddleware.load(parseInt(paramContext, 10)));
+                        return (context = yield spinalAPIMiddleware.load(parseInt(paramContext, 10), profileId));
                     }
                     else if (spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(paramContext)) {
                         return (context = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(paramContext));
@@ -110,7 +112,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (req.body.optionSearchNodes === 'dynamicId') {
                 let nodes = [];
                 for (let index = 0; index < tab.length; index++) {
-                    let node = yield spinalAPIMiddleware.load(parseInt(tab[index], 10));
+                    let node = yield spinalAPIMiddleware.load(parseInt(tab[index], 10), profileId);
                     nodes.push(node);
                 }
                 for (const _node of nodes) {
@@ -420,7 +422,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
             res.status(400).send('ko');
         }
         res.json(result);

@@ -27,7 +27,10 @@ import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { SpinalEventService } from "spinal-env-viewer-task-service";
 import { ContextEvent } from '../interfacesContextsEvents'
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
 * @swagger
 * /api/v1/eventContext/{id}/create_category:
@@ -71,13 +74,15 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
   app.post("/api/v1/eventContext/:id/create_category", async (req, res, next) => {
 
     try {
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
       SpinalEventService.createEventCategory(context.getId().get(), req.body.categoryName, req.body.icon);
 
     } catch (error) {
       console.error(error)
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("ko")
     }
     res.json();

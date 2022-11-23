@@ -32,6 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -62,7 +63,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         var _a, _b, _c;
         let nodes = [];
         try {
-            const graph = yield spinalAPIMiddleware.getGraph();
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const graph = yield spinalAPIMiddleware.getProfileGraph(profileId);
             const contexts = yield graph.getChildren('hasContext');
             for (const context of contexts) {
                 if (context.getName().get() === 'BimFileContext') {

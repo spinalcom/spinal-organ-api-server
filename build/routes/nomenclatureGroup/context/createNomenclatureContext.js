@@ -33,6 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_plugin_nomenclature_service_1 = require("spinal-env-viewer-plugin-nomenclature-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -63,19 +64,25 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   */
     app.post("/api/v1/nomenclatureGroup/create", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const userGraph = yield spinalAPIMiddleware.getProfileGraph(profileId);
+            if (!userGraph)
+                res.status(406).send(`No graph found for ${profileId}`);
             let context = yield spinal_env_viewer_plugin_nomenclature_service_1.spinalNomenclatureService.createOrGetContext(req.body.nomenclatureContextName);
+            userGraph.addContext(context);
             var info = {
                 dynamicId: context._server_id,
                 staticId: context.getId().get(),
                 name: context.getName().get(),
                 type: context.getType().get(),
             };
+            res.status(200).json(info);
         }
         catch (error) {
-            console.error(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
             res.status(400).send("ko");
         }
-        res.json(info);
     }));
 };
 //# sourceMappingURL=createNomenclatureContext.js.map

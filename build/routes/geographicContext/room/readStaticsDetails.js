@@ -36,6 +36,7 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
 const spinal_env_viewer_plugin_control_endpoint_service_1 = require("spinal-env-viewer-plugin-control-endpoint-service");
 const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -68,9 +69,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     */
     app.get("/api/v1/room/:id/read_static_details", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
             let equipements = [];
             let CategorieAttributsList = [];
-            var room = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            var room = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
             if (room.getType().get() === "geographicRoom") {
@@ -189,8 +191,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send("ko");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json(info);
     }));

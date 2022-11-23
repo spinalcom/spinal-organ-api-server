@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const networkService_1 = require("../networkService");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -67,9 +68,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.post('/api/v1/device/create', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post("/api/v1/device/create", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var network = yield spinalAPIMiddleware.load(parseInt(req.body.networkDynamicId));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var network = yield spinalAPIMiddleware.load(parseInt(req.body.networkDynamicId), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(network);
             var contextId = yield network.getContextIds();
@@ -78,20 +80,22 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 name: req.body.name,
                 type: req.body.type,
                 children: [],
-                nodeTypeName: 'BmsDevice',
+                nodeTypeName: 'BmsDevice'
             };
             let configService = {
                 contextName: contextNetwork.getName().get(),
-                contextType: 'Network',
+                contextType: "Network",
                 networkName: network.getName().get(),
-                networkType: 'NetworkVirtual',
+                networkType: "NetworkVirtual"
             };
-            (0, networkService_1.default)().init(yield spinalAPIMiddleware.getGraph(), configService, true);
+            const graph = yield spinalAPIMiddleware.getProfileGraph(profileId);
+            (0, networkService_1.default)().init(graph, configService, true);
             //@ts-ignore
             (0, networkService_1.default)().createNewBmsDevice(network.getId().get(), obj);
         }
         catch (error) {
-            console.error(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
             res.status(400).send();
         }
         res.json();

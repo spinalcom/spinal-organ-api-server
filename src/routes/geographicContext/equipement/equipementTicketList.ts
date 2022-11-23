@@ -33,11 +33,13 @@ import { Room } from '../interfacesGeoContext';
 import { serviceTicketPersonalized } from 'spinal-service-ticket';
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import { LOGS_EVENTS } from 'spinal-service-ticket/dist/Constants';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger
@@ -74,8 +76,9 @@ module.exports = function (
     let nodes = [];
     try {
       await spinalAPIMiddleware.getGraph();
+      const profileId = getProfileId(req);
       var equipement = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10)
+        parseInt(req.params.id, 10), profileId
       );
       //@ts-ignore
       SpinalGraphService._addNode(equipement);
@@ -245,7 +248,8 @@ module.exports = function (
         res.status(400).send('node is not of type BIMObject');
       }
     } catch (error) {
-      console.log(error);
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send('ko');
     }
     res.json(nodes);

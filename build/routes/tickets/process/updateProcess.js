@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -77,39 +78,37 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.put('/api/v1/workflow/:workflowId/process/:processId/update', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.put("/api/v1/workflow/:workflowId/process/:processId/update", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
             yield spinalAPIMiddleware.getGraph();
-            let workflow = yield spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10));
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.processId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            let workflow = yield spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+            var node = yield spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             var allProcess = yield spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflow.getId().get());
             for (let index = 0; index < allProcess.length; index++) {
                 const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(allProcess[index].id.get());
                 if (realNode.getName().get() === req.body.newNameProcess) {
-                    return res.status(400).send('the name of process already exists');
+                    return res.status(400).send("the name of process already exists");
                 }
             }
-            if (workflow instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
-                node.belongsToContext(workflow)) {
-                if (workflow.getType().get() === 'SpinalSystemServiceTicket' &&
-                    req.body.newNameProcess !== 'string') {
+            if (workflow instanceof spinal_env_viewer_graph_service_1.SpinalContext && node.belongsToContext(workflow)) {
+                if (workflow.getType().get() === "SpinalSystemServiceTicket" && req.body.newNameProcess !== "string") {
                     node.info.name.set(req.body.newNameProcess);
                 }
                 else {
-                    return res
-                        .status(400)
-                        .send('this context is not a SpinalSystemServiceTicket or invalid name string');
+                    return res.status(400).send("this context is not a SpinalSystemServiceTicket or invalid name string");
                 }
             }
             else {
-                res.status(400).send('node not found in context');
+                res.status(400).send("node not found in context");
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send('ko');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            return res.status(400).send("ko");
         }
         res.json();
     }));

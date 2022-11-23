@@ -24,14 +24,13 @@
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { CategoriesAttribute } from './interfacesCategoriesAtrtribut';
+import { CategoriesAttribute } from './interfacesCategoriesAtrtribut'
+import { getProfileId } from '../../utilities/requestUtilities';
 import { SpinalNode } from 'spinal-model-graph';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
   /**
    * @swagger
    * /api/v1/node/{nodeId}/categoryByName/{categoryName}/read:
@@ -67,33 +66,29 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get(
-    '/api/v1/node/:nodeId/categoryByName/:categoryName/read',
-    async (req, res, next) => {
-      let info: CategoriesAttribute;
-      try {
-        let node: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.nodeId, 10)
-        );
-        const result = await serviceDocumentation._categoryExist(
-          node,
-          req.params.categoryName
-        );
-        if (result === undefined) {
-          res.status(400).send('category not found in node');
-        } else {
-          info = {
-            dynamicId: result._server_id,
-            staticId: result.getId().get(),
-            name: result.getName().get(),
-            type: result.getType().get(),
-          };
-        }
-      } catch (error) {
-        console.log(error);
-        res.status(400).send('ko');
+  app.get("/api/v1/node/:nodeId/categoryByName/:categoryName/read", async (req, res, next) => {
+
+    let info: CategoriesAttribute;
+    try {
+      const profileId = getProfileId(req);
+      let node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId)
+      const result = await serviceDocumentation._categoryExist(node, req.params.categoryName);
+      if (result === undefined) {
+        res.status(400).send("category not found in node")
+      } else {
+        info = {
+          dynamicId: result._server_id,
+          staticId: result.getId().get(),
+          name: result.getName().get(),
+          type: result.getType().get(),
+        };
       }
-      res.json(info);
+    } catch (error) {
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
-  );
-};
+    res.json(info);
+  })
+}
+

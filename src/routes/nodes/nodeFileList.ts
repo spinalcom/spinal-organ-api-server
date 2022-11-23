@@ -31,11 +31,13 @@ import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import getFiles from '../../utilities/getFiles';
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger
@@ -70,7 +72,8 @@ module.exports = function (
    */
   app.get('/api/v1/node/:id/file_list', async (req, res, next) => {
     try {
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(node);
 
@@ -88,7 +91,8 @@ module.exports = function (
         }
       }
     } catch (error) {
-      console.log(error);
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send('ko');
     }
     res.json(_files);

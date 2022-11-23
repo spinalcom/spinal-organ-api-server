@@ -28,9 +28,11 @@ import * as express from 'express';
 import { SpinalEventService } from "spinal-env-viewer-task-service";
 import { Event } from '../interfacesContextsEvents'
 import { eventNames } from 'process';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
 * @swagger
 * /api/v1/event/{eventId}/read:
@@ -64,7 +66,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
   app.get("/api/v1/event/:eventId/read", async (req, res, next) => {
 
     try {
-      var event: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.eventId, 10));
+      const profileId = getProfileId(req);
+      var event: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.eventId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(event)
 
@@ -87,6 +90,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
     } catch (error) {
       console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("list of event is not loaded");
     }
     res.send(info);

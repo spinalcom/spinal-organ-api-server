@@ -24,17 +24,12 @@
 
 import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import {
-  Context,
-  BIMFileContext,
-  BIMFileContextItems,
-} from '../contexts/interfacesContexts';
+import { Context, BIMFileContext, BIMFileContextItems, } from '../contexts/interfacesContexts';
+import { ISpinalAPIMiddleware } from '../../interfaces';
+import { getProfileId } from "../../utilities/requestUtilities";
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/BIM/BIMFileContext/list:
@@ -64,7 +59,9 @@ module.exports = function (
   app.get('/api/v1/BIM/BIMFileContext/list', async (req, res) => {
     let nodes = [];
     try {
-      const graph = await spinalAPIMiddleware.getGraph();
+      const profileId = getProfileId(req);
+
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
       const contexts = await graph.getChildren('hasContext');
 
       for (const context of contexts) {

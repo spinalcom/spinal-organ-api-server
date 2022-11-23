@@ -22,21 +22,16 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { SpinalEventService } from 'spinal-env-viewer-task-service';
-import { CategoryEvent } from '../interfacesContextsEvents';
+import { SpinalEventService } from "spinal-env-viewer-task-service";
+import { CategoryEvent } from '../interfacesContextsEvents'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/eventContext/{id}/category_list:
@@ -69,13 +64,13 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get('/api/v1/eventContext/:id/category_list', async (req, res, next) => {
+  app.get("/api/v1/eventContext/:id/category_list", async (req, res, next) => {
+
     let nodes = [];
     await spinalAPIMiddleware.getGraph();
     try {
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10)
-      );
+      const profileId = getProfileId(req);
+      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context);
 
@@ -98,7 +93,8 @@ module.exports = function (
       }
     } catch (error) {
       console.error(error);
-      res.status(400).send('list of category event is not loaded');
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(400).send("list of category event is not loaded");
     }
     res.send(nodes);
   });

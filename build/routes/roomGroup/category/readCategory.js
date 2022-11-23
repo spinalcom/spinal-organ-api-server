@@ -33,6 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -72,10 +73,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     */
     app.get("/api/v1/roomsGroup/:contextId/category/:categoryId/read", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var context = yield spinalAPIMiddleware.load(parseInt(req.params.contextId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var context = yield spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = yield spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10));
+            var category = yield spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && category.belongsToContext(context)) {
@@ -96,8 +98,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send("ko");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json(info);
     }));

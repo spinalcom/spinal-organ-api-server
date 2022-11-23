@@ -34,6 +34,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_plugin_group_manager_service_1 = require("spinal-env-viewer-plugin-group-manager-service");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const constants_1 = require("spinal-env-viewer-context-geographic-service/build/constants");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -61,7 +63,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/equipementsGroup/list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         let nodes = [];
         try {
-            var groupContexts = yield spinal_env_viewer_plugin_group_manager_service_1.default.getGroupContexts();
+            const profilId = (0, requestUtilities_1.getProfileId)(req);
+            const graph = yield spinalAPIMiddleware.getProfileGraph(profilId);
+            var groupContexts = yield spinal_env_viewer_plugin_group_manager_service_1.default.getGroupContexts(constants_1.EQUIPMENT_TYPE, graph);
             for (let index = 0; index < groupContexts.length; index++) {
                 var realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(groupContexts[index].id);
                 if (realNode.getType().get() === "BIMObjectGroupContext") {
@@ -77,6 +81,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
         catch (error) {
             console.error(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
             res.status(400).send("list of group contexts is not loaded");
         }
         res.send(nodes);

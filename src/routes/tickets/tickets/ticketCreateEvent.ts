@@ -22,23 +22,17 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { SpinalEventService } from 'spinal-env-viewer-task-service';
-import { FileSystem } from 'spinal-core-connectorjs_type';
-import { ServiceUser } from 'spinal-service-user';
-import * as moment from 'moment';
+import { SpinalEventService } from "spinal-env-viewer-task-service";
+import { TICKET_CONTEXT_TYPE, TIKET_TYPE as TICKET_TYPE } from 'spinal-service-ticket';
+import * as moment from 'moment'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { Period } from 'spinal-env-viewer-task-service'
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/ticket/{id}/create_event:
@@ -78,18 +72,22 @@ module.exports = function (
    *                 type: string
    *               startDate:
    *                 type: string
+*                 default: YYYY-MM-DD
    *               endDate:
    *                 type: string
+*                 default: YYYY-MM-DD
    *               description:
    *                 type: string
    *               repeat:
    *                 type: boolean
    *               repeatEnd:
-   *                 type: number
+*                 type: string
+*                 default: YYYY-MM-DD
    *               count:
    *                 type: number
    *               period:
-   *                 type: number
+*                 type: string
+*                 default: day|week|month|year
    *               user:
    *                 type: object
    *                 required:
@@ -97,7 +95,7 @@ module.exports = function (
    *                   - email
    *                   - gsm
    *                 properties:
-   *                   userName:
+*                   username:
    *                     type: string
    *                   email:
    *                     type: string
@@ -113,43 +111,35 @@ module.exports = function (
    *       400:
    *         description: Bad request
    */
-  app.post('/api/v1/ticket/:id/create_event', async (req, res, next) => {
+  app.post("/api/v1/ticket/:id/create_event", async (req, res, next) => {
     try {
-      var node: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10)
-      );
-      //@ts-ignore
-      SpinalGraphService._addNode(node);
       await spinalAPIMiddleware.getGraph();
+      const profileId = getProfileId(req);
+      var node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      //@ts-ignore
+      SpinalGraphService._addNode(node)
 
       var tree = await SpinalEventService.createOrgetDefaultTreeStructure();
-      var context: any = tree.context;
-      var category: any = tree.category;
-      var group: any = tree.group;
+      var context: any = tree.context
+      var category: any = tree.category
+      var group: any = tree.group
 
-      if (node.getType().get() === 'SpinalSystemServiceTicketTypeTicket') {
-        if (context.type.get() === 'SpinalEventGroupContext') {
+
+      if (node.getType().get() === TICKET_TYPE) {
+        if (context.type.get() === "SpinalEventGroupContext") {
           let eventInfo = {
             contextId: context.id.get(),
             groupId: group.id.get(),
             categoryId: category.id.get(),
             nodeId: node.getId().get(),
-            startDate: moment(
-              req.body.startDate,
-              'DD MM YYYY HH:mm:ss',
-              true
-            ).toString(),
+            startDate: (moment(new Date(req.body.startDate))).toString(),
             description: req.body.description,
-            endDate: moment(
-              req.body.endDate,
-              'DD MM YYYY HH:mm:ss',
-              true
-            ).toString(),
-            periodicity: { count: req.body.count, period: req.body.period },
+            endDate: (moment(new Date(req.body.endDate))).toString(),
+            periodicity: { count: req.body.count, period: Period[req.body.period] },
             repeat: req.body.repeat,
             name: req.body.name,
             creationDate: moment(new Date().toISOString()).toString(),
-            repeatEnd: req.body.repeatEnd,
+            repeatEnd: (moment(new Date(req.body.repeatEnd))).toString()
           };
           let user = {
             username: req.body.user.userName,
@@ -199,9 +189,13 @@ module.exports = function (
         res.status(400).send('the node is not of type Ticket');
       }
     } catch (error) {
-      console.log(error);
-      res.status(400).send('ko');
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
-    res.json(info);
-  });
-};
+    // res.json(info);
+  })
+}
+
+
+

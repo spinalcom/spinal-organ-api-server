@@ -26,8 +26,10 @@ import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { serviceTicketPersonalized } from 'spinal-service-ticket'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
   * @swagger
   * /api/v1/workflow/{workflowId}/process/{processId}/step/{stepId}/delete_step:
@@ -70,9 +72,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
   app.delete("/api/v1/workflow/:workflowId/process/:processId/step/:stepId/delete_step", async (req, res, next) => {
     try {
-      let workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10));
-      var process: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10));
-      var step: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.stepId, 10));
+      const profileId = getProfileId(req);
+      let workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+      var process: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
+      var step: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.stepId, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(process);
       // @ts-ignore
@@ -90,8 +93,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
       }
 
     } catch (error) {
-      console.log(error);
-      return res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(500).send(error.message);
     }
     res.json();
   })

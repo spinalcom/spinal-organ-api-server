@@ -22,20 +22,14 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { Workflow } from '../interfacesWorkflowAndTickets';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+import { Workflow } from '../interfacesWorkflowAndTickets'
+import { serviceTicketPersonalized } from 'spinal-service-ticket'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/workflow/{id}/create_process:
@@ -75,34 +69,29 @@ module.exports = function (
   app.post('/api/v1/workflow/:id/create_process', async (req, res, next) => {
     try {
       await spinalAPIMiddleware.getGraph();
-      var workflow: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10)
-      );
+
+      const profileId = getProfileId(req);
+      var workflow: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
-      SpinalGraphService._addNode(workflow);
-      var allProcess = await serviceTicketPersonalized.getAllProcess(
-        workflow.getId().get()
-      );
+      SpinalGraphService._addNode(workflow)
+
+      var allProcess = await serviceTicketPersonalized.getAllProcess(workflow.getId().get());
       for (let index = 0; index < allProcess.length; index++) {
-        const realNode = SpinalGraphService.getRealNode(
-          allProcess[index].id.get()
-        );
+        const realNode = SpinalGraphService.getRealNode(allProcess[index].id.get())
         if (realNode.getName().get() === req.body.nameProcess) {
-          return res.status(400).send('the name process already exists');
+          return res.status(400).send("the name process already exists")
         }
       }
-      if (req.body.nameProcess !== 'string') {
-        await serviceTicketPersonalized.createProcess(
-          { name: req.body.nameProcess },
-          workflow.getId().get()
-        );
+      if (req.body.nameProcess !== "string") {
+        await serviceTicketPersonalized.createProcess({ name: req.body.nameProcess }, workflow.getId().get())
       } else {
-        return res.status(400).send('invalid name string');
+        return res.status(400).send("invalid name string")
       }
     } catch (error) {
-      console.log(error);
-      res.status(400).send('ko');
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(500).send(error.message);
     }
     res.json();
-  });
-};
+  })
+}

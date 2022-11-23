@@ -32,12 +32,14 @@ import * as express from 'express';
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import { serviceTicketPersonalized } from 'spinal-service-ticket';
 import getFiles from '../../../utilities/getFiles';
-import { LOGS_EVENTS } from 'spinal-service-ticket/dist/Constants';
+import { LOGS_EVENTS, } from 'spinal-service-ticket/dist/Constants';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger
@@ -71,8 +73,9 @@ module.exports = function (
   app.get('/api/v1/ticket/:ticketId/read_details', async (req, res, next) => {
     try {
       await spinalAPIMiddleware.getGraph();
+      const profileId = getProfileId(req);
       var _ticket: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.ticketId, 10)
+        parseInt(req.params.ticketId, 10), profileId
       );
       //@ts-ignore
       SpinalGraphService._addNode(_ticket);
@@ -242,7 +245,8 @@ module.exports = function (
         log_list: _logs,
       };
     } catch (error) {
-      console.log(error);
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send('ko');
     }
     res.json(info);

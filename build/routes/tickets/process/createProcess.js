@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -73,26 +74,28 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post('/api/v1/workflow/:id/create_process', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
             yield spinalAPIMiddleware.getGraph();
-            var workflow = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var workflow = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(workflow);
             var allProcess = yield spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflow.getId().get());
             for (let index = 0; index < allProcess.length; index++) {
                 const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(allProcess[index].id.get());
                 if (realNode.getName().get() === req.body.nameProcess) {
-                    return res.status(400).send('the name process already exists');
+                    return res.status(400).send("the name process already exists");
                 }
             }
-            if (req.body.nameProcess !== 'string') {
+            if (req.body.nameProcess !== "string") {
                 yield spinal_service_ticket_1.serviceTicketPersonalized.createProcess({ name: req.body.nameProcess }, workflow.getId().get());
             }
             else {
-                return res.status(400).send('invalid name string');
+                return res.status(400).send("invalid name string");
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send('ko');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            return res.status(500).send(error.message);
         }
         res.json();
     }));

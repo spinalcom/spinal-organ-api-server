@@ -22,20 +22,16 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
+import { serviceTicketPersonalized } from 'spinal-service-ticket'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
   /**
    * @swagger
    * /api/v1/workflow/{workflowId}/process/{processId}/update:
@@ -79,56 +75,39 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.put(
-    '/api/v1/workflow/:workflowId/process/:processId/update',
-    async (req, res, next) => {
-      try {
-        await spinalAPIMiddleware.getGraph();
-        let workflow = await spinalAPIMiddleware.load(
-          parseInt(req.params.workflowId, 10)
-        );
-        var node: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.processId, 10)
-        );
-        // @ts-ignore
-        SpinalGraphService._addNode(node);
+  app.put("/api/v1/workflow/:workflowId/process/:processId/update", async (req, res, next) => {
+    try {
+      await spinalAPIMiddleware.getGraph();
+      const profileId = getProfileId(req);
+      let workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+      var node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
+      // @ts-ignore
+      SpinalGraphService._addNode(node);
 
-        var allProcess = await serviceTicketPersonalized.getAllProcess(
-          workflow.getId().get()
-        );
-        for (let index = 0; index < allProcess.length; index++) {
-          const realNode = SpinalGraphService.getRealNode(
-            allProcess[index].id.get()
-          );
-          if (realNode.getName().get() === req.body.newNameProcess) {
-            return res.status(400).send('the name of process already exists');
-          }
+      var allProcess = await serviceTicketPersonalized.getAllProcess(workflow.getId().get());
+      for (let index = 0; index < allProcess.length; index++) {
+        const realNode = SpinalGraphService.getRealNode(allProcess[index].id.get())
+        if (realNode.getName().get() === req.body.newNameProcess) {
+          return res.status(400).send("the name of process already exists")
         }
-
-        if (
-          workflow instanceof SpinalContext &&
-          node.belongsToContext(workflow)
-        ) {
-          if (
-            workflow.getType().get() === 'SpinalSystemServiceTicket' &&
-            req.body.newNameProcess !== 'string'
-          ) {
-            node.info.name.set(req.body.newNameProcess);
-          } else {
-            return res
-              .status(400)
-              .send(
-                'this context is not a SpinalSystemServiceTicket or invalid name string'
-              );
-          }
-        } else {
-          res.status(400).send('node not found in context');
-        }
-      } catch (error) {
-        console.log(error);
-        res.status(400).send('ko');
       }
-      res.json();
+
+      if (workflow instanceof SpinalContext && node.belongsToContext(workflow)) {
+        if (workflow.getType().get() === "SpinalSystemServiceTicket" && req.body.newNameProcess !== "string") {
+          node.info.name.set(req.body.newNameProcess)
+        }
+        else {
+          return res.status(400).send("this context is not a SpinalSystemServiceTicket or invalid name string");
+        }
+      } else {
+        res.status(400).send("node not found in context");
+      }
+    } catch (error) {
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(400).send("ko")
     }
-  );
-};
+    res.json();
+  })
+}
+

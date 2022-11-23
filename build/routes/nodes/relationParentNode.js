@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const corseChildrenAndParentNode_1 = require("../../utilities/corseChildrenAndParentNode");
 const spinal_model_graph_1 = require("spinal-model-graph");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
     * @swagger
@@ -45,9 +46,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     */
     app.get("/api/v1/relation/:id/parent_node", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
             var parent;
             var info;
-            var relation = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            var relation = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             if (relation instanceof spinal_model_graph_1.SpinalRelationLstPtr || relation instanceof spinal_model_graph_1.SpinalRelationPtrLst || relation instanceof spinal_model_graph_1.SpinalRelationRef) {
                 parent = yield relation.getParent();
                 var children_node = (0, corseChildrenAndParentNode_1.childrensNode)(parent);
@@ -63,8 +65,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send("ko");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json(info);
     }));

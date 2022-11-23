@@ -37,6 +37,7 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const spinal_env_viewer_plugin_control_endpoint_service_1 = require("spinal-env-viewer-plugin-control-endpoint-service");
 const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -78,7 +79,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get('/api/v1/analytics/room/:id/status/:option', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
             yield spinalAPIMiddleware.getGraph();
-            var room = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var room = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
             var ticketList = [];
@@ -326,7 +328,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
+            if (error.code)
+                return res.status(error.code).send({ message: error.message });
             res.status(400).send('ko');
         }
         res.json(info);

@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -69,7 +70,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/floor/:id/room_list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         let nodes = [];
         try {
-            var floor = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var floor = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(floor);
             const { spec } = req.query;
@@ -134,6 +136,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
         catch (error) {
             console.error(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
             res.status(400).send("list of room is not loaded");
         }
         res.send(nodes);

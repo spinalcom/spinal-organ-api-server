@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -69,9 +70,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      */
     app.put('/api/v1/node/:IdNode/category/:IdCategory/attribut/:attributName/update', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
             var nodes = [];
-            let node = yield spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10));
-            let category = yield spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10));
+            let node = yield spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
+            let category = yield spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
             let childrens = yield node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
             for (const children of childrens) {
                 if (children.getId().get() === category.getId().get()) {
@@ -101,7 +103,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
+            if (error.code)
+                return res.status(error.code).send({ message: error.message });
             return res.status(400).send('ko');
         }
         res.json(nodes);

@@ -24,17 +24,16 @@
 
 import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { NetworkService, ConfigService } from 'spinal-model-bmsnetwork';
-import getInstance from '../networkService';
-import {
-  SpinalContext,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { NetworkService, ConfigService } from 'spinal-model-bmsnetwork'
+import getInstance from "../networkService";
+import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: SpinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger
@@ -69,38 +68,39 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.post('/api/v1/device/create', async (req, res, next) => {
+
+
+  app.post("/api/v1/device/create", async (req, res, next) => {
+
     try {
-      var network = await spinalAPIMiddleware.load(
-        parseInt(req.body.networkDynamicId)
-      );
+      const profileId = getProfileId(req);
+      var network = await spinalAPIMiddleware.load(parseInt(req.body.networkDynamicId), profileId)
       //@ts-ignore
       SpinalGraphService._addNode(network);
       var contextId = await network.getContextIds();
-      var contextNetwork = SpinalGraphService.getRealNode(contextId[0]);
+      var contextNetwork = SpinalGraphService.getRealNode(contextId[0])
       var obj = {
         name: req.body.name,
         type: req.body.type,
         children: [],
-        nodeTypeName: 'BmsDevice',
-      };
+        nodeTypeName: 'BmsDevice'
+      }
       let configService: ConfigService = {
         contextName: contextNetwork.getName().get(),
-        contextType: 'Network',
+        contextType: "Network",
         networkName: network.getName().get(),
-        networkType: 'NetworkVirtual',
-      };
-      getInstance().init(
-        await spinalAPIMiddleware.getGraph(),
-        configService,
-        true
-      );
+        networkType: "NetworkVirtual"
+      }
+
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId)
+      getInstance().init(graph, configService, true)
       //@ts-ignore
       getInstance().createNewBmsDevice(network.getId().get(), obj);
     } catch (error) {
-      console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send();
     }
     res.json();
-  });
-};
+  })
+
+}

@@ -23,7 +23,7 @@
  */
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
-import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
+
 import {
   SpinalContext,
   SpinalNode,
@@ -32,11 +32,13 @@ import {
 import { NodeAttribut, Attributs } from './interfacesAttributs';
 
 import * as express from 'express';
+import { ISpinalAPIMiddleware } from '../../interfaces';
+import { getProfileId } from "../../utilities/requestUtilities";
 
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger
@@ -80,12 +82,14 @@ module.exports = function (
     '/api/v1/node/:IdNode/category/:IdCategory/attribut/:attributName/delete',
     async (req, res, next) => {
       try {
+        const profileId = getProfileId(req);
+
         var aux = false;
         let node: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.IdNode, 10)
+          parseInt(req.params.IdNode, 10), profileId
         );
         let category: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.IdCategory, 10)
+          parseInt(req.params.IdCategory, 10), profileId
         );
         let childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
         for (const children of childrens) {
@@ -106,7 +110,7 @@ module.exports = function (
           }
         }
       } catch (error) {
-        console.log(error);
+        if (error.code) return res.status(error.code).send({ message: error.message });
         return res.status(400).send('ko');
       }
       res.json();

@@ -28,8 +28,10 @@ import { EndPointRoom } from '../interfacesGeoContext'
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { spinalControlPointService } from 'spinal-env-viewer-plugin-control-endpoint-service'
 import { SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/equipement/{id}/control_endpoint_list:
@@ -65,8 +67,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
   app.get("/api/v1/equipement/:id/control_endpoint_list", async (req, res, next) => {
 
     try {
+      const profileId = getProfileId(req);
 
-      let equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      let equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(equipement);
 
@@ -98,6 +101,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
 
     } catch (error) {
       console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("list of endpoints is not loaded");
     }
     res.send(allNodes);

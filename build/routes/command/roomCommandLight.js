@@ -33,6 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -66,7 +67,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/command/room/:id/light", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         var info;
         try {
-            var room = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var room = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
             var controlPoints = yield room.getChildren('hasControlPoints');
@@ -89,8 +91,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.error(error);
-            res.status(400).send("list of room is not loaded");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            return res.status(400).send("list of room is not loaded");
         }
         res.send(info);
     }));

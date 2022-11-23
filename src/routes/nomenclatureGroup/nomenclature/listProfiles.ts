@@ -28,9 +28,11 @@ import { SpinalEventService } from "spinal-env-viewer-task-service";
 import { CategoryEvent } from '../../calendar/interfacesContextsEvents'
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { spinalNomenclatureService } from "spinal-env-viewer-plugin-nomenclature-service"
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/nomenclatureGroup/{contextId}/profile_list:
@@ -66,7 +68,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
   app.get("/api/v1/nomenclatureGroup/:contextId/profile_list", async (req, res, next) => {
 
     try {
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10));
+      const profileId = getProfileId(req);
+      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
 
@@ -130,8 +133,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
       }
 
     } catch (error) {
-      console.error(error);
-      res.status(400).send("list of group is not loaded");
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(400).send("list of group is not loaded");
     }
     res.send(profile_tab);
   });

@@ -21,22 +21,16 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { SpinalEventService } from 'spinal-env-viewer-task-service';
-import { CategoryEvent } from '../../calendar/interfacesContextsEvents';
-import groupManagerService from 'spinal-env-viewer-plugin-group-manager-service';
+import { SpinalEventService } from "spinal-env-viewer-task-service";
+import { CategoryEvent } from '../../calendar/interfacesContextsEvents'
+import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/roomsGroup/{contextId}/category/{categoryId}/group_list:
@@ -76,55 +70,43 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get(
-    '/api/v1/roomsGroup/:contextId/category/:categoryId/group_list',
-    async (req, res, next) => {
-      let nodes = [];
-      try {
-        await spinalAPIMiddleware.getGraph();
-        var context: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.contextId, 10)
-        );
-        //@ts-ignore
-        SpinalGraphService._addNode(context);
-        var category: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.categoryId, 10)
-        );
-        //@ts-ignore
-        SpinalGraphService._addNode(category);
-        if (
-          context instanceof SpinalContext &&
-          category.belongsToContext(context)
-        ) {
-          if (context.getType().get() === 'geographicRoomGroupContext') {
-            var listGroups = await groupManagerService.getGroups(
-              category.getId().get()
-            );
-            for (const group of listGroups) {
-              // @ts-ignore
-              const realNode = SpinalGraphService.getRealNode(group.id.get());
-              let info = {
-                dynamicId: realNode._server_id,
-                staticId: realNode.getId().get(),
-                name: realNode.getName().get(),
-                type: realNode.getType().get(),
-                color: group.color.get(),
-              };
-              nodes.push(info);
-            }
-          } else {
-            res
-              .status(400)
-              .send('node is not type of geographicRoomGroupContext ');
+  app.get("/api/v1/roomsGroup/:contextId/category/:categoryId/group_list", async (req, res, next) => {
+
+    let nodes = [];
+    try {
+      const profileId = getProfileId(req);
+      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+      //@ts-ignore
+      SpinalGraphService._addNode(context)
+      var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+      //@ts-ignore
+      SpinalGraphService._addNode(category)
+      if (context instanceof SpinalContext && category.belongsToContext(context)) {
+        if (context.getType().get() === "geographicRoomGroupContext") {
+          var listGroups = await groupManagerService.getGroups(category.getId().get())
+          for (const group of listGroups) {
+            // @ts-ignore
+            const realNode = SpinalGraphService.getRealNode(group.id.get())
+            let info = {
+              dynamicId: realNode._server_id,
+              staticId: realNode.getId().get(),
+              name: realNode.getName().get(),
+              type: realNode.getType().get(),
+              color: group.color.get()
+            };
+            nodes.push(info);
           }
         } else {
-          res.status(400).send('category not found in context');
+          res.status(400).send("node is not type of geographicRoomGroupContext ");
         }
-      } catch (error) {
-        console.error(error);
-        res.status(400).send('list of category event is not loaded');
+      } else {
+        res.status(400).send("category not found in context");
       }
-      res.send(nodes);
+    } catch (error) {
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(400).send("list of category event is not loaded");
     }
-  );
+    res.send(nodes);
+  });
 };
+

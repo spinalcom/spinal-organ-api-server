@@ -33,6 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
   * @swagger
@@ -73,9 +74,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/node/:nodeId/categoryById/:categoryId/read", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         let info;
         try {
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var node = yield spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
             var childrens = yield node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
-            var category = yield spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10));
+            var category = yield spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             for (let index = 0; index < childrens.length; index++) {
                 if (childrens[index] === category) {
                     info = {
@@ -91,8 +93,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send("ko");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json(info);
     }));

@@ -29,9 +29,11 @@ import { Step } from '../interfacesWorkflowAndTickets'
 import { serviceTicketPersonalized } from 'spinal-service-ticket'
 import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
 import { ServiceUser } from "spinal-service-user";
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
   * @swagger
@@ -70,11 +72,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
   */
   app.post("/api/v1/ticket/:ticketId/add_note", async (req, res, next) => {
     try {
-      var ticket: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10));
+      const profileId = getProfileId(req);
+      var ticket: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(ticket)
-      var user = { username: "admin", userId: 0 }
-      // console.log("6582658", await serviceDocumentation.addNote(ticket, user, req.body.note));
+      var user = { username: "admin", userId: 168 }
 
       const note = await serviceDocumentation.addNote(ticket, user, req.body.note)
       const elementNote = await note.element.load()
@@ -91,8 +93,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
       }
 
     } catch (error) {
-      console.log(error);
-      res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(info);
   })

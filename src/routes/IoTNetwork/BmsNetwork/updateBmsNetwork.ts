@@ -25,8 +25,10 @@
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
  * @swagger
@@ -67,7 +69,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
   app.put("/api/v1/Network/:id/update", async (req, res, next) => {
 
     try {
-      var network = await spinalAPIMiddleware.load(parseInt(req.params.id, 10))
+      const profileId = getProfileId(req);
+      var network = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
       // @ts-ignore
       SpinalGraphService._addNode(network);
       if (network.getType().get() === "BmsNetwork") {
@@ -77,7 +80,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         res.status(400).send("this node is not a BmsNetwork");
       }
     } catch (error) {
-      console.log(error);
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("ko")
     }
 

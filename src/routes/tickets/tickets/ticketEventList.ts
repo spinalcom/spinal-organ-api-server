@@ -22,23 +22,14 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import {
-  SpinalEvent,
-  SpinalEventService,
-} from 'spinal-env-viewer-task-service';
-import { sendDate, verifDate } from '../../../utilities/dateFunctions';
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+import { SpinalEvent, SpinalEventService } from "spinal-env-viewer-task-service";
+import { sendDate, verifDate } from "../../../utilities/dateFunctions"
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/ticket/{id}/event_list:
@@ -85,95 +76,83 @@ module.exports = function (
    *       400:
    *         description: Bad request
    */
-  app.post('/api/v1/ticket/:id/event_list', async (req, res, next) => {
+  app.post("/api/v1/ticket/:id/event_list", async (req, res, next) => {
     try {
       await spinalAPIMiddleware.getGraph();
+      const profileId = getProfileId(req);
       //ticket node
       var nodes = [];
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
-      SpinalGraphService._addNode(node);
+      SpinalGraphService._addNode(node)
 
-      if (node.getType().get() === 'SpinalSystemServiceTicketTypeTicket') {
-        if (req.body.period === 'all') {
-          let listEvents = await SpinalEventService.getEvents(
-            node.getId().get()
-          );
+
+      if (node.getType()?.get() === "SpinalSystemServiceTicketTypeTicket") {
+
+        if (req.body.period === "all") {
+          let listEvents = await SpinalEventService.getEvents(node.getId()?.get())
           ListEvents(listEvents);
-        } else if (req.body.period === 'today') {
+
+        } else if (req.body.period === "today") {
+
           var start = new Date();
           start.setHours(2, 0, 0, 0);
           var end = new Date();
           end.setHours(25, 59, 59, 999);
 
-          let listEvents = await SpinalEventService.getEvents(
-            node.getId().get(),
-            start,
-            end
-          );
+          let listEvents = await SpinalEventService.getEvents(node.getId()?.get(), start, end);
           ListEvents(listEvents);
-        } else if (
-          req.body.period === undefined ||
-          req.body.period === 'week'
-        ) {
-          var curr = new Date(); // get current date
-          var first = curr.getDate() - curr.getDay() + 1; // First day is the day of the month - the day of the week
+        }
+
+        else if (req.body.period === undefined || req.body.period === "week") {
+          var curr = new Date; // get current date
+          var first = (curr.getDate() - curr.getDay()) + 1; // First day is the day of the month - the day of the week
           var last = first + 6; // last day is the first day + 6
           var firstday = new Date(curr.setDate(first));
           firstday.setHours(2, 0, 0, 0).toString();
           var lastday = new Date(curr.setDate(last));
           lastday.setHours(25, 59, 59, 999).toString();
-          let listEvents = await SpinalEventService.getEvents(
-            node.getId().get(),
-            firstday,
-            lastday
-          );
+          let listEvents = await SpinalEventService.getEvents(node.getId()?.get(), firstday, lastday);
           ListEvents(listEvents);
-        } else if (req.body.period === 'dateInterval') {
+        }
+
+        else if (req.body.period === "dateInterval") {
           if (!verifDate(req.body.startDate) || !verifDate(req.body.endDate)) {
-            res.status(400).send('invalid Date');
+            res.status(400).send("invalid Date")
           } else {
-            const start = sendDate(req.body.startDate);
-            const end = sendDate(req.body.endDate);
-            let listEvents = await SpinalEventService.getEvents(
-              node.getId().get(),
-              start.toDate(),
-              end.toDate()
-            );
+            const start = sendDate(req.body.startDate)
+            const end = sendDate(req.body.endDate)
+            let listEvents = await SpinalEventService.getEvents(node.getId()?.get(), start.toDate(), end.toDate());
             ListEvents(listEvents);
           }
         }
+
       } else {
-        res.status(400).send('the node is not of type Ticket');
+        res.status(400).send("the node is not of type Ticket")
       }
 
       function ListEvents(array) {
         for (const child of array) {
           // @ts-ignore
-          const _child = SpinalGraphService.getRealNode(child.id.get());
-          if (_child.getType().get() === 'SpinalEvent') {
+          const _child = SpinalGraphService.getRealNode(child.id?.get())
+          if (_child.getType()?.get() === "SpinalEvent") {
             let info = {
               dynamicId: _child._server_id,
-              staticId: _child.getId().get(),
-              name: _child.getName().get(),
-              type: _child.getType().get(),
-              groupeID: _child.info.groupId.get(),
-              categoryID: child.categoryId.get(),
-              nodeId: _child.info.nodeId.get(),
-              startDate: _child.info.startDate.get(),
-              endDate: _child.info.endDate.get(),
-              creationDate: _child.info.creationDate.get(),
+              staticId: _child.getId()?.get(),
+              name: _child.getName()?.get(),
+              type: _child.getType()?.get(),
+              groupeID: _child.info.groupId?.get(),
+              categoryID: child.categoryId?.get(),
+              nodeId: _child.info.nodeId?.get(),
+              startDate: _child.info.startDate?.get(),
+              endDate: _child.info.endDate?.get(),
+              creationDate: _child.info.creationDate?.get(),
               user: {
-                username: _child.info.user.username.get(),
-                email:
-                  _child.info.user.email == undefined
-                    ? undefined
-                    : _child.info.user.email.get(),
-                gsm:
-                  _child.info.user.gsm == undefined
-                    ? undefined
-                    : _child.info.user.gsm.get(),
-              },
+                username: _child.info.user.username?.get(),
+                email: _child.info.user.email == undefined ? undefined : _child.info.user.email?.get(),
+                gsm: _child.info.user.gsm == undefined ? undefined : _child.info.user.gsm?.get()
+              }
+
             };
 
             nodes.push(info);
@@ -181,9 +160,10 @@ module.exports = function (
         }
       }
     } catch (error) {
-      console.log(error);
-      res.status(400).send('ko');
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(nodes);
-  });
-};
+  })
+}

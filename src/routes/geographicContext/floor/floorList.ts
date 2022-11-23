@@ -24,19 +24,15 @@
 
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { Floor } from '../interfacesGeoContext';
+import { Floor } from '../interfacesGeoContext'
 import { SpinalNode } from 'spinal-model-graph';
-import {
-  SpinalContext,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/floor/list:
@@ -65,39 +61,42 @@ module.exports = function (
     let nodes = [];
     try {
       const { spec } = req.query;
-      const graph = await spinalAPIMiddleware.getGraph();
-      let geographicContexts =
-        SpinalGraphService.getContextWithType('geographicContext');
+      const profileId = getProfileId(req);
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
+      const contexts = await graph.getChildren("hasContext");
 
-      var buildings = await geographicContexts[0].getChildren(
-        'hasGeographicBuilding'
-      );
-      var floors = await buildings[0].getChildren('hasGeographicFloor');
+      // var geographicContexts = await SpinalGraphService.getContextWithType("geographicContext");
+      var geographicContexts = contexts.filter(el => el.getType().get() === "geographicContext");
+      var buildings = await geographicContexts[0].getChildren("hasGeographicBuilding");
+      var floors = await buildings[0].getChildren("hasGeographicFloor")
       for (const floor of floors) {
         var info;
         var categories = await floor.getChildren(NODE_TO_CATEGORY_RELATION);
 
-        if (spec === 'archipel') {
+        if (spec === "archipel") {
           for (const category of categories) {
-            if (category.getName().get() === 'default') {
+            if (category.getName().get() === "default") {
               var attributs = (await category.element.load()).get();
               for (const attr of attributs) {
-                if (attr.label === 'showOccupant') {
-                  if (attr.value === true || attr.value === 'true') {
+                if (attr.label === "showOccupant") {
+                  if (attr.value === true || attr.value === "true") {
+
                     info = {
                       dynamicId: floor._server_id,
                       staticId: floor.getId().get(),
                       name: floor.getName().get(),
                       type: floor.getType().get(),
-                      aliasOccupant: showInfo('aliasOccupant', attributs),
-                      idOccupant: showInfo('idOccupant', attributs),
-                      bureauOccupant: showInfo('bureauOccupant', attributs),
-                      showOccupant: showInfo('showOccupant', attributs),
-                    };
+                      aliasOccupant: showInfo("aliasOccupant", attributs),
+                      idOccupant: showInfo("idOccupant", attributs),
+                      bureauOccupant: showInfo("bureauOccupant", attributs),
+                      showOccupant: showInfo("showOccupant", attributs),
+
+                    }
                     nodes.push(info);
                   }
                 }
               }
+
             }
           }
         } else {
@@ -109,20 +108,33 @@ module.exports = function (
               staticId: category.getId().get(),
               name: category.getName().get(),
               type: category.getType().get(),
-              attributs: attributs,
-            };
-            categoriesTab.push(catInfo);
+              attributs: attributs
+            }
+            categoriesTab.push(catInfo)
           }
           info = {
             dynamicId: floor._server_id,
             staticId: floor.getId().get(),
             name: floor.getName().get(),
             type: floor.getType().get(),
-            categories: categoriesTab,
+            categories: categoriesTab
           };
           nodes.push(info);
         }
       }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       // for (const child of floors) {
       //   let info: Floor = {
@@ -137,15 +149,17 @@ module.exports = function (
       function showInfo(name, attributes) {
         for (const attr of attributes) {
           if (attr.label === name) {
-            return attr.value;
+            return attr.value
           }
         }
       }
     } catch (error) {
       console.error(error);
-      res.status(400).send('list of floor is not loaded');
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(400).send("list of floor is not loaded");
     }
 
     res.send(nodes);
+
   });
 };

@@ -33,6 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -86,46 +87,41 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.put('/api/v1/workflow/:workflowId/process/:processId/step/:stepId/update_step', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.put("/api/v1/workflow/:workflowId/process/:processId/step/:stepId/update_step", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
             yield spinalAPIMiddleware.getGraph();
-            let workflow = yield spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10));
-            var process = yield spinalAPIMiddleware.load(parseInt(req.params.processId, 10));
-            var step = yield spinalAPIMiddleware.load(parseInt(req.params.stepId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            let workflow = yield spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+            var process = yield spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
+            var step = yield spinalAPIMiddleware.load(parseInt(req.params.stepId, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(process);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(step);
-            var allSteps = yield spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(process.getId().get(), ['SpinalSystemServiceTicketHasStep']);
+            var allSteps = yield spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(process.getId().get(), ["SpinalSystemServiceTicketHasStep"]);
             for (let index = 0; index < allSteps.length; index++) {
                 const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(allSteps[index].id.get());
-                if (realNode.getName().get() === req.body.newNameStep ||
-                    req.body.newNameStep === 'string') {
-                    return res
-                        .status(400)
-                        .send('the name of step already exists or invalid name string');
+                if (realNode.getName().get() === req.body.newNameStep || req.body.newNameStep === "string") {
+                    return res.status(400).send("the name of step already exists or invalid name string");
                 }
             }
-            if (workflow instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
-                process.belongsToContext(workflow) &&
-                step.belongsToContext(workflow)) {
-                if (workflow.getType().get() === 'SpinalSystemServiceTicket') {
+            if (workflow instanceof spinal_env_viewer_graph_service_1.SpinalContext && process.belongsToContext(workflow) && step.belongsToContext(workflow)) {
+                if (workflow.getType().get() === "SpinalSystemServiceTicket") {
                     step.info.name.set(req.body.newNameStep);
                     step.info.color.set(req.body.newColor);
                 }
                 else {
-                    return res
-                        .status(400)
-                        .send('this context is not a SpinalSystemServiceTicket');
+                    return res.status(400).send("this context is not a SpinalSystemServiceTicket");
                 }
             }
             else {
-                res.status(400).send('node not found in context');
+                res.status(400).send("node not found in context");
             }
         }
         catch (error) {
-            console.log(error);
-            return res.status(400).send('ko');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            return res.status(400).send("ko");
         }
         res.json();
     }));

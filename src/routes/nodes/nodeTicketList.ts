@@ -22,19 +22,14 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService, } from 'spinal-env-viewer-graph-service';
 import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+import { PROCESS_TYPE, STEP_RELATION_NAME, STEP_TYPE, TICKET_RELATION_NAME } from 'spinal-service-ticket';
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/node/{id}/ticket_list:
@@ -70,37 +65,36 @@ module.exports = function (
     let nodes = [];
     try {
       await spinalAPIMiddleware.getGraph();
+      const profileId = getProfileId(req);
       var node: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10)
+        parseInt(req.params.id, 10), profileId
       );
       //@ts-ignore
       SpinalGraphService._addNode(node);
 
-      var ticketList = await node.getChildren(
-        'SpinalSystemServiceTicketHasTicket'
-      );
+
+      var ticketList = await node.getChildren(TICKET_RELATION_NAME);
       for (const ticket of ticketList) {
         //context && workflow
         const workflow = SpinalGraphService.getRealNode(
           ticket.getContextIds()[0]
         );
+
         //Step
         let _step = await ticket
-          .getParents('SpinalSystemServiceTicketHasTicket')
+          .getParents(TICKET_RELATION_NAME)
           .then((steps) => {
             for (const step of steps) {
-              if (
-                step.getType().get() === 'SpinalSystemServiceTicketTypeStep'
-              ) {
+              if (step.getType().get() === STEP_TYPE) {
                 return step;
               }
             }
           });
         let _process = await _step
-          .getParents('SpinalSystemServiceTicketHasStep')
+          .getParents(STEP_RELATION_NAME)
           .then((processes) => {
             for (const process of processes) {
-              if (process.getType().get() === 'SpinalServiceTicketProcess') {
+              if (process.getType().get() === PROCESS_TYPE) {
                 return process;
               }
             }
@@ -113,7 +107,7 @@ module.exports = function (
           priority: ticket.info.priority.get(),
           creationDate: ticket.info.creationDate.get(),
           userName:
-            ticket.info.user == undefined ? '' : ticket.info.user.name.get(),
+            ticket.info.user ? ticket.info.user.username?.get() || ticket.info.user.name?.get() || "" : "",
           gmaoId:
             ticket.info.gmaoId == undefined ? '' : ticket.info.gmaoId.get(),
           gmaoDateCreation:
@@ -154,8 +148,9 @@ module.exports = function (
         nodes.push(info);
       }
     } catch (error) {
-      console.log(error);
-      res.status(400).send('ko');
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(400).send('ko');
     }
     res.json(nodes);
   });

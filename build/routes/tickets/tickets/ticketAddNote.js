@@ -34,6 +34,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
     * @swagger
@@ -72,11 +73,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     */
     app.post("/api/v1/ticket/:ticketId/add_note", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var ticket = yield spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var ticket = yield spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(ticket);
-            var user = { username: "admin", userId: 0 };
-            // console.log("6582658", await serviceDocumentation.addNote(ticket, user, req.body.note));
+            var user = { username: "admin", userId: 168 };
             const note = yield spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addNote(ticket, user, req.body.note);
             const elementNote = yield note.element.load();
             var info = {
@@ -91,8 +92,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             };
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send("ko");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json(info);
     }));

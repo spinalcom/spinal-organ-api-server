@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -54,12 +55,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/context/:contextId/node/:nodeId/nodesOfType/:type', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/context/:contextId/node/:nodeId/nodesOfType/:type", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         let nodes = [];
         try {
-            yield spinalAPIMiddleware.getGraph();
-            var contextNode = yield spinalAPIMiddleware.load(parseInt(req.params.contextId, 10));
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var contextNode = yield spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            var node = yield spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
             var SpinalContextNodeId = contextNode.getId().get();
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(contextNode);
@@ -69,8 +70,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             var type_list = yield spinal_env_viewer_graph_service_1.SpinalGraphService.browseAndClassifyByTypeInContext(SpinalNodeId, SpinalContextNodeId);
             if (req.params.type in type_list.data) {
                 let model_list = type_list.data[req.params.type];
-                if (contextNode instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
-                    node.belongsToContext(contextNode)) {
+                if (contextNode instanceof spinal_env_viewer_graph_service_1.SpinalContext && node.belongsToContext(contextNode)) {
                     for (let index = 0; index < model_list.length; index++) {
                         // hacky way use realnode when fiexd
                         const realNode = model_list[index]._parents[0];
@@ -79,22 +79,23 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             dynamicId: realNode._server_id,
                             staticId: model_list[index].id.get(),
                             name: model_list[index].name.get(),
-                            type: model_list[index].type.get(),
+                            type: model_list[index].type.get()
                         };
                         nodes.push(info);
                     }
                 }
                 else {
-                    res.status(400).send('node not found in context');
+                    res.status(400).send("node not found in context");
                 }
             }
             else {
-                res.status(400).send('Type not found in node');
+                res.status(400).send("Type not found in node");
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send('ko');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json(nodes);
     }));

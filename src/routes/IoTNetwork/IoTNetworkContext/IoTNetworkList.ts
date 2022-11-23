@@ -24,12 +24,10 @@
 
 import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { IoTNetwork } from '../interfacesEndpointAndTimeSeries';
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: SpinalAPIMiddleware
-) {
+import { IoTNetwork } from "../interfacesEndpointAndTimeSeries";
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/IoTNetworkContext/list:
@@ -54,28 +52,34 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get('/api/v1/IoTNetworkContext/list', async (req, res, next) => {
+
+
+  app.get("/api/v1/IoTNetworkContext/list", async (req, res, next) => {
+
     let nodes = [];
     try {
-      const graph = await spinalAPIMiddleware.getGraph();
-
-      var childrens = await graph.getChildren('hasContext');
+      const profileId = getProfileId(req);
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId)
+      var childrens = await graph.getChildren("hasContext");
 
       for (const child of childrens) {
-        if (child.getType().get() === 'Network') {
+        if (child.getType().get() === "Network") {
           let info: IoTNetwork = {
             dynamicId: child._server_id,
             staticId: child.getId().get(),
             name: child.getName().get(),
-            type: child.getType().get(),
+            type: child.getType().get()
           };
           nodes.push(info);
         }
       }
+
     } catch (error) {
-      console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+
       res.status(400).send('list of IoTNetworksContext is not loaded');
     }
     res.send(nodes);
   });
-};
+}
+

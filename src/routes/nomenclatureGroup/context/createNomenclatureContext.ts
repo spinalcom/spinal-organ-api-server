@@ -27,9 +27,11 @@ import * as express from 'express';
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import { spinalNomenclatureService } from "spinal-env-viewer-plugin-nomenclature-service"
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/nomenclatureGroup/create:
@@ -62,17 +64,25 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
   app.post("/api/v1/nomenclatureGroup/create", async (req, res, next) => {
 
     try {
+      const profileId = getProfileId(req);
+      const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
+      if (!userGraph) res.status(406).send(`No graph found for ${profileId}`);
+
       let context = await spinalNomenclatureService.createOrGetContext(req.body.nomenclatureContextName)
+
+      userGraph.addContext(context);
+
       var info = {
         dynamicId: context._server_id,
         staticId: context.getId().get(),
         name: context.getName().get(),
         type: context.getType().get(),
       }
+      res.status(200).json(info);
+
     } catch (error) {
-      console.error(error)
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("ko")
     }
-    res.json(info);
   })
 }

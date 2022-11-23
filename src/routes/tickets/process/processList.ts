@@ -21,20 +21,15 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { Workflow } from '../interfacesWorkflowAndTickets';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+import { Workflow } from '../interfacesWorkflowAndTickets'
+import { serviceTicketPersonalized } from 'spinal-service-ticket'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
   /**
    * @swagger
    * /api/v1/workflow/{id}/processList:
@@ -66,34 +61,30 @@ module.exports = function (
    *       400:
    *         description: Bad request
    */
-  app.get('/api/v1/workflow/:id/processList', async (req, res, next) => {
-    let nodes = [];
+  app.get("/api/v1/workflow/:id/processList", async (req, res, next) => {
+    let nodes = []
     try {
       await spinalAPIMiddleware.getGraph();
-      var workflow = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10)
-      );
+      const profileId = getProfileId(req);
+      var workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
-      SpinalGraphService._addNode(workflow);
-      var allProcess = await serviceTicketPersonalized.getAllProcess(
-        workflow.getId().get()
-      );
+      SpinalGraphService._addNode(workflow)
+      var allProcess = await serviceTicketPersonalized.getAllProcess(workflow.getId().get());
       for (let index = 0; index < allProcess.length; index++) {
-        const realNode = SpinalGraphService.getRealNode(
-          allProcess[index].id.get()
-        );
+        const realNode = SpinalGraphService.getRealNode(allProcess[index].id.get())
         var info: Workflow = {
           dynamicId: realNode._server_id,
           staticId: realNode.getId().get(),
           name: realNode.getName().get(),
           type: realNode.getType().get(),
-        };
+        }
         nodes.push(info);
       }
     } catch (error) {
-      console.log(error);
-      res.status(400).send('ko');
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(500).send(error.message);
     }
     res.json(nodes);
-  });
-};
+  })
+}

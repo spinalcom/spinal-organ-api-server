@@ -26,7 +26,9 @@ import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/groupContext/{id}/update:
@@ -68,13 +70,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
   app.put("/api/v1/groupContext/:id/update", async (req, res, next) => {
 
     try {
-      var groupContext: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var groupContext: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(groupContext)
       groupContext.getName().set(req.body.newContextName)
 
     } catch (error) {
-      console.error(error)
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("ko")
     }
     res.json();

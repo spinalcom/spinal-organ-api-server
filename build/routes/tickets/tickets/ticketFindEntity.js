@@ -33,6 +33,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const spinal_service_ticket_1 = require("spinal-service-ticket");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
   * @swagger
@@ -65,22 +67,35 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   */
     app.get("/api/v1/ticket/:ticketId/find_entity", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var _ticket = yield spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var _ticket = yield spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(_ticket);
-            var elementSelected = yield spinalAPIMiddleware.loadPtr(_ticket.info.elementSelected);
-            var info = {
-                dynamicId: elementSelected._server_id,
-                staticId: elementSelected.getId().get(),
-                name: elementSelected.getName().get(),
-                type: elementSelected.getType().get(),
-            };
+            // var elementSelected = await spinalAPIMiddleware.loadPtr(_ticket.info.elementSelected)
+            const parents = yield _ticket.getParents();
+            const parent = parents.find(el => el.getType().get() !== spinal_service_ticket_1.STEP_TYPE);
+            let info = {};
+            if (parent) {
+                info = {
+                    dynamicId: parent._server_id,
+                    staticId: parent.getId().get(),
+                    name: parent.getName().get(),
+                    type: parent.getType().get(),
+                };
+            }
+            // var info = {
+            //   dynamicId: elementSelected._server_id,
+            //   staticId: elementSelected.getId().get(),
+            //   name: elementSelected.getName().get(),
+            //   type: elementSelected.getType().get(),
+            // }
+            res.status(200).json(info);
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send("ko");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
-        res.json(info);
     }));
 };
 //# sourceMappingURL=ticketFindEntity.js.map

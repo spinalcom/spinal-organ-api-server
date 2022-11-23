@@ -38,6 +38,7 @@ const spinal_service_ticket_1 = require("spinal-service-ticket");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const awaitSync_1 = require("../../../utilities/awaitSync");
 const loadNode_1 = require("../../../utilities/loadNode");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -105,6 +106,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post('/api/v1/ticket/create_ticket', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         var _a, _b;
         try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
             let ticketCreated;
             let ticketInfo = {
                 name: req.body.name,
@@ -118,7 +120,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 parseInt(req.body.workflow, 10),
                 parseInt(req.body.process, 10),
             ];
-            const [node, workflowById, processById] = yield (0, loadNode_1._load)(arrayofServerId);
+            const [node, workflowById, processById] = yield (0, loadNode_1._load)(arrayofServerId, spinalAPIMiddleware, profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             if (workflowById === undefined && processById === undefined) {
@@ -209,7 +211,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             // }
         }
         catch (error) {
-            console.log(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
             res.status(400).send({ ko: error });
         }
         res.json(info);

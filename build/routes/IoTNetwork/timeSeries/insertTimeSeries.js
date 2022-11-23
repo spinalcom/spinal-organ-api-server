@@ -35,6 +35,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinalTimeSeries_1 = require("../spinalTimeSeries");
 const moment = require("moment");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -78,7 +79,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   */
     app.post("/api/v1/endpoint/:id/timeSeries/insert", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             var timeseries = yield (0, spinalTimeSeries_1.default)().getOrCreateTimeSeries(node.getId().get());
@@ -87,7 +89,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             yield timeseries.insert(newValue, date.toDate());
         }
         catch (error) {
-            console.error(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
             res.status(400).send();
         }
         res.json();

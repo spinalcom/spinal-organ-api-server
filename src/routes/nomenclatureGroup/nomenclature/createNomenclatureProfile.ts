@@ -27,9 +27,11 @@ import * as express from 'express';
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import { spinalNomenclatureService } from "spinal-env-viewer-plugin-nomenclature-service"
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/nomenclatureGroup/{contextId}/category/{categoryId}/create_group:
@@ -79,11 +81,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
   app.post("/api/v1/nomenclatureGroup/:contextId/category/:categoryId/create_group", async (req, res, next) => {
 
     try {
-
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10));
+      const profileId = getProfileId(req);
+      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
-      var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10));
+      var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(category)
 
@@ -99,7 +101,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
       }
 
     } catch (error) {
-      console.error(error)
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("ko")
     }
     res.json();

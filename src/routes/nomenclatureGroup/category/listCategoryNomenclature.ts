@@ -27,9 +27,11 @@ import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { spinalNomenclatureService } from "spinal-env-viewer-plugin-nomenclature-service"
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/nomenclatureGroup/{id}/category_list:
@@ -66,7 +68,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
     let nodes = [];
     try {
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
 
@@ -91,7 +94,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         res.status(400).send("node is not type of AttributeConfigurationGroupContext ");
       }
     } catch (error) {
-      console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("list of category is not loaded");
     }
     res.send(nodes);

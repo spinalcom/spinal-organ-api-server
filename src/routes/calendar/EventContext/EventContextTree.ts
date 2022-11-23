@@ -27,8 +27,10 @@ import * as express from 'express';
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { recTree } from '../../../utilities/recTree'
 import { ContextTree } from '../../contexts/interfacesContexts'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/eventContext/{id}/tree:
@@ -63,7 +65,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
     var contexts: ContextTree;
 
     try {
-      var context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       if (context instanceof SpinalContext) {
         contexts = {
           dynamicId: context._server_id,
@@ -76,7 +79,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
       }
     } catch (error) {
       console.error(error);
-      res.status(400).send("ko");
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(contexts);
   });

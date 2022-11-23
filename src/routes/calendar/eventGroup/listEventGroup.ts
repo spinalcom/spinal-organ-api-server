@@ -22,21 +22,15 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { SpinalEventService } from 'spinal-env-viewer-task-service';
-import { GroupEvent } from '../interfacesContextsEvents';
+import { SpinalEventService } from "spinal-env-viewer-task-service";
+import { GroupEvent } from '../interfacesContextsEvents'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/eventContext/{ContextId}/eventCategory/{CategoryId}/group_list:
@@ -81,16 +75,12 @@ module.exports = function (
     async (req, res, next) => {
       let nodes = [];
       try {
-        await spinalAPIMiddleware.getGraph();
-        var context: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.ContextId, 10)
-        );
+        const profileId = getProfileId(req);
+        var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.ContextId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(context);
 
-        var category: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.CategoryId, 10)
-        );
+        var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.CategoryId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(category);
 
@@ -126,9 +116,9 @@ module.exports = function (
         }
       } catch (error) {
         console.error(error);
-        res.status(400).send('list of category event is not loaded');
+        if (error.code && error.message) return res.status(error.code).send(error.message);
+        res.status(400).send("list of category event is not loaded");
       }
       res.send(nodes);
-    }
-  );
+    });
 };

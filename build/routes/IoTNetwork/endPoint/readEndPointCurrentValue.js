@@ -33,6 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
     * @swagger
@@ -65,14 +66,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     */
     app.get("/api/v1/endpoint/:id/read", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             var element = yield node.element.load();
             var info = { currentValue: element.currentValue.get() };
         }
         catch (error) {
-            console.log(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
             res.status(400).send("ko");
         }
         res.json(info);

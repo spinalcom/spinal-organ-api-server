@@ -35,6 +35,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_control_endpoint_service_1 = require("spinal-env-viewer-plugin-control-endpoint-service");
 const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
   * @swagger
@@ -69,7 +70,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    */
     app.get("/api/v1/node/:id/control_endpoint_list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            let room = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            let room = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
             var profils = yield spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(room.getId().get(), [spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP]);
@@ -93,8 +95,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             var allNodes = yield Promise.all(promises);
         }
         catch (error) {
-            console.error(error);
-            res.status(400).send("list of endpoints is not loaded");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            return res.status(400).send("list of endpoints is not loaded");
         }
         res.send(allNodes);
     }));

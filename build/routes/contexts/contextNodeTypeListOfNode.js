@@ -33,6 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -70,28 +71,29 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/context/:contextId/node/:nodeId/nodeTypeList', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/context/:contextId/node/:nodeId/nodeTypeList", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         var type_list;
         try {
-            var contextNode = yield spinalAPIMiddleware.load(parseInt(req.params.contextId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var contextNode = yield spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(contextNode);
             var SpinalContextNodeId = contextNode.getId().get();
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10));
+            var node = yield spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             var SpinalNodeId = node.getId().get();
-            if (contextNode instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
-                node.belongsToContext(contextNode)) {
+            if (contextNode instanceof spinal_env_viewer_graph_service_1.SpinalContext && node.belongsToContext(contextNode)) {
                 type_list = yield spinal_env_viewer_graph_service_1.SpinalGraphService.browseAndClassifyByTypeInContext(SpinalNodeId, SpinalContextNodeId);
             }
             else {
-                res.status(400).send('node not found in context');
+                res.status(400).send("node not found in context");
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send('ko');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json(type_list.types);
     }));

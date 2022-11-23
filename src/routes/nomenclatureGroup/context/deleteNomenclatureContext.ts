@@ -26,9 +26,11 @@ import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer
 import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { SpinalEventService } from "spinal-env-viewer-task-service";
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/nomenclatureGroup/{id}/delete:
@@ -56,7 +58,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
 */
   app.delete("/api/v1/nomenclatureGroup/:id/delete", async (req, res, next) => {
     try {
-      var groupContext: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var groupContext: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(groupContext)
       if (groupContext.getType().get() === "AttributeConfigurationGroupContext") {
@@ -65,8 +68,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
         res.status(400).send("node is not type of AttributeConfigurationGroupContext ");
       }
     } catch (error) {
-      console.log(error);
-      res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json();
   })

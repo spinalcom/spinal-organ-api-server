@@ -28,9 +28,11 @@ import { Floor } from '../interfacesGeoContext'
 import { SpinalNode } from 'spinal-model-graph';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/room/{id}/reference_Objects_list:
@@ -79,7 +81,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
   app.get("/api/v1/room/:id/reference_Objects_list", async (req, res, next) => {
 
     try {
-      var room: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var room: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(room)
       var bimFileId: string;
@@ -108,6 +111,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
       }
     } catch (error) {
       console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("list of reference_Objects is not loaded");
     }
 

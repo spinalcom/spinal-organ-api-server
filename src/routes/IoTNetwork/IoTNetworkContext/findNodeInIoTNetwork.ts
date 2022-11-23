@@ -27,8 +27,10 @@ import { findOneInContext } from '../../../utilities/findOneInContext';
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { IoTNetwork } from '../interfacesEndpointAndTimeSeries'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
   * @swagger
   * /api/v1/IoTNetworkContext/{IoTNetworkId}/node/{nodeId}/find:
@@ -68,14 +70,15 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
   app.get("/api/v1/IoTNetworkContext/:IoTNetworkId/node/:nodeId/find", async (req, res, next) => {
     try {
-      var IoTNetwork: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IoTNetworkId, 10));
+      const profileId = getProfileId(req);
+      var IoTNetwork: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IoTNetworkId, 10), profileId);
       var node = SpinalGraphService.getRealNode(req.params.nodeId);
 
 
       if (IoTNetwork.getType().get() === "Network" && typeof node === "undefined") {
         node = await findOneInContext(IoTNetwork, IoTNetwork, (n) => n.getId().get() === req.params.nodeId)
         if (typeof node === "undefined") {
-          return res.status(400).send("ko");
+          return res.status(404).send("node Not found");
         }
         // @ts-ignore
         SpinalGraphService._addNode(node);
@@ -90,8 +93,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         type: node.getType().get(),
       }
     } catch (error) {
-      console.log(error);
-      res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(info);
   })

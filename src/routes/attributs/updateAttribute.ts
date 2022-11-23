@@ -33,11 +33,10 @@ import { NodeAttribut, Attributs } from './interfacesAttributs';
 
 import * as express from 'express';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+import { ISpinalAPIMiddleware } from '../../interfaces';
+import { getProfileId } from "../../utilities/requestUtilities";
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/node/{idNode}/category/{idCategory}/attribut/{attributName}/update:
@@ -99,12 +98,14 @@ module.exports = function (
     '/api/v1/node/:IdNode/category/:IdCategory/attribut/:attributName/update',
     async (req, res, next) => {
       try {
+        const profileId = getProfileId(req);
+
         var nodes = [];
         let node: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.IdNode, 10)
+          parseInt(req.params.IdNode, 10), profileId
         );
         let category: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.IdCategory, 10)
+          parseInt(req.params.IdCategory, 10), profileId
         );
         let childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
         for (const children of childrens) {
@@ -135,7 +136,7 @@ module.exports = function (
           nodes.push(info);
         }
       } catch (error) {
-        console.log(error);
+        if (error.code) return res.status(error.code).send({ message: error.message });
         return res.status(400).send('ko');
       }
       res.json(nodes);

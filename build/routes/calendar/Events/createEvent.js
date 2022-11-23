@@ -35,6 +35,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service");
 const moment = require("moment");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
   * @swagger
@@ -78,18 +79,22 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   *                 type: number
   *               startDate:
   *                 type: string
+  *                 default: YYYY-MM-DD
   *               endDate:
   *                 type: string
+  *                 default: YYYY-MM-DD
   *               description:
   *                 type: string
   *               repeat:
   *                 type: boolean
   *               repeatEnd:
   *                 type: number
+  *                 default: YYYY-MM-DD
   *               count:
   *                 type: number
   *               period:
   *                 type: number
+  *                 default: day|week|month|year
   *     responses:
   *       200:
   *         description: Updated successfully
@@ -98,36 +103,60 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     */
     app.post("/api/v1/event/create", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var context = yield spinalAPIMiddleware.load(parseInt(req.body.contextId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var context = yield spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var groupe = yield spinalAPIMiddleware.load(parseInt(req.body.groupDynamicId, 10));
+            var groupe = yield spinalAPIMiddleware.load(parseInt(req.body.groupDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(groupe);
-            var node = yield spinalAPIMiddleware.load(parseInt(req.body.nodeDynamicId, 10));
+            var node = yield spinalAPIMiddleware.load(parseInt(req.body.nodeDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            var category = yield spinalAPIMiddleware.load(parseInt(req.body.categoryDynamicId, 10));
+            var category = yield spinalAPIMiddleware.load(parseInt(req.body.categoryDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext) {
-                if (context.getType().get() === "SpinalEventGroupContext") {
+                if (context.getType().get() === spinal_env_viewer_task_service_1.CONTEXT_TYPE) {
                     let eventInfo = {
                         contextId: context.getId().get(),
                         groupId: groupe.getId().get(),
                         categoryId: category.getId().get(),
                         nodeId: node.getId().get(),
-                        startDate: (moment(req.body.startDate, "DD MM YYYY HH:mm:ss", true)).toString(),
+                        startDate: (moment(new Date(req.body.startDate))).toString(),
                         description: req.body.description,
-                        endDate: (moment(req.body.endDate, "DD MM YYYY HH:mm:ss", true)).toString(),
-                        periodicity: { count: req.body.count, period: req.body.period },
+                        endDate: (moment(new Date(req.body.endDate))).toString(),
+                        periodicity: { count: req.body.count, period: spinal_env_viewer_task_service_1.Period[req.body.period] },
                         repeat: req.body.repeat,
                         name: req.body.name,
-                        creationDate: (Date.now()).toString(),
-                        repeatEnd: req.body.repeatEnd
+                        creationDate: (moment(new Date().toISOString())).toString(),
+                        repeatEnd: (moment(new Date(req.body.repeatEnd))).toString()
                     };
-                    let user = { username: "string", userId: 0 };
-                    yield spinal_env_viewer_task_service_1.SpinalEventService.createEvent(context.getId().get(), groupe.getId().get(), node.getId().get(), eventInfo, user);
+                    let user = { username: "admin", userId: 168 };
+                    let result = yield spinal_env_viewer_task_service_1.SpinalEventService.createEvent(context.getId().get(), groupe.getId().get(), node.getId().get(), eventInfo, user);
+                    if (!Array.isArray(result))
+                        result = [result];
+                    const infos = result.map(ticketCreated => {
+                        const node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(ticketCreated.id.get());
+                        return {
+                            dynamicId: node._server_id,
+                            staticId: ticketCreated.id.get(),
+                            name: ticketCreated.name.get(),
+                            type: ticketCreated.type.get(),
+                            groupeId: ticketCreated.groupId.get(),
+                            categoryId: ticketCreated.categoryId.get(),
+                            nodeId: ticketCreated.nodeId.get(),
+                            startDate: ticketCreated.startDate.get(),
+                            endDate: ticketCreated.endDate.get(),
+                            creationDate: ticketCreated.creationDate.get(),
+                            user: {
+                                username: ticketCreated.user.username.get(),
+                                email: ticketCreated.user.email == undefined ? undefined : ticketCreated.user.email.get(),
+                                gsm: ticketCreated.user.gsm == undefined ? undefined : ticketCreated.user.gsm.get()
+                            }
+                        };
+                    });
+                    return res.status(200).json(infos);
                 }
                 else {
                     return res.status(400).send("this context is not a SpinalEventGroupContext");
@@ -138,8 +167,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send("ko");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json();
     }));

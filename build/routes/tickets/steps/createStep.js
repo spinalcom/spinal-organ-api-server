@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -79,42 +80,40 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Add not Successfully
      */
-    app.post('/api/v1/workflow/:id/create_step', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post("/api/v1/workflow/:id/create_step", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
             yield spinalAPIMiddleware.getGraph();
-            var workflow = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            yield spinalAPIMiddleware.getGraph();
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var workflow = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(workflow);
-            var process = yield spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10));
+            var process = yield spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(process);
-            var allSteps = yield spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(process.getId().get(), ['SpinalSystemServiceTicketHasStep']);
+            var allSteps = yield spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(process.getId().get(), ["SpinalSystemServiceTicketHasStep"]);
             for (let index = 0; index < allSteps.length; index++) {
                 const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(allSteps[index].id.get());
-                if (realNode.getName().get() === req.body.name ||
-                    req.body.name === 'string') {
-                    return res
-                        .status(400)
-                        .send('the name of step already exists or invalid name string');
+                if (realNode.getName().get() === req.body.name || req.body.name === "string") {
+                    return res.status(400).send("the name of step already exists or invalid name string");
                 }
             }
             if (workflow instanceof spinal_env_viewer_graph_service_1.SpinalContext) {
-                if (workflow.getType().get() === 'SpinalSystemServiceTicket') {
+                if (workflow.getType().get() === "SpinalSystemServiceTicket") {
                     spinal_service_ticket_1.serviceTicketPersonalized.addStep(process.getId().get(), workflow.getId().get(), req.body.name, req.body.color, req.body.order);
                 }
                 else {
-                    return res
-                        .status(400)
-                        .send('this context is not a SpinalSystemServiceTicket');
+                    return res.status(400).send("this context is not a SpinalSystemServiceTicket");
                 }
             }
             else {
-                return res.status(400).send('node not found in context');
+                return res.status(400).send("node not found in context");
             }
         }
         catch (error) {
-            console.log(error);
-            return res.status(400).send('ko');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            return res.status(500).send(error.message);
         }
         res.json();
     }));

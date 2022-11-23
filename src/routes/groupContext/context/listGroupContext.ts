@@ -27,8 +27,10 @@ import * as express from 'express';
 import { Context } from '../interfacesGroupContexts'
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from 'src/interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/groupContext/list:
@@ -57,7 +59,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
     let nodes = [];
     try {
-      var groupContexts = await groupManagerService.getGroupContexts();
+      const profilId = getProfileId(req);
+      const graph = await spinalAPIMiddleware.getProfileGraph(profilId);
+      var groupContexts = await groupManagerService.getGroupContexts(undefined, graph);
       for (let index = 0; index < groupContexts.length; index++) {
         var realNode = SpinalGraphService.getRealNode(groupContexts[index].id)
         let info: Context = {
@@ -69,7 +73,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         nodes.push(info)
       }
     } catch (error) {
-      console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+
       res.status(400).send("list of group contexts is not loaded");
     }
 

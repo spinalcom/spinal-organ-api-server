@@ -22,21 +22,15 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { SpinalEventService } from 'spinal-env-viewer-task-service';
-import { Event } from '../calendar/interfacesContextsEvents';
+import { SpinalEventService } from "spinal-env-viewer-task-service";
+import { Event } from '../calendar/interfacesContextsEvents'
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/node/{id}/event_list:
@@ -68,39 +62,42 @@ module.exports = function (
    *       400:
    *         description: Bad request
    */
-  app.get('/api/v1/node/:id/event_list', async (req, res, next) => {
+  app.get("/api/v1/node/:id/event_list", async (req, res, next) => {
     try {
       await spinalAPIMiddleware.getGraph();
+      const profileId = getProfileId(req);
       var nodes = [];
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
-      SpinalGraphService._addNode(node);
-      var listEvents = await SpinalEventService.getEvents(node.getId().get());
+      SpinalGraphService._addNode(node)
+      var listEvents = await SpinalEventService.getEvents(node.getId().get())
 
       for (const child of listEvents) {
         // @ts-ignore
-        const _child = SpinalGraphService.getRealNode(child.id.get());
-        if (_child.getType().get() === 'SpinalEvent') {
+        const _child = SpinalGraphService.getRealNode(child.id.get())
+        if (_child.getType().get() === "SpinalEvent") {
           let info = {
             dynamicId: _child._server_id,
-            staticId: _child.getId().get(),
-            name: _child.getName().get(),
-            type: _child.getType().get(),
-            groupeID: _child.info.groupId.get(),
-            categoryID: child.categoryId.get(),
-            nodeId: _child.info.nodeId.get(),
-            repeat: _child.info.repeat.get(),
-            description: _child.info.description.get(),
-            startDate: _child.info.startDate.get(),
-            endDate: _child.info.endDate.get(),
+            staticId: _child.getId()?.get(),
+            name: _child.getName()?.get(),
+            type: _child.getType()?.get(),
+            groupeID: _child.info.groupId?.get(),
+            categoryID: child.categoryId?.get(),
+            nodeId: _child.info.nodeId?.get(),
+            repeat: _child.info.repeat?.get(),
+            description: _child.info.description?.get(),
+            startDate: _child.info.startDate?.get(),
+            endDate: _child.info.endDate?.get(),
           };
           nodes.push(info);
         }
       }
+
     } catch (error) {
-      console.log(error);
-      res.status(400).send('ko');
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(nodes);
-  });
-};
+  })
+}

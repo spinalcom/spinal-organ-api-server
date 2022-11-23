@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_group_manager_service_1 = require("spinal-env-viewer-plugin-group-manager-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -66,14 +67,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/endPointsGroup/:id/category_list', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/endPointsGroup/:id/category_list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         let nodes = [];
         try {
-            yield spinalAPIMiddleware.getGraph();
-            var context = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var context = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            if (context.getType().get() === 'BmsEndpointGroupContext') {
+            if (context.getType().get() === "BmsEndpointGroupContext") {
                 var listCategories = yield spinal_env_viewer_plugin_group_manager_service_1.default.getCategories(context.getId().get());
                 for (const category of listCategories) {
                     // @ts-ignore
@@ -83,18 +84,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         staticId: realNode.getId().get(),
                         name: realNode.getName().get(),
                         type: realNode.getType().get(),
-                        icon: category.icon.get(),
+                        icon: category.icon.get()
                     };
                     nodes.push(info);
                 }
             }
             else {
-                res.status(400).send('node is not type of BmsEndpointGroupContext ');
+                res.status(400).send("node is not type of BmsEndpointGroupContext ");
             }
         }
         catch (error) {
             console.error(error);
-            res.status(400).send('list of category is not loaded');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(400).send("list of category is not loaded");
         }
         res.send(nodes);
     }));

@@ -27,7 +27,9 @@ import * as express from 'express';
 import { childrensNode, parentsNode } from '../../utilities/corseChildrenAndParentNode'
 import { Node } from './interfacesNodes'
 import { SpinalNode } from 'spinal-model-graph';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
  * @swagger
@@ -61,8 +63,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
   app.get("/api/v1/node/:id/read", async (req, res, next) => {
     try {
-
-      var node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       var childrens_list = childrensNode(node);
       var parents_list = await parentsNode(node)
       var info: Node = {
@@ -74,8 +76,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         parent_relation_list: parents_list
       }
     } catch (error) {
-      console.log(error);
-      res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(info);
   });

@@ -27,7 +27,9 @@ import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-servi
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { EndPointNodeAttribut } from '../interfacesEndpointAndTimeSeries'
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+import { getProfileId } from "../../../utilities/requestUtilities";
+import { ISpinalAPIMiddleware } from "../../../interfaces";
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/endpoint/{id}/attributsList:
@@ -62,8 +64,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
     let nodes = [];
 
     try {
-
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(node);
       let childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
@@ -80,8 +82,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         nodes.push(info)
       }
     } catch (error) {
-      console.log(error);
-      return res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(500).send(error.message);
     }
 
     res.json(nodes);

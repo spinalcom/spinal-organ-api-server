@@ -33,6 +33,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
     * @swagger
@@ -68,8 +69,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     */
     app.delete("/api/v1/workflow/:workflowId/process/:processId/delete_process", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            let workflow = yield spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10));
-            var process = yield spinalAPIMiddleware.load(parseInt(req.params.processId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            let workflow = yield spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+            var process = yield spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(process);
             if (workflow instanceof spinal_env_viewer_graph_service_1.SpinalContext && process.belongsToContext(workflow)) {
@@ -85,8 +87,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send("ko");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json();
     }));

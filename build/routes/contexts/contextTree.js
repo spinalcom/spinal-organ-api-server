@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const recTree_1 = require("../../utilities/recTree");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -44,7 +45,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/context/:id/tree", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         var contexts;
         try {
-            var context = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var context = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext) {
                 contexts = {
                     dynamicId: context._server_id,
@@ -58,7 +60,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
         catch (error) {
             console.error(error);
-            res.status(400).send("ko");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json(contexts);
     }));

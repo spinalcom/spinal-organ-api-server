@@ -1,2 +1,3 @@
 import { SpinalNode } from 'spinal-model-graph';
-export declare function _load(arrayofServerId: any): Promise<SpinalNode<any>[]>;
+import { ISpinalAPIMiddleware } from 'src/interfaces';
+export declare function _load(arrayofServerId: any, spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: any): Promise<SpinalNode<any>[]>;

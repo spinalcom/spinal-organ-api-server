@@ -51,6 +51,7 @@ import {
   TRelationMap,
   visitNodesWithTypeRelation,
 } from '../../utilities/visitNodesWithTypeRelation';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
 const all_GeoType: string[] = GEOGRAPHIC_TYPES_ORDER.concat(CONTEXT_TYPE);
 /**
@@ -142,7 +143,7 @@ function errorHandler(res: ViweInfoRes, error: EError) {
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: SpinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   async function getRootNodes(
     dynIds: number | number[],

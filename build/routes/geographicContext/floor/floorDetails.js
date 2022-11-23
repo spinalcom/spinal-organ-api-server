@@ -33,6 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -63,15 +64,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/floor/:id/floor_details', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/floor/:id/floor_details", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var floor = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
-            var rooms = yield floor.getChildren('hasGeographicRoom');
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var floor = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            var rooms = yield floor.getChildren("hasGeographicRoom");
             let sommes = 0;
             let _bimObjects = [];
             var bimFileId;
             for (const room of rooms) {
-                var bimObjects = yield room.getChildren('hasBimObject');
+                var bimObjects = yield room.getChildren("hasBimObject");
                 for (const bimObject of bimObjects) {
                     bimFileId = bimObject.info.bimFileId.get();
                     const infoBimObject = {
@@ -81,16 +83,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         version: bimObject.info.version.get(),
                         externalId: bimObject.info.externalId.get(),
                         dbid: bimObject.info.dbid.get(),
-                        bimFileId: bimObject.info.bimFileId.get(),
+                        bimFileId: bimObject.info.bimFileId.get()
                     };
                     _bimObjects.push(infoBimObject);
                 }
                 let categories = yield room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
                 for (const child of categories) {
-                    if (child.getName().get() === 'Spatial') {
+                    if (child.getName().get() === "Spatial") {
                         let attributs = yield child.element.load();
                         for (const attribut of attributs.get()) {
-                            if (attribut.label === 'area') {
+                            if (attribut.label === "area") {
                                 sommes = sommes + attribut.value;
                             }
                         }
@@ -99,12 +101,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
             var info = {
                 area: sommes,
-                _bimObjects: _bimObjects,
+                _bimObjects: _bimObjects
             };
         }
         catch (error) {
             console.error(error);
-            res.status(400).send('list of floor is not loaded');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(400).send("list of floor is not loaded");
         }
         res.send(info);
     }));

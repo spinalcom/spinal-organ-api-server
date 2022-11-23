@@ -27,9 +27,11 @@ import * as express from 'express';
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import { spinalNomenclatureService } from "spinal-env-viewer-plugin-nomenclature-service"
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/nomenclatureGroup/{id}/update:
@@ -71,12 +73,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
   app.put("/api/v1/nomenclatureGroup/:id/update", async (req, res, next) => {
 
     try {
-      var groupContext: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var groupContext: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(groupContext)
       if (groupContext.getType().get() === "AttributeConfigurationGroupContext") {
         var contextUpdated = await spinalNomenclatureService.updateContext(groupContext.getId().get(), req.body.newNomenclatureContextName)
-        console.log(contextUpdated);
         var info = {
           dynamicId: contextUpdated._server_id,
           staticId: contextUpdated.getId().get(),
@@ -87,7 +89,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
         res.status(400).send("node is not type of AttributeConfigurationGroupContext ");
       }
     } catch (error) {
-      console.error(error)
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("ko")
     }
     res.json(info);

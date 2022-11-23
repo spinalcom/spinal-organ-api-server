@@ -27,7 +27,9 @@ import * as express from 'express';
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { IoTNetworkTree } from '../interfacesEndpointAndTimeSeries'
 import { recTree } from '../../../utilities/recTree'
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
   * @swagger
@@ -63,7 +65,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
     var IoTNetworks: IoTNetworkTree;
 
     try {
-      var IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       if (IoTNetwork instanceof SpinalContext) {
         IoTNetworks = {
           dynamicId: IoTNetwork._server_id,
@@ -74,8 +77,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         };
       }
     } catch (error) {
-      console.error(error);
-      res.status(400).send("ko");
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+
+      res.status(500).send(error.message);
     }
     res.json(IoTNetworks);
   });

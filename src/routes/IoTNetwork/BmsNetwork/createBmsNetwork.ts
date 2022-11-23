@@ -24,18 +24,17 @@
 
 import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { NetworkService, ConfigService } from 'spinal-model-bmsnetwork';
-import getInstance from '../networkService';
-import {
-  SpinalContext,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { NetworkService, ConfigService } from 'spinal-model-bmsnetwork'
+import getInstance from "../networkService";
+import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: SpinalAPIMiddleware
-) {
+
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
+
   /**
    * @swagger
    * /api/v1/Network/create:
@@ -70,29 +69,30 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.post('/api/v1/Network/create', async (req, res, next) => {
+
+
+  app.post("/api/v1/Network/create", async (req, res, next) => {
+
     try {
-      var context = await spinalAPIMiddleware.load(
-        parseInt(req.body.IoTNetworkContext_DynamicId)
-      );
+      const profileId = getProfileId(req);
+      var context = await spinalAPIMiddleware.load(parseInt(req.body.IoTNetworkContext_DynamicId), profileId)
       // @ts-ignore
       SpinalGraphService._addNode(context);
 
       let configService: ConfigService = {
         contextName: context.getName().get(),
-        contextType: 'IoTNetwork',
+        contextType: "IoTNetwork",
         networkName: req.body.NetworkName,
-        networkType: req.body.NetworkTypeName,
-      };
-      getInstance().init(
-        await spinalAPIMiddleware.getGraph(),
-        configService,
-        true
-      );
+        networkType: req.body.NetworkTypeName
+      }
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId)
+      getInstance().init(graph, configService, true);
     } catch (error) {
-      console.error(error);
-      res.status(400).send();
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+
+      res.status(400).send()
     }
     res.json();
-  });
-};
+  })
+
+}

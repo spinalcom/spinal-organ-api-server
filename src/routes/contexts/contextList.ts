@@ -24,12 +24,12 @@
 
 import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { Context } from './interfacesContexts';
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+import { Context } from './interfacesContexts'
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
+
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/context/list:
@@ -54,15 +54,16 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get('/api/v1/context/list', async (req, res, next) => {
+  app.get("/api/v1/context/list", async (req, res, next) => {
+
     let nodes = [];
     try {
-      var graph = await spinalAPIMiddleware.getGraph();
-      if (graph === undefined) {
-        res.status(400).send('graph is not loaded');
-      }
+      const profileId = getProfileId(req);
+      var graph = await spinalAPIMiddleware.getProfileGraph(profileId)
+
       var relationNames = graph.getRelationNames();
       var childrens = await graph.getChildren(relationNames);
+
       for (const child of childrens) {
         let info: Context = {
           dynamicId: child._server_id,
@@ -75,7 +76,8 @@ module.exports = function (
       res.send(nodes);
     } catch (error) {
       console.error(error);
-      res.status(400).send('list of contexts is not loaded');
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(400).send("list of contexts is not loaded");
     }
   });
 };

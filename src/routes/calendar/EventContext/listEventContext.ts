@@ -21,21 +21,16 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { SpinalEventService } from 'spinal-env-viewer-task-service';
-import { ContextEvent } from '../interfacesContextsEvents';
+import { SpinalEventService, CONTEXT_TYPE } from "spinal-env-viewer-task-service";
+import { ContextEvent } from '../interfacesContextsEvents'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/eventContext/list:
@@ -61,14 +56,18 @@ module.exports = function (
    */
 
   app.get('/api/v1/eventContext/list', async (req, res, next) => {
-    let nodes = [];
     try {
-      await spinalAPIMiddleware.getGraph();
-      var listContextEvents = await SpinalEventService.getEventContexts();
-      for (const child of listContextEvents) {
+      let nodes = [];
+      const profileId = getProfileId(req);
+      const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
+
+      const contexts = userGraph ? await userGraph.getChildren("hasContext") : []
+      var listContextEvents = contexts.filter(context => context.getType().get() === CONTEXT_TYPE);
+
+      for (const _child of listContextEvents) {
         // @ts-ignore
-        const _child = SpinalGraphService.getRealNode(child.id.get());
-        if (_child.getType().get() === 'SpinalEventGroupContext') {
+        // const _child = SpinalGraphService.getRealNode(child.id.get())
+        if (_child.getType().get() === CONTEXT_TYPE) {
           let info: ContextEvent = {
             dynamicId: _child._server_id,
             staticId: _child.getId().get(),
@@ -78,10 +77,12 @@ module.exports = function (
           nodes.push(info);
         }
       }
+
+      res.send(nodes);
     } catch (error) {
       console.error(error);
-      res.status(400).send('list of contexts events is not loaded');
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(400).send("list of contexts events is not loaded");
     }
-    res.send(nodes);
   });
 };

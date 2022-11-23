@@ -35,6 +35,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service");
 const dateFunctions_1 = require("../../../utilities/dateFunctions");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -82,79 +83,77 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.post('/api/v1/ticket/:id/event_list', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post("/api/v1/ticket/:id/event_list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+        var _a, _b, _c, _d, _e;
         try {
             yield spinalAPIMiddleware.getGraph();
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
             //ticket node
             var nodes = [];
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            if (node.getType().get() === 'SpinalSystemServiceTicketTypeTicket') {
-                if (req.body.period === 'all') {
-                    let listEvents = yield spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId().get());
+            if (((_a = node.getType()) === null || _a === void 0 ? void 0 : _a.get()) === "SpinalSystemServiceTicketTypeTicket") {
+                if (req.body.period === "all") {
+                    let listEvents = yield spinal_env_viewer_task_service_1.SpinalEventService.getEvents((_b = node.getId()) === null || _b === void 0 ? void 0 : _b.get());
                     ListEvents(listEvents);
                 }
-                else if (req.body.period === 'today') {
+                else if (req.body.period === "today") {
                     var start = new Date();
                     start.setHours(2, 0, 0, 0);
                     var end = new Date();
                     end.setHours(25, 59, 59, 999);
-                    let listEvents = yield spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId().get(), start, end);
+                    let listEvents = yield spinal_env_viewer_task_service_1.SpinalEventService.getEvents((_c = node.getId()) === null || _c === void 0 ? void 0 : _c.get(), start, end);
                     ListEvents(listEvents);
                 }
-                else if (req.body.period === undefined ||
-                    req.body.period === 'week') {
-                    var curr = new Date(); // get current date
-                    var first = curr.getDate() - curr.getDay() + 1; // First day is the day of the month - the day of the week
+                else if (req.body.period === undefined || req.body.period === "week") {
+                    var curr = new Date; // get current date
+                    var first = (curr.getDate() - curr.getDay()) + 1; // First day is the day of the month - the day of the week
                     var last = first + 6; // last day is the first day + 6
                     var firstday = new Date(curr.setDate(first));
                     firstday.setHours(2, 0, 0, 0).toString();
                     var lastday = new Date(curr.setDate(last));
                     lastday.setHours(25, 59, 59, 999).toString();
-                    let listEvents = yield spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId().get(), firstday, lastday);
+                    let listEvents = yield spinal_env_viewer_task_service_1.SpinalEventService.getEvents((_d = node.getId()) === null || _d === void 0 ? void 0 : _d.get(), firstday, lastday);
                     ListEvents(listEvents);
                 }
-                else if (req.body.period === 'dateInterval') {
+                else if (req.body.period === "dateInterval") {
                     if (!(0, dateFunctions_1.verifDate)(req.body.startDate) || !(0, dateFunctions_1.verifDate)(req.body.endDate)) {
-                        res.status(400).send('invalid Date');
+                        res.status(400).send("invalid Date");
                     }
                     else {
                         const start = (0, dateFunctions_1.sendDate)(req.body.startDate);
                         const end = (0, dateFunctions_1.sendDate)(req.body.endDate);
-                        let listEvents = yield spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId().get(), start.toDate(), end.toDate());
+                        let listEvents = yield spinal_env_viewer_task_service_1.SpinalEventService.getEvents((_e = node.getId()) === null || _e === void 0 ? void 0 : _e.get(), start.toDate(), end.toDate());
                         ListEvents(listEvents);
                     }
                 }
             }
             else {
-                res.status(400).send('the node is not of type Ticket');
+                res.status(400).send("the node is not of type Ticket");
             }
             function ListEvents(array) {
+                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
                 for (const child of array) {
                     // @ts-ignore
-                    const _child = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(child.id.get());
-                    if (_child.getType().get() === 'SpinalEvent') {
+                    const _child = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode((_a = child.id) === null || _a === void 0 ? void 0 : _a.get());
+                    if (((_b = _child.getType()) === null || _b === void 0 ? void 0 : _b.get()) === "SpinalEvent") {
                         let info = {
                             dynamicId: _child._server_id,
-                            staticId: _child.getId().get(),
-                            name: _child.getName().get(),
-                            type: _child.getType().get(),
-                            groupeID: _child.info.groupId.get(),
-                            categoryID: child.categoryId.get(),
-                            nodeId: _child.info.nodeId.get(),
-                            startDate: _child.info.startDate.get(),
-                            endDate: _child.info.endDate.get(),
-                            creationDate: _child.info.creationDate.get(),
+                            staticId: (_c = _child.getId()) === null || _c === void 0 ? void 0 : _c.get(),
+                            name: (_d = _child.getName()) === null || _d === void 0 ? void 0 : _d.get(),
+                            type: (_e = _child.getType()) === null || _e === void 0 ? void 0 : _e.get(),
+                            groupeID: (_f = _child.info.groupId) === null || _f === void 0 ? void 0 : _f.get(),
+                            categoryID: (_g = child.categoryId) === null || _g === void 0 ? void 0 : _g.get(),
+                            nodeId: (_h = _child.info.nodeId) === null || _h === void 0 ? void 0 : _h.get(),
+                            startDate: (_j = _child.info.startDate) === null || _j === void 0 ? void 0 : _j.get(),
+                            endDate: (_k = _child.info.endDate) === null || _k === void 0 ? void 0 : _k.get(),
+                            creationDate: (_l = _child.info.creationDate) === null || _l === void 0 ? void 0 : _l.get(),
                             user: {
-                                username: _child.info.user.username.get(),
-                                email: _child.info.user.email == undefined
-                                    ? undefined
-                                    : _child.info.user.email.get(),
-                                gsm: _child.info.user.gsm == undefined
-                                    ? undefined
-                                    : _child.info.user.gsm.get(),
-                            },
+                                username: (_m = _child.info.user.username) === null || _m === void 0 ? void 0 : _m.get(),
+                                email: _child.info.user.email == undefined ? undefined : (_o = _child.info.user.email) === null || _o === void 0 ? void 0 : _o.get(),
+                                gsm: _child.info.user.gsm == undefined ? undefined : (_p = _child.info.user.gsm) === null || _p === void 0 ? void 0 : _p.get()
+                            }
                         };
                         nodes.push(info);
                     }
@@ -162,8 +161,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send('ko');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json(nodes);
     }));

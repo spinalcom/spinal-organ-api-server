@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const recTree_1 = require("../../utilities/recTree");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -59,8 +60,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/geographicContext/space", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         var contexts;
         try {
-            yield spinalAPIMiddleware.getGraph();
-            let geographicContexts = yield spinal_env_viewer_graph_service_1.SpinalGraphService.getContextWithType("geographicContext");
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const userGraph = yield spinalAPIMiddleware.getProfileGraph(profileId);
+            const temp_contexts = yield userGraph.getChildren("hasContext");
+            let geographicContexts = temp_contexts.filter(el => el.getType().get() === "geographicContext");
             let geographicContext = geographicContexts[0];
             if (geographicContext instanceof spinal_env_viewer_graph_service_1.SpinalContext) {
                 contexts = {
@@ -75,7 +78,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
         catch (error) {
             console.error(error);
-            res.status(400).send("ko");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json(contexts);
     }));

@@ -36,6 +36,7 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const Constants_1 = require("spinal-service-ticket/dist/Constants");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -69,7 +70,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get('/api/v1/ticket/:ticketId/read_details', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
             yield spinalAPIMiddleware.getGraph();
-            var _ticket = yield spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var _ticket = yield spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(_ticket);
             //Step
@@ -222,7 +224,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             };
         }
         catch (error) {
-            console.log(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
             res.status(400).send('ko');
         }
         res.json(info);

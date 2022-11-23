@@ -9,31 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-/*
- * Copyright 2020 SpinalCom - www.spinalcom.com
- *
- * This file is part of SpinalCore.
- *
- * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
- * carefully.
- *
- * This Agreement is a legally binding contract between
- * the Licensee (as defined below) and SpinalCom that
- * sets forth the terms and conditions that govern your
- * use of the Program. By installing and/or using the
- * Program, you agree to abide by all the terms and
- * conditions stated or referenced herein.
- *
- * If you do not agree to abide by these terms and
- * conditions, do not demonstrate your acceptance and do
- * not install or use the Program.
- * You should have received a copy of the license along
- * with this file. If not, see
- * <http://resources.spinalcom.com/licenses.pdf>.
- */
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -59,14 +36,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Bad request
      */
     app.get('/api/v1/eventContext/list', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-        let nodes = [];
         try {
-            yield spinalAPIMiddleware.getGraph();
-            var listContextEvents = yield spinal_env_viewer_task_service_1.SpinalEventService.getEventContexts();
-            for (const child of listContextEvents) {
+            let nodes = [];
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const userGraph = yield spinalAPIMiddleware.getProfileGraph(profileId);
+            const contexts = userGraph ? yield userGraph.getChildren("hasContext") : [];
+            var listContextEvents = contexts.filter(context => context.getType().get() === spinal_env_viewer_task_service_1.CONTEXT_TYPE);
+            for (const _child of listContextEvents) {
                 // @ts-ignore
-                const _child = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(child.id.get());
-                if (_child.getType().get() === 'SpinalEventGroupContext') {
+                // const _child = SpinalGraphService.getRealNode(child.id.get())
+                if (_child.getType().get() === spinal_env_viewer_task_service_1.CONTEXT_TYPE) {
                     let info = {
                         dynamicId: _child._server_id,
                         staticId: _child.getId().get(),
@@ -76,12 +55,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     nodes.push(info);
                 }
             }
+            res.send(nodes);
         }
         catch (error) {
             console.error(error);
-            res.status(400).send('list of contexts events is not loaded');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(400).send("list of contexts events is not loaded");
         }
-        res.send(nodes);
     }));
 };
 //# sourceMappingURL=listEventContext.js.map

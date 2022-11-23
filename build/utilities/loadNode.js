@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports._load = void 0;
-const spinalAPIMiddleware_1 = require("../app/spinalAPIMiddleware");
-function _load(arrayofServerId) {
+function _load(arrayofServerId, spinalAPIMiddleware, profileId) {
     return Promise.all(arrayofServerId.map(item => {
-        return spinalAPIMiddleware_1.default.getInstance().load(item).catch(() => undefined);
+        return spinalAPIMiddleware.load(item, profileId).catch(() => undefined);
     }));
 }
 exports._load = _load;

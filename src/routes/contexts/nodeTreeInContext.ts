@@ -24,19 +24,13 @@
 
 import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import {
-  SpinalContext,
-  SpinalGraphService,
-  SpinalNode,
-} from 'spinal-env-viewer-graph-service';
-import { ContextTree } from './interfacesContexts';
-import { recTree } from '../../utilities/recTree';
+import { SpinalContext, SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service';
+import { ContextTree } from './interfacesContexts'
+import { recTree } from '../../utilities/recTree'
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/context/{idContext}/node/{idNode}/tree:
@@ -74,43 +68,35 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get(
-    '/api/v1/context/:idContext/node/:idNode/tree',
-    async (req, res, next) => {
-      let tree: ContextTree;
+  app.get("/api/v1/context/:idContext/node/:idNode/tree", async (req, res, next) => {
 
-      try {
-        var context = await spinalAPIMiddleware.load(
-          parseInt(req.params.idContext, 10)
-        );
-        var node = await spinalAPIMiddleware.load(
-          parseInt(req.params.idNode, 10)
-        );
-        // @ts-ignore
-        SpinalGraphService._addNode(context);
-        // @ts-ignore
-        SpinalGraphService._addNode(node);
+    let tree: ContextTree;
 
-        if (
-          context instanceof SpinalContext &&
-          node instanceof SpinalNode &&
-          node.belongsToContext(context)
-        ) {
-          tree = {
-            dynamicId: node._server_id,
-            staticId: node.getId().get(),
-            name: node.getName().get(),
-            type: node.getType().get(),
-            children: await recTree(node, context),
-          };
-        } else {
-          res.status(400).send('node not found in context');
-        }
-      } catch (error) {
-        console.log(error);
-        res.status(400).send('ko');
+    try {
+      const profileId = getProfileId(req);
+      var context = await spinalAPIMiddleware.load(parseInt(req.params.idContext, 10), profileId);
+      var node = await spinalAPIMiddleware.load(parseInt(req.params.idNode, 10), profileId);
+      // @ts-ignore
+      SpinalGraphService._addNode(context);
+      // @ts-ignore
+      SpinalGraphService._addNode(node);
+
+      if (context instanceof SpinalContext && node instanceof SpinalNode && node.belongsToContext(context)) {
+        tree = {
+          dynamicId: node._server_id,
+          staticId: node.getId().get(),
+          name: node.getName().get(),
+          type: node.getType().get(),
+          children: await recTree(node, context),
+        };
+      } else {
+        res.status(400).send('node not found in context');
       }
-      res.json(tree);
+    } catch (error) {
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
-  );
+    res.json(tree);
+  });
 };

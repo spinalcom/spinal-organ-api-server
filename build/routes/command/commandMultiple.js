@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const upstaeControlEndpoint_1 = require("./../../utilities/upstaeControlEndpoint");
 const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -82,12 +83,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      */
     app.post('/api/v1/node/command', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
             var arrayList = [];
             const nodetypes = ["geographicRoom", "BIMObject", "BIMObjectGroup", "geographicRoomGroup", "geographicFloor"];
             const controlPointTypes = ["COMMAND_BLIND", "COMMAND_LIGHT", "COMMAND_TEMP"];
             const nodes = req.body.propertyReference;
             for (const node of nodes) {
-                const _node = yield spinalAPIMiddleware.load(parseInt(node.dynamicId, 10));
+                const _node = yield spinalAPIMiddleware.load(parseInt(node.dynamicId, 10), profileId);
                 if (nodetypes.includes(_node.getType().get())) {
                     for (const command of node.commands) {
                         if (controlPointTypes.includes(command.key)) {
@@ -114,7 +116,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.error(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
             res.status(400).send("one of node is not loaded");
         }
         res.send("Endpoint updated");

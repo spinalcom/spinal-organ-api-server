@@ -26,8 +26,10 @@ import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-ser
 import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
 * @swagger
@@ -63,7 +65,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
   app.delete("/api/v1/node/:nodeId/categoryByName/:categoryName/delete", async (req, res, next) => {
 
     try {
-      let node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10))
+      const profileId = getProfileId(req);
+      let node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId)
       const result = await serviceDocumentation._categoryExist(node, req.params.categoryName);
       if (result === undefined) {
         res.status(400).send("category not found in node")
@@ -71,8 +74,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         result.removeFromGraph();
       }
     } catch (error) {
-      console.log(error);
-      res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json();
   })

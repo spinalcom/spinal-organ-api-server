@@ -35,12 +35,13 @@ import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-ser
 import { ServiceUser } from 'spinal-service-user';
 var http = require('http');
 var fs = require('fs');
-import config from '../../app/config';
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger
@@ -71,7 +72,8 @@ module.exports = function (
   app.use('/api/v1/node/:id/download_file', async (req, res, next) => {
     try {
       await spinalAPIMiddleware.getGraph();
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       const host = spinalAPIMiddleware.config.spinalConnector.host;
       const port = spinalAPIMiddleware.config.spinalConnector.port;
       var p = await down(node, host, port);

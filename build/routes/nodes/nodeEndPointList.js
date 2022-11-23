@@ -33,6 +33,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
+const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -65,15 +67,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/node/:id/endpoint_list', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/node/:id/endpoint_list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         let nodes = [];
         try {
-            spinalAPIMiddleware.getGraph();
-            let node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            let node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            var endpoints = yield node.getChildren(["hasEndPoint", "hasBmsEndpoint"]);
-            console.log(endpoints);
+            var endpoints = yield node.getChildren(["hasEndPoint", spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName]);
             for (const endpoint of endpoints) {
                 var element = yield endpoint.element.load();
                 var currentValue = element.currentValue.get();
@@ -88,8 +89,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.error(error);
-            res.status(400).send('list of endpoints is not loaded');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(400).send("list of endpoints is not loaded");
         }
         res.send(nodes);
     }));

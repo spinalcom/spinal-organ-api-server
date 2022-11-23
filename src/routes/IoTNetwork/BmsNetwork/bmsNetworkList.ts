@@ -24,12 +24,10 @@
 
 import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { IoTNetwork } from '../interfacesEndpointAndTimeSeries';
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: SpinalAPIMiddleware
-) {
+import { IoTNetwork } from "../interfacesEndpointAndTimeSeries";
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/Network/list:
@@ -54,35 +52,39 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get('/api/v1/Network/list', async (req, res, next) => {
+
+
+  app.get("/api/v1/Network/list", async (req, res, next) => {
+
     let nodes = [];
     let contextNetwork;
     try {
-      const graph = await spinalAPIMiddleware.getGraph();
-
-      var childrens = await graph.getChildren('hasContext');
+      const profileId = getProfileId(req);
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId)
+      var childrens = await graph.getChildren("hasContext");
 
       for (const child of childrens) {
-        if (child.getType().get() === 'Network') {
+        if (child.getType().get() === "Network") {
           contextNetwork = child;
           break;
         }
       }
-      var networks = await contextNetwork.getChildrenInContext(contextNetwork);
+      var networks = await contextNetwork.getChildrenInContext(contextNetwork)
 
       for (const network of networks) {
         let info: IoTNetwork = {
           dynamicId: network._server_id,
           staticId: network.getId().get(),
           name: network.getName().get(),
-          type: network.getType().get(),
+          type: network.getType().get()
         };
         nodes.push(info);
       }
+
     } catch (error) {
-      console.error(error);
-      res.status(400).send('list of networks is not loaded');
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(400).send("list of networks is not loaded");
     }
     res.send(nodes);
   });
-};
+}

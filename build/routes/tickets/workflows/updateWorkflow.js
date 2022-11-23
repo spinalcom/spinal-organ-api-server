@@ -32,6 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -68,29 +69,28 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.put('/api/v1/workflow/:id/update', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.put("/api/v1/workflow/:id/update", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var workflow = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
-            const graph = yield spinalAPIMiddleware.getGraph();
-            var childrens = yield graph.getChildren('hasContext');
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var workflow = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const graph = yield spinalAPIMiddleware.getProfileGraph(profileId);
+            var childrens = yield graph.getChildren("hasContext");
             for (const child of childrens) {
                 if (child.getName().get() === req.body.newNameWorkflow) {
-                    return res.status(400).send('the name context already exists');
+                    return res.status(400).send("the name context already exists");
                 }
             }
-            if (workflow.getType().get() === 'SpinalSystemServiceTicket' &&
-                req.body.nameWorkflow !== 'string') {
+            if (workflow.getType().get() === "SpinalSystemServiceTicket" && req.body.nameWorkflow !== "string") {
                 workflow.info.name.set(req.body.newNameWorkflow);
             }
             else {
-                return res
-                    .status(400)
-                    .send('this context is not a SpinalSystemServiceTicket Or string is invalid name');
+                return res.status(400).send("this context is not a SpinalSystemServiceTicket Or string is invalid name");
             }
         }
         catch (error) {
-            console.log(error);
-            return res.status(400).send('ko');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            return res.status(400).send("ko");
         }
         res.json();
     }));

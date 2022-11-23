@@ -34,7 +34,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service");
+const spinal_service_ticket_1 = require("spinal-service-ticket");
 const moment = require("moment");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const spinal_env_viewer_task_service_2 = require("spinal-env-viewer-task-service");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -75,18 +78,22 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                 type: string
      *               startDate:
      *                 type: string
+  *                 default: YYYY-MM-DD
      *               endDate:
      *                 type: string
+  *                 default: YYYY-MM-DD
      *               description:
      *                 type: string
      *               repeat:
      *                 type: boolean
      *               repeatEnd:
-     *                 type: number
+  *                 type: string
+  *                 default: YYYY-MM-DD
      *               count:
      *                 type: number
      *               period:
-     *                 type: number
+  *                 type: string
+  *                 default: day|week|month|year
      *               user:
      *                 type: object
      *                 required:
@@ -94,7 +101,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                   - email
      *                   - gsm
      *                 properties:
-     *                   userName:
+  *                   username:
      *                     type: string
      *                   email:
      *                     type: string
@@ -110,31 +117,32 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.post('/api/v1/ticket/:id/create_event', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post("/api/v1/ticket/:id/create_event", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            yield spinalAPIMiddleware.getGraph();
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            yield spinalAPIMiddleware.getGraph();
             var tree = yield spinal_env_viewer_task_service_1.SpinalEventService.createOrgetDefaultTreeStructure();
             var context = tree.context;
             var category = tree.category;
             var group = tree.group;
-            if (node.getType().get() === 'SpinalSystemServiceTicketTypeTicket') {
-                if (context.type.get() === 'SpinalEventGroupContext') {
+            if (node.getType().get() === spinal_service_ticket_1.TIKET_TYPE) {
+                if (context.type.get() === "SpinalEventGroupContext") {
                     let eventInfo = {
                         contextId: context.id.get(),
                         groupId: group.id.get(),
                         categoryId: category.id.get(),
                         nodeId: node.getId().get(),
-                        startDate: moment(req.body.startDate, 'DD MM YYYY HH:mm:ss', true).toString(),
+                        startDate: (moment(new Date(req.body.startDate))).toString(),
                         description: req.body.description,
-                        endDate: moment(req.body.endDate, 'DD MM YYYY HH:mm:ss', true).toString(),
-                        periodicity: { count: req.body.count, period: req.body.period },
+                        endDate: (moment(new Date(req.body.endDate))).toString(),
+                        periodicity: { count: req.body.count, period: spinal_env_viewer_task_service_2.Period[req.body.period] },
                         repeat: req.body.repeat,
                         name: req.body.name,
                         creationDate: moment(new Date().toISOString()).toString(),
-                        repeatEnd: req.body.repeatEnd,
+                        repeatEnd: (moment(new Date(req.body.repeatEnd))).toString()
                     };
                     let user = {
                         username: req.body.user.userName,
@@ -177,10 +185,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send('ko');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
-        res.json(info);
+        // res.json(info);
     }));
 };
 //# sourceMappingURL=ticketCreateEvent.js.map

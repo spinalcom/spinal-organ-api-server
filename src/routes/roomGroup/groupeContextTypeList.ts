@@ -25,7 +25,9 @@
 import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/groupContext/type_list:
@@ -52,13 +54,15 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
     let types = [];
     try {
-      var groupContexts = await groupManagerService.getGroupContexts();
+      const profilId = getProfileId(req);
+      const graph = await spinalAPIMiddleware.getProfileGraph(profilId);
+      var groupContexts = await groupManagerService.getGroupContexts(undefined, graph);
       for (const groupContext of groupContexts) {
         types.push(groupContext.type);
       }
     } catch (error) {
-      console.error(error);
-      res.status(400).send("list of type of context is not loaded");
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(400).send("list of type of context is not loaded");
     }
 
     res.send(types);

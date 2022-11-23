@@ -76,9 +76,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
       streamObj.push(imageBufferData)
       streamObj.push(null)
       streamObj.pipe(fs.createWriteStream('testImage1.jpg'));
+
     } catch (error) {
-      console.log(error);
-      res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json("convert string to image with succes");
   });

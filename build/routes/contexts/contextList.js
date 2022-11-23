@@ -32,6 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -56,13 +57,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/context/list', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/context/list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         let nodes = [];
         try {
-            var graph = yield spinalAPIMiddleware.getGraph();
-            if (graph === undefined) {
-                res.status(400).send('graph is not loaded');
-            }
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var graph = yield spinalAPIMiddleware.getProfileGraph(profileId);
             var relationNames = graph.getRelationNames();
             var childrens = yield graph.getChildren(relationNames);
             for (const child of childrens) {
@@ -78,7 +77,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
         catch (error) {
             console.error(error);
-            res.status(400).send('list of contexts is not loaded');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(400).send("list of contexts is not loaded");
         }
     }));
 };

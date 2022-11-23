@@ -27,8 +27,10 @@ import { findOneInContext } from '../../../utilities/findOneInContext';
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { Workflow } from '../interfacesWorkflowAndTickets'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
   * @swagger
@@ -69,8 +71,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
   app.get("/api/v1/workflow/:workflowId/node/:nodeId/read", async (req, res, next) => {
     try {
-      var workflow: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10));
-      var node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10));
+      const profileId = getProfileId(req);
+      var workflow: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+      var node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(node);
 
@@ -86,8 +89,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         return res.status(400).send("this context is not a SpinalSystemServiceTicket");
       }
     } catch (error) {
-      console.log(error);
-      res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(info);
   })

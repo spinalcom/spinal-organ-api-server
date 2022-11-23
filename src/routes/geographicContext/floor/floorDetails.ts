@@ -27,17 +27,13 @@ import * as express from 'express';
 import { Floor } from '../interfacesGeoContext';
 import { SpinalNode } from 'spinal-model-graph';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
-import {
-  SpinalContext,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { findOneInContext } from '../../../utilities/findOneInContext';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/floor/{id}/floor_details:
@@ -68,17 +64,20 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get('/api/v1/floor/:id/floor_details', async (req, res, next) => {
+  app.get("/api/v1/floor/:id/floor_details", async (req, res, next) => {
+
+
+
     try {
-      var floor: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10)
-      );
-      var rooms = await floor.getChildren('hasGeographicRoom');
-      let sommes = 0;
+      const profileId = getProfileId(req);
+
+      var floor: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      var rooms = await floor.getChildren("hasGeographicRoom")
+      let sommes = 0
       let _bimObjects = [];
       var bimFileId: string;
       for (const room of rooms) {
-        var bimObjects = await room.getChildren('hasBimObject');
+        var bimObjects = await room.getChildren("hasBimObject");
         for (const bimObject of bimObjects) {
           bimFileId = bimObject.info.bimFileId.get();
 
@@ -89,7 +88,7 @@ module.exports = function (
             version: bimObject.info.version.get(),
             externalId: bimObject.info.externalId.get(),
             dbid: bimObject.info.dbid.get(),
-            bimFileId: bimObject.info.bimFileId.get(),
+            bimFileId: bimObject.info.bimFileId.get()
           };
 
           _bimObjects.push(infoBimObject);
@@ -97,11 +96,11 @@ module.exports = function (
 
         let categories = await room.getChildren(NODE_TO_CATEGORY_RELATION);
         for (const child of categories) {
-          if (child.getName().get() === 'Spatial') {
+          if (child.getName().get() === "Spatial") {
             let attributs = await child.element.load();
             for (const attribut of attributs.get()) {
-              if (attribut.label === 'area') {
-                sommes = sommes + attribut.value;
+              if (attribut.label === "area") {
+                sommes = sommes + attribut.value
               }
             }
           }
@@ -109,13 +108,15 @@ module.exports = function (
       }
       var info = {
         area: sommes,
-        _bimObjects: _bimObjects,
+        _bimObjects: _bimObjects
       };
     } catch (error) {
       console.error(error);
-      res.status(400).send('list of floor is not loaded');
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(400).send("list of floor is not loaded");
     }
 
     res.send(info);
+
   });
 };

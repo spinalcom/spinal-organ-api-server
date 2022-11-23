@@ -24,16 +24,13 @@
 
 import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import {
-  SpinalContext,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
+
   /**
    * @swagger
    * /api/v1/context/{idContext}/node/{idNode}/nodeTypeList:
@@ -71,40 +68,31 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get(
-    '/api/v1/context/:contextId/node/:nodeId/nodeTypeList',
-    async (req, res, next) => {
-      var type_list;
-      try {
-        var contextNode = await spinalAPIMiddleware.load(
-          parseInt(req.params.contextId, 10)
-        );
-        // @ts-ignore
-        SpinalGraphService._addNode(contextNode);
-        var SpinalContextNodeId = contextNode.getId().get();
-        var node = await spinalAPIMiddleware.load(
-          parseInt(req.params.nodeId, 10)
-        );
-        // @ts-ignore
-        SpinalGraphService._addNode(node);
-        var SpinalNodeId = node.getId().get();
+  app.get("/api/v1/context/:contextId/node/:nodeId/nodeTypeList", async (req, res, next) => {
 
-        if (
-          contextNode instanceof SpinalContext &&
-          node.belongsToContext(contextNode)
-        ) {
-          type_list = await SpinalGraphService.browseAndClassifyByTypeInContext(
-            SpinalNodeId,
-            SpinalContextNodeId
-          );
-        } else {
-          res.status(400).send('node not found in context');
-        }
-      } catch (error) {
-        console.log(error);
-        res.status(400).send('ko');
+    var type_list;
+    try {
+      const profileId = getProfileId(req);
+      var contextNode = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+      // @ts-ignore
+      SpinalGraphService._addNode(contextNode);
+      var SpinalContextNodeId = contextNode.getId().get();
+      var node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
+      // @ts-ignore
+      SpinalGraphService._addNode(node);
+      var SpinalNodeId = node.getId().get();
+
+      if (contextNode instanceof SpinalContext && node.belongsToContext(contextNode)) {
+        type_list = await SpinalGraphService.browseAndClassifyByTypeInContext(SpinalNodeId, SpinalContextNodeId);
+      } else {
+        res.status(400).send("node not found in context");
       }
-      res.json(type_list.types);
+
+    } catch (error) {
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
-  );
+    res.json(type_list.types);
+  });
 };

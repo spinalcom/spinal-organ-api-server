@@ -28,12 +28,11 @@ import {
 } from 'spinal-env-viewer-graph-service';
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
   /**
    * @swagger
    * /api/v1/workflow/{id}/update:
@@ -70,35 +69,30 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.put('/api/v1/workflow/:id/update', async (req, res, next) => {
+  app.put("/api/v1/workflow/:id/update", async (req, res, next) => {
+
     try {
-      var workflow = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10)
-      );
-      const graph = await spinalAPIMiddleware.getGraph();
-      var childrens = await graph.getChildren('hasContext');
+      const profileId = getProfileId(req);
+      var workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId)
+      var childrens = await graph.getChildren("hasContext");
 
       for (const child of childrens) {
         if (child.getName().get() === req.body.newNameWorkflow) {
-          return res.status(400).send('the name context already exists');
+          return res.status(400).send("the name context already exists")
         }
       }
-      if (
-        workflow.getType().get() === 'SpinalSystemServiceTicket' &&
-        req.body.nameWorkflow !== 'string'
-      ) {
-        workflow.info.name.set(req.body.newNameWorkflow);
-      } else {
-        return res
-          .status(400)
-          .send(
-            'this context is not a SpinalSystemServiceTicket Or string is invalid name'
-          );
+      if (workflow.getType().get() === "SpinalSystemServiceTicket" && req.body.nameWorkflow !== "string") {
+        workflow.info.name.set(req.body.newNameWorkflow)
+      }
+      else {
+        return res.status(400).send("this context is not a SpinalSystemServiceTicket Or string is invalid name");
       }
     } catch (error) {
-      console.log(error);
-      return res.status(400).send('ko');
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(400).send("ko")
     }
     res.json();
-  });
-};
+  })
+}

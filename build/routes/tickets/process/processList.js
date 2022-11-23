@@ -34,6 +34,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -66,11 +67,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/workflow/:id/processList', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/workflow/:id/processList", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         let nodes = [];
         try {
             yield spinalAPIMiddleware.getGraph();
-            var workflow = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var workflow = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(workflow);
             var allProcess = yield spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflow.getId().get());
@@ -86,8 +88,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send('ko');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            return res.status(500).send(error.message);
         }
         res.json(nodes);
     }));

@@ -24,7 +24,9 @@
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
   * @swagger
   * /api/v1/workflow/{workflowId}/process/{processId}/delete_process:
@@ -60,8 +62,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
   app.delete("/api/v1/workflow/:workflowId/process/:processId/delete_process", async (req, res, next) => {
     try {
-      let workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10));
-      var process: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10));
+      const profileId = getProfileId(req);
+      let workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+      var process: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(process);
 
@@ -77,8 +80,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
       }
 
     } catch (error) {
-      console.log(error);
-      res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json();
   })

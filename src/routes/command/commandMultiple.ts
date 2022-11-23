@@ -31,11 +31,13 @@ import {
 } from 'spinal-env-viewer-graph-service';
 import { updateControlEndpointWithAnalytic } from './../../utilities/upstaeControlEndpoint'
 import { NetworkService, InputDataEndpoint, InputDataEndpointDataType, InputDataEndpointType } from "spinal-model-bmsnetwork"
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger
@@ -85,12 +87,13 @@ module.exports = function (
 
   app.post('/api/v1/node/command', async (req, res, next) => {
     try {
+      const profileId = getProfileId(req);
       var arrayList = [];
       const nodetypes = ["geographicRoom", "BIMObject", "BIMObjectGroup", "geographicRoomGroup", "geographicFloor"];
       const controlPointTypes = ["COMMAND_BLIND", "COMMAND_LIGHT", "COMMAND_TEMP"];
       const nodes = req.body.propertyReference;
       for (const node of nodes) {
-        const _node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10));
+        const _node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10), profileId);
         if (nodetypes.includes(_node.getType().get())) {
           for (const command of node.commands) {
             if (controlPointTypes.includes(command.key)) {
@@ -114,7 +117,7 @@ module.exports = function (
         }
       }
     } catch (error) {
-      console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message)
       res.status(400).send("one of node is not loaded");
     }
 

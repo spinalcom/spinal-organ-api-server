@@ -29,9 +29,10 @@ import { Room } from '../geographicContext/interfacesGeoContext'
 import { SpinalNode } from 'spinal-model-graph';
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
+import { ISpinalAPIMiddleware } from '../../interfaces';
+import { getProfileId } from '../../utilities/requestUtilities';
 
-
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/command/floor/{id}/roomList_command_enable:
@@ -68,8 +69,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
     let nodes = [];
     try {
+      const profileId = getProfileId(req);
 
-      var floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      var floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(floor)
 
@@ -93,7 +95,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
       }
 
     } catch (error) {
-      console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message)
       res.status(400).send("list of room is not loaded");
     }
 

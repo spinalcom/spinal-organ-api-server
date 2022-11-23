@@ -22,12 +22,14 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
 import { NodeAttribut, Attributs } from './interfacesAttributs'
 import { FileSystem } from 'spinal-core-connectorjs_type';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+import { ISpinalAPIMiddleware } from '../../interfaces';
+import { getProfileId } from "../../utilities/requestUtilities";
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
 * @swagger
 * /api/v1/node/{id}/attributsList:
@@ -62,10 +64,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
 
   app.get("/api/v1/node/:id/attributsList", async (req, res, next) => {
+    const profileId = getProfileId(req);
     let nodes = [];
 
     try {
-      let node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      let node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       let childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
       for (const child of childrens) {
         let attributs = await child.element.load();
@@ -79,7 +82,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         nodes.push(info);
       }
     } catch (error) {
-      console.log(error);
+      if (error.code) return res.status(error.code).send({ message: error.message });
       return res.status(400).send("ko");
     }
 

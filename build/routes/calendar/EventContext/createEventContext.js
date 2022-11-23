@@ -32,7 +32,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
   * @swagger
@@ -64,13 +66,26 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post("/api/v1/eventContext/create", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
             let steps = [];
-            spinal_env_viewer_task_service_1.SpinalEventService.createEventContext(req.body.contextName, steps);
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const userGraph = yield spinalAPIMiddleware.getProfileGraph(profileId);
+            if (!userGraph)
+                res.status(406).send(`No graph found for ${profileId}`);
+            const info = yield spinal_env_viewer_task_service_1.SpinalEventService.createEventContext(req.body.contextName, steps);
+            const context = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(info.id.get());
+            userGraph.addContext(context);
+            res.status(200).json({
+                name: context.getName().get(),
+                staticId: context.getId().get(),
+                dynamicId: context._server_id,
+                type: context.getType().get()
+            });
         }
         catch (error) {
             console.error(error);
-            res.status(400).send("ko");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
-        res.json();
     }));
 };
 //# sourceMappingURL=createEventContext.js.map

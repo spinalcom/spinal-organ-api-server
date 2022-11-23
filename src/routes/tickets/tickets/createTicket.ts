@@ -36,13 +36,13 @@ import { ServiceUser } from 'spinal-service-user';
 import { awaitSync } from '../../../utilities/awaitSync';
 import { _load } from '../../../utilities/loadNode';
 import { LocalFileData } from 'get-file-object-from-local-path';
-import * as bodyParser from 'body-parser';
-
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger
@@ -109,6 +109,7 @@ module.exports = function (
    */
   app.post('/api/v1/ticket/create_ticket', async (req, res, next) => {
     try {
+      const profileId = getProfileId(req);
       let ticketCreated;
       let ticketInfo = {
         name: req.body.name,
@@ -122,9 +123,7 @@ module.exports = function (
         parseInt(req.body.workflow, 10),
         parseInt(req.body.process, 10),
       ];
-      const [node, workflowById, processById]: SpinalNode<any>[] = await _load(
-        arrayofServerId
-      );
+      const [node, workflowById, processById]: SpinalNode<any>[] = await _load(arrayofServerId, spinalAPIMiddleware, profileId);
       //@ts-ignore
       SpinalGraphService._addNode(node);
       if (workflowById === undefined && processById === undefined) {
@@ -235,7 +234,8 @@ module.exports = function (
 
 
     } catch (error) {
-      console.log(error);
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send({ ko: error });
     }
     res.json(info);

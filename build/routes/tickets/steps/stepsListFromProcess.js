@@ -33,6 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -75,17 +76,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get('/api/v1/workflow/:workflowId/process/:processId/stepList', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         let nodes = [];
         try {
-            yield spinalAPIMiddleware.getGraph();
-            var workflow = yield spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10));
-            var process = yield spinalAPIMiddleware.load(parseInt(req.params.processId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var workflow = yield spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+            var process = yield spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(workflow);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(process);
-            if (workflow instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
-                process.belongsToContext(workflow)) {
-                if (workflow.getType().get() === 'SpinalSystemServiceTicket') {
-                    var allSteps = yield spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(process.getId().get(), ['SpinalSystemServiceTicketHasStep']);
+            if (workflow instanceof spinal_env_viewer_graph_service_1.SpinalContext && process.belongsToContext(workflow)) {
+                if (workflow.getType().get() === "SpinalSystemServiceTicket") {
+                    var allSteps = yield spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(process.getId().get(), ["SpinalSystemServiceTicketHasStep"]);
                     for (let index = 0; index < allSteps.length; index++) {
                         const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(allSteps[index].id.get());
                         var info = {
@@ -95,24 +95,23 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             type: realNode.getType().get(),
                             color: realNode.info.color.get(),
                             order: realNode.info.order.get(),
-                            processId: realNode.info.processId.get(),
+                            processId: realNode.info.processId.get()
                         };
                         nodes.push(info);
                     }
                 }
                 else {
-                    return res
-                        .status(400)
-                        .send('this context is not a SpinalSystemServiceTicket');
+                    return res.status(400).send("this context is not a SpinalSystemServiceTicket");
                 }
             }
             else {
-                res.status(400).send('node not found in context');
+                res.status(400).send("node not found in context");
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send('ko');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            return res.status(500).send(error.message);
         }
         res.json(nodes);
     }));

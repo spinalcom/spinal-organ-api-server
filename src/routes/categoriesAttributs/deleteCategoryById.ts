@@ -25,17 +25,12 @@
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
   /**
    * @swagger
    * /api/v1/node/{nodeId}/category/{categoryId}/delete:
@@ -69,30 +64,24 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.delete(
-    '/api/v1/node/:nodeId/category/:categoryId/delete',
-    async (req, res, next) => {
-      try {
-        let node: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.nodeId, 10)
-        );
-        let category = await spinalAPIMiddleware.load(
-          parseInt(req.params.categoryId, 10)
-        );
-        const result = await serviceDocumentation._categoryExist(
-          node,
-          category.getName().get()
-        );
-        if (result === undefined) {
-          res.status(400).send('category not found in node');
-        } else {
-          category.removeFromGraph();
-        }
-      } catch (error) {
-        console.log(error);
-        res.status(400).send('ko');
+  app.delete("/api/v1/node/:nodeId/category/:categoryId/delete", async (req, res, next) => {
+
+    try {
+      const profileId = getProfileId(req);
+      let node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId)
+      let category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId)
+      const result = await serviceDocumentation._categoryExist(node, category.getName().get());
+      if (result === undefined) {
+        res.status(400).send("category not found in node")
+      } else {
+        category.removeFromGraph();
       }
-      res.json();
+    } catch (error) {
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(400).send("ko")
     }
-  );
-};
+    res.json();
+  })
+}
+

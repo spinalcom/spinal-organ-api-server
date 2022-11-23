@@ -34,6 +34,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_group_manager_service_1 = require("spinal-env-viewer-plugin-group-manager-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -73,19 +74,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/roomsGroup/:contextId/category/:categoryId/group_list', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/roomsGroup/:contextId/category/:categoryId/group_list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         let nodes = [];
         try {
-            yield spinalAPIMiddleware.getGraph();
-            var context = yield spinalAPIMiddleware.load(parseInt(req.params.contextId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var context = yield spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = yield spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10));
+            var category = yield spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
-                category.belongsToContext(context)) {
-                if (context.getType().get() === 'geographicRoomGroupContext') {
+            if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && category.belongsToContext(context)) {
+                if (context.getType().get() === "geographicRoomGroupContext") {
                     var listGroups = yield spinal_env_viewer_plugin_group_manager_service_1.default.getGroups(category.getId().get());
                     for (const group of listGroups) {
                         // @ts-ignore
@@ -95,24 +95,23 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             staticId: realNode.getId().get(),
                             name: realNode.getName().get(),
                             type: realNode.getType().get(),
-                            color: group.color.get(),
+                            color: group.color.get()
                         };
                         nodes.push(info);
                     }
                 }
                 else {
-                    res
-                        .status(400)
-                        .send('node is not type of geographicRoomGroupContext ');
+                    res.status(400).send("node is not type of geographicRoomGroupContext ");
                 }
             }
             else {
-                res.status(400).send('category not found in context');
+                res.status(400).send("category not found in context");
             }
         }
         catch (error) {
-            console.error(error);
-            res.status(400).send('list of category event is not loaded');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            return res.status(400).send("list of category event is not loaded");
         }
         res.send(nodes);
     }));

@@ -34,11 +34,13 @@ import { serviceTicketPersonalized } from 'spinal-service-ticket';
 import { FileExplorer } from 'spinal-env-viewer-plugin-documentation-service';
 import { ServiceUser } from 'spinal-service-user';
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger
@@ -79,8 +81,9 @@ module.exports = function (
    */
   app.post('/api/v1/node/:id/upload_file', async (req, res, next) => {
     try {
+      const profileId = getProfileId(req);
       var node: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10)
+        parseInt(req.params.id, 10), profileId
       );
       //@ts-ignore
       SpinalGraphService._addNode(node);
@@ -122,7 +125,8 @@ module.exports = function (
         });
       }
     } catch (error) {
-      console.log(error);
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send('ko');
     }
     // res.json();

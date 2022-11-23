@@ -30,7 +30,9 @@ import {
   SpinalRelationPtrLst,
   SpinalRelationRef
 } from 'spinal-model-graph'
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
   * @swagger
@@ -69,8 +71,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
     try {
       var nodes;
       var node_list = [];
-      var relation = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
-
+      const profileId = getProfileId(req);
+      var relation = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
 
       if (relation instanceof SpinalRelationLstPtr || relation instanceof SpinalRelationPtrLst || relation instanceof SpinalRelationRef) {
         nodes = await relation.getChildren();
@@ -90,8 +92,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         }
       }
     } catch (error) {
-      console.log(error);
-      res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(node_list);
   });

@@ -35,11 +35,13 @@ import {
 } from 'spinal-env-viewer-graph-service';
 import { findOneInContext } from '../../utilities/findOneInContext';
 import { spinalCore, FileSystem } from 'spinal-core-connectorjs_type';
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger
@@ -88,6 +90,7 @@ module.exports = function (
 
   app.post('/api/v1/find_node_in_context', async (req, res, next) => {
     try {
+      const profileId = getProfileId(req);
       var info;
       await spinalAPIMiddleware.getGraph();
       const tab = req.body.array;
@@ -99,7 +102,7 @@ module.exports = function (
       async function verifyContext(paramContext: string) {
         if (typeof FileSystem._objects[paramContext] !== 'undefined') {
           return (context = await spinalAPIMiddleware.load(
-            parseInt(paramContext, 10)
+            parseInt(paramContext, 10), profileId
           ));
         } else if (SpinalGraphService.getRealNode(paramContext)) {
           return (context = SpinalGraphService.getRealNode(paramContext));
@@ -115,7 +118,7 @@ module.exports = function (
         let nodes = [];
         for (let index = 0; index < tab.length; index++) {
           let node: SpinalNode<any> = await spinalAPIMiddleware.load(
-            parseInt(tab[index], 10)
+            parseInt(tab[index], 10), profileId
           );
           nodes.push(node);
         }
@@ -474,7 +477,8 @@ module.exports = function (
         }
       }
     } catch (error) {
-      console.log(error);
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send('ko');
     }
     res.json(result);

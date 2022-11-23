@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_nomenclature_service_1 = require("spinal-env-viewer-plugin-nomenclature-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -72,12 +73,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   */
     app.put("/api/v1/nomenclatureGroup/:id/update", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var groupContext = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var groupContext = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(groupContext);
             if (groupContext.getType().get() === "AttributeConfigurationGroupContext") {
                 var contextUpdated = yield spinal_env_viewer_plugin_nomenclature_service_1.spinalNomenclatureService.updateContext(groupContext.getId().get(), req.body.newNomenclatureContextName);
-                console.log(contextUpdated);
                 var info = {
                     dynamicId: contextUpdated._server_id,
                     staticId: contextUpdated.getId().get(),
@@ -90,7 +91,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.error(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
             res.status(400).send("ko");
         }
         res.json(info);

@@ -33,6 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -78,13 +79,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/floor/:id/reference_Objects_list', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/floor/:id/reference_Objects_list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var floor = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var floor = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(floor);
-            let referenceObjets = yield floor.getChildren('hasReferenceObject');
+            let referenceObjets = yield floor.getChildren("hasReferenceObject");
             var _objects = [];
+            var bimFileId;
             for (let index = 0; index < referenceObjets.length; index++) {
                 var infoReferencesObject = {
                     dynamicId: referenceObjets[index]._server_id,
@@ -108,7 +111,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
         catch (error) {
             console.error(error);
-            res.status(400).send('list of reference_Objects is not loaded');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(400).send("list of reference_Objects is not loaded");
         }
         res.send(info);
     }));

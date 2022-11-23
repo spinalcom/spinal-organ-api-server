@@ -30,11 +30,12 @@ import {
   SpinalNode,
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger
@@ -117,7 +118,8 @@ module.exports = function (
           res.status(400).send('category or group not found in context');
         }
       } catch (error) {
-        console.log(error);
+        if (error.code && error.message) return res.status(error.code).send(error.message);
+
         res.status(400).send('ko');
       }
       res.json(info);

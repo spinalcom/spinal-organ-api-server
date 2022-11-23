@@ -32,6 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -56,14 +57,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/Network/list', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/Network/list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         let nodes = [];
         let contextNetwork;
         try {
-            const graph = yield spinalAPIMiddleware.getGraph();
-            var childrens = yield graph.getChildren('hasContext');
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const graph = yield spinalAPIMiddleware.getProfileGraph(profileId);
+            var childrens = yield graph.getChildren("hasContext");
             for (const child of childrens) {
-                if (child.getType().get() === 'Network') {
+                if (child.getType().get() === "Network") {
                     contextNetwork = child;
                     break;
                 }
@@ -74,14 +76,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     dynamicId: network._server_id,
                     staticId: network.getId().get(),
                     name: network.getName().get(),
-                    type: network.getType().get(),
+                    type: network.getType().get()
                 };
                 nodes.push(info);
             }
         }
         catch (error) {
-            console.error(error);
-            res.status(400).send('list of networks is not loaded');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(400).send("list of networks is not loaded");
         }
         res.send(nodes);
     }));

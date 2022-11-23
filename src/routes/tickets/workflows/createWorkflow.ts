@@ -24,11 +24,10 @@
 import { serviceTicketPersonalized } from 'spinal-service-ticket';
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/workflow/create:
@@ -56,27 +55,38 @@ module.exports = function (
    *       400:
    *         description: create not Successfully
    */
-  app.post('/api/v1/workflow/create', async (req, res, next) => {
+  app.post("/api/v1/workflow/create", async (req, res, next) => {
     try {
+      const profileId = getProfileId(req);
+      const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
       const graph = await spinalAPIMiddleware.getGraph();
-      var childrens = await graph.getChildren('hasContext');
+
+      var childrens = await graph.getChildren("hasContext");
+
       for (const child of childrens) {
         if (child.getName().get() === req.body.nameWorkflow) {
           return res.status(400).send('the name context already exists');
         }
       }
-      if (req.body.nameWorkflow !== 'string') {
-        await serviceTicketPersonalized.createContext(
-          req.body.nameWorkflow,
-          []
-        );
+
+      if (req.body.nameWorkflow !== "string") {
+        const context = await serviceTicketPersonalized.createContext(req.body.nameWorkflow, []);
+        await userGraph.addContext(context);
+
+        return res.status(200).json({
+          name: context.getName().get(),
+          type: context.getType().get(),
+          staticId: context.getId().get(),
+          dynamicId: context._server_id,
+        });
+
       } else {
-        return res.status(400).send('string is invalide name');
+        return res.status(400).send("string is invalide name");
       }
     } catch (error) {
-      console.log(error);
-      return res.status(400).send('ko');
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(500).send(error.message);
     }
-    res.json();
-  });
-};
+  })
+}

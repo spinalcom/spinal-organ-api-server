@@ -33,6 +33,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 const spinal_service_ticket_1 = require("spinal-service-ticket");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -61,27 +62,36 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: create not Successfully
      */
-    app.post('/api/v1/workflow/create', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post("/api/v1/workflow/create", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const userGraph = yield spinalAPIMiddleware.getProfileGraph(profileId);
             const graph = yield spinalAPIMiddleware.getGraph();
-            var childrens = yield graph.getChildren('hasContext');
+            var childrens = yield graph.getChildren("hasContext");
             for (const child of childrens) {
                 if (child.getName().get() === req.body.nameWorkflow) {
                     return res.status(400).send('the name context already exists');
                 }
             }
-            if (req.body.nameWorkflow !== 'string') {
-                yield spinal_service_ticket_1.serviceTicketPersonalized.createContext(req.body.nameWorkflow, []);
+            if (req.body.nameWorkflow !== "string") {
+                const context = yield spinal_service_ticket_1.serviceTicketPersonalized.createContext(req.body.nameWorkflow, []);
+                yield userGraph.addContext(context);
+                return res.status(200).json({
+                    name: context.getName().get(),
+                    type: context.getType().get(),
+                    staticId: context.getId().get(),
+                    dynamicId: context._server_id,
+                });
             }
             else {
-                return res.status(400).send('string is invalide name');
+                return res.status(400).send("string is invalide name");
             }
         }
         catch (error) {
-            console.log(error);
-            return res.status(400).send('ko');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            return res.status(500).send(error.message);
         }
-        res.json();
     }));
 };
 //# sourceMappingURL=createWorkflow.js.map

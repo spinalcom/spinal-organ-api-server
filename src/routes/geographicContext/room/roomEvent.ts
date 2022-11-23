@@ -28,7 +28,9 @@ import * as express from 'express';
 import { SpinalEventService } from "spinal-env-viewer-task-service";
 import { Event } from '../../calendar/interfacesContextsEvents'
 import { sendDate, verifDate } from "../../../utilities/dateFunctions"
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/room/{id}/event_list:
@@ -77,8 +79,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 */
   app.post("/api/v1/room/:id/event_list", async (req, res, next) => {
     try {
+      const profileId = getProfileId(req);
       var nodes = [];
-      var room: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      var room: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(room)
       if (room.getType().get() === "geographicRoom") {
@@ -132,19 +135,19 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
             let info = {
               dynamicId: _child._server_id,
-              staticId: _child.getId().get(),
-              name: _child.getName().get(),
-              type: _child.getType().get(),
-              groupeID: _child.info.groupId.get(),
-              categoryID: child.categoryId.get(),
-              nodeId: _child.info.nodeId.get(),
-              startDate: _child.info.startDate.get(),
-              endDate: _child.info.endDate.get(),
+              staticId: _child.getId()?.get(),
+              name: _child.getName()?.get(),
+              type: _child.getType()?.get(),
+              groupeID: _child.info.groupId?.get(),
+              categoryID: child.categoryId?.get(),
+              nodeId: _child.info.nodeId?.get(),
+              startDate: _child.info.startDate?.get(),
+              endDate: _child.info.endDate?.get(),
               creationDate: _child.info.creationDate == undefined ? undefined : _child.info.creationDate,
               user: {
-                username: _child.info.user.username.get(),
-                email: _child.info.user.email == undefined ? undefined : _child.info.user.email.get(),
-                gsm: _child.info.user.gsm == undefined ? undefined : _child.info.user.gsm.get()
+                username: _child.info.user.username?.get(),
+                email: _child.info.user.email == undefined ? undefined : _child.info.user.email?.get(),
+                gsm: _child.info.user.gsm == undefined ? undefined : _child.info.user.gsm?.get()
               }
 
             };
@@ -155,8 +158,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
       }
 
     } catch (error) {
-      console.log(error);
-      res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(nodes);
   })

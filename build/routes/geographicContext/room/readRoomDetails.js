@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -66,9 +67,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     */
     app.get("/api/v1/room/:id/read_details", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
             let area = 0;
             let _bimObjects = [];
-            var room = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            var room = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             const t = [];
             var bimFileId;
             //@ts-ignore
@@ -109,8 +111,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send("ko");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json(info);
     }));

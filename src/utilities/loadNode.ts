@@ -22,10 +22,11 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 import { SpinalNode } from 'spinal-model-graph';
+import { ISpinalAPIMiddleware } from 'src/interfaces';
 import spinalAPIMiddleware from '../app/spinalAPIMiddleware';
 
-export function _load(arrayofServerId): Promise<SpinalNode<any>[]> {
+export function _load(arrayofServerId, spinalAPIMiddleware: ISpinalAPIMiddleware, profileId): Promise<SpinalNode<any>[]> {
   return Promise.all(arrayofServerId.map(item => {
-    return spinalAPIMiddleware.getInstance().load(item).catch(() => undefined)
+    return spinalAPIMiddleware.load(item, profileId).catch(() => undefined)
   }))
 }

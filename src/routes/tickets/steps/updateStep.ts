@@ -22,19 +22,14 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from 'src/interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
   /**
    * @swagger
    * /api/v1/workflow/{workflowId}/process/{processId}/step/{stepId}/update_step:
@@ -88,64 +83,42 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.put(
-    '/api/v1/workflow/:workflowId/process/:processId/step/:stepId/update_step',
-    async (req, res, next) => {
-      try {
-        await spinalAPIMiddleware.getGraph();
-        let workflow = await spinalAPIMiddleware.load(
-          parseInt(req.params.workflowId, 10)
-        );
-        var process: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.processId, 10)
-        );
-        var step: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.stepId, 10)
-        );
-        // @ts-ignore
-        SpinalGraphService._addNode(process);
-        // @ts-ignore
-        SpinalGraphService._addNode(step);
+  app.put("/api/v1/workflow/:workflowId/process/:processId/step/:stepId/update_step", async (req, res, next) => {
+    try {
+      await spinalAPIMiddleware.getGraph();
+      const profileId = getProfileId(req);
+      let workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+      var process: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
+      var step: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.stepId, 10), profileId);
+      // @ts-ignore
+      SpinalGraphService._addNode(process);
+      // @ts-ignore
+      SpinalGraphService._addNode(step);
 
-        var allSteps = await SpinalGraphService.getChildren(
-          process.getId().get(),
-          ['SpinalSystemServiceTicketHasStep']
-        );
-        for (let index = 0; index < allSteps.length; index++) {
-          const realNode = SpinalGraphService.getRealNode(
-            allSteps[index].id.get()
-          );
-          if (
-            realNode.getName().get() === req.body.newNameStep ||
-            req.body.newNameStep === 'string'
-          ) {
-            return res
-              .status(400)
-              .send('the name of step already exists or invalid name string');
-          }
+      var allSteps = await SpinalGraphService.getChildren(process.getId().get(), ["SpinalSystemServiceTicketHasStep"])
+      for (let index = 0; index < allSteps.length; index++) {
+        const realNode = SpinalGraphService.getRealNode(allSteps[index].id.get())
+        if (realNode.getName().get() === req.body.newNameStep || req.body.newNameStep === "string") {
+          return res.status(400).send("the name of step already exists or invalid name string")
         }
-
-        if (
-          workflow instanceof SpinalContext &&
-          process.belongsToContext(workflow) &&
-          step.belongsToContext(workflow)
-        ) {
-          if (workflow.getType().get() === 'SpinalSystemServiceTicket') {
-            step.info.name.set(req.body.newNameStep);
-            step.info.color.set(req.body.newColor);
-          } else {
-            return res
-              .status(400)
-              .send('this context is not a SpinalSystemServiceTicket');
-          }
-        } else {
-          res.status(400).send('node not found in context');
-        }
-      } catch (error) {
-        console.log(error);
-        return res.status(400).send('ko');
       }
-      res.json();
+
+      if (workflow instanceof SpinalContext && process.belongsToContext(workflow) && step.belongsToContext(workflow)) {
+        if (workflow.getType().get() === "SpinalSystemServiceTicket") {
+          step.info.name.set(req.body.newNameStep)
+          step.info.color.set(req.body.newColor)
+        }
+        else {
+          return res.status(400).send("this context is not a SpinalSystemServiceTicket");
+        }
+      } else {
+        res.status(400).send("node not found in context");
+      }
+    } catch (error) {
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(400).send("ko")
     }
-  );
-};
+    res.json();
+  })
+}

@@ -24,19 +24,14 @@
 
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { Context } from '../interfacesGroupContexts';
-import groupManagerService from 'spinal-env-viewer-plugin-group-manager-service';
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { Context } from '../interfacesGroupContexts'
+import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ROOM_TYPE } from "spinal-env-viewer-context-geographic-service/build/constants";
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/roomsGroup/list:
@@ -61,11 +56,16 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get('/api/v1/roomsGroup/list', async (req, res, next) => {
+  app.get("/api/v1/roomsGroup/list", async (req, res, next) => {
+
     let nodes = [];
     try {
-      await spinalAPIMiddleware.getGraph();
-      var groupContexts = await groupManagerService.getGroupContexts();
+      const profileId = getProfileId(req);
+
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
+
+      var groupContexts = await groupManagerService.getGroupContexts(ROOM_TYPE, graph);
+
       for (let index = 0; index < groupContexts.length; index++) {
         var realNode = SpinalGraphService.getRealNode(groupContexts[index].id);
         if (realNode.getType().get() === 'geographicRoomGroupContext') {
@@ -79,10 +79,11 @@ module.exports = function (
         }
       }
     } catch (error) {
-      console.error(error);
-      res.status(400).send('list of group contexts is not loaded');
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(400).send('list of group contexts is not loaded');
     }
 
     res.send(nodes);
+
   });
 };

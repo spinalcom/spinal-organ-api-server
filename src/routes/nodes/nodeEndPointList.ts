@@ -26,16 +26,12 @@ import SpinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { EndPointNode } from './interfacesNodes';
 import { SpinalGraph } from 'spinal-model-graph';
-import {
-  SpinalContext,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { getProfileId } from '../../utilities/requestUtilities';
+import { SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: SpinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/node/{id}/endpoint_list:
@@ -68,15 +64,18 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get('/api/v1/node/:id/endpoint_list', async (req, res, next) => {
+
+
+  app.get("/api/v1/node/:id/endpoint_list", async (req, res, next) => {
+
     let nodes = [];
     try {
-      spinalAPIMiddleware.getGraph();
-      let node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      let node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(node);
-      var endpoints = await node.getChildren(["hasEndPoint", "hasBmsEndpoint"]);
-      console.log(endpoints);
+      var endpoints = await node.getChildren(["hasEndPoint", SpinalBmsEndpoint.relationName]);
+
 
       for (const endpoint of endpoints) {
         var element = await endpoint.element.load();
@@ -90,10 +89,12 @@ module.exports = function (
         };
         nodes.push(info);
       }
+
     } catch (error) {
-      console.error(error);
-      res.status(400).send('list of endpoints is not loaded');
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(400).send("list of endpoints is not loaded");
     }
     res.send(nodes);
   });
-};
+}

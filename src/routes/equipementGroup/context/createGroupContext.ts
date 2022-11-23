@@ -25,8 +25,11 @@
 import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
+import { EQUIPMENT_TYPE } from "spinal-env-viewer-context-geographic-service/build/constants";
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/equipementsGroup/create:
@@ -59,12 +62,26 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
   app.post("/api/v1/equipementsGroup/create", async (req, res, next) => {
 
     try {
-      groupManagerService.createGroupContext(req.body.contextName, "BIMObject")
+      const profileId = getProfileId(req);
+      const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
+      if (!userGraph) res.status(406).send(`No graph found for ${profileId}`);
+
+      const context = await groupManagerService.createGroupContext(req.body.contextName, EQUIPMENT_TYPE)
+
+      userGraph.addContext(context);
+
+      res.status(200).json({
+        name: context.getName().get(),
+        staticId: context.getId().get(),
+        dynamicId: context._server_id,
+        type: context.getType().get()
+      });
+
     } catch (error) {
       console.error(error)
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("ko")
     }
-    res.json();
   })
 
 }

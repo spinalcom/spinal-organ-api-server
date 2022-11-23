@@ -27,8 +27,10 @@ import * as express from 'express';
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { ContextTree } from '../contexts/interfacesContexts'
 import { recTreeDepth } from '../../utilities/recTree'
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/geographicContext/space:
@@ -54,9 +56,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
   app.get("/api/v1/geographicContext/space", async (req, res, next) => {
     var contexts: ContextTree;
     try {
-      await spinalAPIMiddleware.getGraph();
+      const profileId = getProfileId(req);
+      const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
+      const temp_contexts = await userGraph.getChildren("hasContext");
 
-      let geographicContexts = await SpinalGraphService.getContextWithType("geographicContext");
+      let geographicContexts = temp_contexts.filter(el => el.getType().get() === "geographicContext");
       let geographicContext = geographicContexts[0];
       if (geographicContext instanceof SpinalContext) {
         contexts = {
@@ -70,7 +74,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
       }
     } catch (error) {
       console.error(error);
-      res.status(400).send("ko");
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(contexts);
   });

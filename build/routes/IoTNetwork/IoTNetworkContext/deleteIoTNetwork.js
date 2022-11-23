@@ -32,6 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -60,7 +61,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   */
     app.delete("/api/v1/IoTNetworkContext/:id/delete", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            let IoTNetwork = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            let IoTNetwork = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             if (IoTNetwork.getType().get() === "Network") {
                 IoTNetwork.removeFromGraph();
             }
@@ -69,8 +71,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send("ko");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json();
     }));

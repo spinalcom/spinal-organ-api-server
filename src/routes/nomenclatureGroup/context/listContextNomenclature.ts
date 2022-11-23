@@ -28,8 +28,10 @@ import { Context } from '../interfacesGroupContexts'
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import { spinalNomenclatureService } from "spinal-env-viewer-plugin-nomenclature-service"
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/nomenclatureGroup/list:
@@ -58,7 +60,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
     let nodes = [];
     try {
-      var groupContexts = await spinalNomenclatureService.getContexts();
+      let profileId = getProfileId(req);
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
+      var groupContexts = await spinalNomenclatureService.getContexts(undefined, graph);
 
       for (let index = 0; index < groupContexts.length; index++) {
         var realNode = SpinalGraphService.getRealNode(groupContexts[index].info.id.get())
@@ -74,7 +78,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
       }
     } catch (error) {
-      console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("list of nomrncalture contexts is not loaded");
     }
 

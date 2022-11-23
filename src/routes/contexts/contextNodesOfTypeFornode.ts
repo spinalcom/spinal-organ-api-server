@@ -23,17 +23,12 @@
  */
 import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import {
-  SpinalContext,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
-import { ContextNodeofTypes } from './interfacesContexts';
+import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { ContextNodeofTypes } from './interfacesContexts'
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/context/{contextId}/node/{nodeId}/nodesOfType/{type}:
@@ -77,61 +72,51 @@ module.exports = function (
    *       400:
    *         description: Bad request
    */
-  app.get(
-    '/api/v1/context/:contextId/node/:nodeId/nodesOfType/:type',
-    async (req, res, next) => {
-      let nodes = [];
+  app.get("/api/v1/context/:contextId/node/:nodeId/nodesOfType/:type", async (req, res, next) => {
 
-      try {
-        await spinalAPIMiddleware.getGraph();
-        var contextNode = await spinalAPIMiddleware.load(
-          parseInt(req.params.contextId, 10)
-        );
-        var node = await spinalAPIMiddleware.load(
-          parseInt(req.params.nodeId, 10)
-        );
+    let nodes = [];
 
-        var SpinalContextNodeId = contextNode.getId().get();
-        // @ts-ignore
-        SpinalGraphService._addNode(contextNode);
-        var SpinalNodeId = node.getId().get();
-        // @ts-ignore
-        SpinalGraphService._addNode(node);
-        var type_list =
-          await SpinalGraphService.browseAndClassifyByTypeInContext(
-            SpinalNodeId,
-            SpinalContextNodeId
-          );
+    try {
+      const profileId = getProfileId(req);
+      var contextNode = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+      var node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
 
-        if (req.params.type in type_list.data) {
-          let model_list = type_list.data[req.params.type];
-          if (
-            contextNode instanceof SpinalContext &&
-            node.belongsToContext(contextNode)
-          ) {
-            for (let index = 0; index < model_list.length; index++) {
-              // hacky way use realnode when fiexd
-              const realNode = model_list[index]._parents[0];
-              // dynamicId: SpinalGraphService.getRealNode(model_list[index].id.get())._server_id,
-              let info: ContextNodeofTypes = {
-                dynamicId: realNode._server_id,
-                staticId: model_list[index].id.get(),
-                name: model_list[index].name.get(),
-                type: model_list[index].type.get(),
-              };
-              nodes.push(info);
-            }
-          } else {
-            res.status(400).send('node not found in context');
+      var SpinalContextNodeId = contextNode.getId().get();
+      // @ts-ignore
+      SpinalGraphService._addNode(contextNode);
+      var SpinalNodeId = node.getId().get();
+      // @ts-ignore
+      SpinalGraphService._addNode(node);
+      var type_list = await SpinalGraphService.browseAndClassifyByTypeInContext(SpinalNodeId, SpinalContextNodeId);
+
+      if (req.params.type in type_list.data) {
+        let model_list = type_list.data[req.params.type];
+        if (contextNode instanceof SpinalContext && node.belongsToContext(contextNode)) {
+          for (let index = 0; index < model_list.length; index++) {
+            // hacky way use realnode when fiexd
+            const realNode = model_list[index]._parents[0];
+            // dynamicId: SpinalGraphService.getRealNode(model_list[index].id.get())._server_id,
+            let info: ContextNodeofTypes = {
+              dynamicId: realNode._server_id,
+              staticId: model_list[index].id.get(),
+              name: model_list[index].name.get(),
+              type: model_list[index].type.get()
+
+            };
+            nodes.push(info);
           }
         } else {
-          res.status(400).send('Type not found in node');
+          res.status(400).send("node not found in context");
         }
-      } catch (error) {
-        console.log(error);
-        res.status(400).send('ko');
+      } else {
+        res.status(400).send("Type not found in node");
       }
-      res.json(nodes);
+    } catch (error) {
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
-  );
+    res.json(nodes);
+  });
+
 };

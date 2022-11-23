@@ -33,6 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_plugin_group_manager_service_1 = require("spinal-env-viewer-plugin-group-manager-service");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -58,14 +59,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/groupContext/type_list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         let types = [];
         try {
-            var groupContexts = yield spinal_env_viewer_plugin_group_manager_service_1.default.getGroupContexts();
+            const profilId = (0, requestUtilities_1.getProfileId)(req);
+            const graph = yield spinalAPIMiddleware.getProfileGraph(profilId);
+            var groupContexts = yield spinal_env_viewer_plugin_group_manager_service_1.default.getGroupContexts(undefined, graph);
             for (const groupContext of groupContexts) {
                 types.push(groupContext.type);
             }
         }
         catch (error) {
-            console.error(error);
-            res.status(400).send("list of type of context is not loaded");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            return res.status(400).send("list of type of context is not loaded");
         }
         res.send(types);
     }));

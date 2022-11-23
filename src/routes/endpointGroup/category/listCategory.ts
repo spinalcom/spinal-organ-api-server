@@ -22,20 +22,15 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import groupManagerService from 'spinal-env-viewer-plugin-group-manager-service';
+import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/endPointsGroup/{id}/category_list:
@@ -68,43 +63,43 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get(
-    '/api/v1/endPointsGroup/:id/category_list',
-    async (req, res, next) => {
-      let nodes = [];
-      try {
-        await spinalAPIMiddleware.getGraph();
-        var context: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.id, 10)
-        );
-        //@ts-ignore
-        SpinalGraphService._addNode(context);
+  app.get("/api/v1/endPointsGroup/:id/category_list", async (req, res, next) => {
 
-        if (context.getType().get() === 'BmsEndpointGroupContext') {
-          var listCategories = await groupManagerService.getCategories(
-            context.getId().get()
-          );
+    let nodes = [];
+    try {
+      const profileId = getProfileId(req);
+      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      //@ts-ignore
+      SpinalGraphService._addNode(context)
 
-          for (const category of listCategories) {
-            // @ts-ignore
-            const realNode = SpinalGraphService.getRealNode(category.id.get());
-            let info = {
-              dynamicId: realNode._server_id,
-              staticId: realNode.getId().get(),
-              name: realNode.getName().get(),
-              type: realNode.getType().get(),
-              icon: category.icon.get(),
-            };
-            nodes.push(info);
-          }
-        } else {
-          res.status(400).send('node is not type of BmsEndpointGroupContext ');
+      if (context.getType().get() === "BmsEndpointGroupContext") {
+        var listCategories = await groupManagerService.getCategories(context.getId().get())
+
+        for (const category of listCategories) {
+          // @ts-ignore
+          const realNode = SpinalGraphService.getRealNode(category.id.get());
+          let info = {
+            dynamicId: realNode._server_id,
+            staticId: realNode.getId().get(),
+            name: realNode.getName().get(),
+            type: realNode.getType().get(),
+            icon: category.icon.get()
+          };
+          nodes.push(info);
+
         }
-      } catch (error) {
-        console.error(error);
-        res.status(400).send('list of category is not loaded');
+
+      } else {
+        res.status(400).send("node is not type of BmsEndpointGroupContext ");
       }
-      res.send(nodes);
+
+
+
+    } catch (error) {
+      console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(400).send("list of category is not loaded");
     }
-  );
+    res.send(nodes);
+  });
 };

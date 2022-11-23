@@ -30,11 +30,13 @@ import {
   SpinalNode,
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger
@@ -95,22 +97,17 @@ module.exports = function (
     '/api/v1/roomsGroup/:contextId/category/:categoryId/group/:groupId/addRooms',
     async (req, res, next) => {
       try {
+        const profileId = getProfileId(req);
         const _roomList = req.body;
-        var context: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.contextId, 10)
-        );
+        var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(context);
 
-        var category: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.categoryId, 10)
-        );
+        var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(category);
 
-        var group: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.groupId, 10)
-        );
+        var group: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(group);
 
@@ -148,11 +145,14 @@ module.exports = function (
         } else {
           res.status(400).send('category or group not found in context');
         }
+
+        res.json();
       } catch (error) {
-        console.log(error);
+
+        if (error.code && error.message) return res.status(error.code).send(error.message);
         res.status(400).send('ko');
       }
-      res.json();
+
     }
   );
 };

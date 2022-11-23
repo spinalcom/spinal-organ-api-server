@@ -24,17 +24,11 @@
 
 import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import groupManagerService from 'spinal-env-viewer-plugin-group-manager-service';
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: SpinalAPIMiddleware
-) {
+import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/equipementsGroup/{contextId}/category/{categoryId}/create_group:
@@ -81,44 +75,36 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.post(
-    '/api/v1/equipementsGroup/:contextId/category/:categoryId/create_group',
-    async (req, res, next) => {
-      try {
-        var context: SpinalNode<any>;
-        context = await spinalAPIMiddleware.load(
-          parseInt(req.params.contextId, 10)
-        );
-        //@ts-ignore
-        SpinalGraphService._addNode(context);
-        var category: SpinalNode<any>;
-        category = await spinalAPIMiddleware.load(
-          parseInt(req.params.categoryId, 10)
-        );
-        //@ts-ignore
-        SpinalGraphService._addNode(category);
-        if (
-          context instanceof SpinalContext &&
-          category.belongsToContext(context)
-        ) {
-          if (context.getType().get() === 'BIMObjectGroupContext') {
-            groupManagerService.addGroup(
-              context.getId().get(),
-              category.getId().get(),
-              req.body.groupName,
-              req.body.colorName
-            );
-          } else {
-            res.status(400).send('node is not type of BIMObjectGroupContext ');
-          }
+  app.post("/api/v1/equipementsGroup/:contextId/category/:categoryId/create_group", async (req, res, next) => {
+
+    try {
+      const profileId = getProfileId(req);
+
+      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+      //@ts-ignore
+      SpinalGraphService._addNode(context)
+      var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+      //@ts-ignore
+      SpinalGraphService._addNode(category)
+
+      if (context instanceof SpinalContext && category.belongsToContext(context)) {
+        if (context.getType().get() === "BIMObjectGroupContext") {
+          groupManagerService.addGroup(context.getId().get(), category.getId().get(), req.body.groupName, req.body.colorName)
+
         } else {
-          res.status(400).send('category not found in context');
+          res.status(400).send("node is not type of BIMObjectGroupContext ");
         }
-      } catch (error) {
-        console.error(error);
-        res.status(400).send('ko');
+      } else {
+        res.status(400).send("category not found in context");
       }
-      res.json();
+
+    } catch (error) {
+      console.error(error)
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(400).send("ko")
     }
-  );
-};
+    res.json();
+  })
+
+}
+

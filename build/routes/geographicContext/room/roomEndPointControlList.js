@@ -98,6 +98,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
         catch (error) {
             console.error(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
             res.status(400).send("list of endpoints is not loaded");
         }
         res.send(allNodes);

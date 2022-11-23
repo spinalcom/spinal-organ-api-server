@@ -24,12 +24,12 @@
 
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { Workflow } from '../interfacesWorkflowAndTickets';
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+import { Workflow } from '../interfacesWorkflowAndTickets'
+import { profile } from 'console';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { SERVICE_TYPE } from 'spinal-service-ticket'
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/workflow/list:
@@ -54,26 +54,32 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get('/api/v1/workflow/list', async (req, res, next) => {
+  app.get("/api/v1/workflow/list", async (req, res, next) => {
+
     let nodes = [];
     try {
-      const graph = await spinalAPIMiddleware.getGraph();
-      var childrens = await graph.getChildren('hasContext');
+      const profileId = getProfileId(req);
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId)
+      var childrens = await graph.getChildren("hasContext");
+
       for (const child of childrens) {
-        if (child.getType().get() === 'SpinalSystemServiceTicket') {
+        if (child.getType().get() === SERVICE_TYPE) {
           let info: Workflow = {
             dynamicId: child._server_id,
             staticId: child.getId().get(),
             name: child.getName().get(),
-            type: child.getType().get(),
+            type: child.getType().get()
           };
           nodes.push(info);
         }
       }
+
+      res.send(nodes);
+
+
     } catch (error) {
-      console.error(error);
-      res.status(400).send('list of worflows is not loaded');
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(400).send("list of worflows is not loaded");
     }
-    res.send(nodes);
   });
 };

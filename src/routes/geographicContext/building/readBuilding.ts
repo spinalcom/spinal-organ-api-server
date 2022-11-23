@@ -27,16 +27,12 @@ import * as express from 'express';
 import { Building } from '../interfacesGeoContext';
 import { SpinalNode } from 'spinal-model-graph';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
-import {
-  SpinalContext,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
   /**
    * @swagger
    * /api/v1/building/read:
@@ -59,29 +55,30 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get('/api/v1/building/read', async (req, res, next) => {
+  app.get("/api/v1/building/read", async (req, res, next) => {
     try {
       var address;
       var sommes = 0;
-      const graph = await spinalAPIMiddleware.getGraph();
-      var geographicContexts = await SpinalGraphService.getContextWithType(
-        'geographicContext'
-      );
-      var building = await geographicContexts[0].getChildren(
-        'hasGeographicBuilding'
-      );
-      var floors = await building[0].getChildren('hasGeographicFloor');
+      const profileId = getProfileId(req);
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
+
+      const contexts = await graph.getChildren("hasContext");
+
+      // var geographicContexts = await SpinalGraphService.getContextWithType("geographicContext");
+      var geographicContexts = contexts.filter(el => el.getType().get() === "geographicContext");
+      var building = await geographicContexts[0].getChildren("hasGeographicBuilding");
+      var floors = await building[0].getChildren("hasGeographicFloor")
 
       for (let index = 0; index < floors.length; index++) {
-        var rooms = await floors[index].getChildren('hasGeographicRoom');
+        var rooms = await floors[index].getChildren("hasGeographicRoom")
         for (const room of rooms) {
           let categories = await room.getChildren(NODE_TO_CATEGORY_RELATION);
           for (const child of categories) {
-            if (child.getName().get() === 'Spatial') {
+            if (child.getName().get() === "Spatial") {
               let attributs = await child.element.load();
               for (const attribut of attributs.get()) {
-                if (attribut.label === 'area') {
-                  sommes = sommes + attribut.value;
+                if (attribut.label === "area") {
+                  sommes = sommes + attribut.value
                 }
               }
             }
@@ -89,33 +86,36 @@ module.exports = function (
         }
       }
 
+
       let categories = await building[0].getChildren(NODE_TO_CATEGORY_RELATION);
       for (const child of categories) {
-        if (child.getName().get() === 'Spinal Building Information') {
+        if (child.getName().get() === "Spinal Building Information") {
           let attributs = await child.element.load();
           for (const attribut of attributs.get()) {
-            if (attribut.label === 'Adresse') {
-              address = attribut.value;
+            if (attribut.label === "Adresse") {
+              address = attribut.value
             }
           }
         }
       }
-      if (building[0].getType().get() === 'geographicBuilding') {
+      if (building[0].getType().get() === "geographicBuilding") {
         var info: Building = {
           dynamicId: building[0]._server_id,
           staticId: building[0].getId().get(),
           name: building[0].getName().get(),
           type: building[0].getType().get(),
           address: address,
-          area: sommes,
-        };
+          area: sommes
+        }
       } else {
-        res.status(400).send('node is not of type geographic building');
+        res.status(400).send("node is not of type geographic building");
       }
+
     } catch (error) {
-      console.log(error);
-      res.status(400).send('ko');
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(info);
   });
-};
+}

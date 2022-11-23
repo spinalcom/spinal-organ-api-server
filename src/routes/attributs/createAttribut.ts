@@ -28,7 +28,10 @@ import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer
 
 import * as express from 'express';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+import { ISpinalAPIMiddleware } from '../../interfaces';
+import { getProfileId } from "../../utilities/requestUtilities";
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /** 
 * @swagger
@@ -84,12 +87,13 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
   app.post("/api/v1/node/:IdNode/category/:IdCategory/attribut/create", async (req, res, next) => {
     try {
+      const profileId = getProfileId(req);
 
-      let node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10));
+      let node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
       var test = false
       //@ts-ignore
       SpinalGraphService._addNode(node)
-      let category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10));
+      let category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(category)
       let attributeLabel = req.body.attributeLabel;
@@ -112,7 +116,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         return res.status(400).send("this category does not belong to this node");
       }
     } catch (error) {
-      console.log(error);
+      if (error.code) return res.status(error.code).send({ message: error.message });
       return res.status(400).send("ko");
     }
     res.json();

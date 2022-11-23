@@ -25,8 +25,10 @@
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
  * @swagger
@@ -67,7 +69,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
   app.put("/api/v1/IoTNetworkContext/:id/update", async (req, res, next) => {
 
     try {
-      var IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10))
+      const profileId = getProfileId(req);
+      var IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
       if (IoTNetwork.getType().get() === "Network") {
         IoTNetwork.info.name.set(req.body.newNameIoTNetwork)
       }
@@ -75,7 +78,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         res.status(400).send("this context is not a Network");
       }
     } catch (error) {
-      console.log(error);
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("ko")
     }
 

@@ -25,8 +25,10 @@
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/device/{id}/delete:
@@ -54,7 +56,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
 */
   app.delete("/api/v1/device/:id/delete", async (req, res, next) => {
     try {
-      let device = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      let device = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(device);
       if (device.getType().get() === "BmsDevice") {
@@ -64,8 +67,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
         res.status(400).send("this node is not of type BmsDevice");
       }
     } catch (error) {
-      console.log(error);
-      res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json();
   })

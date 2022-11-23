@@ -26,8 +26,10 @@ import * as express from 'express';
 import { IoTNetwork } from "../interfacesEndpointAndTimeSeries";
 import { SpinalGraph } from 'spinal-model-graph';
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/device/{id}/endpoint_list:
@@ -66,8 +68,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
 
     let nodes = [];
     try {
-
-      let device = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      let device = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(device);
       var endpoints = await device.getChildren("hasBmsEndpoint");
@@ -83,7 +85,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
       }
 
     } catch (error) {
-      console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+
       res.status(400).send("list of endpoints is not loaded");
     }
     res.send(nodes);

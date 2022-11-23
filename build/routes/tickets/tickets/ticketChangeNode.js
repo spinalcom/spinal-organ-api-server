@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
     * @swagger
@@ -72,17 +73,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     */
     app.put("/api/v1/ticket/:ticketId/change_node", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var node = yield spinalAPIMiddleware.load(parseInt(req.body.nodeDynamicId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var node = yield spinalAPIMiddleware.load(parseInt(req.body.nodeDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            var ticket = yield spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10));
+            var ticket = yield spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(ticket);
             yield spinal_service_ticket_1.serviceTicketPersonalized.changeTicketElementNode(ticket.getId().get(), node.getId().get());
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send("ko");
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json();
     }));

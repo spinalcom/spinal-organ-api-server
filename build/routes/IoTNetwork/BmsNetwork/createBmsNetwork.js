@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const networkService_1 = require("../networkService");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -68,21 +69,24 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.post('/api/v1/Network/create', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post("/api/v1/Network/create", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var context = yield spinalAPIMiddleware.load(parseInt(req.body.IoTNetworkContext_DynamicId));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var context = yield spinalAPIMiddleware.load(parseInt(req.body.IoTNetworkContext_DynamicId), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
             let configService = {
                 contextName: context.getName().get(),
-                contextType: 'IoTNetwork',
+                contextType: "IoTNetwork",
                 networkName: req.body.NetworkName,
-                networkType: req.body.NetworkTypeName,
+                networkType: req.body.NetworkTypeName
             };
-            (0, networkService_1.default)().init(yield spinalAPIMiddleware.getGraph(), configService, true);
+            const graph = yield spinalAPIMiddleware.getProfileGraph(profileId);
+            (0, networkService_1.default)().init(graph, configService, true);
         }
         catch (error) {
-            console.error(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
             res.status(400).send();
         }
         res.json();

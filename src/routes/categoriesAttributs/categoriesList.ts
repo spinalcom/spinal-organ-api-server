@@ -25,8 +25,10 @@ import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service/dist/Models/constants";
 import { CategoriesAttribute } from './interfacesCategoriesAtrtribut'
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
 * @swagger
@@ -64,7 +66,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
     let nodes = [];
 
     try {
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      const profileId = getProfileId(req);
+      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       var childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
       for (const child of childrens) {
         let info: CategoriesAttribute = {
@@ -76,8 +79,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         nodes.push(info);
       }
     } catch (error) {
-      console.log(error);
-      res.status(400).send("ko");
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(nodes);
   });

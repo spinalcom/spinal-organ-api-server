@@ -24,18 +24,14 @@
 
 import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { NetworkService, ConfigService } from 'spinal-model-bmsnetwork';
-import getInstance from '../networkService';
-import {
-  SpinalContext,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { NetworkService, ConfigService } from 'spinal-model-bmsnetwork'
+import getInstance from "../networkService";
+import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: SpinalAPIMiddleware
-) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
   /**
    * @swagger
    * /api/v1/endpoint/create:
@@ -73,11 +69,13 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.post('/api/v1/endpoint/create', async (req, res, next) => {
+
+
+  app.post("/api/v1/endpoint/create", async (req, res, next) => {
+
     try {
-      var device = await spinalAPIMiddleware.load(
-        parseInt(req.body.deviceDynamicId)
-      );
+      const profileId = getProfileId(req);
+      var device = await spinalAPIMiddleware.load(parseInt(req.body.deviceDynamicId), profileId)
       //@ts-ignore
       SpinalGraphService._addNode(device);
 
@@ -92,21 +90,20 @@ module.exports = function (
       };
       let configService: ConfigService = {
         contextName: contextNetwork.getName().get(),
-        contextType: 'Network',
-        networkName: 'NetworkVirtual',
-        networkType: 'NetworkVirtual',
-      };
-      getInstance().init(
-        await spinalAPIMiddleware.getGraph(),
-        configService,
-        true
-      );
+        contextType: "Network",
+        networkName: "NetworkVirtual",
+        networkType: "NetworkVirtual"
+      }
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId)
+      getInstance().init(graph, configService, true)
       //@ts-ignore
       getInstance().createNewBmsEndpoint(device.getId().get(), obj);
     } catch (error) {
-      console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+
       res.status(400).send();
     }
     res.json();
-  });
-};
+  })
+
+}

@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -66,38 +67,41 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/node/:id/event_list', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/node/:id/event_list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         try {
             yield spinalAPIMiddleware.getGraph();
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
             var nodes = [];
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             var listEvents = yield spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId().get());
             for (const child of listEvents) {
                 // @ts-ignore
                 const _child = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(child.id.get());
-                if (_child.getType().get() === 'SpinalEvent') {
+                if (_child.getType().get() === "SpinalEvent") {
                     let info = {
                         dynamicId: _child._server_id,
-                        staticId: _child.getId().get(),
-                        name: _child.getName().get(),
-                        type: _child.getType().get(),
-                        groupeID: _child.info.groupId.get(),
-                        categoryID: child.categoryId.get(),
-                        nodeId: _child.info.nodeId.get(),
-                        repeat: _child.info.repeat.get(),
-                        description: _child.info.description.get(),
-                        startDate: _child.info.startDate.get(),
-                        endDate: _child.info.endDate.get(),
+                        staticId: (_a = _child.getId()) === null || _a === void 0 ? void 0 : _a.get(),
+                        name: (_b = _child.getName()) === null || _b === void 0 ? void 0 : _b.get(),
+                        type: (_c = _child.getType()) === null || _c === void 0 ? void 0 : _c.get(),
+                        groupeID: (_d = _child.info.groupId) === null || _d === void 0 ? void 0 : _d.get(),
+                        categoryID: (_e = child.categoryId) === null || _e === void 0 ? void 0 : _e.get(),
+                        nodeId: (_f = _child.info.nodeId) === null || _f === void 0 ? void 0 : _f.get(),
+                        repeat: (_g = _child.info.repeat) === null || _g === void 0 ? void 0 : _g.get(),
+                        description: (_h = _child.info.description) === null || _h === void 0 ? void 0 : _h.get(),
+                        startDate: (_j = _child.info.startDate) === null || _j === void 0 ? void 0 : _j.get(),
+                        endDate: (_k = _child.info.endDate) === null || _k === void 0 ? void 0 : _k.get(),
                     };
                     nodes.push(info);
                 }
             }
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send('ko');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json(nodes);
     }));

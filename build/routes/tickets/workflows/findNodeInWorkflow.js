@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const findOneInContext_1 = require("../../../utilities/findOneInContext");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -70,26 +71,24 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/workflow/:workflowId/node/:nodeId/find', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/workflow/:workflowId/node/:nodeId/find", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         try {
             yield spinalAPIMiddleware.getGraph();
-            var workflow = yield spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10));
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            var workflow = yield spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
             if (req.params.nodeId) {
             }
             var node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(req.params.nodeId);
-            if (workflow.getType().get() === 'SpinalSystemServiceTicket' &&
-                typeof node === 'undefined') {
+            if (workflow.getType().get() === "SpinalSystemServiceTicket" && typeof node === "undefined") {
                 node = yield (0, findOneInContext_1.findOneInContext)(workflow, workflow, (n) => n.getId().get() === req.params.nodeId);
-                if (typeof node === 'undefined') {
-                    return res.status(400).send('ko');
+                if (typeof node === "undefined") {
+                    return res.status(404).send("node not found");
                 }
                 // @ts-ignore
                 spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             }
-            else if (workflow.getType().get() !== 'SpinalSystemServiceTicket') {
-                return res
-                    .status(400)
-                    .send('this context is not a SpinalSystemServiceTicket');
+            else if (workflow.getType().get() !== "SpinalSystemServiceTicket") {
+                return res.status(400).send("this context is not a SpinalSystemServiceTicket");
             }
             var info = {
                 dynamicId: node._server_id,
@@ -99,8 +98,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             };
         }
         catch (error) {
-            console.log(error);
-            res.status(400).send('ko');
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(500).send(error.message);
         }
         res.json(info);
     }));

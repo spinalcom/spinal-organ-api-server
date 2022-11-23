@@ -22,20 +22,14 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import { Note } from '../interfacesGeoContext';
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
-) {
+import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
+import { Note } from '../interfacesGeoContext'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/equipement/{id}/note_list:
@@ -69,29 +63,31 @@ module.exports = function (
    */
   app.get('/api/v1/equipement/:id/note_list', async (req, res, next) => {
     try {
-      var equipement: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10)
-      );
+      const profileId = getProfileId(req);
+
+      var equipement: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
-      SpinalGraphService._addNode(equipement);
-      if (equipement.getType().get() === 'BIMObject') {
-        var _notes = [];
-        var notes = await serviceDocumentation.getNotes(equipement);
+      SpinalGraphService._addNode(equipement)
+      if (equipement.getType().get() === "BIMObject") {
+        var _notes = []
+        var notes = await serviceDocumentation.getNotes(equipement)
         for (const note of notes) {
           let infoNote: Note = {
             date: parseInt(note.element.date.get()),
             type: note.element.type.get(),
-            message: note.element.message.get(),
-          };
-          _notes.push(infoNote);
+            message: note.element.message.get()
+          }
+          _notes.push(infoNote)
         }
       } else {
-        res.status(400).send('node is not of type  BIMObject');
+        res.status(400).send("node is not of type  BIMObject");
       }
+
     } catch (error) {
-      console.log(error);
-      res.status(400).send('ko');
+
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(_notes);
-  });
-};
+  })
+}

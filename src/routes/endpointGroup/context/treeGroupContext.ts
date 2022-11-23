@@ -28,8 +28,10 @@ import { ContextTree } from '../../contexts/interfacesContexts'
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import { recTree } from '../../../utilities/recTree'
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/endPointsGroup/{id}/tree:
@@ -61,9 +63,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
  */
 
   app.get("/api/v1/endPointsGroup/:id/tree", async (req, res, next) => {
+    const profileId = getProfileId(req);
     var contexts: ContextTree;
     try {
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
       if (context.getType().get() === "BmsEndpointGroupContext") {
@@ -83,7 +86,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
     } catch (error) {
       console.error(error);
-      res.status(400).send("ko");
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
     res.json(contexts);
   });

@@ -31,11 +31,13 @@ import {
 } from 'spinal-env-viewer-graph-service';
 import { updateControlEndpointWithAnalytic } from './../../utilities/upstaeControlEndpoint'
 import { NetworkService, InputDataEndpoint, InputDataEndpointDataType, InputDataEndpointType } from "spinal-model-bmsnetwork"
+import { ISpinalAPIMiddleware } from '../../interfaces';
+import { getProfileId } from '../../utilities/requestUtilities';
 
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger
@@ -82,8 +84,9 @@ module.exports = function (
   app.post('/api/v1/command/room/:id/temp', async (req, res, next) => {
     var info;
     try {
+      const profileId = getProfileId(req);
 
-      var room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      var room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(room)
 
@@ -112,7 +115,7 @@ module.exports = function (
 
 
     } catch (error) {
-      console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message)
       res.status(400).send("list of room is not loaded");
     }
 

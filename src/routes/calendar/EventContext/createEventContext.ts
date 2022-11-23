@@ -27,7 +27,10 @@ import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
 import { SpinalEventService } from "spinal-env-viewer-task-service";
 import { ContextEvent } from '../interfacesContextsEvents'
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
 * @swagger
 * /api/v1/eventContext/create:
@@ -62,12 +65,28 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
 
     try {
       let steps = []
-      SpinalEventService.createEventContext(req.body.contextName, steps)
+      const profileId = getProfileId(req);
+      const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
+
+      if (!userGraph) res.status(406).send(`No graph found for ${profileId}`);
+
+      const info = await SpinalEventService.createEventContext(req.body.contextName, steps);
+      const context = SpinalGraphService.getRealNode(info.id.get());
+
+      userGraph.addContext(context);
+
+      res.status(200).json({
+        name: context.getName().get(),
+        staticId: context.getId().get(),
+        dynamicId: context._server_id,
+        type: context.getType().get()
+      });
+
     } catch (error) {
       console.error(error)
-      res.status(400).send("ko")
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
-    res.json();
   })
 
 }
