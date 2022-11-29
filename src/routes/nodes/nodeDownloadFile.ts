@@ -73,7 +73,7 @@ module.exports = function (
       await spinalAPIMiddleware.getGraph();
       var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
       var p = await down(node);
-      res.download(p, (error) => { });
+      res.download(p, (error) => {});
     } catch (error) {
       console.log(error);
       res.status(400).send('ko');
@@ -86,9 +86,11 @@ function down(node): Promise<string> {
     node.load((argPath) => {
       const p = `${__dirname}/${node.name.get()}`;
       const f = fs.createWriteStream(p);
-
+      const protocol = config.spinalConnector.protocol
+        ? config.spinalConnector.protocol
+        : 'http';
       http.get(
-        `http://${config.spinalConnector.host}:${config.spinalConnector.port}/sceen/_?u=${argPath._server_id}`,
+        `${protocol}://${config.spinalConnector.host}:${config.spinalConnector.port}/sceen/_?u=${argPath._server_id}`,
         function (response) {
           response.pipe(f);
           response.on('end', async () => {
