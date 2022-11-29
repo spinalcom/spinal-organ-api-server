@@ -221,7 +221,7 @@ module.exports = function (
           };
           const base64Image = image.value as string;
           // check if data base64
-          if (base64Image.startsWith('data:image/png;base64')) {
+          if (/^data:image\/\w+;base64,/.test(base64Image) === true) {
             const imageData = base64Image.replace(
               /^data:image\/\w+;base64,/,
               ''
