@@ -22,21 +22,22 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
-import { FileSystem } from 'spinal-core-connectorjs_type';
 import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import { ServiceUser } from 'spinal-service-user';
-var http = require('http');
-var fs = require('fs');
+import * as fs from 'fs';
 import config from '../../config';
+var http, hubUri;
 
+if (config.spinalConnector.protocol === 'https') {
+  http = require('https');
+  hubUri = `https://${config.spinalConnector.host}`;
+} else {
+  http = require('http');
+  hubUri = `http://${config.spinalConnector.host}`;
+}
+if (config.spinalConnector.port) {
+  hubUri = `${hubUri}:${config.spinalConnector.port}`;
+}
 module.exports = function (
   logger,
   app: express.Express,
@@ -71,9 +72,16 @@ module.exports = function (
   app.use('/api/v1/node/:id/download_file', async (req, res, next) => {
     try {
       await spinalAPIMiddleware.getGraph();
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
-      var p = await down(node);
-      res.download(p, (error) => {});
+      var path = await spinalAPIMiddleware.load<spinal.File>(
+        parseInt(req.params.id, 10)
+      );
+      var p = await down(path);
+      res.download(p, (error) => {
+        // remove file after 1min
+        setTimeout(() => {
+          fs.unlink(p, () => {});
+        }, 60000);
+      });
     } catch (error) {
       console.log(error);
       res.status(400).send('ko');
@@ -81,16 +89,13 @@ module.exports = function (
   });
 };
 
-function down(node): Promise<string> {
+function down(path: spinal.File): Promise<string> {
   return new Promise((resolve, reject) => {
-    node.load((argPath) => {
-      const p = `${__dirname}/${node.name.get()}`;
+    path.load((argPath) => {
+      const p = `${__dirname}/${path.name.get()}`;
       const f = fs.createWriteStream(p);
-      const protocol = config.spinalConnector.protocol
-        ? config.spinalConnector.protocol
-        : 'http';
       http.get(
-        `${protocol}://${config.spinalConnector.host}:${config.spinalConnector.port}/sceen/_?u=${argPath._server_id}`,
+        `${hubUri}/sceen/_?u=${argPath._server_id}`,
         function (response) {
           response.pipe(f);
           response.on('end', async () => {
