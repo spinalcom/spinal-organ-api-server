@@ -84,20 +84,16 @@ function Requests(logger) {
   return {
 
     // TODO host should be configurable
-    run: async function (): Promise<void> {
+    run: async function (): Promise<any> {
       let host = config.api.host
       let port = config.api.port
-
       const server = api.listen(port, () => {
         console.log("api server is running");
       });
-
       SpinalAPIMiddleware.getInstance().runSocketServer(server);
-
+      return server
     },
-
     getSwaggerDocs: (): Object => { return swaggerDocs; }
-
   };
 }
 
@@ -105,6 +101,6 @@ function Requests(logger) {
 const r = Requests({})
 console.log(r);
 
-r.run();
+export const server = r.run();
 
 export default Requests;

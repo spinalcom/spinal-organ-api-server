@@ -32,6 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.server = void 0;
 const dotenv = require("dotenv");
 dotenv.config();
 const swaggerUi = require("swagger-ui-express");
@@ -84,6 +85,7 @@ function Requests(logger) {
                     console.log("api server is running");
                 });
                 spinalAPIMiddleware_1.default.getInstance().runSocketServer(server);
+                return server;
             });
         },
         getSwaggerDocs: () => { return swaggerDocs; }
@@ -91,6 +93,6 @@ function Requests(logger) {
 }
 const r = Requests({});
 console.log(r);
-r.run();
+exports.server = r.run();
 exports.default = Requests;
 //# sourceMappingURL=index.js.map
