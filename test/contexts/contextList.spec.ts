@@ -25,19 +25,25 @@
 import { describe, before, it } from 'mocha';
 const chai = require('chai');
 const chaiHttp = require('chai-http')
-import Request from '../../src/index';
+import { server } from '../../src/index';
 chai.should();
 chai.use(chaiHttp);
 
-
-describe('Contexts requests', function () {
-  describe('Get context list', function () {
-    it('It should get al the contexts', (done) => {
-      console.log(Request);
-      done()
+async function mainTest() {
+  const S = await server
+  describe('Contexts requests', function () {
+    describe('Get context list', function () {
+      it('It should get al the contexts', (done) => {
+        chai.request(S).get('/api/v1/context/list').end((err, reponse) => {
+          reponse.should.have.status(200);
+        })
+        done()
+      })
     })
   })
-})
+}
+
+mainTest();
 
 // describe("User Service Unit Tests", function () {
 //   describe("Save User functionality", function () {

@@ -25,11 +25,9 @@
 import SpinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { EndPointNode } from './interfacesNodes';
-import { SpinalGraph } from 'spinal-model-graph';
-import {
-  SpinalContext,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service';
+import { SpinalBmsEndpoint, SpinalBmsDevice, SpinalBmsEndpointGroup } from "spinal-model-bmsnetwork";
+const BMS_ENDPOINT_RELATIONS = ["hasEndPoint", SpinalBmsDevice.relationName, SpinalBmsEndpoint.relationName, SpinalBmsEndpointGroup.relationName];
 
 module.exports = function (
   logger,
@@ -72,12 +70,11 @@ module.exports = function (
     let nodes = [];
     try {
       spinalAPIMiddleware.getGraph();
-      let node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      let node: SpinalNode = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
       // @ts-ignore
       SpinalGraphService._addNode(node);
-      var endpoints = await node.getChildren(["hasEndPoint", "hasBmsEndpoint"]);
-      console.log(endpoints);
-
+      const endpoints = await SpinalGraphService.findNodesByType(node.getId().get(), BMS_ENDPOINT_RELATIONS, SpinalBmsEndpoint.nodeTypeName)
+      //     var endpoints = await node.getChildren(["hasEndPoint", "hasBmsEndpoint"]);
       for (const endpoint of endpoints) {
         var element = await endpoint.element.load();
         var currentValue = element.currentValue.get();

@@ -23,9 +23,12 @@
  */
 import SpinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
+import { EndPointNode } from '../../nodes/interfacesNodes';
 import { IoTNetwork } from "../interfacesEndpointAndTimeSeries";
 import { SpinalGraph } from 'spinal-model-graph';
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service';
+import { SpinalBmsEndpoint, SpinalBmsDevice, SpinalBmsEndpointGroup } from "spinal-model-bmsnetwork";
+const BMS_ENDPOINT_RELATIONS = ["hasEndPoint", SpinalBmsDevice.relationName, SpinalBmsEndpoint.relationName, SpinalBmsEndpointGroup.relationName];
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
   /**
@@ -66,25 +69,27 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
 
     let nodes = [];
     try {
-
-      let device = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      spinalAPIMiddleware.getGraph();
+      let node: SpinalNode = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
       // @ts-ignore
-      SpinalGraphService._addNode(device);
-      var endpoints = await device.getChildren("hasBmsEndpoint");
-
+      SpinalGraphService._addNode(node);
+      const endpoints = await SpinalGraphService.findNodesByType(node.getId().get(), BMS_ENDPOINT_RELATIONS, SpinalBmsEndpoint.nodeTypeName)
+      //     var endpoints = await node.getChildren(["hasEndPoint", "hasBmsEndpoint"]);
       for (const endpoint of endpoints) {
-        let info: IoTNetwork = {
+        var element = await endpoint.element.load();
+        var currentValue = element.currentValue.get();
+        let info: EndPointNode = {
           dynamicId: endpoint._server_id,
           staticId: endpoint.getId().get(),
           name: endpoint.getName().get(),
-          type: endpoint.getType().get()
+          type: endpoint.getType().get(),
+          currentValue: currentValue,
         };
         nodes.push(info);
       }
-
     } catch (error) {
       console.error(error);
-      res.status(400).send("list of endpoints is not loaded");
+      res.status(400).send('list of endpoints is not loaded');
     }
     res.send(nodes);
   });

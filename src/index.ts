@@ -94,6 +94,7 @@ function Requests(logger) {
 
   return {
     // TODO host should be configurable
+
     run: async function (): Promise<void> {
       const spinalAPIMiddleware = await initSpinalHub();
       const api = initApiServer(spinalAPIMiddleware);
@@ -107,9 +108,7 @@ function Requests(logger) {
         console.log(
           `  redoc :\thttp://localhost:${port}/spinalcom-api-redoc-docs`
         );
-        console.log();
       });
-
       SpinalAPIMiddleware.getInstance().runSocketServer(server);
     },
 
@@ -122,6 +121,6 @@ function Requests(logger) {
 const r = Requests({});
 console.log(r);
 
-r.run();
+export const server = r.run();
 
 export default Requests;
