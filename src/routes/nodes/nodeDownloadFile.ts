@@ -26,6 +26,7 @@ import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import * as fs from 'fs';
 import config from '../../config';
+const mime = require('mime-types');
 var http, hubUri;
 
 if (config.spinalConnector.protocol === 'https') {
@@ -75,13 +76,7 @@ module.exports = function (
       var path = await spinalAPIMiddleware.load<spinal.File>(
         parseInt(req.params.id, 10)
       );
-      var p = await down(path);
-      res.download(p, (error) => {
-        // remove file after 1min
-        setTimeout(() => {
-          fs.unlink(p, () => {});
-        }, 60000);
-      });
+      await down(path, res);
     } catch (error) {
       console.log(error);
       res.status(400).send('ko');
@@ -89,17 +84,20 @@ module.exports = function (
   });
 };
 
-function down(path: spinal.File): Promise<string> {
+function down(file: spinal.File, res): Promise<void> {
   return new Promise((resolve, reject) => {
-    path.load((argPath) => {
-      const p = `${__dirname}/${path.name.get()}`;
-      const f = fs.createWriteStream(p);
+    file.load((argPath) => {
+      // const p = `${__dirname}/${path.name.get()}`;
+      // const f = fs.createWriteStream(p);
       http.get(
         `${hubUri}/sceen/_?u=${argPath._server_id}`,
         function (response) {
-          response.pipe(f);
+          var type =
+            mime.lookup(file?.name?.get()) || 'application/octet-stream';
+          res.set('Content-Type', type);
+          response.pipe(res);
           response.on('end', async () => {
-            resolve(p);
+            resolve();
           });
           response.on('error', function (err) {
             console.log(err);
