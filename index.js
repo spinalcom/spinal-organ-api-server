@@ -22,6 +22,8 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
+const dotenv = require('dotenv');
+dotenv.config();
 
-const Requests = require('./build/index').default
+const Requests = require('./build/index').default;
 module.exports = Requests;

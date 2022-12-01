@@ -143,20 +143,13 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         //attributs list
         let categories = await room.getChildren(NODE_TO_CATEGORY_RELATION);
         for (const child of categories) {
-          let attributs = (await child.element.load()).get();
-          var filter_attributs = [];
-          for (const attribut of attributs) {
-            if (attribut.label === "name" || attribut.label === "area" || attribut.label === "perimeter" || attribut.label === "capacity") {
-              filter_attributs.push(attribut)
-            }
-          }
-
+          let attributs = await child.element.load();
           let info = {
             dynamicId: child._server_id,
             staticId: child.getId().get(),
             name: child.getName().get(),
             type: child.getType().get(),
-            attributs: filter_attributs
+            attributs: attributs.get()
           };
           CategorieAttributsList.push(info);
         }

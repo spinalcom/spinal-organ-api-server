@@ -28,10 +28,14 @@ import * as cors from 'cors';
 import * as _ from 'lodash';
 
 import * as bodyParser from 'body-parser';
-import SpinalAPIMiddleware from './spinalAPIMiddleware';
+import type SpinalAPIMiddleware from './spinalAPIMiddleware';
 import routes from './routes/routes';
+import morgan = require('morgan');
 
-function APIServer(logger): express.Express {
+function APIServer(
+  logger,
+  spinalAPIMiddleware: SpinalAPIMiddleware
+): express.Express {
   const app = express();
   // enable files upload
   app.use(
@@ -48,23 +52,34 @@ function APIServer(logger): express.Express {
     })
   );
   const bodyParserDefault = bodyParser.json();
-  const bodyParserTicket = bodyParser.json({ limit: '500mb' })
+  const bodyParserTicket = bodyParser.json({ limit: '500mb' });
   app.use((req, res, next) => {
-
-    if (req.originalUrl === "/api/v1/node/convert_base_64" || req.originalUrl === "/api/v1/ticket/create_ticket")
-      return bodyParserTicket(req, res, next)
-    return bodyParserDefault(req, res, next)
+    if (
+      req.originalUrl === '/api/v1/node/convert_base_64' ||
+      req.originalUrl === '/api/v1/ticket/create_ticket'
+    )
+      return bodyParserTicket(req, res, next);
+    return bodyParserDefault(req, res, next);
   });
-  // app.use(morgan('dev'));
-
-  const spinalAPIMiddleware = SpinalAPIMiddleware.getInstance();
-  if (spinalAPIMiddleware.getGraph() !== undefined) {
-    console.log('the graph is loaded correctly');
-  } else console.log('the graph is not loaded correctly');
+  if (process.env.LOG_BODY) {
+    morgan.token('body-req', (req) => {
+      return req.method === 'POST' || req.method === 'PUT'
+        ? // @ts-ignore
+          JSON.stringify(req.body, null, 2)
+        : '';
+    });
+    app.use(
+      '/api/*',
+      morgan(
+        ':method :url :status :response-time ms - :res[content-length] :body-req'
+      )
+    );
+  } else {
+    app.use('/api/*', morgan('dev'));
+  }
 
   routes(logger, app, spinalAPIMiddleware);
-  app.use('/admin', express.static('public'));
-
+  // app.use('/admin', express.static('public'));
   // app.use(function (req, res, next) {
   //   var pathUrl = req.path;
   //   if (pathUrl !== '/') {

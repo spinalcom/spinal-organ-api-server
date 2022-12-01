@@ -1,2 +1,4 @@
 node_modules
 spinal-model-graph
+.env
+build

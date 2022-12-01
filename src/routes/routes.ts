@@ -23,7 +23,7 @@
  */
 
 import * as express from 'express';
-import SpinalAPIMiddleware from '../spinalAPIMiddleware';
+import type SpinalAPIMiddleware from '../spinalAPIMiddleware';
 function routes(
   logger,
   app: express.Express,
@@ -967,19 +967,29 @@ function routes(
   // Analytics
   require('./analytics/roomResume')(logger, app, spinalAPIMiddleware);
 
-  // command 
+  // command
   require('./command/roomListCommandEnable')(logger, app, spinalAPIMiddleware);
   require('./command/roomCommandLight')(logger, app, spinalAPIMiddleware);
   require('./command/roomCommandBlind')(logger, app, spinalAPIMiddleware);
   require('./command/roomCommandTemp')(logger, app, spinalAPIMiddleware);
 
-  require('./command/roomCommandBlindSetValue')(logger, app, spinalAPIMiddleware);
-  require('./command/roomCommandLightSetValue')(logger, app, spinalAPIMiddleware);
-  require('./command/roomCommandTempSetValue')(logger, app, spinalAPIMiddleware);
+  require('./command/roomCommandBlindSetValue')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./command/roomCommandLightSetValue')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./command/roomCommandTempSetValue')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./nodes/nodeReadControlEndpoint')(logger, app, spinalAPIMiddleware);
   require('./command/commandMultiple')(logger, app, spinalAPIMiddleware);
-
 }
-
 
 export default routes;
