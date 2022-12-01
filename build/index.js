@@ -33,8 +33,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.server = void 0;
-const dotenv = require("dotenv");
-dotenv.config();
 const swaggerUi = require("swagger-ui-express");
 const swaggerJSDoc = require("swagger-jsdoc");
 const swaggerOption_1 = require("./swaggerOption");
@@ -44,51 +42,68 @@ const config_1 = require("./config");
 const api_server_1 = require("./api-server");
 const spinalAPIMiddleware_1 = require("./spinalAPIMiddleware");
 function Requests(logger) {
-    let api = (0, api_server_1.default)(logger);
+    function initSpinalHub() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const spinalAPIMiddleware = spinalAPIMiddleware_1.default.getInstance();
+            yield spinalAPIMiddleware.getGraph();
+            console.log('graph loaded successfully.');
+            return spinalAPIMiddleware;
+        });
+    }
+    function initApiServer(spinalAPIMiddleware) {
+        let api = (0, api_server_1.default)(logger, spinalAPIMiddleware);
+        // TODO add swagger specs here for external documentation and for the organ to ask for it
+        api.use('/swagger-spec', (req, res) => {
+            res.json(swaggerDocs);
+        });
+        fs.writeFile('./swagger-spec.json', JSON.stringify(swaggerDocs, null, 2), (err) => {
+            if (err) {
+                return console.error(err);
+            }
+        });
+        // add swagger docs to API
+        api.use('/spinalcom-api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs, swaggerUiOpts));
+        api.get('/docs/swagger.json', (req, res) => {
+            res.send(swaggerDocs);
+        });
+        api.get('/spinalcom-api-redoc-docs', redoc({
+            title: 'API Docs',
+            specUrl: '/docs/swagger.json',
+        }));
+        // serve logo.png file
+        api.get('/logo.png', (req, res) => {
+            res.sendFile('spinalcore.png', { root: process.cwd() + '/uploads' });
+        });
+        return api;
+    }
     let swaggerDocs = swaggerJSDoc(swaggerOption_1.swaggerOption);
     let swaggerUiOpts = {
         explorer: true,
-        openapi: "3.0.1",
-        produces: ["application/json"],
+        openapi: '3.0.1',
+        produces: ['application/json'],
         swaggerOptions: swaggerOption_1.swaggerOption,
-        customCss: '.topbar-wrapper img {content: url(/logo.png);} .swagger-ui .topbar {background: #dbdbdb;}'
+        customCss: '.topbar-wrapper img {content: url(/logo.png);} .swagger-ui .topbar {background: #dbdbdb;}',
     };
-    // TODO add swagger specs here for external documentation and for the organ to ask for it
-    api.use('/swagger-spec', (req, res) => {
-        res.json(swaggerDocs);
-    });
-    fs.writeFile('./swagger-spec.json', JSON.stringify(swaggerDocs, null, 2), (err) => {
-        if (err) {
-            return console.error(err);
-        }
-    });
-    // add swagger docs to API
-    api.use('/spinalcom-api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs, swaggerUiOpts));
-    api.get('/docs/swagger.json', (req, res) => {
-        res.send(swaggerDocs);
-    });
-    api.get('/spinalcom-api-reduc-docs', redoc({
-        title: 'API Docs',
-        specUrl: '/docs/swagger.json'
-    }));
-    // serve logo.png file
-    api.get('/logo.png', (req, res) => {
-        res.sendFile('spinalcore.png', { root: process.cwd() + '/uploads' });
-    });
     return {
         // TODO host should be configurable
         run: function () {
             return __awaiter(this, void 0, void 0, function* () {
-                let host = config_1.default.api.host;
+                const spinalAPIMiddleware = yield initSpinalHub();
+                const api = initApiServer(spinalAPIMiddleware);
                 let port = config_1.default.api.port;
                 const server = api.listen(port, () => {
-                    console.log("api server is running");
+                    console.log(`\nApi server is listening at 0.0.0.0:${port}`);
+                    console.log(`  openapi :\thttp://localhost:${port}/docs/swagger.json`);
+                    console.log(`  swagger-ui :\thttp://localhost:${port}/spinalcom-api-docs`);
+                    console.log(`  redoc :\thttp://localhost:${port}/spinalcom-api-redoc-docs`);
+                    console.log();
                 });
                 spinalAPIMiddleware_1.default.getInstance().runSocketServer(server);
-                return server;
             });
         },
-        getSwaggerDocs: () => { return swaggerDocs; }
+        getSwaggerDocs: () => {
+            return swaggerDocs;
+        },
     };
 }
 const r = Requests({});

@@ -25,7 +25,9 @@
 import SpinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
 import { EndPointRoom } from '../interfacesGeoContext'
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service';
+import { SpinalBmsEndpoint, SpinalBmsDevice, SpinalBmsEndpointGroup } from "spinal-model-bmsnetwork";
+const BMS_ENDPOINT_RELATIONS = ["hasEndPoint", SpinalBmsDevice.relationName, SpinalBmsEndpoint.relationName, SpinalBmsEndpointGroup.relationName];
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
   /**
@@ -66,23 +68,23 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
 
     let nodes = [];
     try {
-
+      spinalAPIMiddleware.getGraph();
       let room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
       // @ts-ignore
       SpinalGraphService._addNode(room);
       if (room.getType().get() === "geographicRoom") {
 
-        var endpoints = await room.getChildren(["hasEndPoint", "hasBmsEndpoint"]);
-
+        const endpoints = await SpinalGraphService.findNodesByType(room.getId().get(), BMS_ENDPOINT_RELATIONS, SpinalBmsEndpoint.nodeTypeName)
+        //     var endpoints = await node.getChildren(["hasEndPoint", "hasBmsEndpoint"]);
         for (const endpoint of endpoints) {
-          var element = await endpoint.element.load()
+          var element = await endpoint.element.load();
           var currentValue = element.currentValue.get();
           let info: EndPointRoom = {
             dynamicId: endpoint._server_id,
             staticId: endpoint.getId().get(),
             name: endpoint.getName().get(),
             type: endpoint.getType().get(),
-            currentValue: currentValue
+            currentValue: currentValue,
           };
           nodes.push(info);
         }

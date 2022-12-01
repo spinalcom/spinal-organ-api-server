@@ -108,7 +108,6 @@ function Requests(logger) {
         console.log(
           `  redoc :\thttp://localhost:${port}/spinalcom-api-redoc-docs`
         );
-        console.log();
       });
       SpinalAPIMiddleware.getInstance().runSocketServer(server);
     },
