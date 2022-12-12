@@ -7515,10 +7515,12 @@
                     "type": "number"
                   },
                   "startDate": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "YYYY-MM-DD"
                   },
                   "endDate": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "YYYY-MM-DD"
                   },
                   "description": {
                     "type": "string"
@@ -7527,13 +7529,15 @@
                     "type": "boolean"
                   },
                   "repeatEnd": {
-                    "type": "number"
+                    "type": "number",
+                    "default": "YYYY-MM-DD"
                   },
                   "count": {
                     "type": "number"
                   },
                   "period": {
-                    "type": "number"
+                    "type": "number",
+                    "default": "day|week|month|year"
                   }
                 }
               }
@@ -13096,10 +13100,12 @@
                     "type": "string"
                   },
                   "startDate": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "YYYY-MM-DD"
                   },
                   "endDate": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "YYYY-MM-DD"
                   },
                   "description": {
                     "type": "string"
@@ -13108,13 +13114,15 @@
                     "type": "boolean"
                   },
                   "repeatEnd": {
-                    "type": "number"
+                    "type": "string",
+                    "default": "YYYY-MM-DD"
                   },
                   "count": {
                     "type": "number"
                   },
                   "period": {
-                    "type": "number"
+                    "type": "string",
+                    "default": "day|week|month|year"
                   },
                   "user": {
                     "type": "object",
@@ -13124,7 +13132,7 @@
                       "gsm"
                     ],
                     "properties": {
-                      "userName": {
+                      "username": {
                         "type": "string"
                       },
                       "email": {

@@ -70,6 +70,7 @@ function getCat(filePath: string): string {
     if (dir[idx] === 'routes') return dir[idx + 1];
   }
 }
+
 function getIndexCat(filePath: string): number {
   const dir = getCat(filePath);
   if (!dir) return 9999;

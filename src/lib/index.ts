@@ -41,6 +41,7 @@ function initApiServer(app: Application, spinalAPIMiddleware: ISpinalAPIMiddlewa
     app.use((req, res, next) => {
         if (req.originalUrl === '/api/v1/node/convert_base_64' || req.originalUrl === '/api/v1/ticket/create_ticket')
             return bodyParserTicket(req, res, next);
+        next()
     });
 
     useLogger(app, log_body);
