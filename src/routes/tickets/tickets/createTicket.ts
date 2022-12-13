@@ -22,21 +22,16 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 import {
-  SpinalContext,
   SpinalNode,
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
-import { File, FileSystem, Lst, Ptr } from 'spinal-core-connectorjs_type';
 import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { Step } from '../interfacesWorkflowAndTickets';
 import { serviceTicketPersonalized } from 'spinal-service-ticket';
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import { ServiceUser } from 'spinal-service-user';
 import { awaitSync } from '../../../utilities/awaitSync';
 import { _load } from '../../../utilities/loadNode';
-import { LocalFileData } from 'get-file-object-from-local-path';
-import * as bodyParser from 'body-parser';
+import getNode from '../../../utilities/getNode'
 
 module.exports = function (
   logger,
@@ -55,7 +50,7 @@ module.exports = function (
    *     tags:
    *       - Workflow & ticket
    *     requestBody:
-   *       description: For the two parameters *workflow* and *process* you can browse it either by putting the dynamicId or the name
+   *       description: For the two parameters *workflow* and *process* you can browse it either by putting the dynamicId or the name and to associate the ticket with an element, please fill in the dynamicId or StaticId parameter
    *       required: true
    *       content:
    *         application/json:
@@ -65,6 +60,7 @@ module.exports = function (
    *               - workflow
    *               - process
    *               - nodeDynamicId
+   *               - nodeStaticId
    *               - name
    *               - priority
    *               - description
@@ -77,6 +73,8 @@ module.exports = function (
    *                 type: string
    *               nodeDynamicId:
    *                 type: number
+   *               nodeStaticId:
+   *                 type: string
    *               name:
    *                 type: string
    *               priority:
@@ -108,6 +106,7 @@ module.exports = function (
    */
   app.post('/api/v1/ticket/create_ticket', async (req, res, next) => {
     try {
+      await spinalAPIMiddleware.getGraph();
       let ticketCreated;
       let ticketInfo = {
         name: req.body.name,
@@ -115,16 +114,15 @@ module.exports = function (
         description: req.body.description,
         declarer_id: req.body.declarer_id,
       };
-      await spinalAPIMiddleware.getGraph();
       let arrayofServerId = [
-        parseInt(req.body.nodeDynamicId, 10),
         parseInt(req.body.workflow, 10),
         parseInt(req.body.process, 10),
       ];
-      const [node, workflowById, processById]: SpinalNode<any>[] = await _load(
+      const [workflowById, processById]: SpinalNode<any>[] = await _load(
         arrayofServerId
       );
-      if (!node) return res.status(400).send('invalid nodeDynamicId');
+      const node = await getNode(spinalAPIMiddleware, req.body.nodeDynamicId, req.body.nodeStaticId)
+      if (!node) return res.status(400).send('invalid nodeDynamicId or nodeStaticId');
 
       //@ts-ignore
       SpinalGraphService._addNode(node);
@@ -233,33 +231,8 @@ module.exports = function (
               user
             );
           }
-          // else {
-          //   await serviceDocumentation.addNote(
-          //     realNodeTicket,
-          //     user,
-          //     image.value
-          //   );
-          // }
         }
       }
-
-      // var images = req.body.images
-      // for (const image of images) {
-      //   const fs = require('fs');
-      //   var base64 = image.value;
-      //   var data = base64.replace(/^data:image\/\w+;base64,/, "");
-      //   var ReadableData = require('stream').Readable
-      //   const imageBufferData = Buffer.from(data, 'base64')
-      //   var streamObj = new ReadableData()
-      //   streamObj.push(imageBufferData)
-      //   streamObj.push(null)
-      //   var pipe = streamObj.pipe(fs.createWriteStream('./' + image.name));
-      //   pipe.on('finish', function () {
-      //     console.log("pipe.ON");
-      //     const fileData = new LocalFileData('./' + image.name)
-      //     console.log("filedata", fileData);
-      //   });
-      // }
     } catch (error) {
       console.error(error);
       return res.status(400).send({ ko: error });
@@ -267,3 +240,5 @@ module.exports = function (
     return res.json(info);
   });
 };
+
+

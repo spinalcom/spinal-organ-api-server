@@ -96,7 +96,6 @@ function Requests(logger) {
                     console.log(`  openapi :\thttp://localhost:${port}/docs/swagger.json`);
                     console.log(`  swagger-ui :\thttp://localhost:${port}/spinalcom-api-docs`);
                     console.log(`  redoc :\thttp://localhost:${port}/spinalcom-api-redoc-docs`);
-                    console.log();
                 });
                 spinalAPIMiddleware_1.default.getInstance().runSocketServer(server);
             });

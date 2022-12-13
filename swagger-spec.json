@@ -6447,7 +6447,7 @@
           "Workflow & ticket"
         ],
         "requestBody": {
-          "description": "For the two parameters *workflow* and *process* you can browse it either by putting the dynamicId or the name",
+          "description": "For the two parameters *workflow* and *process* you can browse it either by putting the dynamicId or the name and to associate the ticket with an element, please fill in the dynamicId or StaticId parameter",
           "required": true,
           "content": {
             "application/json": {
@@ -6457,6 +6457,7 @@
                   "workflow",
                   "process",
                   "nodeDynamicId",
+                  "nodeStaticId",
                   "name",
                   "priority",
                   "description",
@@ -6472,6 +6473,9 @@
                   },
                   "nodeDynamicId": {
                     "type": "number"
+                  },
+                  "nodeStaticId": {
+                    "type": "string"
                   },
                   "name": {
                     "type": "string"
