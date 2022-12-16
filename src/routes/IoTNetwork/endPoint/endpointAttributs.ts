@@ -22,68 +22,73 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service/dist/Models/constants";
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
+import {
+  SpinalGraphService,
+  SpinalNode,
+} from 'spinal-env-viewer-graph-service';
+import type spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { EndPointNodeAttribut } from '../interfacesEndpointAndTimeSeries'
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+import type { EndPointNodeAttribut } from '../interfacesEndpointAndTimeSeries';
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: spinalAPIMiddleware
+) {
   /**
- * @swagger
- * /api/v1/endpoint/{id}/attributsList:
- *   get:
- *     security: 
- *       - OauthSecurity: 
- *         - readOnly
- *     description: Returns list of attributs of endpoint 
- *     summary: Get list of attributs of endpoint
- *     tags:
- *       - IoTNetwork & Time Series
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *                $ref: '#/components/schemas/EndPointNodeAttribut'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/endpoint/{id}/attributsList:
+   *   get:
+   *     security:
+   *       - OauthSecurity:
+   *         - readOnly
+   *     description: Returns list of attributs of endpoint
+   *     summary: Get list of attributs of endpoint
+   *     tags:
+   *       - IoTNetwork & Time Series
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/EndPointNodeAttribut'
+   *       400:
+   *         description: Bad request
+   */
 
-  app.get("/api/v1/endpoint/:id/attributsList", async (req, res, next) => {
-    let nodes = [];
-
+  app.get('/api/v1/endpoint/:id/attributsList', async (req, res, next) => {
     try {
-
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      var node: SpinalNode = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10)
+      );
       // @ts-ignore
       SpinalGraphService._addNode(node);
       let childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
-
-      for (const child of childrens) {
-        let attributs = await child.element.load()
+      const prom = childrens.map(async (child) => {
+        let attributs = await child.element.load();
         let info: EndPointNodeAttribut = {
           dynamicId: child._server_id,
           staticId: child.getId().get(),
           name: child.getName().get(),
           type: child.getType().get(),
-          attributs: attributs.get()
+          attributs: attributs.get(),
         };
-        nodes.push(info)
-      }
+        return info;
+      });
+      const json = await Promise.all(prom);
+      return res.json(json);
     } catch (error) {
       console.log(error);
-      return res.status(400).send("ko");
+      return res.status(400).send('ko');
     }
-
-    res.json(nodes);
-  })
-}
+  });
+};
