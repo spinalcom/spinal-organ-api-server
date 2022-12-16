@@ -82,7 +82,7 @@ module.exports = function (
         };
         return info;
       });
-      const json = Promise.all(prom);
+      const json = await Promise.all(prom);
       return res.json(json);
     } catch (error) {
       console.log(error);
