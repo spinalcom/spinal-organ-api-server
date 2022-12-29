@@ -95,21 +95,13 @@ module.exports = function (
         //Use the name of the input field (i.e. "file") to retrieve the uploaded file
         // @ts-ignore
         let file = req.files.file;
-
         //Use the mv() method to place the file in upload directory (i.e. "uploads")
-        // file.mv('./uploads/' + file.name);
-        // var user = { username: "string", userId: 0 }
         var data = {
           name: file.name,
           buffer: file.data,
-          // mimetype: file.mimetype,
-          // size: file.size
         };
 
         await FileExplorer.uploadFiles(node, data);
-
-        // let directory = await FileExplorer.getDirectory(node);
-        // await FileExplorer.addFileUpload(directory, file)
         //send response
         res.send({
           status: true,
@@ -125,6 +117,5 @@ module.exports = function (
       console.log(error);
       res.status(400).send('ko');
     }
-    // res.json();
   });
 };

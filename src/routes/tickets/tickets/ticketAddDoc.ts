@@ -22,17 +22,12 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 import {
-  SpinalContext,
   SpinalNode,
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
-import { FileSystem } from 'spinal-core-connectorjs_type';
 import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { Step } from '../interfacesWorkflowAndTickets';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import { ServiceUser } from 'spinal-service-user';
+import { FileExplorer } from 'spinal-env-viewer-plugin-documentation-service';
 
 module.exports = function (
   logger,
@@ -86,10 +81,6 @@ module.exports = function (
    */
   app.post('/api/v1/ticket/:ticketId/add_doc', async (req, res, next) => {
     try {
-      // var workflow = await spinalAPIMiddleware.load(parseInt(req.body.workflowId, 10));
-      // //@ts-ignore
-      // SpinalGraphService._addNode(workflow)
-
       var ticket: SpinalNode<any> = await spinalAPIMiddleware.load(
         parseInt(req.params.ticketId, 10)
       );
@@ -103,27 +94,20 @@ module.exports = function (
           message: 'No file uploaded',
         });
       } else {
-        //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
         //@ts-ignore
-        let avatar = req.files.file;
-
-        //Use the mv() method to place the file in upload directory (i.e. "uploads")
-        // avatar.mv('./uploads/' + avatar.name);
-        var user = { username: 'api', userId: 0 };
+        let file = req.files.file;
         var data = {
-          name: avatar.name,
-          buffer: avatar.data,
+          name: file.name,
+          buffer: file.data,
         };
-        await serviceDocumentation.addFileAsNote(ticket, data, user);
-
-        // send response
+        await FileExplorer.uploadFiles(ticket, data);
         res.send({
           status: true,
           message: 'File is uploaded',
           data: {
-            name: avatar.name,
-            mimetype: avatar.mimetype,
-            size: avatar.size,
+            name: file.name,
+            mimetype: file.mimetype,
+            size: file.size,
           },
         });
       }
@@ -131,6 +115,5 @@ module.exports = function (
       console.log(error);
       res.status(400).send('ko');
     }
-    // res.json();
   });
 };
