@@ -42,7 +42,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/equipement/{id}/control_endpoint_list:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Return list of control endpoint
    *     summary: Gets a list of control endpoint

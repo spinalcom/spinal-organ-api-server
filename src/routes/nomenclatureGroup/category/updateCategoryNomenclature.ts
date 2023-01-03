@@ -34,7 +34,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/nomenclatureGroup/{contextId}/category/{categoryId}/update:
  *   put:
  *     security: 
- *       - OauthSecurity: 
+ *       - bearerAuth: 
  *         - read
  *     description: update category nomenclature
  *     summary: update category nomenclature

@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/groupContext/{id}/read:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: read group Context
    *     summary: Gets group Context

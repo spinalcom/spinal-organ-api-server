@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/workflow/{id}/nodeTypeList:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Return node type list of workflow
    *     summary: Get type list in workflow with given ID

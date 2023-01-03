@@ -35,7 +35,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/equipementsGroup/create:
  *   post:
  *     security:
- *       - OauthSecurity:
+ *       - bearerAuth:
  *         - read
  *     description: create equipements Group context
  *     summary: create equipements Group context

@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     * /api/v1/IoTNetworkContext/{IoTNetworkId}/node/{nodeId}/find:
     *   get:
     *     security:
-    *       - OauthSecurity:
+    *       - bearerAuth:
     *         - readOnly
     *     description: find a node in IoTNetwork
     *     summary: find a node in IoTNetwork

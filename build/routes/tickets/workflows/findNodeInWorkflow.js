@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/workflow/{workflowId}/node/{nodeId}/find:
      *   get:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: find a node in workflow
      *     summary: find a node in workflow

@@ -35,7 +35,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 * /api/v1/node/{id}/attributsList:
 *   get:
 *     security: 
-*       - OauthSecurity: 
+*       - bearerAuth: 
 *         - readOnly
 *     description: Returns list of attributs
 *     summary: Get list of attributs
@@ -64,38 +64,27 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
 
   app.get("/api/v1/node/:id/attributsList", async (req, res, next) => {
-    const profileId = getProfileId(req);
-    let nodes = [];
 
     try {
+      const profileId = getProfileId(req);
       let node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       let childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
-      for (const child of childrens) {
+      const prom = childrens.map(async (child): Promise<NodeAttribut> => {
         let attributs = await child.element.load();
         let info: NodeAttribut = {
           dynamicId: child._server_id,
           staticId: child.getId().get(),
           name: child.getName().get(),
           type: child.getType().get(),
-          attributs: attributs.get()
+          attributs: attributs.get(),
         };
-        nodes.push(info);
-      }
+        return info;
+      });
+      const json = await Promise.all(prom);
+      return res.json(json);
     } catch (error) {
       if (error.code) return res.status(error.code).send({ message: error.message });
       return res.status(400).send("ko");
     }
-
-    res.json(nodes);
   });
 };
-
-
-
-
-
-
-
-
-
-

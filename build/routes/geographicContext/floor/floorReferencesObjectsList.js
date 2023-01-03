@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/floor/{id}/reference_Objects_list:
      *   get:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: Return reference objects of a floor
      *     summary: Gets a reference objects of a floor

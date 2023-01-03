@@ -37,7 +37,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/endpoint/{id}/timeSeries/readCurrentDay:
  *   get:
  *     security:
- *       - OauthSecurity:
+ *       - bearerAuth:
  *         - readOnly
  *     description: get time series of current day 
  *     summary: get time series of current day

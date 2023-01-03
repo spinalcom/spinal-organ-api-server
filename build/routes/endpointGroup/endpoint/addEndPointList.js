@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/endPointsGroup/{contextId}/category/{categoryId}/group/{groupId}/addEndpoint:
      *   post:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: add  endpoint to group
      *     summary: add  endpoint to group

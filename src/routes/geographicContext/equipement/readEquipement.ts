@@ -37,7 +37,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/equipement/{id}/read:
  *   get:
  *     security: 
- *       - OauthSecurity: 
+ *       - bearerAuth: 
  *         - readOnly
  *     description: read equipement 
  *     summary: Gets equipement

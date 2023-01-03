@@ -43,7 +43,7 @@ module.exports = function (
    * /api/v1/endPointsGroup/{contextId}/category/{categoryId}/group/{groupId}/endpointList:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: read  endpointList
    *     summary: Get  endpointList

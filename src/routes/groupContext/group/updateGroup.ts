@@ -34,7 +34,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/groupContext/{contextId}/category/{categoryId}/group/{groupId}/update:
  *   put:
  *     security: 
- *       - OauthSecurity: 
+ *       - bearerAuth: 
  *         - read
  *     description: update group
  *     summary: update group

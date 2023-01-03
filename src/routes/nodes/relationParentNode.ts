@@ -39,7 +39,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   * /api/v1/relation/{id}/parent_node:
   *   get:
   *     security:
-  *       - OauthSecurity:
+  *       - bearerAuth:
   *         - readOnly
   *     description: Return parents of relation node
   *     summary: Gets parents of relation with given ID node

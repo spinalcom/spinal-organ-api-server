@@ -36,7 +36,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
  * /api/v1/node/convert_base_64:
  *   post:
  *     security: 
- *       - OauthSecurity: 
+ *       - bearerAuth: 
  *         - read
  *     description: Find node object in a specific context
  *     summary: Gets Node

@@ -35,7 +35,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 * /api/v1/groupContext/contextsOfType/{type}:
 *   get:
 *     security:
-*       - OauthSecurity:
+*       - bearerAuth:
 *         - readOnly
 *     description: Return nodes of type in context
 *     summary: Gets a nodes of type with given ID context and Type

@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/workflow/{id}/create_process:
      *   post:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - read
      *     description: create a Process
      *     summary: create a Process

@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/endPointsGroup/{id}/tree:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Return tree of context endPoints Group
    *     summary: Get a tree context by ID

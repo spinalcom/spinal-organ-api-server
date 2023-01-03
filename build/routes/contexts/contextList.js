@@ -39,7 +39,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/context/list:
      *   get:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: Return list of contexts
      *     summary: Gets a list of contexts

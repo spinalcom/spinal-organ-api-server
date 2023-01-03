@@ -17,7 +17,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   * /api/v1/node/{id}/categoriesList:
   *   get:
   *     security:
-  *       - OauthSecurity:
+  *       - bearerAuth:
   *         - readOnly
   *     description: Returns list of categories atrribut
   *     summary: Get list of categories atrribut

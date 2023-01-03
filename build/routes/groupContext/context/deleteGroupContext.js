@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/groupContext/{id}/delete:
    *   delete:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - read
    *     description: delete groupContext
    *     summary: delete groupContext

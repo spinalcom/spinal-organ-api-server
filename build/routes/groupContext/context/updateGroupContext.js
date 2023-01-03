@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/groupContext/{id}/update:
    *   put:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - read
    *     description: update group context
    *     summary: update group context

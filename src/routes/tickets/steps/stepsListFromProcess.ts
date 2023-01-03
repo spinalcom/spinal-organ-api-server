@@ -36,7 +36,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    * /api/v1/workflow/{workflowId}/process/{processId}/stepList:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Returns list of steps
    *     summary: Get list of steps

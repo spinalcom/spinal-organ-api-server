@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/endpoint/create:
      *   post:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - read
      *     description: create endpoint
      *     summary: create endpoint

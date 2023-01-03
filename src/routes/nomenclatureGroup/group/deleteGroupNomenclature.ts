@@ -36,7 +36,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/nomenclatureGroup/{contextId}/category/{categoryId}/group/{groupId}/delete:
  *   delete:
  *     security:
- *       - OauthSecurity:
+ *       - bearerAuth:
  *         - read
  *     description: delete group nomenclature Group
  *     summary: delete group nomenclature Group

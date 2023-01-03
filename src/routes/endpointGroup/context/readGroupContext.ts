@@ -37,7 +37,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/endPointsGroup/{id}/read:
  *   get:
  *     security: 
- *       - OauthSecurity: 
+ *       - bearerAuth: 
  *         - readOnly
  *     description: read group endPoints Group
  *     summary: Gets group endPoints Group

@@ -35,7 +35,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    * /api/v1/workflow/{workflowId}/process/{processId}/step/{stepId}/update_step:
    *   put:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - read
    *     description: update the step
    *     summary: update the step

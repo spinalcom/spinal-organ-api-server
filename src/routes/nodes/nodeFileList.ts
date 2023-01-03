@@ -44,7 +44,7 @@ module.exports = function (
    * /api/v1/node/{id}/file_list:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Returns files of node
    *     summary: Get list files of node

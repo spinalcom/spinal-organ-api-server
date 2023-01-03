@@ -36,7 +36,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   * /api/v1/node/{id}/add_note:
   *   post:
   *     security:
-  *       - OauthSecurity:
+  *       - bearerAuth:
   *         - read
   *     description: add a note
   *     summary: add a note

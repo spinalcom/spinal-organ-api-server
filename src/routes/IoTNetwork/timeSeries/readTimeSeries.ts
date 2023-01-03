@@ -40,7 +40,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/endpoint/{id}/timeSeries/read/{begin}/{end}:
  *   get:
  *     security:
- *       - OauthSecurity:
+ *       - bearerAuth:
  *         - readOnly
  *     description: get time series 
  *     summary: get time series

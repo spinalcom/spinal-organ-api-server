@@ -46,7 +46,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /BIM/file:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: route of the static bim files
    *     tags:

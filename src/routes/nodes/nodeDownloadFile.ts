@@ -22,21 +22,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
-import { FileSystem } from 'spinal-core-connectorjs_type';
-import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
-import * as express from 'express';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import { ServiceUser } from 'spinal-service-user';
-var http = require('http');
-var fs = require('fs');
+import { ISpinalAPIMiddleware } from '../../interfaces'; import * as express from 'express';
+import * as fs from 'fs';
 import { getProfileId } from '../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../interfaces';
+const mime = require('mime-types');
 
 module.exports = function (
   logger,
@@ -48,7 +37,7 @@ module.exports = function (
    * /api/v1/node/{id}/download_file:
    *   post:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - read
    *     description: Download a Doc
    *     summary: Download a Doc
@@ -74,10 +63,8 @@ module.exports = function (
       await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);
       var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      const host = spinalAPIMiddleware.config.spinalConnector.host;
-      const port = spinalAPIMiddleware.config.spinalConnector.port;
-      var p = await down(node, host, port);
-      res.download(p, (error) => { });
+      const { http, hubUri } = getHost(spinalAPIMiddleware.config);
+      await down(node, http, hubUri, res);
     } catch (error) {
       console.log(error);
       res.status(400).send('ko');
@@ -85,22 +72,45 @@ module.exports = function (
   });
 };
 
-function down(node, host, port): Promise<string> {
+function down(file, http, hubUri, res): Promise<void> {
   return new Promise((resolve, reject) => {
-    node.load((argPath) => {
-      const p = `${__dirname}/${node.name.get()}`;
-      const f = fs.createWriteStream(p);
-
-      http.get(`http://${host}:${port}/sceen/_?u=${argPath._server_id}`, function (response) {
-        response.pipe(f);
-        response.on('end', async () => {
-          resolve(p);
-        });
-        response.on('error', function (err) {
-          console.log(err);
-        });
-      }
+    file.load((argPath) => {
+      // const p = `${__dirname}/${path.name.get()}`;
+      // const f = fs.createWriteStream(p);
+      http.get(
+        `${hubUri}/sceen/_?u=${argPath._server_id}`,
+        function (response) {
+          var type =
+            mime.lookup(file?.name?.get()) || 'application/octet-stream';
+          res.set('Content-Type', type);
+          response.pipe(res);
+          response.on('end', async () => {
+            resolve();
+          });
+          response.on('error', function (err) {
+            console.log(err);
+          });
+        }
       );
     });
   });
+}
+
+
+function getHost(config: any) {
+  let http;
+  let hubUri;
+
+  if (config.spinalConnector.protocol === 'https') {
+    http = require('https');
+    hubUri = `https://${config.spinalConnector.host}`;
+  } else {
+    http = require('http');
+    hubUri = `http://${config.spinalConnector.host}`;
+  }
+  if (config.spinalConnector.port) {
+    hubUri = `${hubUri}:${config.spinalConnector.port}`;
+  }
+
+  return { http, hubUri }
 }

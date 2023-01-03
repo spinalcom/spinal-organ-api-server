@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/node/{nodeId}/categoryByName/{categoryName}/update:
      *   put:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - read
      *     description: update category attribut in specific node
      *     summary: update category attribut

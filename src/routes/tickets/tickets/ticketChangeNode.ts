@@ -40,7 +40,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   * /api/v1/ticket/{ticketId}/change_node:
   *   put:
   *     security:
-  *       - OauthSecurity:
+  *       - bearerAuth:
   *         - read
   *     description: change a node of Ticket
   *     summary: change a node of Ticket

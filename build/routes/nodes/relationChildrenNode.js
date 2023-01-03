@@ -18,7 +18,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     * /api/v1/relation/{id}/children_node:
     *   get:
     *     security:
-    *       - OauthSecurity:
+    *       - bearerAuth:
     *         - readOnly
     *     description: Return cildrens of relation node
     *     summary: Get childrens of relation with given ID node

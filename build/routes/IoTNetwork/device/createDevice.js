@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/device/create:
      *   post:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - read
      *     description: create device
      *     summary: create device

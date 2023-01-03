@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/device/{id}/delete:
    *   delete:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - read
    *     description: delete device
    *     summary: delete device

@@ -35,7 +35,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/IoTNetworkContext/{id}/update:
  *   put:
  *     security: 
- *       - OauthSecurity: 
+ *       - bearerAuth: 
  *         - read
  *     description: update the IoTNetwork
  *     summary: update the IoTNetwork

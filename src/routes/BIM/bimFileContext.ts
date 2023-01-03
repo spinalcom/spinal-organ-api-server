@@ -35,7 +35,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    * /api/v1/BIM/BIMFileContext/list:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Return list of BIM File Contexts
    *     summary: Get the list  BIM File Contexts

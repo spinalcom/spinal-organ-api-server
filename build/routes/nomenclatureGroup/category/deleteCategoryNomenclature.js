@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/nomenclatureGroup/{contextId}/category/{categoryId}/delete:
    *   delete:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - read
    *     description: delete category nomenclature
    *     summary: delete category nomenclature

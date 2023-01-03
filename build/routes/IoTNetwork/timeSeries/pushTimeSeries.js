@@ -42,7 +42,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     * /api/v1/endpoint/{id}/timeSeries/push:
     *   post:
     *     security:
-    *       - OauthSecurity:
+    *       - bearerAuth:
     *         - read
     *     description: push new value
     *     summary: push new value

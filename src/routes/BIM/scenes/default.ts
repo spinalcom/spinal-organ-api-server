@@ -31,7 +31,7 @@ module.exports = function (logger, app) {
    * /api/v1/BIM/scene/default:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Retrun the default scene with it's items
    *     summary: Get the default scene with it's items

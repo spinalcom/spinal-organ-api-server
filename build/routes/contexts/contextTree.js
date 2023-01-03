@@ -18,7 +18,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/context/{id}/tree:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Return tree of context
    *     summary: Get a tree context by ID

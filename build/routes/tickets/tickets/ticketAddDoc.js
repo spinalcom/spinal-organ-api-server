@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/ticket/{ticketId}/add_doc:
      *   post:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - read
      *     description: Uploads a Doc
      *     summary: Uploads a Doc
@@ -98,25 +98,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 });
             }
             else {
-                //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
                 //@ts-ignore
-                let avatar = req.files.file;
-                //Use the mv() method to place the file in upload directory (i.e. "uploads")
-                // avatar.mv('./uploads/' + avatar.name);
-                var user = { username: 'api', userId: 0 };
+                let file = req.files.file;
                 var data = {
-                    name: avatar.name,
-                    buffer: avatar.data,
+                    name: file.name,
+                    buffer: file.data,
                 };
-                yield spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addFileAsNote(ticket, data, user);
-                // send response
+                yield spinal_env_viewer_plugin_documentation_service_1.FileExplorer.uploadFiles(ticket, data);
                 res.send({
                     status: true,
                     message: 'File is uploaded',
                     data: {
-                        name: avatar.name,
-                        mimetype: avatar.mimetype,
-                        size: avatar.size,
+                        name: file.name,
+                        mimetype: file.mimetype,
+                        size: file.size,
                     },
                 });
             }

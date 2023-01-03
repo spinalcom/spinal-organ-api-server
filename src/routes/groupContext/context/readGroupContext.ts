@@ -37,7 +37,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/groupContext/{id}/read:
  *   get:
  *     security: 
- *       - OauthSecurity: 
+ *       - bearerAuth: 
  *         - readOnly
  *     description: read group Context 
  *     summary: Gets group Context

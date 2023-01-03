@@ -36,7 +36,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/nomenclatureGroup/{id}/create_category:
  *   post:
  *     security:
- *       - OauthSecurity:
+ *       - bearerAuth:
  *         - read
  *     description: create category Nomenclature 
  *     summary: create category Nomenclature 

@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/equipementsGroup/create:
    *   post:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - read
    *     description: create equipements Group context
    *     summary: create equipements Group context

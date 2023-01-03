@@ -44,7 +44,7 @@ module.exports = function (
    * /api/v1/command/room/{id}/blind:
    *   post:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Set command blind value
    *     summary: Set command blind value

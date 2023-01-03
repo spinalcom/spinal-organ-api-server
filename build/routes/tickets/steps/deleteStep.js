@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     * /api/v1/workflow/{workflowId}/process/{processId}/step/{stepId}/delete_step:
     *   delete:
     *     security:
-    *       - OauthSecurity:
+    *       - bearerAuth:
     *         - read
     *     description: Delete a step
     *     summary: delete an step

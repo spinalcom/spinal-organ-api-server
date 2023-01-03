@@ -32,7 +32,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   * /api/v1/workflow/{workflowId}/process/{processId}/delete_process:
   *   delete:
   *     security:
-  *       - OauthSecurity:
+  *       - bearerAuth:
   *         - read
   *     description: Delete a process
   *     summary: delete an process

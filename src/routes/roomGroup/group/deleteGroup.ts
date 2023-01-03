@@ -36,7 +36,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/roomsGroup/{contextId}/category/{categoryId}/group/{groupId}/delete:
  *   delete:
  *     security:
- *       - OauthSecurity:
+ *       - bearerAuth:
  *         - read
  *     description: delete group roomsGroup
  *     summary: delete group roomsGroup

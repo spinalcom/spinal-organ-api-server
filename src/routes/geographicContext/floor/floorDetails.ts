@@ -39,7 +39,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    * /api/v1/floor/{id}/floor_details:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Return details of a floor
    *     summary: Gets a details of a floor

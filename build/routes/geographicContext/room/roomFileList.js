@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/room/{id}/file_list:
      *   get:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: Returns files of room
      *     summary: Get list files of room

@@ -37,7 +37,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/groupeContext/{contextId}/category/{categoryId}/group_list:
  *   get:
  *     security:
- *       - OauthSecurity:
+ *       - bearerAuth:
  *         - readOnly
  *     description: Return list of group
  *     summary: Gets a list of group

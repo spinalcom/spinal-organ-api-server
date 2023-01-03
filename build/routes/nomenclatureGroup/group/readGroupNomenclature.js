@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/nomenclatureGroup/{contextId}/category/{categoryId}/group/{groupId}/read:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: read group nomenclature Group
    *     summary: Get group nomenclature Group

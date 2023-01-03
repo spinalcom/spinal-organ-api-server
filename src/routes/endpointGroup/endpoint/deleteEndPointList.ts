@@ -67,7 +67,7 @@ module.exports = function (
    * /api/v1/endPointsGroup/{contextId}/category/{categoryId}/group/{groupId}/deleteEndpoint:
    *   delete:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: delete  endpoint
    *     summary: delete  endpoint

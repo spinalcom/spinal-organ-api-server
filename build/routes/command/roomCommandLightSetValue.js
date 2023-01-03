@@ -42,7 +42,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/command/room/{id}/light:
      *   post:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: Set command light value
      *     summary: Set command light value

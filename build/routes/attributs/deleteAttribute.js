@@ -17,7 +17,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/node/{idNode}/category/{idCategory}/attribut/{attributName}/delete:
      *   delete:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - read
      *     description: Create attribute
      *     summary: create an attribute

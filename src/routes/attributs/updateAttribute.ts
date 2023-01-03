@@ -42,7 +42,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    * /api/v1/node/{idNode}/category/{idCategory}/attribut/{attributName}/update:
    *   put:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - read
    *     description: Create attribute
    *     summary: create an attribute

@@ -34,7 +34,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/roomsGroup/{contextId}/category/{categoryId}/create_group:
  *   post:
  *     security:
- *       - OauthSecurity:
+ *       - bearerAuth:
  *         - read
  *     description: create group roomsGroup
  *     summary: create group roomsGroup

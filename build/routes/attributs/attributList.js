@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   * /api/v1/node/{id}/attributsList:
   *   get:
   *     security:
-  *       - OauthSecurity:
+  *       - bearerAuth:
   *         - readOnly
   *     description: Returns list of attributs
   *     summary: Get list of attributs
@@ -67,29 +67,29 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   *         description: Bad request
     */
     app.get("/api/v1/node/:id/attributsList", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-        const profileId = (0, requestUtilities_1.getProfileId)(req);
-        let nodes = [];
         try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
             let node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             let childrens = yield node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
-            for (const child of childrens) {
+            const prom = childrens.map((child) => __awaiter(this, void 0, void 0, function* () {
                 let attributs = yield child.element.load();
                 let info = {
                     dynamicId: child._server_id,
                     staticId: child.getId().get(),
                     name: child.getName().get(),
                     type: child.getType().get(),
-                    attributs: attributs.get()
+                    attributs: attributs.get(),
                 };
-                nodes.push(info);
-            }
+                return info;
+            }));
+            const json = yield Promise.all(prom);
+            return res.json(json);
         }
         catch (error) {
             if (error.code)
                 return res.status(error.code).send({ message: error.message });
             return res.status(400).send("ko");
         }
-        res.json(nodes);
     }));
 };
 //# sourceMappingURL=attributList.js.map

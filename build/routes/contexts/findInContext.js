@@ -42,7 +42,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/find_node_in_context:
      *   post:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: Find node object in a specific context
      *     summary: Gets Node

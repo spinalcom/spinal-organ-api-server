@@ -32,7 +32,7 @@ module.exports = function (logger, app: express.Express) {
    * /api/v1/BIM/scene/list:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Retrun the list of scenes
    *     summary: Get scenes of the list

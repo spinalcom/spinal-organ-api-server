@@ -39,7 +39,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 * /api/v1/event/create:
 *   post:
 *     security: 
-*       - OauthSecurity: 
+*       - bearerAuth: 
 *         - read
 *     description: create event
 *     summary: create event

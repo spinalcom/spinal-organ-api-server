@@ -40,7 +40,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   * /api/v1/ticket/{ticketId}/unarchive:
   *   post:
   *     security:
-  *       - OauthSecurity:
+  *       - bearerAuth:
   *         - read
   *     description: unarchive a Ticket
   *     summary: unarchive a Ticket

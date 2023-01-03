@@ -46,7 +46,7 @@ module.exports = function (
    * /api/v1/ticket/{ticketId}/read_details:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Return ticket
    *     summary: Get ticket

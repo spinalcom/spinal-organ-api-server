@@ -40,7 +40,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   * /api/v1/ticket/{ticketId}/change_workflow:
   *   put:
   *     security:
-  *       - OauthSecurity:
+  *       - bearerAuth:
   *         - read
   *     description: change a wokflow of Ticket
   *     summary: change a wokflow of Ticket

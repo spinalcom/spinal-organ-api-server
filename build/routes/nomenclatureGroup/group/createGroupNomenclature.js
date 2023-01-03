@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/nomenclatureGroup/{contextId}/category/{categoryId}/create_group:
    *   post:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - read
    *     description: create group nomenclature Group
    *     summary: create group nomenclature Group

@@ -42,7 +42,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/command/room/{id}/temp:
      *   post:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: Set command temp value
      *     summary: Set command temp value

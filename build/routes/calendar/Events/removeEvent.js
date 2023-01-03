@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   * /api/v1/event/{eventId}/delete:
   *   delete:
   *     security:
-  *       - OauthSecurity:
+  *       - bearerAuth:
   *         - read
   *     description: delete event
   *     summary: delete event

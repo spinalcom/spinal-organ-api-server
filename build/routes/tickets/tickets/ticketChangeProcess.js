@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     * /api/v1/ticket/{ticketId}/change_process:
     *   put:
     *     security:
-    *       - OauthSecurity:
+    *       - bearerAuth:
     *         - read
     *     description: change a process of Ticket
     *     summary: change a process of Ticket

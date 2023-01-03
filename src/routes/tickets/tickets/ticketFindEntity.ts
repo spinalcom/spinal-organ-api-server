@@ -35,7 +35,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 * /api/v1/ticket/{ticketId}/find_entity:
 *   get:
 *     security:
-*       - OauthSecurity:
+*       - bearerAuth:
 *         - readOnly
 *     description: Return entity of ticket
 *     summary: Get entity of ticket

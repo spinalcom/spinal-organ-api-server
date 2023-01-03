@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/IoTNetworkContext/{id}/nodeTypeList:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Return node type list of IoTNetwork
    *     summary: Get type list in IoTNetwork with given ID

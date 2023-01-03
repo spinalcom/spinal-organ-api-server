@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/roomsGroup/{contextId}/category/{categoryId}/group/{groupId}/addRooms:
      *   post:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: add room list
      *     summary: add room

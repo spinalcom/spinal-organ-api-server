@@ -44,7 +44,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/analytics/room/{id}/status/{option}:
      *   get:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: Return status of room
      *     summary: Get Return status of room

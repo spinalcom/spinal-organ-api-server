@@ -39,7 +39,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/IoTNetworkContext/{id}/delete:
    *   delete:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - read
    *     description: delete network context
    *     summary: delete network context

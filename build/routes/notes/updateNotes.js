@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     * /api/v1/node/{id}/update_note:
     *   put:
     *     security:
-    *       - OauthSecurity:
+    *       - bearerAuth:
     *         - read
     *     description: update a note
     *     summary: update a note

@@ -46,7 +46,7 @@ module.exports = function (
    * /api/v1/room/{id}/ticket_list:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Returns list of tickets of room
    *     summary: Get list of tickets of room

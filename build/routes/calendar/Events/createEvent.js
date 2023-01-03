@@ -42,7 +42,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   * /api/v1/event/create:
   *   post:
   *     security:
-  *       - OauthSecurity:
+  *       - bearerAuth:
   *         - read
   *     description: create event
   *     summary: create event

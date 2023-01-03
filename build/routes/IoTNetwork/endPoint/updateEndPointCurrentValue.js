@@ -39,7 +39,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/endpoint/{id}/update:
    *   put:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - read
    *     description: update the current value of endpoint
    *     summary: update the current value of endpoint

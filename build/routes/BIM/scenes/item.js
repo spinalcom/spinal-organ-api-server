@@ -39,7 +39,7 @@ module.exports = function (logger, app) {
      * /api/v1/BIM/scene/{id}:
      *   get:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: Retrun the target scene with it's items
      *     summary: Get the target scene with it's items

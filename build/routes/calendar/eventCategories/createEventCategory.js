@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   * /api/v1/eventContext/{id}/create_category:
   *   post:
   *     security:
-  *       - OauthSecurity:
+  *       - bearerAuth:
   *         - read
   *     description: create event category
   *     summary: create event category

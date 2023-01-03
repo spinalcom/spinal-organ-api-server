@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     * /api/v1/ticket/{ticketId}/unarchive:
     *   post:
     *     security:
-    *       - OauthSecurity:
+    *       - bearerAuth:
     *         - read
     *     description: unarchive a Ticket
     *     summary: unarchive a Ticket

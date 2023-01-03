@@ -37,7 +37,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   * /api/v1/IoTNetworkContext/{IoTNetworkId}/node/{nodeId}/read:
   *   get:
   *     security:
-  *       - OauthSecurity:
+  *       - bearerAuth:
   *         - readOnly
   *     description: read a node in IoTNetwork
   *     summary: read a node in IoTNetwork

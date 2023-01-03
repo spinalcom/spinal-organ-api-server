@@ -36,7 +36,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/endPointsGroup/{id}/delete:
  *   delete:
  *     security:
- *       - OauthSecurity:
+ *       - bearerAuth:
  *         - read
  *     description: delete endPoints Group context
  *     summary: delete endPoints Group context 

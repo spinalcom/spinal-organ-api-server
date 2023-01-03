@@ -39,7 +39,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/Network/list:
      *   get:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: Return list of Network
      *     summary: Gets a list of Network

@@ -36,7 +36,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 * /api/v1/node/{nodeId}/categoryByName/{categoryName}/delete:
 *   delete:
 *     security: 
-*       - OauthSecurity: 
+*       - bearerAuth: 
 *         - read
 *     description: Delete category from graph
 *     summary: Delete category attribut

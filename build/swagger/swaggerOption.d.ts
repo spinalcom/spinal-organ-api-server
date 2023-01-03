@@ -18,17 +18,10 @@ export declare const swaggerOption: {
         };
         components: {
             securitySchemes: {
-                OauthSecurity: {
+                bearerAuth: {
                     type: string;
-                    description: string;
-                    flows: {
-                        clientCredentials: {
-                            tokenUrl: string;
-                            scopes: {
-                                readOnly: string;
-                            };
-                        };
-                    };
+                    scheme: string;
+                    bearerFormat: string;
                 };
             };
         };

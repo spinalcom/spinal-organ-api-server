@@ -26,13 +26,8 @@ import {
   SpinalNode,
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
-import { FileSystem } from 'spinal-core-connectorjs_type';
-import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
-import { Step } from '../interfacesWorkflowAndTickets';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import { ServiceUser } from 'spinal-service-user';
+import { FileExplorer } from 'spinal-env-viewer-plugin-documentation-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 
@@ -46,7 +41,7 @@ module.exports = function (
    * /api/v1/ticket/{ticketId}/add_doc:
    *   post:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - read
    *     description: Uploads a Doc
    *     summary: Uploads a Doc
@@ -105,27 +100,20 @@ module.exports = function (
           message: 'No file uploaded',
         });
       } else {
-        //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
         //@ts-ignore
-        let avatar = req.files.file;
-
-        //Use the mv() method to place the file in upload directory (i.e. "uploads")
-        // avatar.mv('./uploads/' + avatar.name);
-        var user = { username: 'api', userId: 0 };
+        let file = req.files.file;
         var data = {
-          name: avatar.name,
-          buffer: avatar.data,
+          name: file.name,
+          buffer: file.data,
         };
-        await serviceDocumentation.addFileAsNote(ticket, data, user);
-
-        // send response
+        await FileExplorer.uploadFiles(ticket, data);
         res.send({
           status: true,
           message: 'File is uploaded',
           data: {
-            name: avatar.name,
-            mimetype: avatar.mimetype,
-            size: avatar.size,
+            name: file.name,
+            mimetype: file.mimetype,
+            size: file.size,
           },
         });
       }

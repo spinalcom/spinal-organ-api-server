@@ -45,7 +45,7 @@ module.exports = function (
    * /api/v1/node/{idNode}/category/{idCategory}/attribut/{attributName}/delete:
    *   delete:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - read
    *     description: Create attribute
    *     summary: create an attribute

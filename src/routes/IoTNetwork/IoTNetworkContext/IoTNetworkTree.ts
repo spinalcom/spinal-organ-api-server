@@ -36,7 +36,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   * /api/v1/IoTNetworkContext/{id}/tree:
   *   get:
   *     security:
-  *       - OauthSecurity:
+  *       - bearerAuth:
   *         - readOnly
   *     description: Return tree of IoTNetwork
   *     summary: Get a tree IoTNetwork by ID

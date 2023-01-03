@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/equipementsGroup/{contextId}/category/{categoryId}/group/{groupId}/equipementList:
      *   get:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: read equipements List
      *     summary: Get equipements List

@@ -46,17 +46,22 @@ exports.swaggerOption = {
         },
         components: {
             securitySchemes: {
-                OauthSecurity: {
-                    type: "oauth2",
-                    description: "This API uses OAuth 2 with the implicit grant flow. [More info](https://api.example.com/docs/auth)",
-                    flows: {
-                        clientCredentials: {
-                            tokenUrl: "http://localhost:8080/oauth2/token",
-                            scopes: {
-                                readOnly: "readOnly request"
-                            }
-                        }
-                    }
+                // OauthSecurity: {
+                //     type: "oauth2",
+                //     description: "This API uses OAuth 2 with the implicit grant flow. [More info](https://api.example.com/docs/auth)",
+                //     flows: {
+                //         clientCredentials: {
+                //             tokenUrl: "http://localhost:8080/oauth2/token",
+                //             scopes: {
+                //                 readOnly: "readOnly request"
+                //             }
+                //         }
+                //     }
+                // },
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT"
                 }
             }
         },

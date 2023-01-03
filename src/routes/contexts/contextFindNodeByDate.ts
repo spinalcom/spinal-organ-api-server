@@ -41,7 +41,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/find_node_in_context_by_date:
  *   post:
  *     security: 
- *       - OauthSecurity: 
+ *       - bearerAuth: 
  *         - readOnly
  *     description: Find node object in a specific context by date
  *     summary: Gets Node

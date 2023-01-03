@@ -42,7 +42,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/room/{id}/event_list:
    *   post:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Returns events of room
    *     summary: Get list events of room

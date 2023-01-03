@@ -42,7 +42,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/ticket/{id}/event_list:
      *   post:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: Returns events of ticket
      *     summary: Get list events of ticket

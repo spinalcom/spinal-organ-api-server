@@ -37,7 +37,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 * /api/v1/event/{eventId}/update:
 *   put:
 *     security: 
-*       - OauthSecurity: 
+*       - bearerAuth: 
 *         - read
 *     description: update event
 *     summary: update event

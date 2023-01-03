@@ -40,7 +40,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    * /api/v1/node/read_control_endpoint:
    *   post:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Get control endpoint value
    *     summary: Get control endpoint value

@@ -43,7 +43,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/equipement/{id}/ticket_list:
      *   get:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: Returns list of tickets of equipement
      *     summary: Get list of tickets of equipement

@@ -33,26 +33,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const spinal_core_connectorjs_type_1 = require("spinal-core-connectorjs_type");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const awaitSync_1 = require("../../../utilities/awaitSync");
 const loadNode_1 = require("../../../utilities/loadNode");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const getNode_1 = require("../../../utilities/getNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
      * /api/v1/ticket/create_ticket:
      *   post:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - read
      *     description: add a Ticket
      *     summary: add a Ticket
      *     tags:
      *       - Workflow & ticket
      *     requestBody:
-     *       description: For the two parameters *workflow* and *process* you can browse it either by putting the dynamicId or the name
+     *       description: For the two parameters *workflow* and *process* you can browse it either by putting the dynamicId or the name and to associate the ticket with an element, please fill in the dynamicId or StaticId parameter
      *       required: true
      *       content:
      *         application/json:
@@ -62,6 +62,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               - workflow
      *               - process
      *               - nodeDynamicId
+     *               - nodeStaticId
      *               - name
      *               - priority
      *               - description
@@ -74,6 +75,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                 type: string
      *               nodeDynamicId:
      *                 type: number
+     *               nodeStaticId:
+     *                 type: string
      *               name:
      *                 type: string
      *               priority:
@@ -104,7 +107,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Add not Successfully
      */
     app.post('/api/v1/ticket/create_ticket', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-        var _a, _b;
+        var _a, _b, _c, _d;
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             let ticketCreated;
@@ -116,11 +119,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             };
             yield spinalAPIMiddleware.getGraph();
             let arrayofServerId = [
-                parseInt(req.body.nodeDynamicId, 10),
                 parseInt(req.body.workflow, 10),
                 parseInt(req.body.process, 10),
             ];
-            const [node, workflowById, processById] = yield (0, loadNode_1._load)(arrayofServerId, spinalAPIMiddleware, profileId);
+            const [workflowById, processById] = yield yield (0, loadNode_1._load)(arrayofServerId, spinalAPIMiddleware, profileId);
+            const node = yield (0, getNode_1.default)(spinalAPIMiddleware, req.body.nodeDynamicId, req.body.nodeStaticId, profileId);
+            if (!node)
+                return res.status(400).send('invalid nodeDynamicId or nodeStaticId');
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             if (workflowById === undefined && processById === undefined) {
@@ -184,12 +189,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 }
             }
             if (req.body.images && req.body.images.length > 0) {
-                const objImage = new spinal_core_connectorjs_type_1.Lst(req.body.images);
-                realNodeTicket.info.add_attr('images', new spinal_core_connectorjs_type_1.Ptr(objImage));
+                // const objImage = new Lst(req.body.images);
+                // realNodeTicket.info.add_attr('images', new Ptr(objImage));
                 for (const image of req.body.images) {
                     // @ts-ignore
-                    var user = { username: 'admin', userId: 0 };
-                    yield spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addNote(realNodeTicket, user, image.value);
+                    var user = {
+                        username: ((_d = (_c = realNodeTicket.info) === null || _c === void 0 ? void 0 : _c.declarer_id) === null || _d === void 0 ? void 0 : _d.get()) || 'user',
+                        userId: 0,
+                    };
+                    const base64Image = image.value;
+                    // check if data base64
+                    if (/^data:image\/\w+;base64,/.test(base64Image) === true) {
+                        const imageData = base64Image.replace(/^data:image\/\w+;base64,/, '');
+                        const imageBufferData = Buffer.from(imageData, 'base64');
+                        yield spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addFileAsNote(realNodeTicket, { name: image.name, buffer: imageBufferData }, user);
+                    }
                 }
             }
             // var images = req.body.images

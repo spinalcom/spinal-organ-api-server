@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/roomsGroup/{contextId}/category/{categoryId}/group/{groupId}/deleteRooms:
      *   delete:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: read room list
      *     summary: Get room list from rooms Group

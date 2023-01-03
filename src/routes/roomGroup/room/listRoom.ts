@@ -43,7 +43,7 @@ module.exports = function (
    * /api/v1/roomsGroup/{contextId}/category/{categoryId}/group/{groupId}/roomList:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: read room list
    *     summary: Get room list from rooms Group

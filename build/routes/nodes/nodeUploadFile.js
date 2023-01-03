@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/node/{id}/upload_file:
      *   post:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - read
      *     description: Upload a Doc
      *     summary: Upload a Doc
@@ -91,17 +91,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 // @ts-ignore
                 let file = req.files.file;
                 //Use the mv() method to place the file in upload directory (i.e. "uploads")
-                // file.mv('./uploads/' + file.name);
-                // var user = { username: "string", userId: 0 }
                 var data = {
                     name: file.name,
                     buffer: file.data,
-                    // mimetype: file.mimetype,
-                    // size: file.size
                 };
                 yield spinal_env_viewer_plugin_documentation_service_1.FileExplorer.uploadFiles(node, data);
-                // let directory = await FileExplorer.getDirectory(node);
-                // await FileExplorer.addFileUpload(directory, file)
                 //send response
                 res.send({
                     status: true,

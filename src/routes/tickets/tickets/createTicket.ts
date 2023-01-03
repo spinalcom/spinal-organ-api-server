@@ -21,11 +21,7 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { FileSystem, Lst, Ptr } from 'spinal-core-connectorjs_type';
 import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
 import * as express from 'express';
@@ -38,6 +34,7 @@ import { _load } from '../../../utilities/loadNode';
 import { LocalFileData } from 'get-file-object-from-local-path';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
+import getNode from '../../../utilities/getNode'
 
 module.exports = function (
   logger,
@@ -49,14 +46,14 @@ module.exports = function (
    * /api/v1/ticket/create_ticket:
    *   post:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - read
    *     description: add a Ticket
    *     summary: add a Ticket
    *     tags:
    *       - Workflow & ticket
    *     requestBody:
-   *       description: For the two parameters *workflow* and *process* you can browse it either by putting the dynamicId or the name
+   *       description: For the two parameters *workflow* and *process* you can browse it either by putting the dynamicId or the name and to associate the ticket with an element, please fill in the dynamicId or StaticId parameter
    *       required: true
    *       content:
    *         application/json:
@@ -66,6 +63,7 @@ module.exports = function (
    *               - workflow
    *               - process
    *               - nodeDynamicId
+   *               - nodeStaticId
    *               - name
    *               - priority
    *               - description
@@ -78,6 +76,8 @@ module.exports = function (
    *                 type: string
    *               nodeDynamicId:
    *                 type: number
+   *               nodeStaticId:
+   *                 type: string
    *               name:
    *                 type: string
    *               priority:
@@ -119,11 +119,13 @@ module.exports = function (
       };
       await spinalAPIMiddleware.getGraph();
       let arrayofServerId = [
-        parseInt(req.body.nodeDynamicId, 10),
         parseInt(req.body.workflow, 10),
         parseInt(req.body.process, 10),
       ];
-      const [node, workflowById, processById]: SpinalNode<any>[] = await _load(arrayofServerId, spinalAPIMiddleware, profileId);
+      const [workflowById, processById]: SpinalNode<any>[] = await await _load(arrayofServerId, spinalAPIMiddleware, profileId);
+      const node = await getNode(spinalAPIMiddleware, req.body.nodeDynamicId, req.body.nodeStaticId, profileId);
+      if (!node) return res.status(400).send('invalid nodeDynamicId or nodeStaticId');
+
       //@ts-ignore
       SpinalGraphService._addNode(node);
       if (workflowById === undefined && processById === undefined) {
@@ -204,13 +206,29 @@ module.exports = function (
       }
 
       if (req.body.images && req.body.images.length > 0) {
-        const objImage = new Lst(req.body.images);
-        realNodeTicket.info.add_attr('images', new Ptr(objImage));
+        // const objImage = new Lst(req.body.images);
+        // realNodeTicket.info.add_attr('images', new Ptr(objImage));
 
         for (const image of req.body.images) {
           // @ts-ignore
-          var user = { username: 'admin', userId: 0 };
-          await serviceDocumentation.addNote(realNodeTicket, user, image.value);
+          var user = {
+            username: realNodeTicket.info?.declarer_id?.get() || 'user',
+            userId: 0,
+          };
+          const base64Image = image.value as string;
+          // check if data base64
+          if (/^data:image\/\w+;base64,/.test(base64Image) === true) {
+            const imageData = base64Image.replace(
+              /^data:image\/\w+;base64,/,
+              ''
+            );
+            const imageBufferData = Buffer.from(imageData, 'base64');
+            await serviceDocumentation.addFileAsNote(
+              realNodeTicket,
+              { name: image.name, buffer: imageBufferData },
+              user
+            );
+          }
         }
       }
 

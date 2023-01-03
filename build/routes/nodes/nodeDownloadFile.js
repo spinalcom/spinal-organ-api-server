@@ -32,16 +32,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var http = require('http');
-var fs = require('fs');
 const requestUtilities_1 = require("../../utilities/requestUtilities");
+const mime = require('mime-types');
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
      * /api/v1/node/{id}/download_file:
      *   post:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - read
      *     description: Download a Doc
      *     summary: Download a Doc
@@ -66,10 +65,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             yield spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            const host = spinalAPIMiddleware.config.spinalConnector.host;
-            const port = spinalAPIMiddleware.config.spinalConnector.port;
-            var p = yield down(node, host, port);
-            res.download(p, (error) => { });
+            const { http, hubUri } = getHost(spinalAPIMiddleware.config);
+            yield down(node, http, hubUri, res);
         }
         catch (error) {
             console.log(error);
@@ -77,15 +74,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
     }));
 };
-function down(node, host, port) {
+function down(file, http, hubUri, res) {
     return new Promise((resolve, reject) => {
-        node.load((argPath) => {
-            const p = `${__dirname}/${node.name.get()}`;
-            const f = fs.createWriteStream(p);
-            http.get(`http://${host}:${port}/sceen/_?u=${argPath._server_id}`, function (response) {
-                response.pipe(f);
+        file.load((argPath) => {
+            // const p = `${__dirname}/${path.name.get()}`;
+            // const f = fs.createWriteStream(p);
+            http.get(`${hubUri}/sceen/_?u=${argPath._server_id}`, function (response) {
+                var _a;
+                var type = mime.lookup((_a = file === null || file === void 0 ? void 0 : file.name) === null || _a === void 0 ? void 0 : _a.get()) || 'application/octet-stream';
+                res.set('Content-Type', type);
+                response.pipe(res);
                 response.on('end', () => __awaiter(this, void 0, void 0, function* () {
-                    resolve(p);
+                    resolve();
                 }));
                 response.on('error', function (err) {
                     console.log(err);
@@ -93,5 +93,21 @@ function down(node, host, port) {
             });
         });
     });
+}
+function getHost(config) {
+    let http;
+    let hubUri;
+    if (config.spinalConnector.protocol === 'https') {
+        http = require('https');
+        hubUri = `https://${config.spinalConnector.host}`;
+    }
+    else {
+        http = require('http');
+        hubUri = `http://${config.spinalConnector.host}`;
+    }
+    if (config.spinalConnector.port) {
+        hubUri = `${hubUri}:${config.spinalConnector.port}`;
+    }
+    return { http, hubUri };
 }
 //# sourceMappingURL=nodeDownloadFile.js.map

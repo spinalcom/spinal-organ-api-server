@@ -36,7 +36,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 * /api/v1/eventContext/create:
 *   post:
 *     security: 
-*       - OauthSecurity: 
+*       - bearerAuth: 
 *         - read
 *     description: create event context
 *     summary: create event context

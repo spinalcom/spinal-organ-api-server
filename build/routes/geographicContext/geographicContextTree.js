@@ -18,7 +18,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    * /api/v1/geographicContext/tree:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Return the geographic context
    *     summary: Get the geographic context

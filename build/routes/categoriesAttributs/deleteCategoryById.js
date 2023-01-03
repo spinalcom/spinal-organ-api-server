@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/node/{nodeId}/category/{categoryId}/delete:
      *   delete:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - read
      *     description: Delete category from graph
      *     summary: Delete category attribut

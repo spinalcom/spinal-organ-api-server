@@ -43,7 +43,7 @@ module.exports = function (
    * /api/v1/roomsGroup/{contextId}/category/{categoryId}/group/{groupId}/addRooms:
    *   post:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: add room list
    *     summary: add room

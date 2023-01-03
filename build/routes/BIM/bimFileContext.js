@@ -39,7 +39,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/BIM/BIMFileContext/list:
      *   get:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: Return list of BIM File Contexts
      *     summary: Get the list  BIM File Contexts

@@ -17,7 +17,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   * /api/v1/context/{id}/nodesOfType/{type}:
   *   get:
   *     security:
-  *       - OauthSecurity:
+  *       - bearerAuth:
   *         - readOnly
   *     description: Return nodes of type in context
   *     summary: Gets a nodes of type with given ID context and Type

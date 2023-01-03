@@ -35,7 +35,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  * /api/v1/endpoint/{id}/attributsList:
  *   get:
  *     security: 
- *       - OauthSecurity: 
+ *       - bearerAuth: 
  *         - readOnly
  *     description: Returns list of attributs of endpoint 
  *     summary: Get list of attributs of endpoint
@@ -61,32 +61,30 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   */
 
   app.get("/api/v1/endpoint/:id/attributsList", async (req, res, next) => {
-    let nodes = [];
-
     try {
       const profileId = getProfileId(req);
       var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(node);
       let childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
-
-      for (const child of childrens) {
-        let attributs = await child.element.load()
+      const prom = childrens.map(async (child) => {
+        let attributs = await child.element.load();
         let info: EndPointNodeAttribut = {
           dynamicId: child._server_id,
           staticId: child.getId().get(),
           name: child.getName().get(),
           type: child.getType().get(),
-          attributs: attributs.get()
+          attributs: attributs.get(),
         };
-        nodes.push(info)
-      }
+        return info;
+      });
+      const json = await Promise.all(prom);
+      return res.json(json);
     } catch (error) {
 
       if (error.code && error.message) return res.status(error.code).send(error.message);
       return res.status(500).send(error.message);
     }
 
-    res.json(nodes);
   })
 }

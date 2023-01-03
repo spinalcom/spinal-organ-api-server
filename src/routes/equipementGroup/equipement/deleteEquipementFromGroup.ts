@@ -43,7 +43,7 @@ module.exports = function (
    * /api/v1/equipementsGroup/{contextId}/category/{categoryId}/group/{groupId}/deleteEquipement:
    *   delete:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: delete equipement from group
    *     summary: delete equipement from group

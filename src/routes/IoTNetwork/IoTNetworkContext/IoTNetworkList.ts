@@ -33,7 +33,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    * /api/v1/IoTNetworkContext/list:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
    *     description: Return list of IoTNetwork
    *     summary: Gets a list of IoTNetwork
