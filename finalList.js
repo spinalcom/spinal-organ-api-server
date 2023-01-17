@@ -84,6 +84,7 @@ module.exports = [
   "../src/routes/geographicContext/equipement/equipementEvent.ts",
   "../src/routes/geographicContext/equipement/equipementFileList.ts",
   "../src/routes/geographicContext/interfacesGeoContext.ts",
+  "../src/routes/geographicContext/viewInfo.ts",
   "../src/routes/IoTNetwork/IoTNetworkContext/IoTNetworkList.ts",
   "../src/routes/IoTNetwork/IoTNetworkContext/IoTNetworkTree.ts",
   "../src/routes/IoTNetwork/IoTNetworkContext/IoTNetworkTypeList.ts",
