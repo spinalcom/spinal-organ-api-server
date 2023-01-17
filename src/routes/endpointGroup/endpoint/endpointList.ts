@@ -120,18 +120,18 @@ module.exports = function (
               _endpointList.push(info);
             }
           } else {
-            res
+            return res
               .status(400)
               .send('node is not type of BmsEndpointGroupContext ');
           }
         } else {
-          res.status(400).send('category or group not found in context');
+          return res.status(400).send('category or group not found in context');
         }
       } catch (error) {
         console.log(error);
-        res.status(400).send('ko');
+        return res.status(400).send('ko');
       }
-      res.json(_endpointList);
+      return res.json(_endpointList);
     }
   );
 };

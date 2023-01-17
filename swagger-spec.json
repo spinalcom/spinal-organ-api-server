@@ -588,6 +588,164 @@
           }
         }
       },
+      "IModel": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "number"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "dynamicId",
+          "staticId",
+          "name",
+          "type"
+        ]
+      },
+      "IBimObjectsItem": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "number"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "children_relation_list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IRelationListItem"
+            }
+          },
+          "parent_relation_list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IRelationListItem"
+            }
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "dbid": {
+            "type": "number"
+          },
+          "bimFileId": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "dynamicId",
+          "staticId",
+          "name",
+          "type",
+          "children_relation_list",
+          "parent_relation_list",
+          "externalId",
+          "dbid",
+          "bimFileId",
+          "version"
+        ]
+      },
+      "IRelationListItem": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "number"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "children_number": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "dynamicId",
+          "staticId",
+          "name",
+          "children_number"
+        ]
+      },
+      "IViewInfoBody": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "description": "dynamicId(s) of the node(s) root of the request",
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            ]
+          },
+          "floorRef": {
+            "type": "boolean",
+            "description": "get infos from the floors references : floors, walls, windows, doors...",
+            "default": false
+          },
+          "roomRef": {
+            "type": "boolean",
+            "description": "get infos from the rooms references : floor(s)",
+            "default": true
+          },
+          "equipements": {
+            "type": "boolean",
+            "description": "get infos from the equipements",
+            "default": false
+          }
+        },
+        "required": [
+          "dynamicId"
+        ]
+      },
+      "IViewInfoRes": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "number"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "bimFileId": {
+                "type": "string"
+              },
+              "dbIds": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      },
       "IoTNetwork": {
         "type": "object",
         "properties": {
@@ -1085,105 +1243,6 @@
             }
           }
         }
-      },
-      "IModel": {
-        "type": "object",
-        "properties": {
-          "dynamicId": {
-            "type": "number"
-          },
-          "staticId": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "dynamicId",
-          "staticId",
-          "name",
-          "type"
-        ]
-      },
-      "IBimObjectsItem": {
-        "type": "object",
-        "properties": {
-          "dynamicId": {
-            "type": "number"
-          },
-          "staticId": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          },
-          "children_relation_list": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IRelationListItem"
-            }
-          },
-          "parent_relation_list": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IRelationListItem"
-            }
-          },
-          "externalId": {
-            "type": "string"
-          },
-          "dbid": {
-            "type": "number"
-          },
-          "bimFileId": {
-            "type": "string"
-          },
-          "version": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "dynamicId",
-          "staticId",
-          "name",
-          "type",
-          "children_relation_list",
-          "parent_relation_list",
-          "externalId",
-          "dbid",
-          "bimFileId",
-          "version"
-        ]
-      },
-      "IRelationListItem": {
-        "type": "object",
-        "properties": {
-          "dynamicId": {
-            "type": "number"
-          },
-          "staticId": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "children_number": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "dynamicId",
-          "staticId",
-          "name",
-          "children_number"
-        ]
       },
       "ISceneListReturn": {
         "type": "object",
@@ -4186,6 +4245,51 @@
           },
           "400": {
             "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/geographicContext/viewInfo": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return a compact object of dbId / modelID associated to the node in parametter",
+        "summary": "Get the viewer information to show from a geographic node",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "description": "dynamicId can be a array or number or a number",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IViewInfoBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IViewInfoRes"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "no dynamicId found in body request or bad dynamicIds in body request"
+          },
+          "500": {
+            "description": "no Spatial context found"
           }
         }
       }

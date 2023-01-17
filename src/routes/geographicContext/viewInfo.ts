@@ -23,11 +23,7 @@
  */
 import SpinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import {
-  SpinalNode,
-  SpinalGraphService,
-  SpinalContext,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalNode } from 'spinal-env-viewer-graph-service';
 
 import {
   GEOGRAPHIC_TYPES_ORDER,
@@ -53,6 +49,82 @@ import {
 } from '../../utilities/visitNodesWithTypeRelation';
 
 const all_GeoType: string[] = GEOGRAPHIC_TYPES_ORDER.concat(CONTEXT_TYPE);
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     IModel:
+ *       type: object
+ *       properties:
+ *         dynamicId :
+ *           type: number
+ *         staticId:
+ *           type: string
+ *         name:
+ *           type: string
+ *         type:
+ *           type: string
+ *       required:
+ *         - dynamicId
+ *         - staticId
+ *         - name
+ *         - type
+ *     IBimObjectsItem:
+ *       type: object
+ *       properties:
+ *         dynamicId:
+ *           type: number
+ *         staticId:
+ *           type: string
+ *         name:
+ *           type: string
+ *         type:
+ *           type: string
+ *         children_relation_list:
+ *           type: array
+ *           items:
+ *             $ref: "#/components/schemas/IRelationListItem"
+ *         parent_relation_list:
+ *           type: array
+ *           items:
+ *             $ref: "#/components/schemas/IRelationListItem"
+ *         externalId:
+ *           type: string
+ *         dbid:
+ *           type: number
+ *         bimFileId:
+ *           type: string
+ *         version:
+ *           type: number
+ *       required:
+ *         - dynamicId
+ *         - staticId
+ *         - name
+ *         - type
+ *         - children_relation_list
+ *         - parent_relation_list
+ *         - externalId
+ *         - dbid
+ *         - bimFileId
+ *         - version
+ *     IRelationListItem:
+ *       type: object
+ *       properties:
+ *         dynamicId:
+ *           type: number
+ *         staticId:
+ *           type: string
+ *         name:
+ *           type: string
+ *         children_number:
+ *           type: number
+ *       required:
+ *         - dynamicId
+ *         - staticId
+ *         - name
+ *         - children_number
+ */
 /**
  * @interface IViewInfoBody
  */
@@ -86,6 +158,52 @@ interface IViewInfoBody {
    */
   equipements?: boolean;
 }
+
+/**
+ * @swagger
+ * components:
+ *  schemas:
+ *    IViewInfoBody:
+ *      type: object
+ *      properties:
+ *        dynamicId :
+ *          description: "dynamicId(s) of the node(s) root of the request"
+ *          oneOf:
+ *            - type: number
+ *            - type: array
+ *              items:
+ *                type: number
+ *        floorRef:
+ *          type: boolean
+ *          description: "get infos from the floors references : floors, walls, windows, doors..."
+ *          default: false
+ *        roomRef:
+ *          type: boolean
+ *          description: "get infos from the rooms references : floor(s)"
+ *          default: true
+ *        equipements:
+ *          type: boolean
+ *          description: "get infos from the equipements"
+ *          default: false
+ *      required:
+ *        - dynamicId
+ *    IViewInfoRes:
+ *      type: object
+ *      properties:
+ *        dynamicId :
+ *            type: number
+ *        data:
+ *          type: object
+ *          properties:
+ *            bimFileId:
+ *              type : string
+ *            dbIds:
+ *              type: array
+ *              items:
+ *                type: number
+ *
+ * @interface IViewInfoRes
+ */
 interface IViewInfoRes {
   dynamicId: number;
   data: IViewInfoItemRes[];
@@ -100,8 +218,8 @@ interface IViewInfoTmpRes {
   dbIds: Set<number>;
 }
 
-type ViweInfoRes = express.Response<string | IViewInfoRes[], IViewInfoBody>;
-type ViweInfoReq = express.Request<
+type ViewInfoRes = express.Response<string | IViewInfoRes[], IViewInfoBody>;
+type ViewInfoReq = express.Request<
   never,
   IViewInfoRes[] | string,
   IViewInfoBody
@@ -134,7 +252,7 @@ const ErrorsRecord: ErrorsRecord = {
   ),
 };
 
-function errorHandler(res: ViweInfoRes, error: EError) {
+function errorHandler(res: ViewInfoRes, error: EError) {
   const e = ErrorsRecord[error];
   res.status(e.code).send(e.message);
 }
@@ -146,7 +264,7 @@ module.exports = function (
 ) {
   async function getRootNodes(
     dynIds: number | number[],
-    res: ViweInfoRes
+    res: ViewInfoRes
   ): Promise<SpinalNode[]> {
     const ids = Array.isArray(dynIds) ? dynIds : [dynIds];
     const proms = ids.map((dynId) => {
@@ -217,9 +335,39 @@ module.exports = function (
     }
   }
 
+  /**
+   * @swagger
+   * /api/v1/geographicContext/viewInfo:
+   *   post:
+   *     security:
+   *       - OauthSecurity:
+   *         - readOnly
+   *     description: Return a compact object of dbId / modelID associated to the node in parametter
+   *     summary: Get the viewer information to show from a geographic node
+   *     tags:
+   *       - Geographic Context
+   *     requestBody:
+   *       description: dynamicId can be a array or number or a number
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/IViewInfoBody'
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/IViewInfoRes'
+   *       400:
+   *         description: no dynamicId found in body request or bad dynamicIds in body request
+   *       500:
+   *         description: no Spatial context found
+   */
   app.post(
     '/api/v1/geographicContext/viewInfo',
-    async (req: ViweInfoReq, res: ViweInfoRes): Promise<any> => {
+    async (req: ViewInfoReq, res: ViewInfoRes): Promise<any> => {
       const body = req.body;
       const options: Required<IViewInfoBody> = {
         dynamicId: body.dynamicId,
