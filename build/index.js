@@ -97,7 +97,7 @@ function Requests(logger) {
                     console.log(`  swagger-ui :\thttp://localhost:${port}/spinalcom-api-docs`);
                     console.log(`  redoc :\thttp://localhost:${port}/spinalcom-api-redoc-docs`);
                 });
-                spinalAPIMiddleware_1.default.getInstance().runSocketServer(server);
+                yield spinalAPIMiddleware_1.default.getInstance().runSocketServer(server);
             });
         },
         getSwaggerDocs: () => {
