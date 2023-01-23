@@ -113,6 +113,13 @@ module.exports = function (
                 }
               }
             });
+          // retrieve all tickets
+          const allSteps = await _process.getChildren('SpinalSystemServiceTicketHasStep');
+          for (const stp of allSteps) {
+            //@ts-ignore
+            SpinalGraphService._addNode(stp);
+          }
+
 
           // Notes
           var notes = await serviceDocumentation.getNotes(realNodeTicket);
@@ -151,19 +158,14 @@ module.exports = function (
             } else if (log.event == LOGS_EVENTS.unarchive) {
               texte = 'unarchived';
             } else {
-              const promises = log.steps.map((el) =>
-                SpinalGraphService.getNodeAsync(el)
+              const result = log.steps.map((el) =>
+                SpinalGraphService.getNode(el)
               );
-              texte = await Promise.all(promises).then((result) => {
-                //@ts-ignore
-                const step1 = result[0].name.get();
-                //@ts-ignore
-                const step2 = result[1].name.get();
-                const pre = log.event == LOGS_EVENTS.moveToNext ? true : false;
-                return pre
-                  ? `Passed from ${step1} to ${step2}`
-                  : `Backward from ${step1} to ${step2}`;
-              });
+              const step1 = result[0]?.name.get();
+              const step2 = result[1]?.name.get();
+              const pre = log.event == LOGS_EVENTS.moveToNext ? true : false;
+              texte = pre ? `Passed from ${step1} to ${step2}` : `Backward from ${step1} to ${step2}`;
+
             }
             return texte;
           }

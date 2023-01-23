@@ -120,7 +120,6 @@ module.exports = function (
       console.error(error);
       res.status(400).send("list of room is not loaded");
     }
-
     res.send(arrayList);
   });
 };
