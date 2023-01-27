@@ -144,10 +144,11 @@ class SpinalAPIMiddleware {
     return prom;
   }
 
-  runSocketServer(server: Server) {
-    this._waitConnection().then((result) => {
-      runSocketServer(server, this.conn, SpinalGraphService.getGraph());
-    });
+  async runSocketServer(server: Server) {
+    // this._waitConnection().then((result) => {
+    const graph = await this.getGraph();
+    runSocketServer(server, this.conn, graph);
+    // });
   }
 
   _waitConnection(): Promise<Boolean> {

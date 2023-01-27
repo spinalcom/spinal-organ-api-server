@@ -109,7 +109,7 @@ function Requests(logger) {
           `  redoc :\thttp://localhost:${port}/spinalcom-api-redoc-docs`
         );
       });
-      SpinalAPIMiddleware.getInstance().runSocketServer(server);
+      await SpinalAPIMiddleware.getInstance().runSocketServer(server);
     },
 
     getSwaggerDocs: (): Object => {
