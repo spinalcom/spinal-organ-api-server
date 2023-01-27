@@ -49,7 +49,7 @@ export interface Building {
   name: string,
   type: string,
   address: string,
-  area: number
+  area: number | string
 }
 
 

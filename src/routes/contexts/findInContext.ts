@@ -146,18 +146,17 @@ module.exports = function (
                     }
                   }
                 });
-              let elementSelected;
-              try {
-                if (_node.info.elementSelected !== undefined)
-                  elementSelected = await spinalAPIMiddleware.loadPtr(
-                    _node.info.elementSelected
-                  );
-                else
-                  elementSelected = SpinalGraphService.getRealNode(
-                    _node.info.nodeId.get()
-                  );
-              } catch (error) {
-                console.error(error);
+              // element Selected
+              var elementSelected: SpinalNode<any>;
+              const parentsTicket = await _node.getParents(
+                'SpinalSystemServiceTicketHasTicket'
+              );
+              for (const parent of parentsTicket) {
+                if (parent.getType().get() !== 'SpinalSystemServiceTicketTypeStep') {
+                  //@ts-ignore
+                  SpinalGraphService._addNode(parent);
+                  elementSelected = parent;
+                }
               }
               info = {
                 dynamicId: _node._server_id,
@@ -269,18 +268,17 @@ module.exports = function (
                       }
                     }
                   });
-                let elementSelected;
-                try {
-                  if (_node.info.elementSelected !== undefined)
-                    elementSelected = await spinalAPIMiddleware.loadPtr(
-                      _node.info.elementSelected
-                    );
-                  else
-                    elementSelected = SpinalGraphService.getRealNode(
-                      _node.info.nodeId?.get()
-                    );
-                } catch (error) {
-                  console.error(error);
+                // element Selected
+                var elementSelected: SpinalNode<any>;
+                const parentsTicket = await _node.getParents(
+                  'SpinalSystemServiceTicketHasTicket'
+                );
+                for (const parent of parentsTicket) {
+                  if (parent.getType().get() !== 'SpinalSystemServiceTicketTypeStep') {
+                    //@ts-ignore
+                    SpinalGraphService._addNode(parent);
+                    elementSelected = parent;
+                  }
                 }
                 info = {
                   dynamicId: _node._server_id,
@@ -392,18 +390,17 @@ module.exports = function (
                         }
                       }
                     });
-                  let elementSelected;
-                  try {
-                    if (node.info.elementSelected !== undefined)
-                      elementSelected = await spinalAPIMiddleware.loadPtr(
-                        node.info.elementSelected
-                      );
-                    else
-                      elementSelected = SpinalGraphService.getRealNode(
-                        node.info.nodeId.get()
-                      );
-                  } catch (error) {
-                    console.error(error);
+                  // element Selected
+                  var elementSelected: SpinalNode<any>;
+                  const parentsTicket = await _node.getParents(
+                    'SpinalSystemServiceTicketHasTicket'
+                  );
+                  for (const parent of parentsTicket) {
+                    if (parent.getType().get() !== 'SpinalSystemServiceTicketTypeStep') {
+                      //@ts-ignore
+                      SpinalGraphService._addNode(parent);
+                      elementSelected = parent;
+                    }
                   }
                   info = {
                     dynamicId: _node._server_id,

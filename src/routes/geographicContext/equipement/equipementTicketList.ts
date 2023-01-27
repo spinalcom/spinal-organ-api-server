@@ -117,7 +117,7 @@ module.exports = function (
               }
             });
 
-          // retrieve all tickets
+          // retrieve all allSteps
           const allSteps = await _process.getChildren('SpinalSystemServiceTicketHasStep');
           for (const stp of allSteps) {
             //@ts-ignore

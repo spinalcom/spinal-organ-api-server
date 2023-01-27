@@ -198,7 +198,7 @@ module.exports = function (
             staticId: realNodeTicket.getId().get(),
             name: realNodeTicket.getName().get(),
             type: realNodeTicket.getType().get(),
-            elementSelcted: req.body.nodeDynamicId,
+            elementSelected: req.body.nodeDynamicId,
             priority: realNodeTicket.info.priority.get(),
             description: realNodeTicket.info?.description.get(),
             declarer_id: realNodeTicket.info?.declarer_id.get(),

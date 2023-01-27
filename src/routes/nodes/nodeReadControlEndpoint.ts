@@ -101,7 +101,7 @@ module.exports = function (
                         staticId: _node.getId().get(),
                         name: _node.getName().get(),
                         type: _node.getType().get(),
-                        currentValue: element.currentValue.get()
+                        currentValue: element.currentValue
                       }
                       arrayList.push(info)
                     }

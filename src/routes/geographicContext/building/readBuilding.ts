@@ -61,42 +61,24 @@ module.exports = function (
 
   app.get('/api/v1/building/read', async (req, res, next) => {
     try {
-      var address;
-      var sommes = 0;
-      const graph = await spinalAPIMiddleware.getGraph();
+      var _address: string;
+      var _area: string | number;
       var geographicContexts = await SpinalGraphService.getContextWithType(
         'geographicContext'
       );
       var building = await geographicContexts[0].getChildren(
         'hasGeographicBuilding'
       );
-      var floors = await building[0].getChildren('hasGeographicFloor');
-
-      for (let index = 0; index < floors.length; index++) {
-        var rooms = await floors[index].getChildren('hasGeographicRoom');
-        for (const room of rooms) {
-          let categories = await room.getChildren(NODE_TO_CATEGORY_RELATION);
-          for (const child of categories) {
-            if (child.getName().get() === 'Spatial') {
-              let attributs = await child.element.load();
-              for (const attribut of attributs.get()) {
-                if (attribut.label === 'area') {
-                  sommes = sommes + attribut.value;
-                }
-              }
-            }
-          }
-        }
-      }
 
       let categories = await building[0].getChildren(NODE_TO_CATEGORY_RELATION);
       for (const child of categories) {
-        if (child.getName().get() === 'Spinal Building Information') {
-          let attributs = await child.element.load();
-          for (const attribut of attributs.get()) {
-            if (attribut.label === 'Adresse') {
-              address = attribut.value;
-            }
+        let attributs = await child.element.load();
+        for (const attribut of attributs.get()) {
+          if (attribut.label === 'Adresse') {
+            _address = attribut.value;
+          }
+          else if (attribut.label === 'Surface' || attribut.label === 'area') {
+            _area = attribut.value
           }
         }
       }
@@ -106,8 +88,8 @@ module.exports = function (
           staticId: building[0].getId().get(),
           name: building[0].getName().get(),
           type: building[0].getType().get(),
-          address: address,
-          area: sommes,
+          address: _address,
+          area: _area,
         };
       } else {
         res.status(400).send('node is not of type geographic building');
