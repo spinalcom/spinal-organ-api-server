@@ -27,6 +27,8 @@ import { spinalCore, FileSystem } from 'spinal-core-connectorjs_type';
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { SpinalContext, SpinalGraph, SpinalNode } from 'spinal-model-graph';
 import { runSocketServer } from 'spinal-organ-api-pubsub';
+import { store } from './utilities/store';
+
 const Q = require('q');
 
 // get the config
@@ -166,6 +168,39 @@ class SpinalAPIMiddleware {
       return defer.promise;
     };
     return _waitConnectionLoop(deferred);
+  }
+
+
+  async initConfig() {
+    return new Promise<void>((resolve, reject) => {
+      // get the Model from the spinalhub, "onLoadSuccess" and "onLoadError" are 2
+      // callback function.
+      spinalCore.load(
+        this.conn,
+        '/etc/Organs/spinal-organ-api-server-config',
+        this.onLoadConfigSuccess.bind(this, resolve),
+        this.onLoadConfigError.bind(this, resolve, reject)
+      );
+    });
+  }
+
+  onLoadConfigError(resolve, reject): void {
+    const configFile = new SpinalGraph();
+    store(
+      this.conn,
+      configFile,
+      '/etc/Organs/spinal-organ-api-server-config',
+      () => {
+        this.onLoadConfigSuccess(resolve, configFile);
+      },
+      () => {
+        reject('IS NOT ABLE TO CONNECT TO HUB');
+      }
+    );
+  }
+  onLoadConfigSuccess(resolve: () => void, configFile: SpinalGraph<any>) {
+    SpinalGraphService.setGraph(configFile);
+    resolve();
   }
 }
 

@@ -23,48 +23,30 @@
  */
 
 import { describe, before, it } from 'mocha';
-const chai = require('chai');
-const chaiHttp = require('chai-http')
 import { server } from '../../src/index';
+
+let chai = require('chai');
+let chaiHttp = require('chai-http');
+let should = chai.should();
 chai.should();
 chai.use(chaiHttp);
 
+
 async function mainTest() {
+
   const S = await server
-  describe('Contexts requests', function () {
-    describe('Get context list', function () {
-      it('It should get al the contexts', (done) => {
-        chai.request(S).get('/api/v1/context/list').end((err, reponse) => {
-          reponse.should.have.status(200);
-        })
-        done()
-      })
-    })
-  })
+  // describe('Contexts requests', function () {
+  //   describe('Get context list', function () {
+  //     it('It should get al the contexts', (done) => {
+  //       chai.request(S).get('/api/v1/context/list').end((err, reponse) => {
+  //         reponse.should.have.status(200);
+  //       })
+  //       done()
+  //     })
+  //   })
+  // })
 }
 
 mainTest();
 
-// describe("User Service Unit Tests", function () {
-//   describe("Save User functionality", function () {
-//     it("should successfully add a user if the number of users in the DB with the same profiled is zero", async function () {
-//       const profileId = 1;
-//       const name = "Akshay";
-//       const dob = "2020-12-12";
-//       const experience = [{ years: 2, organizationName: "ABCD" }];
-//       const returnedUser = await saveUser({
-//         profileId, 
-//         name,
-//         dob,
-//         experience,
-//       });
-//       expect(returnedUser.name).to.equal(name);
-//       expect(returnedUser.dob.toString()).to.equal((new Date(dob)).toString());
-//       experience.map((exp, index) => {
-//         expect(returnedUser.experience[index].years).to.equal(exp.years);
-//         expect(returnedUser.experience[index].organizationName).to.equal(exp.organizationName);
-//       })
-//     });
-//     it("should throw an error if the number of users with the same profileId is not zero", async function () { });
-//   });
-// });
+

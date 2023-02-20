@@ -47,6 +47,8 @@ function Requests(logger) {
             const spinalAPIMiddleware = spinalAPIMiddleware_1.default.getInstance();
             yield spinalAPIMiddleware.getGraph();
             console.log('graph loaded successfully.');
+            yield spinalAPIMiddleware.initConfig();
+            console.log('file Config loaded successfully.');
             return spinalAPIMiddleware;
         });
     }

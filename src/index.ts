@@ -37,6 +37,8 @@ function Requests(logger) {
     const spinalAPIMiddleware = SpinalAPIMiddleware.getInstance();
     await spinalAPIMiddleware.getGraph();
     console.log('graph loaded successfully.');
+    await spinalAPIMiddleware.initConfig();
+    console.log('file Config loaded successfully.');
     return spinalAPIMiddleware;
   }
 
