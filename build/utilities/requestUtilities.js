@@ -25,7 +25,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getProfileId = void 0;
 function getProfileId(req) {
-    return req.headers.authorization;
+    return req.profileId;
 }
 exports.getProfileId = getProfileId;
 //# sourceMappingURL=requestUtilities.js.map

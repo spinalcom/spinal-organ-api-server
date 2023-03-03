@@ -28,7 +28,7 @@ const express = require("express");
 const fileUpload = require("express-fileupload");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const routes_1 = require("../routes/routes");
+const routes_1 = require("./routes/routes");
 const morgan = require("morgan");
 function useLogger(app, log_body) {
     if (log_body) {

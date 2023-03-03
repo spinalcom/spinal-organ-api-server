@@ -26,7 +26,7 @@
 import config from './config';
 import APIServer from './api-server';
 import SpinalAPIMiddleware from './spinalAPIMiddleware';
-import { getSwaggerDocs, initSwagger } from '../swagger'
+import { getSwaggerDocs, initSwagger } from './swagger';
 
 
 

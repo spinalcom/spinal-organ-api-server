@@ -23,7 +23,7 @@
  */
 
 import { SpinalNode } from 'spinal-model-graph';
-import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
+import SpinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import { IScenesItemsItem } from './interfaces';
 const SCENE_CONTEXT_NAME = 'Scenes';
 const SCENE_RELATIONS = ['hasScene'];

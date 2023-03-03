@@ -25,5 +25,5 @@
 import * as express from 'express';
 
 export function getProfileId(req: express.Request): string {
-    return req.headers.authorization;
+    return (<any>req).profileId;
 }

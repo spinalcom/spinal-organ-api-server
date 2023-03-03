@@ -21,7 +21,7 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { childrensNode, parentsNode } from '../../utilities/corseChildrenAndParentNode'
 import { Node } from './interfacesNodes'

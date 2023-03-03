@@ -23,7 +23,7 @@
  */
 
 import * as express from 'express';
-// import type SpinalAPIMiddleware from '../app/spinalAPIMiddleware';
+// import type SpinalAPIMiddleware from '../spinalAPIMiddleware';
 
 import { ISpinalAPIMiddleware } from "../interfaces";
 

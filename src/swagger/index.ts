@@ -24,6 +24,7 @@
 
 import { Application } from "express";
 import * as fs from 'fs';
+import * as path from 'path';
 import * as swaggerUi from 'swagger-ui-express';
 import * as swaggerJSDoc from 'swagger-jsdoc';
 import { swaggerOption } from './swaggerOption';
@@ -47,14 +48,11 @@ export const getSwaggerDocs = (): Object => {
 
 export function initSwagger(api: Application) {
 
-
-
     api.use('/swagger-spec', (req, res) => {
         res.json(swaggerDocs);
     });
 
-    fs.writeFile(
-        './swagger-spec.json',
+    fs.writeFile(path.resolve(__dirname, '../../swagger-spec.json'),
         JSON.stringify(swaggerDocs, null, 2),
         (err) => {
             if (err) {
@@ -64,14 +62,14 @@ export function initSwagger(api: Application) {
     );
 
     // add swagger docs to API
-    api.use(
-        '/spinalcom-api-docs',
-        swaggerUi.serve,
-        swaggerUi.setup(swaggerDocs, swaggerUiOpts)
-    );
+    api.use('/spinalcom-api-docs', swaggerUi.serve, (req, res, next) => {
+        return swaggerUi.setup(swaggerDocs, swaggerUiOpts)(req, res, next);
+    });
+
     api.get('/docs/swagger.json', (req, res) => {
         res.send(swaggerDocs);
     });
+
     api.get(
         '/spinalcom-api-redoc-docs',
         redoc({

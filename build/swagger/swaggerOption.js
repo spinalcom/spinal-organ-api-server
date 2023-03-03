@@ -67,7 +67,7 @@ exports.swaggerOption = {
         },
         tags: [{
                 name: "Pub/Sub",
-                description: "pubsub api documentation is available at "
+                description: "pubsub api documentation is available at <a>https://resourcecenter.fr.spinalcom.com/ressources-développeur/api-sdk-principes/api-pubsub</a>"
             }],
     },
     apis: (0, listRequest_1.getListRequest)()

@@ -25,6 +25,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initSwagger = exports.getSwaggerDocs = void 0;
 const fs = require("fs");
+const path = require("path");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJSDoc = require("swagger-jsdoc");
 const swaggerOption_1 = require("./swaggerOption");
@@ -45,13 +46,15 @@ function initSwagger(api) {
     api.use('/swagger-spec', (req, res) => {
         res.json(swaggerDocs);
     });
-    fs.writeFile('./swagger-spec.json', JSON.stringify(swaggerDocs, null, 2), (err) => {
+    fs.writeFile(path.resolve(__dirname, '../../swagger-spec.json'), JSON.stringify(swaggerDocs, null, 2), (err) => {
         if (err) {
             return console.error(err);
         }
     });
     // add swagger docs to API
-    api.use('/spinalcom-api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs, swaggerUiOpts));
+    api.use('/spinalcom-api-docs', swaggerUi.serve, (req, res, next) => {
+        return swaggerUi.setup(swaggerDocs, swaggerUiOpts)(req, res, next);
+    });
     api.get('/docs/swagger.json', (req, res) => {
         res.send(swaggerDocs);
     });

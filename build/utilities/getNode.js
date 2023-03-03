@@ -41,7 +41,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 function getNode(spinalAPIMiddleware, dynamicId, staticId, profileId) {
-    var e_1, _a;
+    var _a, e_1, _b, _c;
     return __awaiter(this, void 0, void 0, function* () {
         if (dynamicId) {
             try {
@@ -64,17 +64,24 @@ function getNode(spinalAPIMiddleware, dynamicId, staticId, profileId) {
                 else {
                     const it = context.visitChildrenInContext(context);
                     try {
-                        for (var it_1 = __asyncValues(it), it_1_1; it_1_1 = yield it_1.next(), !it_1_1.done;) {
-                            const node = it_1_1.value;
-                            if (node.info.id.get() === staticId) {
-                                return node;
+                        for (var _d = true, it_1 = __asyncValues(it), it_1_1; it_1_1 = yield it_1.next(), _a = it_1_1.done, !_a;) {
+                            _c = it_1_1.value;
+                            _d = false;
+                            try {
+                                const node = _c;
+                                if (node.info.id.get() === staticId) {
+                                    return node;
+                                }
+                            }
+                            finally {
+                                _d = true;
                             }
                         }
                     }
                     catch (e_1_1) { e_1 = { error: e_1_1 }; }
                     finally {
                         try {
-                            if (it_1_1 && !it_1_1.done && (_a = it_1.return)) yield _a.call(it_1);
+                            if (!_d && !_a && (_b = it_1.return)) yield _b.call(it_1);
                         }
                         finally { if (e_1) throw e_1.error; }
                     }

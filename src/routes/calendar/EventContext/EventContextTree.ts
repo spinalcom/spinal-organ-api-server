@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { recTree } from '../../../utilities/recTree'

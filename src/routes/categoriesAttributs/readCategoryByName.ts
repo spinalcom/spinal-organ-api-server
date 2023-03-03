@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { CategoriesAttribute } from './interfacesCategoriesAtrtribut'
 import { getProfileId } from '../../utilities/requestUtilities';

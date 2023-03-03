@@ -17,17 +17,10 @@
   },
   "components": {
     "securitySchemes": {
-      "OauthSecurity": {
-        "type": "oauth2",
-        "description": "This API uses OAuth 2 with the implicit grant flow. [More info](https://api.example.com/docs/auth)",
-        "flows": {
-          "clientCredentials": {
-            "tokenUrl": "http://localhost:8080/oauth2/token",
-            "scopes": {
-              "readOnly": "readOnly request"
-            }
-          }
-        }
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     },
     "schemas": {
@@ -1447,7 +1440,7 @@
   "tags": [
     {
       "name": "Pub/Sub",
-      "description": "pubsub api documentation is available at "
+      "description": "pubsub api documentation is available at <a>https://resourcecenter.fr.spinalcom.com/ressources-développeur/api-sdk-principes/api-pubsub</a>"
     }
   ],
   "paths": {
@@ -1455,7 +1448,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -1489,7 +1482,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -1532,7 +1525,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -1585,7 +1578,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -1628,7 +1621,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -1681,7 +1674,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -1735,7 +1728,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -1799,7 +1792,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -1852,7 +1845,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -1917,7 +1910,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -1960,7 +1953,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -2006,7 +1999,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -2052,7 +2045,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -2098,7 +2091,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -2144,7 +2137,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -2190,7 +2183,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -2236,7 +2229,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -2282,7 +2275,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -2328,7 +2321,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -2384,7 +2377,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -2420,7 +2413,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -2466,7 +2459,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -2519,7 +2512,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -2565,7 +2558,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -2609,7 +2602,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -2662,7 +2655,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -2713,7 +2706,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -2776,7 +2769,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -2837,7 +2830,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -2883,7 +2876,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -2958,7 +2951,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -3041,7 +3034,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -3095,7 +3088,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3126,7 +3119,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3157,7 +3150,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3188,7 +3181,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3222,7 +3215,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3265,7 +3258,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3331,7 +3324,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3377,7 +3370,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3420,7 +3413,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3463,7 +3456,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3509,7 +3502,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3555,7 +3548,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3601,7 +3594,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3667,7 +3660,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3713,7 +3706,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3759,7 +3752,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3829,7 +3822,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3875,7 +3868,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3918,7 +3911,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -3964,7 +3957,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -4010,7 +4003,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -4056,7 +4049,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -4102,7 +4095,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -4148,7 +4141,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -4194,7 +4187,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -4228,7 +4221,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -4271,7 +4264,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -4314,7 +4307,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -4358,7 +4351,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -4411,7 +4404,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -4447,7 +4440,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -4499,7 +4492,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -4552,7 +4545,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -4586,7 +4579,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -4635,7 +4628,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -4671,7 +4664,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -4724,7 +4717,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -4770,7 +4763,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -4818,7 +4811,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -4854,7 +4847,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -4907,7 +4900,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -4953,7 +4946,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -5006,7 +4999,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -5042,7 +5035,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -5085,7 +5078,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -5128,7 +5121,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -5188,7 +5181,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -5247,7 +5240,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -5300,7 +5293,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -5361,7 +5354,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -5404,7 +5397,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -5447,7 +5440,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -5490,7 +5483,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -5533,7 +5526,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -5576,7 +5569,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -5610,7 +5603,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -5653,7 +5646,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -5694,7 +5687,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -5737,7 +5730,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -5790,7 +5783,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -5826,7 +5819,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -5869,7 +5862,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -5921,7 +5914,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -5974,7 +5967,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -6020,7 +6013,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -6073,7 +6066,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -6119,7 +6112,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -6182,7 +6175,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -6238,7 +6231,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -6303,7 +6296,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -6359,7 +6352,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -6436,7 +6429,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -6447,7 +6440,7 @@
           "Workflow & ticket"
         ],
         "requestBody": {
-          "description": "For the two parameters *workflow* and *process* you can browse it either by putting the dynamicId or the name",
+          "description": "For the two parameters *workflow* and *process* you can browse it either by putting the dynamicId or the name and to associate the ticket with an element, please fill in the dynamicId or StaticId parameter",
           "required": true,
           "content": {
             "application/json": {
@@ -6457,6 +6450,7 @@
                   "workflow",
                   "process",
                   "nodeDynamicId",
+                  "nodeStaticId",
                   "name",
                   "priority",
                   "description",
@@ -6472,6 +6466,9 @@
                   },
                   "nodeDynamicId": {
                     "type": "number"
+                  },
+                  "nodeStaticId": {
+                    "type": "string"
                   },
                   "name": {
                     "type": "string"
@@ -6528,7 +6525,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -6571,7 +6568,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -6640,7 +6637,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -6693,7 +6690,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -6746,7 +6743,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -6799,7 +6796,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -6856,7 +6853,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -6899,7 +6896,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -6956,7 +6953,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -7013,7 +7010,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -7070,7 +7067,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -7127,7 +7124,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -7161,7 +7158,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -7204,7 +7201,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -7245,7 +7242,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -7291,7 +7288,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -7347,7 +7344,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -7413,7 +7410,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -7469,7 +7466,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -7558,7 +7555,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -7601,7 +7598,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -7670,7 +7667,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -7706,7 +7703,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -7740,7 +7737,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -7783,7 +7780,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -7814,7 +7811,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -7858,7 +7855,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -7903,7 +7900,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -7946,7 +7943,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -7999,7 +7996,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -8035,7 +8032,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -8081,7 +8078,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -8138,7 +8135,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -8191,7 +8188,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -8258,7 +8255,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -8304,7 +8301,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -8360,7 +8357,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -8427,7 +8424,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -8490,7 +8487,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -8567,7 +8564,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -8623,7 +8620,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -8657,7 +8654,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -8700,7 +8697,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -8741,7 +8738,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -8784,7 +8781,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -8837,7 +8834,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -8873,7 +8870,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -8919,7 +8916,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -8976,7 +8973,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -9029,7 +9026,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -9096,7 +9093,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -9142,7 +9139,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -9198,7 +9195,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -9265,7 +9262,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -9328,7 +9325,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -9405,7 +9402,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -9461,7 +9458,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -9495,7 +9492,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -9538,7 +9535,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -9579,7 +9576,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -9622,7 +9619,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -9675,7 +9672,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -9711,7 +9708,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -9757,7 +9754,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -9814,7 +9811,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -9867,7 +9864,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -9934,7 +9931,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -9980,7 +9977,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -10036,7 +10033,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -10103,7 +10100,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -10166,7 +10163,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -10243,7 +10240,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -10299,7 +10296,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -10333,7 +10330,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -10376,7 +10373,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -10417,7 +10414,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -10460,7 +10457,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -10513,7 +10510,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -10549,7 +10546,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -10595,7 +10592,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -10652,7 +10649,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -10705,7 +10702,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -10772,7 +10769,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -10818,7 +10815,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -10874,7 +10871,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -10941,7 +10938,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -11004,7 +11001,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -11081,7 +11078,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -11137,7 +11134,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -11171,7 +11168,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -11214,7 +11211,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -11255,7 +11252,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -11298,7 +11295,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -11351,7 +11348,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -11387,7 +11384,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -11433,7 +11430,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -11490,7 +11487,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -11543,7 +11540,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -11610,7 +11607,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -11656,7 +11653,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -11712,7 +11709,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -11779,7 +11776,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -11842,7 +11839,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -11919,7 +11916,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -11975,7 +11972,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12042,7 +12039,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12076,7 +12073,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12128,7 +12125,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12159,7 +12156,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12182,7 +12179,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -12235,7 +12232,7 @@
       "put": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -12288,7 +12285,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12331,7 +12328,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12386,7 +12383,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12455,7 +12452,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12496,7 +12493,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12558,7 +12555,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12599,7 +12596,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12649,7 +12646,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12690,7 +12687,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12752,7 +12749,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12798,7 +12795,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12844,7 +12841,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12905,7 +12902,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12966,7 +12963,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -13014,7 +13011,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -13057,7 +13054,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "read"
             ]
           }
@@ -13169,7 +13166,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -13239,7 +13236,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -13319,7 +13316,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -13399,7 +13396,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -13465,7 +13462,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -13545,7 +13542,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -13625,7 +13622,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -13691,7 +13688,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -13768,7 +13765,7 @@
       "delete": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -13845,7 +13842,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -13908,7 +13905,7 @@
       "get": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }

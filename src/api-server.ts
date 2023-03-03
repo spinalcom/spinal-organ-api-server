@@ -29,7 +29,7 @@ import * as _ from 'lodash';
 
 import * as bodyParser from 'body-parser';
 import type SpinalAPIMiddleware from './spinalAPIMiddleware';
-import routes from '../routes/routes';
+import routes from './routes/routes';
 import morgan = require('morgan');
 
 

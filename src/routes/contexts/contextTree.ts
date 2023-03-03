@@ -21,7 +21,7 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import spinalAPIMiddleware from '../../app/spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { ContextTree } from './interfacesContexts'

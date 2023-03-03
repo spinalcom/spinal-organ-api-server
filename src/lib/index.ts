@@ -28,29 +28,21 @@ import { initSwagger } from "../swagger";
 import { ISpinalAPIMiddleware } from "../interfaces";
 import * as fileUpload from 'express-fileupload';
 import * as bodyParser from 'body-parser';
+import * as path from "path";
 import morgan = require("morgan");
 import routes from "../routes/routes";
-import { useLogger } from "../app/api-server";
+import { useLogger } from "../api-server";
 
 
 function initApiServer(app: Application, spinalAPIMiddleware: ISpinalAPIMiddleware, log_body: boolean = false) {
     app.use(fileUpload({ createParentPath: true }));
 
-    const bodyParserTicket = bodyParser.json({ limit: '500mb' });
-
-    app.use((req, res, next) => {
-        if (req.originalUrl === '/api/v1/node/convert_base_64' || req.originalUrl === '/api/v1/ticket/create_ticket')
-            return bodyParserTicket(req, res, next);
-        next()
-    });
-
     useLogger(app, log_body);
 
-
-    initSwagger(app)
+    initSwagger(app);
 
     app.get('/logo.png', (req, res) => {
-        res.sendFile('spinalcore.png', { root: process.cwd() + '/uploads' });
+        res.sendFile('spinalcore.png', { root: path.resolve(__dirname + '../../../uploads') });
     });
 
     routes({}, app, spinalAPIMiddleware);

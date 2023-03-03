@@ -23,7 +23,7 @@
  */
 
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
 import { SpinalEvent, SpinalEventService } from "spinal-env-viewer-task-service";
 import { sendDate, verifDate } from "../../../utilities/dateFunctions"

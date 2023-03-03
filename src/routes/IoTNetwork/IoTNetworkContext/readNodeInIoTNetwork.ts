@@ -24,7 +24,7 @@
 
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import { findOneInContext } from '../../../utilities/findOneInContext';
-import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
 import { IoTNetwork } from '../interfacesEndpointAndTimeSeries'
 import { getProfileId } from '../../../utilities/requestUtilities';

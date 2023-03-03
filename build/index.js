@@ -35,7 +35,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const config_1 = require("./config");
 const api_server_1 = require("./api-server");
 const spinalAPIMiddleware_1 = require("./spinalAPIMiddleware");
-const swagger_1 = require("../swagger");
+const swagger_1 = require("./swagger");
 function Requests(logger) {
     function initSpinalHub() {
         return __awaiter(this, void 0, void 0, function* () {

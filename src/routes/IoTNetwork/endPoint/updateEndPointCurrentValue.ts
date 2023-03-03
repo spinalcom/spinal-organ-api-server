@@ -23,7 +23,7 @@
  */
 
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import spinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
 import { CurrentValue } from '../interfacesEndpointAndTimeSeries'
 import { getProfileId } from '../../../utilities/requestUtilities';

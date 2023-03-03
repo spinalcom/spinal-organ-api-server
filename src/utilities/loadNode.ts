@@ -23,7 +23,7 @@
  */
 import { SpinalNode } from 'spinal-model-graph';
 import { ISpinalAPIMiddleware } from 'src/interfaces';
-import spinalAPIMiddleware from '../app/spinalAPIMiddleware';
+import spinalAPIMiddleware from '../spinalAPIMiddleware';
 
 export function _load(arrayofServerId, spinalAPIMiddleware: ISpinalAPIMiddleware, profileId): Promise<SpinalNode<any>[]> {
   return Promise.all(arrayofServerId.map(item => {

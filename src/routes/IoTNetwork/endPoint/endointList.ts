@@ -21,7 +21,7 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import SpinalAPIMiddleware from '../../../app/spinalAPIMiddleware';
+import SpinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
 import { IoTNetwork } from "../interfacesEndpointAndTimeSeries";
 import { SpinalGraph } from 'spinal-model-graph';

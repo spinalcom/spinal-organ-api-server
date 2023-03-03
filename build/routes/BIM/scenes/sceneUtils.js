@@ -33,7 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isNodeId = exports.getFolderPath = exports.sceneGetItems = exports.getScenes = void 0;
-const spinalAPIMiddleware_1 = require("../../../app/spinalAPIMiddleware");
+const spinalAPIMiddleware_1 = require("../../../spinalAPIMiddleware");
 const SCENE_CONTEXT_NAME = 'Scenes';
 const SCENE_RELATIONS = ['hasScene'];
 const SCENE_PART_RELATIONS = ['hasParts'];

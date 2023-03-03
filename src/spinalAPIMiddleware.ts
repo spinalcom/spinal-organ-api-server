@@ -28,7 +28,7 @@ import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { SpinalContext, SpinalGraph, SpinalNode } from 'spinal-model-graph';
 import { runSocketServer } from 'spinal-organ-api-pubsub';
 import { IConfig } from 'src/interfaces';
-import { ISpinalAPIMiddleware } from '../interfaces/ISpinalAPIMiddleware';
+import { ISpinalAPIMiddleware } from './interfaces/ISpinalAPIMiddleware';
 const Q = require('q');
 
 // get the config

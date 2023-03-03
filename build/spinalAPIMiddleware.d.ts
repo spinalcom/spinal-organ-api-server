@@ -2,7 +2,7 @@
 import { Server } from 'http';
 import { SpinalGraph } from 'spinal-model-graph';
 import { IConfig } from 'src/interfaces';
-import { ISpinalAPIMiddleware } from '../interfaces/ISpinalAPIMiddleware';
+import { ISpinalAPIMiddleware } from './interfaces/ISpinalAPIMiddleware';
 declare class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
     static instance: SpinalAPIMiddleware;
     loadedPtr: Map<number, any>;

@@ -24,7 +24,7 @@
 
 import { SpinalContext, SpinalNode } from 'spinal-model-graph';
 
-import SpinalAPIMiddleware from '../../app/spinalAPIMiddleware';
+import SpinalAPIMiddleware from '../../spinalAPIMiddleware';
 const BIM_FILE_CONTEXT_NAME = 'BimFileContext';
 const BIM_FILE_CONTEXT_RELATION = 'hasBimFile';
 const BIM_FILE_RELATION = 'hasBimContext';

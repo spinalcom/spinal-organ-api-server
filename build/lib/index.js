@@ -40,21 +40,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.runServerRest = void 0;
 const swagger_1 = require("../swagger");
 const fileUpload = require("express-fileupload");
-const bodyParser = require("body-parser");
+const path = require("path");
 const routes_1 = require("../routes/routes");
-const api_server_1 = require("../app/api-server");
+const api_server_1 = require("../api-server");
 function initApiServer(app, spinalAPIMiddleware, log_body = false) {
     app.use(fileUpload({ createParentPath: true }));
-    const bodyParserTicket = bodyParser.json({ limit: '500mb' });
-    app.use((req, res, next) => {
-        if (req.originalUrl === '/api/v1/node/convert_base_64' || req.originalUrl === '/api/v1/ticket/create_ticket')
-            return bodyParserTicket(req, res, next);
-        next();
-    });
     (0, api_server_1.useLogger)(app, log_body);
     (0, swagger_1.initSwagger)(app);
     app.get('/logo.png', (req, res) => {
-        res.sendFile('spinalcore.png', { root: process.cwd() + '/uploads' });
+        res.sendFile('spinalcore.png', { root: path.resolve(__dirname + '../../../uploads') });
     });
     (0, routes_1.default)({}, app, spinalAPIMiddleware);
 }

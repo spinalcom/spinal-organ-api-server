@@ -33,7 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-const spinalAPIMiddleware_1 = require("../../app/spinalAPIMiddleware");
+const spinalAPIMiddleware_1 = require("../../spinalAPIMiddleware");
 const BIM_FILE_CONTEXT_NAME = 'BimFileContext';
 const BIM_FILE_CONTEXT_RELATION = 'hasBimFile';
 const BIM_FILE_RELATION = 'hasBimContext';
