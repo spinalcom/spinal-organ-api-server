@@ -80,7 +80,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           var bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
           for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
             if (bmsEndPoint.getName().get() === "COMMAND_BLIND") {
-              var element = (await bmsEndPoint.element.load()).get();
+              // var element = (await bmsEndPoint.element.load()).get();
+              var element = (await bmsEndPoint.element.load());
               info = {
                 dynamicId: room._server_id,
                 staticId: room.getId().get(),

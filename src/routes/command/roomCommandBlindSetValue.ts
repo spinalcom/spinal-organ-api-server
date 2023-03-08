@@ -96,16 +96,20 @@ module.exports = function (
           var bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
           for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
             if (bmsEndPoint.getName().get() === "COMMAND_BLIND") {
-              await updateControlEndpointWithAnalytic(bmsEndPoint, req.body.blindCurrentValue, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
+              //@ts-ignore
+              SpinalGraphService._addNode(bmsEndPoint);
+              const model = SpinalGraphService.getInfo(bmsEndPoint.getId().get());
+              var element = await bmsEndPoint.element.load()
+              await updateControlEndpointWithAnalytic(model, req.body.blindCurrentValue, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
               // var element = await bmsEndPoint.element.load();
               // element.currentValue.set(req.body.blindCurrentValue)
-              // info = {
-              //   dynamicId: room._server_id,
-              //   staticId: room.getId().get(),
-              //   name: room.getName().get(),
-              //   type: room.getType().get(),
-              //   currentValue: element.currentValue.get()
-              // }
+              info = {
+                dynamicId: room._server_id,
+                staticId: room.getId().get(),
+                name: room.getName().get(),
+                type: room.getType().get(),
+                currentValue: element.currentValue.get()
+              }
             }
           }
         }

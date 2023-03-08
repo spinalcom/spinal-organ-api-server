@@ -21,6 +21,7 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+import { SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { NetworkService, InputDataEndpoint, InputDataEndpointDataType, InputDataEndpointType } from "spinal-model-bmsnetwork"
 
 /**
@@ -31,6 +32,7 @@ import { NetworkService, InputDataEndpoint, InputDataEndpointDataType, InputData
     * @returns Promise
     */
 export async function updateControlEndpointWithAnalytic(model, valueToPush: any, dataType: any, type: any): Promise<void> {
+
   var networkService = new NetworkService()
   if (valueToPush != undefined) {
     const input: InputDataEndpoint = {
@@ -45,7 +47,7 @@ export async function updateControlEndpointWithAnalytic(model, valueToPush: any,
     };
     const time = new Date();   //Register in TimeSeries
     await networkService.updateEndpoint(model, input, time);
-    console.log(model.info.name.get() + " ==>  is updated ");
+    console.log(model.name.get() + " ==>  is updated ");
   }
   else {
     console.log(valueToPush + " value to push in node : " + model.name.get() + " -- ABORTED !");

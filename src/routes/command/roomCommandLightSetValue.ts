@@ -45,6 +45,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *     summary: Set command light value
    *     tags:
    *      - Command
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
    *     requestBody:
    *       description: set current value, float attribute, 
    *       required: true
@@ -82,16 +90,21 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           var bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
           for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
             if (bmsEndPoint.getName().get() === "COMMAND_LIGHT") {
-              await updateControlEndpointWithAnalytic(bmsEndPoint, req.body.lightCurrentValue, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
+              //@ts-ignore
+              SpinalGraphService._addNode(bmsEndPoint);
+              const model = SpinalGraphService.getInfo(bmsEndPoint.getId().get());
+              var element = await bmsEndPoint.element.load()
+
+              await updateControlEndpointWithAnalytic(model, req.body.lightCurrentValue, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
               // var element = (await bmsEndPoint.element.load()).get();
               // element.currentValue.set(req.body.lightCurrentValue)
-              // info = {
-              //   dynamicId: room._server_id,
-              //   staticId: room.getId().get(),
-              //   name: room.getName().get(),
-              //   type: room.getType().get(),
-              //   currentValue: req.body.lightCurrentValue
-              // }
+              info = {
+                dynamicId: room._server_id,
+                staticId: room.getId().get(),
+                name: room.getName().get(),
+                type: room.getType().get(),
+                currentValue: element.currentValue.get()
+              }
             }
           }
         }

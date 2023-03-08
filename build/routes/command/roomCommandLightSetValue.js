@@ -48,6 +48,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     summary: Set command light value
      *     tags:
      *      - Command
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
      *     requestBody:
      *       description: set current value, float attribute,
      *       required: true
@@ -83,16 +91,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     var bmsEndpointsChildControlPoint = yield controlPoint.getChildren('hasBmsEndpoint');
                     for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
                         if (bmsEndPoint.getName().get() === "COMMAND_LIGHT") {
-                            yield (0, upstaeControlEndpoint_1.updateControlEndpointWithAnalytic)(bmsEndPoint, req.body.lightCurrentValue, spinal_model_bmsnetwork_1.InputDataEndpointDataType.Real, spinal_model_bmsnetwork_1.InputDataEndpointType.Other);
+                            //@ts-ignore
+                            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(bmsEndPoint);
+                            const model = spinal_env_viewer_graph_service_1.SpinalGraphService.getInfo(bmsEndPoint.getId().get());
+                            var element = yield bmsEndPoint.element.load();
+                            yield (0, upstaeControlEndpoint_1.updateControlEndpointWithAnalytic)(model, req.body.lightCurrentValue, spinal_model_bmsnetwork_1.InputDataEndpointDataType.Real, spinal_model_bmsnetwork_1.InputDataEndpointType.Other);
                             // var element = (await bmsEndPoint.element.load()).get();
                             // element.currentValue.set(req.body.lightCurrentValue)
-                            // info = {
-                            //   dynamicId: room._server_id,
-                            //   staticId: room.getId().get(),
-                            //   name: room.getName().get(),
-                            //   type: room.getType().get(),
-                            //   currentValue: req.body.lightCurrentValue
-                            // }
+                            info = {
+                                dynamicId: room._server_id,
+                                staticId: room.getId().get(),
+                                name: room.getName().get(),
+                                type: room.getType().get(),
+                                currentValue: element.currentValue.get()
+                            };
                         }
                     }
                 }

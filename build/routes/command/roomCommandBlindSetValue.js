@@ -91,16 +91,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     var bmsEndpointsChildControlPoint = yield controlPoint.getChildren('hasBmsEndpoint');
                     for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
                         if (bmsEndPoint.getName().get() === "COMMAND_BLIND") {
-                            yield (0, upstaeControlEndpoint_1.updateControlEndpointWithAnalytic)(bmsEndPoint, req.body.blindCurrentValue, spinal_model_bmsnetwork_1.InputDataEndpointDataType.Real, spinal_model_bmsnetwork_1.InputDataEndpointType.Other);
+                            //@ts-ignore
+                            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(bmsEndPoint);
+                            const model = spinal_env_viewer_graph_service_1.SpinalGraphService.getInfo(bmsEndPoint.getId().get());
+                            var element = yield bmsEndPoint.element.load();
+                            yield (0, upstaeControlEndpoint_1.updateControlEndpointWithAnalytic)(model, req.body.blindCurrentValue, spinal_model_bmsnetwork_1.InputDataEndpointDataType.Real, spinal_model_bmsnetwork_1.InputDataEndpointType.Other);
                             // var element = await bmsEndPoint.element.load();
                             // element.currentValue.set(req.body.blindCurrentValue)
-                            // info = {
-                            //   dynamicId: room._server_id,
-                            //   staticId: room.getId().get(),
-                            //   name: room.getName().get(),
-                            //   type: room.getType().get(),
-                            //   currentValue: element.currentValue.get()
-                            // }
+                            info = {
+                                dynamicId: room._server_id,
+                                staticId: room.getId().get(),
+                                name: room.getName().get(),
+                                type: room.getType().get(),
+                                currentValue: element.currentValue.get()
+                            };
                         }
                     }
                 }

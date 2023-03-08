@@ -79,7 +79,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Bad request
      */
     app.post('/api/v1/command/room/:id/temp', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-        var info;
+        var info = {};
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             var room = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
@@ -91,16 +91,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     var bmsEndpointsChildControlPoint = yield controlPoint.getChildren('hasBmsEndpoint');
                     for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
                         if (bmsEndPoint.getName().get() === "COMMAND_TEMPERATURE") {
+                            //@ts-ignore
+                            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(bmsEndPoint);
+                            const model = spinal_env_viewer_graph_service_1.SpinalGraphService.getInfo(bmsEndPoint.getId().get());
                             var element = yield bmsEndPoint.element.load();
-                            yield (0, upstaeControlEndpoint_1.updateControlEndpointWithAnalytic)(bmsEndPoint, req.body.tempCurrentValue, spinal_model_bmsnetwork_1.InputDataEndpointDataType.Real, spinal_model_bmsnetwork_1.InputDataEndpointType.Other);
+                            yield (0, upstaeControlEndpoint_1.updateControlEndpointWithAnalytic)(model, req.body.tempCurrentValue, spinal_model_bmsnetwork_1.InputDataEndpointDataType.Real, spinal_model_bmsnetwork_1.InputDataEndpointType.Other);
                             // element.currentValue.set(req.body.tempCurrentValue)
-                            // info = {
-                            //   dynamicId: room._server_id,
-                            //   staticId: room.getId().get(),
-                            //   name: room.getName().get(),
-                            //   type: room.getType().get(),
-                            //   currentValue: element.currentValue.get()
-                            // }
+                            info = {
+                                dynamicId: room._server_id,
+                                staticId: room.getId().get(),
+                                name: room.getName().get(),
+                                type: room.getType().get(),
+                                currentValue: element.currentValue.get()
+                            };
                         }
                     }
                 }

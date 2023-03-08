@@ -76,8 +76,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 if (controlPoint.getName().get() === "Command") {
                     var bmsEndpointsChildControlPoint = yield controlPoint.getChildren('hasBmsEndpoint');
                     for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
-                        if (bmsEndPoint.getName().get() === "COMMAND_TEMP") {
-                            var element = (yield bmsEndPoint.element.load()).get();
+                        if (bmsEndPoint.getName().get() === "COMMAND_TEMPERATURE") {
+                            // var element = (await bmsEndPoint.element.load()).get();
+                            var element = (yield bmsEndPoint.element.load());
                             info = {
                                 dynamicId: room._server_id,
                                 staticId: room.getId().get(),

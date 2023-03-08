@@ -82,7 +82,7 @@ module.exports = function (
    */
 
   app.post('/api/v1/command/room/:id/temp', async (req, res, next) => {
-    var info;
+    var info = {};
     try {
       const profileId = getProfileId(req);
 
@@ -96,17 +96,20 @@ module.exports = function (
           var bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
           for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
             if (bmsEndPoint.getName().get() === "COMMAND_TEMPERATURE") {
+              //@ts-ignore
+              SpinalGraphService._addNode(bmsEndPoint);
+              const model = SpinalGraphService.getInfo(bmsEndPoint.getId().get());
               var element = await bmsEndPoint.element.load()
-              await updateControlEndpointWithAnalytic(bmsEndPoint, req.body.tempCurrentValue, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
+              await updateControlEndpointWithAnalytic(model, req.body.tempCurrentValue, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
 
               // element.currentValue.set(req.body.tempCurrentValue)
-              // info = {
-              //   dynamicId: room._server_id,
-              //   staticId: room.getId().get(),
-              //   name: room.getName().get(),
-              //   type: room.getType().get(),
-              //   currentValue: element.currentValue.get()
-              // }
+              info = {
+                dynamicId: room._server_id,
+                staticId: room.getId().get(),
+                name: room.getName().get(),
+                type: room.getType().get(),
+                currentValue: element.currentValue.get()
+              }
             }
           }
         }
