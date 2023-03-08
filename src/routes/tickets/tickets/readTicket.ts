@@ -71,121 +71,49 @@ module.exports = function (
   app.get('/api/v1/ticket/:ticketId/read_details', async (req, res, next) => {
     try {
       await spinalAPIMiddleware.getGraph();
-      var _ticket: SpinalNode<any> = await spinalAPIMiddleware.load(
+      const _ticket: SpinalNode<any> = await spinalAPIMiddleware.load(
         parseInt(req.params.ticketId, 10)
       );
       //@ts-ignore
       SpinalGraphService._addNode(_ticket);
-      //Step
-      var _step = await _ticket
-        .getParents('SpinalSystemServiceTicketHasTicket')
-        .then((steps) => {
-          for (const step of steps) {
-            if (step.getType().get() === 'SpinalSystemServiceTicketTypeStep') {
-              return step;
-            }
-          }
-        });
-      var _process = await _step
-        .getParents('SpinalSystemServiceTicketHasStep')
-        .then((processes) => {
-          for (const process of processes) {
-            if (process.getType().get() === 'SpinalServiceTicketProcess') {
-              return process;
-            }
-          }
-        });
-      // retrieve all allSteps
-      const allSteps = await _process.getChildren('SpinalSystemServiceTicketHasStep');
-      for (const stp of allSteps) {
-        //@ts-ignore
-        SpinalGraphService._addNode(stp);
-      }
 
+      const [
+        { _process, _step },
+        _notes,
+        _files,
+        logs,
+        elementSelected
+      ] = await Promise.all([
+        //Step
+        getProcessAndStep(_ticket),
+        // Notes
+        getNodes(_ticket),
+        // Files
+        getFilesNote(_ticket),
+        // Logs
+        serviceTicketPersonalized.getLogs(_ticket.getId().get()),
+        // element Selected
+        getParent(_ticket)
+      ])
 
-      //Context
-      var contextRealNode = SpinalGraphService.getRealNode(
-        _ticket.getContextIds()[0]
-      );
-
-      // Notes
-      var notes = await serviceDocumentation.getNotes(_ticket);
-      var _notes = [];
-      for (const note of notes) {
-        let infoNote = {
-          userName:
-            note.element.username === undefined
-              ? ''
-              : note.element.username.get(),
-          date: note.element.date.get(),
-          type: note.element.type.get(),
-          message: note.element.message.get(),
-        };
-        _notes.push(infoNote);
-      }
-
-      // Files
-      var _files = [];
-      var fileNode = (await _ticket.getChildren('hasFiles'))[0];
-      if (fileNode) {
-        var filesfromElement = await fileNode.element.load();
-        for (let index = 0; index < filesfromElement.length; index++) {
-          let infoFiles = {
-            dynamicId: filesfromElement[index]._server_id,
-            Name: filesfromElement[index].name.get(),
-          };
-          _files.push(infoFiles);
-        }
-      }
-
-      // Logs
-      async function formatEvent(log) {
-        var texte = '';
-        if (log.event == LOGS_EVENTS.creation) {
-          texte = 'created';
-        } else if (log.event == LOGS_EVENTS.archived) {
-          texte = 'archived';
-        } else if (log.event == LOGS_EVENTS.unarchive) {
-          texte = 'unarchived';
-        } else {
-          const result = log.steps.map((el) =>
-            SpinalGraphService.getNode(el)
-          );
-
-          const step1 = result[0]?.name.get();
-          const step2 = result[1]?.name.get();
-          const pre = log.event == LOGS_EVENTS.moveToNext ? true : false;
-          texte = pre ? `Passed from ${step1} to ${step2}` : `Backward from ${step1} to ${step2}`;
-        }
-        return texte;
-      }
-
-      var logs = await serviceTicketPersonalized.getLogs(_ticket.getId().get());
-
-      var _logs = [];
+      // Logs continnue (need to _addNode steps before so it's defered)
+      const _logs = [];
       for (const log of logs) {
         let infoLogs = {
           userName: log.user.name,
           date: log.creationDate,
-          event: await formatEvent(log),
+          event: formatEvent(log),
           ticketStaticId: log.ticketId,
         };
         _logs.push(infoLogs);
       }
 
-      // element Selected
-      var elementSelected: SpinalNode<any>;
-      const parentsTicket = await _ticket.getParents(
-        'SpinalSystemServiceTicketHasTicket'
+      //Context
+      const contextRealNode = SpinalGraphService.getRealNode(
+        _ticket.getContextIds()[0]
       );
-      for (const parent of parentsTicket) {
-        if (parent.getType().get() !== 'SpinalSystemServiceTicketTypeStep') {
-          //@ts-ignore
-          SpinalGraphService._addNode(parent);
-          elementSelected = parent;
-        }
-      }
-      var info = {
+
+      const info = {
         dynamicId: _ticket._server_id,
         staticId: _ticket.getId().get(),
         name: _ticket.getName().get(),
@@ -243,10 +171,106 @@ module.exports = function (
         file_list: _files,
         log_list: _logs,
       };
+      return res.json(info);
     } catch (error) {
       console.log(error);
-      res.status(400).send('ko');
+      return res.status(400).send('ko');
     }
-    res.json(info);
   });
 };
+
+async function getParent(_ticket: SpinalNode<any>) {
+  let elementSelected: SpinalNode<any>;
+  const parentsTicket = await _ticket.getParents(
+    'SpinalSystemServiceTicketHasTicket'
+  );
+  for (const parent of parentsTicket) {
+    if (parent.getType().get() !== 'SpinalSystemServiceTicketTypeStep') {
+      //@ts-ignore
+      SpinalGraphService._addNode(parent);
+      elementSelected = parent;
+    }
+  }
+  return elementSelected;
+}
+
+
+async function getFilesNote(_ticket: SpinalNode<any>) {
+  const _files = [];
+  const fileNode = (await _ticket.getChildren('hasFiles'))[0];
+  if (fileNode) {
+    const filesfromElement = await fileNode.element.load();
+    for (let index = 0; index < filesfromElement.length; index++) {
+      let infoFiles = {
+        dynamicId: filesfromElement[index]._server_id,
+        Name: filesfromElement[index].name.get(),
+      };
+      _files.push(infoFiles);
+    }
+  }
+  return _files;
+}
+
+async function getNodes(_ticket: SpinalNode<any>) {
+  const notes = await serviceDocumentation.getNotes(_ticket);
+  const _notes = [];
+  for (const note of notes) {
+    let infoNote = {
+      userName: note.element?.username?.get() || "",
+      date: note.element?.date?.get(),
+      type: note.element?.type?.get(),
+      message: note.element?.message?.get(),
+    };
+    _notes.push(infoNote);
+  }
+  return _notes;
+}
+
+async function getProcessAndStep(_ticket: SpinalNode<any>): Promise<{ _process: SpinalNode<any>; _step: SpinalNode<any>; }> {
+  var _step = await _ticket
+    .getParents('SpinalSystemServiceTicketHasTicket')
+    .then((steps) => {
+      for (const step of steps) {
+        if (step.getType().get() === 'SpinalSystemServiceTicketTypeStep') {
+          return step;
+        }
+      }
+    });
+  var _process = await _step
+    .getParents('SpinalSystemServiceTicketHasStep')
+    .then((processes) => {
+      for (const process of processes) {
+        if (process.getType().get() === 'SpinalServiceTicketProcess') {
+          return process;
+        }
+      }
+    });
+  // retrieve all allSteps
+  const allSteps = await _process.getChildren('SpinalSystemServiceTicketHasStep');
+  for (const stp of allSteps) {
+    //@ts-ignore
+    SpinalGraphService._addNode(stp);
+  }
+  return { _process, _step };
+}
+
+function formatEvent(log) {
+  var texte = '';
+  if (log.event == LOGS_EVENTS.creation) {
+    texte = 'created';
+  } else if (log.event == LOGS_EVENTS.archived) {
+    texte = 'archived';
+  } else if (log.event == LOGS_EVENTS.unarchive) {
+    texte = 'unarchived';
+  } else {
+    const result = log.steps.map((el) =>
+      SpinalGraphService.getNode(el)
+    );
+
+    const step1 = result[0]?.name?.get();
+    const step2 = result[1]?.name?.get();
+    const pre = log.event == LOGS_EVENTS.moveToNext ? true : false;
+    texte = pre ? `Passed from ${step1} to ${step2}` : `Backward from ${step1} to ${step2}`;
+  }
+  return texte;
+}

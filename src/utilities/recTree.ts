@@ -25,16 +25,14 @@ import { SpinalContext, SpinalNode } from 'spinal-model-graph';
 import { ContextTree } from '../routes/contexts/interfacesContexts'
 
 async function recTree(node: SpinalNode<any>, context: SpinalContext<any> = node): Promise<ContextTree[]> {
-  const childrenIds = await node.getChildrenInContext(context);
-  if (childrenIds.length > 0) {
-    var promises: Promise<ContextTree>[] = childrenIds.map(async (realnode) => {
-      const name = realnode.getName();
-      const type = realnode.getType();
+  const childrenNode = await node.getChildrenInContext(context);
+  if (childrenNode.length > 0) {
+    var promises: Promise<ContextTree>[] = childrenNode.map(async (realnode) => {
       return {
         dynamicId: realnode._server_id,
-        staticId: realnode.getId().get(),
-        name: name ? name.get() : undefined,
-        type: type ? type.get() : undefined,
+        staticId: realnode.getId()?.get(),
+        name: realnode.getName()?.get() || undefined,
+        type: realnode.getType()?.get() || undefined,
         children: await recTree(realnode, context)
       };
     });
@@ -44,55 +42,43 @@ async function recTree(node: SpinalNode<any>, context: SpinalContext<any> = node
   }
 }
 
-
-
-async function recTreeDetails(node: SpinalNode<any>, context: SpinalContext<any> = node): Promise<ContextTree[]> {
-  const childrenIds = await node.getChildrenInContext(context);
-  if (childrenIds.length > 0) {
-    var promises: Promise<ContextTree>[] = childrenIds.map(async (realnode) => {
-      const name = realnode.getName();
-      const type = realnode.getType();
-      if (type.get() === "geographicFloor") {
-        realnode
-      }
-      return {
-        dynamicId: realnode._server_id,
-        staticId: realnode.getId().get(),
-        name: name ? name.get() : undefined,
-        type: type ? type.get() : undefined,
-        children: await recTree(realnode, context)
-      };
-    });
-    return Promise.all(promises);
-  } else {
-    return [];
-  }
-}
-
-
-
-
+// async function recTreeDetails(node: SpinalNode<any>, context: SpinalContext<any> = node): Promise<ContextTree[]> {
+//   const childrenIds = await node.getChildrenInContext(context);
+//   if (childrenIds.length > 0) {
+//     var promises: Promise<ContextTree>[] = childrenIds.map(async (realnode) => {
+//       const name = realnode.getName();
+//       const type = realnode.getType();
+//       if (type.get() === "geographicFloor") {
+//         realnode
+//       }
+//       return {
+//         dynamicId: realnode._server_id,
+//         staticId: realnode.getId().get(),
+//         name: name ? name.get() : undefined,
+//         type: type ? type.get() : undefined,
+//         children: await recTree(realnode, context)
+//       };
+//     });
+//     return Promise.all(promises);
+//   } else {
+//     return [];
+//   }
+// }
 
 async function recTreeDepth(node: SpinalNode<any>, context: SpinalContext<any> = node, depth: number): Promise<ContextTree[]> {
-  const childrenIds = await node.getChildrenInContext(context);
-
-  if (childrenIds.length > 0 && depth > 0) {
-
-    var promises: Promise<ContextTree>[] = childrenIds.map(async (realnode) => {
-      const name = realnode.getName();
-      const type = realnode.getType();
+  const childrenNode = await node.getChildrenInContext(context);
+  if (childrenNode.length > 0 && depth > 0) {
+    var promises: Promise<ContextTree>[] = childrenNode.map(async (realnode) => {
       var info = {
         dynamicId: realnode._server_id,
-        staticId: realnode.getId().get(),
-        name: name ? name.get() : undefined,
-        type: type ? type.get() : undefined,
+        staticId: realnode.getId()?.get(),
+        name: realnode.getName()?.get() || undefined,
+        type: realnode.getType()?.get() || undefined,
         children: await recTreeDepth(realnode, context, depth - 1)
       };
       return info;
     });
     return Promise.all(promises);
-
-
   } else {
     return [];
   }

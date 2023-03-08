@@ -56,28 +56,30 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
   *             schema:
   *                $ref: '#/components/schemas/ContextTree'
   *       400:
-  *         description: Bad request
+  *         description: Bad request id
+  *       500:
+  *         description: internal server error
   */
 
   app.get("/api/v1/workflow/:id/tree", async (req, res, next) => {
-    var workflows: WorkflowTree;
 
     try {
-      var workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
-      if (workflow instanceof SpinalContext) {
-        workflows = {
-          dynamicId: workflow._server_id,
-          staticId: workflow.getId().get(),
-          name: workflow.getName().get(),
-          type: workflow.getType().get(),
-          children: await recTree(workflow, workflow)
+      const workflowModel = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      if (workflowModel instanceof SpinalContext) {
+        const workflows = {
+          dynamicId: workflowModel._server_id,
+          staticId: workflowModel.getId()?.get(),
+          name: workflowModel.getName()?.get(),
+          type: workflowModel.getType()?.get(),
+          children: await recTree(workflowModel, workflowModel)
         };
+        return res.json(workflows);
       }
+      return res.status(400).send("ko");
     } catch (error) {
       console.error(error);
-      res.status(400).send("ko");
+      return res.status(500).send("ko");
     }
-    res.json(workflows);
   });
 
 }

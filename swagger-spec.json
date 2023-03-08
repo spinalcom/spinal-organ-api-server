@@ -5748,7 +5748,10 @@
             }
           },
           "400": {
-            "description": "Bad request"
+            "description": "Bad request id"
+          },
+          "500": {
+            "description": "internal server error"
           }
         }
       }
