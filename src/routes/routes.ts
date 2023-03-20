@@ -990,6 +990,7 @@ function routes(
   );
   require('./nodes/nodeReadControlEndpoint')(logger, app, spinalAPIMiddleware);
   require('./command/commandMultiple')(logger, app, spinalAPIMiddleware);
+  require('./health/healthStatus')(logger, app, spinalAPIMiddleware);
 }
 
 export default routes;
