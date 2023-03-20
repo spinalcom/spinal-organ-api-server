@@ -65,7 +65,7 @@ function APIServer(
     morgan.token('body-req', (req) => {
       return req.method === 'POST' || req.method === 'PUT'
         ? // @ts-ignore
-          JSON.stringify(req.body, null, 2)
+        JSON.stringify(req.body, null, 2)
         : '';
     });
     app.use(
@@ -75,7 +75,23 @@ function APIServer(
       )
     );
   } else {
-    app.use('/api/*', morgan('dev'));
+    // app.use('/api/*', morgan('dev'));
+    app.use(
+      '/api/*',
+      morgan(function (tokens, req, res) {
+        console.log("***", tokens.method(req, res));
+        console.log("***", tokens.url(req, res));
+        // console.log();
+        // console.log();
+        return [
+          tokens.method(req, res),
+          tokens.url(req, res),
+          tokens.status(req, res),
+          tokens.res(req, res, 'content-length'), '-',
+          tokens['response-time'](req, res), 'ms'
+        ].join(' ')
+      })
+    );
   }
 
   routes(logger, app, spinalAPIMiddleware);

@@ -41,14 +41,15 @@ const redoc = require('redoc-express');
 const config_1 = require("./config");
 const api_server_1 = require("./api-server");
 const spinalAPIMiddleware_1 = require("./spinalAPIMiddleware");
+const ConfigFile_js_1 = require("../node_modules/spinal-lib-organ-monitoring/dist/classes/ConfigFile.js");
 function Requests(logger) {
     function initSpinalHub() {
         return __awaiter(this, void 0, void 0, function* () {
             const spinalAPIMiddleware = spinalAPIMiddleware_1.default.getInstance();
             yield spinalAPIMiddleware.getGraph();
             console.log('graph loaded successfully.');
-            yield spinalAPIMiddleware.initConfig();
-            console.log('file Config loaded successfully.');
+            // await spinalAPIMiddleware.initConfig();
+            // console.log('file Config loaded successfully.');
             return spinalAPIMiddleware;
         });
     }
@@ -94,6 +95,9 @@ function Requests(logger) {
                 const api = initApiServer(spinalAPIMiddleware);
                 let port = config_1.default.api.port;
                 const server = api.listen(port, () => {
+                    ConfigFile_js_1.default.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME + "-config", process.env.SPINALHUB_IP, process.env.SPINALHUB_PROTOCOL, parseInt(process.env.REQUESTS_PORT));
+                    // ConfigFile.pushLog(`Api server is listening at 0.0.0.0:${port}`)
+                    // ConfigFile.pushLastAction(`Api server is listening at 0.0.0.0:${port}`)
                     console.log(`\nApi server is listening at 0.0.0.0:${port}`);
                     console.log(`  openapi :\thttp://localhost:${port}/docs/swagger.json`);
                     console.log(`  swagger-ui :\thttp://localhost:${port}/spinalcom-api-docs`);
