@@ -38,8 +38,6 @@ import { spinalGraphUtils } from "spinal-organ-api-pubsub";
 //     Redefine Filesystem.onConnectionError
 //////////////////////////////////////////////////
 
-//@ts-ignore
-FileSystem._timeout_reconnect = 5 * 60 * 1000;
 
 //@ts-ignore
 FileSystem.onConnectionError = async (error_code: number) => {
