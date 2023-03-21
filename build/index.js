@@ -47,8 +47,6 @@ const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
 //     Redefine Filesystem.onConnectionError
 //////////////////////////////////////////////////
 //@ts-ignore
-FileSystem._timeout_reconnect = 5 * 60 * 1000;
-//@ts-ignore
 FileSystem.onConnectionError = (error_code) => __awaiter(void 0, void 0, void 0, function* () {
     if (error_code === 0) {
         yield spinal_organ_api_pubsub_1.spinalGraphUtils.rebindAllNodes();
