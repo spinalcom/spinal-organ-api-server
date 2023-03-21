@@ -41,7 +41,23 @@ const redoc = require('redoc-express');
 const config_1 = require("./config");
 const api_server_1 = require("./api-server");
 const spinalAPIMiddleware_1 = require("./spinalAPIMiddleware");
-const ConfigFile_js_1 = require("../node_modules/spinal-lib-organ-monitoring/dist/classes/ConfigFile.js");
+const ConfigFile_js_1 = require("spinal-lib-organ-monitoring/dist/classes/ConfigFile.js");
+const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
+//////////////////////////////////////////////////
+//     Redefine Filesystem.onConnectionError
+//////////////////////////////////////////////////
+//@ts-ignore
+FileSystem._timeout_reconnect = 5 * 60 * 1000;
+//@ts-ignore
+FileSystem.onConnectionError = (error_code) => __awaiter(void 0, void 0, void 0, function* () {
+    if (error_code === 0) {
+        yield spinal_organ_api_pubsub_1.spinalGraphUtils.rebindAllNodes();
+    }
+    else if (error_code === 2 || error_code === 3 || error_code === 4) {
+        process.exit();
+    }
+});
+//end Redefine Filesystem.onConnectionError
 function Requests(logger) {
     function initSpinalHub() {
         return __awaiter(this, void 0, void 0, function* () {
