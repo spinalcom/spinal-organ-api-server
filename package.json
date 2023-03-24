@@ -45,7 +45,7 @@
     "spinal-lib-forgefile": "git+https://github.com/spinalcom/spinal-lib-forgefile.git",
     "spinal-model-graph": "git+https://github.com/spinalcom/spinal-model-graph.git",
     "spinal-model-timeseries": "git+https://github.com/spinalcom/spinal-model-timeseries.git",
-    "spinal-organ-api-pubsub": "git+https://github.com/spinalcom/spinal-organ-api-pubsub.git",
+    "spinal-organ-api-pubsub": "git+https://github.com/spinalcom/spinal-organ-api-pubsub.git#bos_config",
     "spinal-organ-network_sample": "git+https://github.com/spinalcom/spinal-organ-network_sample.git",
     "spinal-service-ticket": "git+https://github.com/spinalcom/spinal-service-ticket.git",
     "spinal-service-user": "git+https://github.com/spinalcom/spinal-service-user.git",
