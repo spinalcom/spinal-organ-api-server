@@ -31,7 +31,26 @@ const redoc = require('redoc-express');
 import config from './config';
 import APIServer from './api-server';
 import SpinalAPIMiddleware from './spinalAPIMiddleware';
-import ConfigFile from "../node_modules/spinal-lib-organ-monitoring/dist/classes/ConfigFile.js"
+import ConfigFile from "spinal-lib-organ-monitoring/dist/classes/ConfigFile.js";
+import { spinalGraphUtils } from "spinal-organ-api-pubsub";
+
+//////////////////////////////////////////////////
+//     Redefine Filesystem.onConnectionError
+//////////////////////////////////////////////////
+
+
+//@ts-ignore
+FileSystem.onConnectionError = async (error_code: number) => {
+  if (error_code === 0) {
+    await spinalGraphUtils.rebindAllNodes();
+  } else if (error_code === 2 || error_code === 3 || error_code === 4) {
+    process.exit();
+  }
+
+}
+
+//end Redefine Filesystem.onConnectionError
+
 
 function Requests(logger) {
   async function initSpinalHub() {

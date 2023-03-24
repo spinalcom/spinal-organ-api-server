@@ -92,7 +92,7 @@ module.exports = function (
       for (const node of nodes) {
         const _node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10));
         if (nodetypes.includes(_node.getType().get())) {
-          for (const command of node.commands) {
+          for (const command of node.keys) {
             if (controlPointTypes.includes(command.key)) {
               let controlPoints = await _node.getChildren('hasControlPoints');
               for (const controlPoint of controlPoints) {
