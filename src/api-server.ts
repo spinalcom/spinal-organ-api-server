@@ -79,10 +79,6 @@ function APIServer(
     app.use(
       '/api/*',
       morgan(function (tokens, req, res) {
-        console.log("***", tokens.method(req, res));
-        console.log("***", tokens.url(req, res));
-        // console.log();
-        // console.log();
         return [
           tokens.method(req, res),
           tokens.url(req, res),

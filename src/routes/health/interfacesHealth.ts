@@ -47,5 +47,6 @@ export interface HealthStatus {
   bootTimestamp: number;
   lastHealthTime: number;
   ramHeapUsed: string;
+  state: string;
   logList: string[];
 }

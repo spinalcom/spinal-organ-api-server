@@ -65,11 +65,23 @@ module.exports = function (
         for (const file of directory) {
           var fileLoaded = await file.load()
           if (file._info.model_type.get() === "ConfigFile") {
+            let state: string;
+            function isWithinTwoMinutes(timestamp) {
+              var twoMinutesAgo = Date.now() - (2 * 60 * 1000); // calculate timestamp for 2 minutes ago
+              return (timestamp >= twoMinutesAgo && timestamp <= Date.now()); // check if timestamp is within 2 minutes
+            }
+            if (isWithinTwoMinutes(fileLoaded.genericOrganData.lastHealthTime.get())) {
+              state = "ON"
+            } else {
+              state = "OFF"
+            }
+
             let infoHealth: HealthStatus = {
               name: fileLoaded.genericOrganData.name.get(),
               bootTimestamp: fileLoaded.genericOrganData.bootTimestamp.get(),
               lastHealthTime: fileLoaded.genericOrganData.lastHealthTime.get(),
               ramHeapUsed: fileLoaded.genericOrganData.ramHeapUsed.get(),
+              state: state,
               logList: []
             };
             organs.push(infoHealth)
