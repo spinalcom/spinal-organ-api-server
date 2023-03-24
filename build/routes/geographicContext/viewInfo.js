@@ -105,7 +105,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
     }
     app.post('/api/v1/geographicContext/viewInfo', (req, res) => __awaiter(this, void 0, void 0, function* () {
-        var _a, e_1, _b, _c;
+        var e_1, _a;
         const body = req.body;
         const options = {
             dynamicId: body.dynamicId,
@@ -125,28 +125,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         for (const node of nodes) {
             const item = [];
             try {
-                for (var _d = true, _e = (e_1 = void 0, __asyncValues((0, visitNodesWithTypeRelation_1.visitNodesWithTypeRelation)(node, relations))), _f; _f = yield _e.next(), _a = _f.done, !_a;) {
-                    _c = _f.value;
-                    _d = false;
-                    try {
-                        const n = _c;
-                        if (n.info.type.get() === constants_1.REFERENCE_TYPE ||
-                            n.info.type.get() === constants_1.EQUIPMENT_TYPE) {
-                            const bimFileId = n.info.bimFileId.get();
-                            const dbId = n.info.dbid.get();
-                            if (bimFileId && dbId)
-                                pushResBody(item, bimFileId, dbId);
-                        }
-                    }
-                    finally {
-                        _d = true;
+                for (var _b = (e_1 = void 0, __asyncValues((0, visitNodesWithTypeRelation_1.visitNodesWithTypeRelation)(node, relations))), _c; _c = yield _b.next(), !_c.done;) {
+                    const n = _c.value;
+                    if (n.info.type.get() === constants_1.REFERENCE_TYPE ||
+                        n.info.type.get() === constants_1.EQUIPMENT_TYPE) {
+                        const bimFileId = n.info.bimFileId.get();
+                        const dbId = n.info.dbid.get();
+                        if (bimFileId && dbId)
+                            pushResBody(item, bimFileId, dbId);
                     }
                 }
             }
             catch (e_1_1) { e_1 = { error: e_1_1 }; }
             finally {
                 try {
-                    if (!_d && !_a && (_b = _e.return)) yield _b.call(_e);
+                    if (_c && !_c.done && (_a = _b.return)) yield _a.call(_b);
                 }
                 finally { if (e_1) throw e_1.error; }
             }

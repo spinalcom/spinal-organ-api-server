@@ -50,14 +50,8 @@ const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
 const Q = require('q');
 // get the config
 const config_1 = require("./config");
+const spinalIOMiddleware_1 = require("./spinalIOMiddleware");
 class SpinalAPIMiddleware {
-    // singleton class
-    static getInstance() {
-        if (SpinalAPIMiddleware.instance === null) {
-            SpinalAPIMiddleware.instance = new SpinalAPIMiddleware();
-        }
-        return SpinalAPIMiddleware.instance;
-    }
     constructor() {
         this.iteratorGraph = this.geneGraph();
         this.config = config_1.default;
@@ -72,6 +66,13 @@ class SpinalAPIMiddleware {
         this.conn = spinal_core_connectorjs_type_1.spinalCore.connect(connect_opt);
         // get the Model from the spinalhub, "onLoadSuccess" and "onLoadError" are 2
         // callback function.
+    }
+    // singleton class
+    static getInstance() {
+        if (SpinalAPIMiddleware.instance === null) {
+            SpinalAPIMiddleware.instance = new SpinalAPIMiddleware();
+        }
+        return SpinalAPIMiddleware.instance;
     }
     geneGraph() {
         return __asyncGenerator(this, arguments, function* geneGraph_1() {
@@ -153,9 +154,10 @@ class SpinalAPIMiddleware {
         return prom;
     }
     runSocketServer(server) {
-        this._waitConnection().then((result) => {
-            (0, spinal_organ_api_pubsub_1.runSocketServer)(server, this.conn, spinal_env_viewer_graph_service_1.SpinalGraphService.getGraph());
-        });
+        this._waitConnection().then((result) => __awaiter(this, void 0, void 0, function* () {
+            const spinalIOMiddleware = new spinalIOMiddleware_1.SpinalIOMiddleware(this.conn, this.config);
+            yield (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
+        }));
     }
     _waitConnection() {
         const deferred = Q.defer();

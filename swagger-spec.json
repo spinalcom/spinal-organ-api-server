@@ -12606,6 +12606,18 @@
         "tags": [
           "Command"
         ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
         "requestBody": {
           "description": "set current value, float attribute,",
           "required": true,

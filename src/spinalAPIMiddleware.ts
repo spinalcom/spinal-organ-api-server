@@ -30,9 +30,9 @@ import { runSocketServer } from 'spinal-organ-api-pubsub';
 import { IConfig } from 'src/interfaces';
 import { ISpinalAPIMiddleware } from './interfaces/ISpinalAPIMiddleware';
 const Q = require('q');
-
 // get the config
 import config from './config';
+import { SpinalIOMiddleware } from './spinalIOMiddleware';
 
 class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
   static instance: SpinalAPIMiddleware = null;
@@ -150,8 +150,9 @@ class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
   }
 
   runSocketServer(server: Server) {
-    this._waitConnection().then((result) => {
-      runSocketServer(server, this.conn, SpinalGraphService.getGraph());
+    this._waitConnection().then(async (result) => {
+      const spinalIOMiddleware = new SpinalIOMiddleware(this.conn, this.config);
+      await runSocketServer(server, spinalIOMiddleware);
     });
   }
 
