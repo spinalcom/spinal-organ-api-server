@@ -153,9 +153,10 @@ class SpinalAPIMiddleware {
         this.loadedPtr.set(server_id, prom);
         return prom;
     }
-    runSocketServer(server) {
+    runSocketServer(server, spinalIOMiddleware) {
         this._waitConnection().then((result) => __awaiter(this, void 0, void 0, function* () {
-            const spinalIOMiddleware = new spinalIOMiddleware_1.SpinalIOMiddleware(this.conn, this.config);
+            if (spinalIOMiddleware == undefined)
+                spinalIOMiddleware = new spinalIOMiddleware_1.SpinalIOMiddleware(this.conn, this.config);
             yield (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
         }));
     }

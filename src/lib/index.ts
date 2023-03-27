@@ -27,11 +27,10 @@ import { Server } from "http";
 import { initSwagger } from "../swagger";
 import { ISpinalAPIMiddleware } from "../interfaces";
 import * as fileUpload from 'express-fileupload';
-import * as bodyParser from 'body-parser';
 import * as path from "path";
-import morgan = require("morgan");
 import routes from "../routes/routes";
 import { useLogger } from "../api-server";
+import { runSocketServer, ISpinalIOMiddleware } from 'spinal-organ-api-pubsub';
 
 
 function initApiServer(app: Application, spinalAPIMiddleware: ISpinalAPIMiddleware, log_body: boolean = false) {
@@ -48,8 +47,10 @@ function initApiServer(app: Application, spinalAPIMiddleware: ISpinalAPIMiddlewa
     routes({}, app, spinalAPIMiddleware);
 }
 
-export function runServerRest(server: Server, app: Application, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-    initApiServer(app, spinalAPIMiddleware);
+export async function runServerRest(server: Server, app: Application, spinalAPIMiddleware: ISpinalAPIMiddleware, spinalIOMiddleware: ISpinalIOMiddleware, log_body: boolean = false) {
+    initApiServer(app, spinalAPIMiddleware, log_body);
+    await runSocketServer(server, spinalIOMiddleware);
 }
 
 export * from "../interfaces";
+export { ISpinalIOMiddleware };

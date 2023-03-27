@@ -86,6 +86,7 @@ class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
         }
       );
     });
+
     const graph = await init;
     while (true) {
       yield graph;
@@ -149,9 +150,9 @@ class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
     return prom;
   }
 
-  runSocketServer(server: Server) {
+  runSocketServer(server: Server, spinalIOMiddleware?: SpinalIOMiddleware) {
     this._waitConnection().then(async (result) => {
-      const spinalIOMiddleware = new SpinalIOMiddleware(this.conn, this.config);
+      if (spinalIOMiddleware == undefined) spinalIOMiddleware = new SpinalIOMiddleware(this.conn, this.config);
       await runSocketServer(server, spinalIOMiddleware);
     });
   }
