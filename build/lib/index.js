@@ -42,14 +42,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ISpinalIOMiddleware = exports.runServerRest = void 0;
+exports.runServerRest = void 0;
 const swagger_1 = require("../swagger");
 const fileUpload = require("express-fileupload");
 const path = require("path");
 const routes_1 = require("../routes/routes");
 const api_server_1 = require("../api-server");
 const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
-Object.defineProperty(exports, "ISpinalIOMiddleware", { enumerable: true, get: function () { return spinal_organ_api_pubsub_1.ISpinalIOMiddleware; } });
 function initApiServer(app, spinalAPIMiddleware, log_body = false) {
     app.use(fileUpload({ createParentPath: true }));
     (0, api_server_1.useLogger)(app, log_body);

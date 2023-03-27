@@ -53,4 +53,3 @@ export async function runServerRest(server: Server, app: Application, spinalAPIM
 }
 
 export * from "../interfaces";
-export { ISpinalIOMiddleware };
