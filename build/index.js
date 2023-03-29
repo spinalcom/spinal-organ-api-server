@@ -41,8 +41,8 @@ const redoc = require('redoc-express');
 const config_1 = require("./config");
 const api_server_1 = require("./api-server");
 const spinalAPIMiddleware_1 = require("./spinalAPIMiddleware");
-const ConfigFile_js_1 = require("spinal-lib-organ-monitoring/dist/classes/ConfigFile.js");
 const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
+const spinal_lib_organ_monitoring_1 = require("spinal-lib-organ-monitoring");
 //////////////////////////////////////////////////
 //     Redefine Filesystem.onConnectionError
 //////////////////////////////////////////////////
@@ -109,7 +109,8 @@ function Requests(logger) {
                 const api = initApiServer(spinalAPIMiddleware);
                 let port = config_1.default.api.port;
                 const server = api.listen(port, () => {
-                    ConfigFile_js_1.default.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME + "-config", process.env.SPINALHUB_IP, process.env.SPINALHUB_PROTOCOL, parseInt(process.env.REQUESTS_PORT));
+                    console.log(spinal_lib_organ_monitoring_1.default);
+                    spinal_lib_organ_monitoring_1.default.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME + "-config", process.env.SPINALHUB_IP, process.env.SPINALHUB_PROTOCOL, parseInt(process.env.REQUESTS_PORT));
                     // ConfigFile.pushLog(`Api server is listening at 0.0.0.0:${port}`)
                     // ConfigFile.pushLastAction(`Api server is listening at 0.0.0.0:${port}`)
                     console.log(`\nApi server is listening at 0.0.0.0:${port}`);

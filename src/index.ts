@@ -31,8 +31,8 @@ const redoc = require('redoc-express');
 import config from './config';
 import APIServer from './api-server';
 import SpinalAPIMiddleware from './spinalAPIMiddleware';
-import ConfigFile from "spinal-lib-organ-monitoring/dist/classes/ConfigFile.js";
 import { spinalGraphUtils } from "spinal-organ-api-pubsub";
+import ConfigFile from "spinal-lib-organ-monitoring"
 
 //////////////////////////////////////////////////
 //     Redefine Filesystem.onConnectionError
@@ -122,6 +122,7 @@ function Requests(logger) {
       const api = initApiServer(spinalAPIMiddleware);
       let port = config.api.port;
       const server = api.listen(port, () => {
+        console.log(ConfigFile);
 
         ConfigFile.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME + "-config", process.env.SPINALHUB_IP, process.env.SPINALHUB_PROTOCOL, parseInt(process.env.REQUESTS_PORT));
         // ConfigFile.pushLog(`Api server is listening at 0.0.0.0:${port}`)
