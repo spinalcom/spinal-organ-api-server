@@ -87,7 +87,8 @@ module.exports = function (
     try {
       var arrayList = [];
       const nodetypes = ["geographicRoom", "BIMObject", "BIMObjectGroup", "geographicRoomGroup", "geographicFloor"];
-      const controlPointTypes = ["COMMAND_BLIND", "COMMAND_LIGHT", "COMMAND_TEMP"];
+      //const controlPointTypes = ["COMMAND_BLIND", "COMMAND_LIGHT", "COMMAND_TEMP"];
+      const controlPointTypes = ["COMMAND_BLIND","COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE"];
       const nodes = req.body.propertyReference;
       for (const node of nodes) {
         const _node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10));
