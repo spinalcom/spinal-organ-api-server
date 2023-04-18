@@ -38,8 +38,17 @@ async function getNode(
         parseInt(dynamicId)
       );
       return node;
-    } catch (error) {}
+    } catch (error) { }
+  } else if (dynamicId && typeof dynamicId !== 'string') {
+    try {
+      var node: SpinalNode<any> = await spinalAPIMiddleware.load(
+        dynamicId
+      );
+      return node;
+    } catch (error) { }
   }
+
+
 
   if (staticId && typeof staticId === 'string') {
     const node = SpinalGraphService.getRealNode(staticId);
