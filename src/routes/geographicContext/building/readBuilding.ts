@@ -72,13 +72,15 @@ module.exports = function (
 
       let categories = await building[0].getChildren(NODE_TO_CATEGORY_RELATION);
       for (const child of categories) {
-        let attributs = await child.element.load();
-        for (const attribut of attributs.get()) {
-          if (attribut.label === 'Adresse') {
-            _address = attribut.value;
-          }
-          else if (attribut.label === 'Surface' || attribut.label === 'area') {
-            _area = attribut.value
+        if (child.getName().get() === "spatial") {
+          let attributs = await child.element.load();
+          for (const attribut of attributs.get()) {
+            if (attribut.label === 'Adresse') {
+              _address = attribut.value;
+            }
+            else if (attribut.label === 'Surface' || attribut.label === 'area') {
+              _area = attribut.value
+            }
           }
         }
       }
