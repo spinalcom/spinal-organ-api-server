@@ -51,8 +51,8 @@ FileSystem.onConnectionError = (error_code) => __awaiter(void 0, void 0, void 0,
     if (error_code === 0) {
         yield spinal_organ_api_pubsub_1.spinalGraphUtils.rebindAllNodes();
     }
-    else if (error_code === 2 || error_code === 3 || error_code === 4) {
-        process.exit();
+    else if (error_code === 2 || error_code === 3 || error_code === 4 || error_code === 1) {
+        process.exit(error_code);
     }
 });
 //end Redefine Filesystem.onConnectionError
@@ -109,7 +109,7 @@ function Requests(logger) {
                 const api = initApiServer(spinalAPIMiddleware);
                 let port = config_1.default.api.port;
                 const server = api.listen(port, () => {
-                    console.log(spinal_lib_organ_monitoring_1.default);
+                    // console.log(ConfigFile);    
                     spinal_lib_organ_monitoring_1.default.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME + "-config", process.env.SPINALHUB_IP, process.env.SPINALHUB_PROTOCOL, parseInt(process.env.REQUESTS_PORT));
                     // ConfigFile.pushLog(`Api server is listening at 0.0.0.0:${port}`)
                     // ConfigFile.pushLastAction(`Api server is listening at 0.0.0.0:${port}`)

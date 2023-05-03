@@ -43,10 +43,9 @@ import ConfigFile from "spinal-lib-organ-monitoring"
 FileSystem.onConnectionError = async (error_code: number) => {
   if (error_code === 0) {
     await spinalGraphUtils.rebindAllNodes();
-  } else if (error_code === 2 || error_code === 3 || error_code === 4) {
-    process.exit();
+  } else if (error_code === 2 || error_code === 3 || error_code === 4 || error_code === 1) {
+    process.exit(error_code);
   }
-
 }
 
 //end Redefine Filesystem.onConnectionError
@@ -122,8 +121,7 @@ function Requests(logger) {
       const api = initApiServer(spinalAPIMiddleware);
       let port = config.api.port;
       const server = api.listen(port, () => {
-        console.log(ConfigFile);
-
+        // console.log(ConfigFile);    
         ConfigFile.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME + "-config", process.env.SPINALHUB_IP, process.env.SPINALHUB_PROTOCOL, parseInt(process.env.REQUESTS_PORT));
         // ConfigFile.pushLog(`Api server is listening at 0.0.0.0:${port}`)
         // ConfigFile.pushLastAction(`Api server is listening at 0.0.0.0:${port}`)

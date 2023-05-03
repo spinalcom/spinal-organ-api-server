@@ -22,10 +22,12 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
+import { SpinalContext, SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
 import { CurrentValue } from '../interfacesEndpointAndTimeSeries'
+import spinalServiceTimeSeries from '../spinalTimeSeries'
+// import { SpinalServiceTimeseries } from 'spinal-model-timeseries'
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
 
@@ -71,20 +73,24 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
   const { NODE_TO_CATEGORY_RELATION } = require('spinal-env-viewer-plugin-documentation-service/dist/Models/constants')
   const { SpinalGraphService } = require('spinal-env-viewer-graph-service')
+
   app.put("/api/v1/endpoint/:id/update", async (req, res, next) => {
     let info;
 
     try {
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10))
+      var node: SpinalNode = await spinalAPIMiddleware.load(parseInt(req.params.id, 10))
       SpinalGraphService._addNode(node);
-      var element = await node.element.load()
+      // const vali = await spinalServiceTimeSeries().pushFromEndpoint(node.getId().get(), req.body.newValue)
+      // console.log(vali);
+      var timeseries = await spinalServiceTimeSeries().getOrCreateTimeSeries(node.getId().get())
+      await timeseries.push(req.body.newValue);
+      var element = await node.element.load();
       element.currentValue.set(req.body.newValue)
       info = { NewValue: element.currentValue.get() };
     } catch (error) {
       console.log(error);
       res.status(400).send("ko")
     }
-
     res.json(info);
   })
 }
