@@ -78,7 +78,7 @@ module.exports = function (
             if (attribut.label === 'Adresse') {
               _address = attribut.value;
             }
-            else if (attribut.label === 'Surface' || attribut.label === 'area') {
+            else if (attribut.label === 'Surface' || attribut.label.toLowerCase() === 'area') {
               _area = attribut.value
             }
           }
