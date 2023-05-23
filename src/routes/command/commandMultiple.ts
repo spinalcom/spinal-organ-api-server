@@ -93,7 +93,6 @@ module.exports = function (
     try {
       const paramContext = req.body.context;
       let context: SpinalContext<any>;
-      context = await verifyContext(paramContext);
       async function verifyContext(paramContext: string) {
         if (typeof FileSystem._objects[paramContext] !== 'undefined') {
           return (context = await spinalAPIMiddleware.load(
@@ -116,6 +115,10 @@ module.exports = function (
         if (node.dynamicId.length !== 0) {
           _node = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10));
         } else if (node.staticId !== 0) {
+          if (paramContext === undefined) {
+            res.status(400).send('context not exist');
+          }
+          context = await verifyContext(paramContext);
           _node = SpinalGraphService.getRealNode(
             node.staticId
           );
@@ -161,3 +164,21 @@ module.exports = function (
     res.send("Endpoint updated");
   });
 };
+
+
+
+// {
+//   "context": "39155024",
+//     "propertyReference": [
+//       {
+//         "dynamicId": "",
+//         "staticId": "SpinalNode-29472378-6d39-4b8b-54ac-98b9c8470d57-17a86bcb6d9",
+//         "keys": [
+//           {
+//             "key": "COMMAND_BLIND",
+//             "value": "20"
+//           }
+//         ]
+//       }
+//     ]
+// }
