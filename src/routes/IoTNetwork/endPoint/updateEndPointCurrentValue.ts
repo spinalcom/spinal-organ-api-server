@@ -28,6 +28,9 @@ import * as express from 'express';
 import { CurrentValue } from '../interfacesEndpointAndTimeSeries'
 import spinalServiceTimeSeries from '../spinalTimeSeries'
 // import { SpinalServiceTimeseries } from 'spinal-model-timeseries'
+import { NetworkService, ConfigService, InputDataEndpoint, InputDataEndpointType } from 'spinal-model-bmsnetwork';
+
+import getInstance from '../networkService';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
 
@@ -76,16 +79,22 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
   app.put("/api/v1/endpoint/:id/update", async (req, res, next) => {
     let info;
-
     try {
       var node: SpinalNode = await spinalAPIMiddleware.load(parseInt(req.params.id, 10))
       SpinalGraphService._addNode(node);
-      // const vali = await spinalServiceTimeSeries().pushFromEndpoint(node.getId().get(), req.body.newValue)
-      // console.log(vali);
-      var timeseries = await spinalServiceTimeSeries().getOrCreateTimeSeries(node.getId().get())
-      await timeseries.push(req.body.newValue);
+      const reference: InputDataEndpoint = {
+        id: "",
+        name: "",
+        path: "",
+        currentValue: req.body.newValue,
+        unit: "",
+        dataType: 0,
+        type: 0,
+        nodeTypeName: ""  // should be SpinalBmsEndpoint.nodeTypeName || 'BmsEndpoint'
+      }
+      const refNode = SpinalGraphService.getInfo(node.getId().get())
+      await getInstance().updateEndpoint(refNode, reference)
       var element = await node.element.load();
-      element.currentValue.set(req.body.newValue)
       info = { NewValue: element.currentValue.get() };
     } catch (error) {
       console.log(error);

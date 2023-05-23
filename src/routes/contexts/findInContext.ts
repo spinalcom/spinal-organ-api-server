@@ -147,7 +147,7 @@ module.exports = function (
                   }
                 });
               // element Selected
-              var elementSelected: SpinalNode<any>;
+              let elementSelected: SpinalNode<any>;
               const parentsTicket = await _node.getParents(
                 'SpinalSystemServiceTicketHasTicket'
               );
