@@ -177,7 +177,7 @@ module.exports = function (
                 userName:
                   _node.info.user == undefined
                     ? ''
-                    : _node.info.user.name.get(),
+                    : _node.info.user.name == undefined ? _node.info.user.username.get() : _node.info.user.name.get(),
                 gmaoId:
                   _node.info.gmaoId == undefined ? '' : _node.info.gmaoId.get(),
                 gmaoDateCreation:
@@ -236,7 +236,6 @@ module.exports = function (
           }
           nodes.push(node);
         }
-
         for (const _node of nodes) {
           if (_node !== undefined) {
             if (
@@ -269,7 +268,7 @@ module.exports = function (
                     }
                   });
                 // element Selected
-                var elementSelected: SpinalNode<any>;
+                let elementSelected: SpinalNode<any>;
                 const parentsTicket = await _node.getParents(
                   'SpinalSystemServiceTicketHasTicket'
                 );
@@ -299,7 +298,7 @@ module.exports = function (
                   userName:
                     _node.info.user == undefined
                       ? ''
-                      : _node.info.user.name.get(),
+                      : _node.info.user.name == undefined ? _node.info.user.username.get() : _node.info.user.name.get(),
                   gmaoId:
                     _node.info.gmaoId == undefined ? '' : _node.info.gmaoId.get(),
                   gmaoDateCreation:
@@ -391,7 +390,7 @@ module.exports = function (
                       }
                     });
                   // element Selected
-                  var elementSelected: SpinalNode<any>;
+                  let elementSelected: SpinalNode<any>;
                   const parentsTicket = await _node.getParents(
                     'SpinalSystemServiceTicketHasTicket'
                   );
@@ -421,7 +420,7 @@ module.exports = function (
                     userName:
                       _node.info.user == undefined
                         ? ''
-                        : _node.info.user.name.get(),
+                        : _node.info.user.name == undefined ? _node.info.user.username.get() : _node.info.user.name.get(),
                     gmaoId:
                       _node.info.gmaoId == undefined
                         ? ''
