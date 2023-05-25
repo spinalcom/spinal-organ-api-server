@@ -114,7 +114,7 @@ module.exports = function (
       for (const node of nodes) {
         if (node.dynamicId.length !== 0) {
           _node = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10));
-        } else if (node.staticId !== 0) {
+        } else if (node.staticId.length !== 0) {
           if (paramContext === undefined) {
             res.status(400).send('context not exist');
           }
@@ -129,32 +129,36 @@ module.exports = function (
               (n) => n.getId().get() === node.staticId
             );
           }
-        }
-        if (context instanceof SpinalContext &&
-          _node.belongsToContext(context) && _node !== undefined) {
-          if (nodetypes.includes(_node.getType().get())) {
-            for (const command of node.keys) {
-              if (controlPointTypes.includes(command.key)) {
-                let controlPoints = await _node.getChildren('hasControlPoints');
-                for (const controlPoint of controlPoints) {
-                  if (controlPoint.getName().get() === "Command") {
-                    let bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
-                    for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
-                      if (bmsEndPoint.getName().get() === command.key) {
-                        await updateControlEndpointWithAnalytic(bmsEndPoint, command.value, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
-                      }
-                    }
-                  }
-                }
-              } else {
-                res.status(400).send("unkown key");
-              }
+          if (_node) {
+            if (context instanceof SpinalContext &&
+              _node.belongsToContext(context)) { continue }
+            else {
+              res.status(400).send('this node does not belong to this context');
             }
-          } else {
-            res.status(400).send("one of the node is not of type authorized");
           }
         }
 
+        if (nodetypes.includes(_node.getType().get())) {
+          for (const command of node.keys) {
+            if (controlPointTypes.includes(command.key)) {
+              let controlPoints = await _node.getChildren('hasControlPoints');
+              for (const controlPoint of controlPoints) {
+                if (controlPoint.getName().get() === "Command") {
+                  let bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
+                  for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
+                    if (bmsEndPoint.getName().get() === command.key) {
+                      await updateControlEndpointWithAnalytic(bmsEndPoint, command.value, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
+                    }
+                  }
+                }
+              }
+            } else {
+              res.status(400).send("unkown key");
+            }
+          }
+        } else {
+          res.status(400).send("one of the node is not of type authorized");
+        }
       }
     } catch (error) {
       console.error(error);
@@ -166,19 +170,3 @@ module.exports = function (
 };
 
 
-
-// {
-//   "context": "39155024",
-//     "propertyReference": [
-//       {
-//         "dynamicId": "",
-//         "staticId": "SpinalNode-29472378-6d39-4b8b-54ac-98b9c8470d57-17a86bcb6d9",
-//         "keys": [
-//           {
-//             "key": "COMMAND_BLIND",
-//             "value": "20"
-//           }
-//         ]
-//       }
-//     ]
-// }
