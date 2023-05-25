@@ -115,6 +115,8 @@ module.exports = function (
         if (node.dynamicId.length !== 0) {
           _node = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10));
         } else if (node.staticId.length !== 0) {
+          console.log("node.staticId", node.staticId);
+
           if (paramContext === undefined) {
             res.status(400).send('context not exist');
           }
@@ -122,6 +124,8 @@ module.exports = function (
           _node = SpinalGraphService.getRealNode(
             node.staticId
           );
+          console.log("context", context.getName().get());
+
           if (typeof _node === 'undefined') {
             _node = await findOneInContext(
               context,
@@ -130,14 +134,11 @@ module.exports = function (
             );
           }
           if (_node) {
-            if (context instanceof SpinalContext &&
-              _node.belongsToContext(context)) { continue }
-            else {
+            if (!_node.belongsToContext(context)) {
               res.status(400).send('this node does not belong to this context');
             }
           }
         }
-
         if (nodetypes.includes(_node.getType().get())) {
           for (const command of node.keys) {
             if (controlPointTypes.includes(command.key)) {
@@ -168,5 +169,7 @@ module.exports = function (
     res.send("Endpoint updated");
   });
 };
+
+
 
 
