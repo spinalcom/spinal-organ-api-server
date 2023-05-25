@@ -75,10 +75,10 @@ module.exports = function (
         if (child.getName().get() === "spatial") {
           let attributs = await child.element.load();
           for (const attribut of attributs.get()) {
-            if (attribut.label === 'Adresse') {
+            if (attribut.label.toLowerCase() === 'Adresse') {
               _address = attribut.value;
             }
-            else if (attribut.label === 'Surface' || attribut.label.toLowerCase() === 'area') {
+            else if (attribut.label.toLowerCase() === 'Surface' || attribut.label.toLowerCase() === 'area') {
               _area = attribut.value
             }
           }
