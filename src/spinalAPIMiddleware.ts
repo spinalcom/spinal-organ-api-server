@@ -22,17 +22,18 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { Server } from 'http';
-import { spinalCore, FileSystem } from 'spinal-core-connectorjs_type';
-import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
-import { SpinalContext, SpinalGraph, SpinalNode } from 'spinal-model-graph';
-import { runSocketServer } from 'spinal-organ-api-pubsub';
-import { store } from './utilities/store';
+import {Server} from 'http';
+import {spinalCore, FileSystem} from 'spinal-core-connectorjs_type';
+import {SpinalGraphService} from 'spinal-env-viewer-graph-service';
+import {SpinalContext, SpinalGraph, SpinalNode} from 'spinal-model-graph';
+import {runSocketServer} from 'spinal-organ-api-pubsub';
+import {store} from './utilities/store';
 
 const Q = require('q');
 
 // get the config
 import config from './config';
+import {SpinalIOMiddleware} from './spinalIOMiddleware';
 
 class SpinalAPIMiddleware {
   static instance: SpinalAPIMiddleware = null;
@@ -146,11 +147,15 @@ class SpinalAPIMiddleware {
     return prom;
   }
 
-  async runSocketServer(server: Server) {
-    // this._waitConnection().then((result) => {
-    const graph = await this.getGraph();
-    runSocketServer(server, this.conn, graph);
-    // });
+  async runSocketServer(
+    server: Server,
+    spinalIOMiddleware?: SpinalIOMiddleware
+  ) {
+    this._waitConnection().then(async (result) => {
+      if (spinalIOMiddleware == undefined)
+        spinalIOMiddleware = new SpinalIOMiddleware(this.conn, config);
+      await runSocketServer(server, spinalIOMiddleware);
+    });
   }
 
   _waitConnection(): Promise<Boolean> {
@@ -169,7 +174,6 @@ class SpinalAPIMiddleware {
     };
     return _waitConnectionLoop(deferred);
   }
-
 
   async initConfig() {
     return new Promise<void>((resolve, reject) => {

@@ -24,32 +24,35 @@
 
 import * as swaggerUi from 'swagger-ui-express';
 import * as swaggerJSDoc from 'swagger-jsdoc';
-import { swaggerOption } from './swaggerOption';
-import { getListRequest } from './listRequest';
+import {swaggerOption} from './swaggerOption';
+import {getListRequest} from './listRequest';
 import * as fs from 'fs';
 const redoc = require('redoc-express');
 import config from './config';
 import APIServer from './api-server';
 import SpinalAPIMiddleware from './spinalAPIMiddleware';
-import { spinalGraphUtils } from "spinal-organ-api-pubsub";
-import ConfigFile from "spinal-lib-organ-monitoring"
+import {spinalGraphUtils} from 'spinal-organ-api-pubsub';
+import ConfigFile from 'spinal-lib-organ-monitoring';
 
 //////////////////////////////////////////////////
 //     Redefine Filesystem.onConnectionError
 //////////////////////////////////////////////////
 
-
 //@ts-ignore
 FileSystem.onConnectionError = async (error_code: number) => {
   if (error_code === 0) {
     await spinalGraphUtils.rebindAllNodes();
-  } else if (error_code === 2 || error_code === 3 || error_code === 4 || error_code === 1) {
+  } else if (
+    error_code === 2 ||
+    error_code === 3 ||
+    error_code === 4 ||
+    error_code === 1
+  ) {
     process.exit(error_code);
   }
-}
+};
 
 //end Redefine Filesystem.onConnectionError
-
 
 function Requests(logger) {
   async function initSpinalHub() {
@@ -98,7 +101,7 @@ function Requests(logger) {
 
     // serve logo.png file
     api.get('/logo.png', (req, res) => {
-      res.sendFile('spinalcore.png', { root: process.cwd() + '/uploads' });
+      res.sendFile('spinalcore.png', {root: process.cwd() + '/uploads'});
     });
     return api;
   }
@@ -121,8 +124,14 @@ function Requests(logger) {
       const api = initApiServer(spinalAPIMiddleware);
       let port = config.api.port;
       const server = api.listen(port, () => {
-        // console.log(ConfigFile);    
-        ConfigFile.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME + "-config", process.env.SPINALHUB_IP, process.env.SPINALHUB_PROTOCOL, parseInt(process.env.REQUESTS_PORT));
+        // console.log(ConfigFile);
+        ConfigFile.init(
+          spinalAPIMiddleware.conn,
+          process.env.ORGAN_NAME + '-config',
+          process.env.SPINALHUB_IP,
+          process.env.SPINALHUB_PROTOCOL,
+          parseInt(process.env.REQUESTS_PORT)
+        );
         // ConfigFile.pushLog(`Api server is listening at 0.0.0.0:${port}`)
         // ConfigFile.pushLastAction(`Api server is listening at 0.0.0.0:${port}`)
         console.log(`\nApi server is listening at 0.0.0.0:${port}`);
