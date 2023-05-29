@@ -52,13 +52,25 @@ const Q = require('q');
 const config_1 = require("./config");
 const spinalIOMiddleware_1 = require("./spinalIOMiddleware");
 class SpinalAPIMiddleware {
+    // singleton class
+    static getInstance() {
+        if (SpinalAPIMiddleware.instance === null) {
+            SpinalAPIMiddleware.instance = new SpinalAPIMiddleware();
+        }
+        return SpinalAPIMiddleware.instance;
+    }
     constructor() {
         this.iteratorGraph = this.geneGraph();
         this.config = config_1.default;
         this.loadedPtr = new Map();
         // connection string to connect to spinalhub
-        const protocol = this.config.spinalConnector.protocol ? this.config.spinalConnector.protocol : 'http';
-        const host = this.config.spinalConnector.host + (this.config.spinalConnector.port ? `:${this.config.spinalConnector.port}` : '');
+        const protocol = this.config.spinalConnector.protocol
+            ? this.config.spinalConnector.protocol
+            : 'http';
+        const host = this.config.spinalConnector.host +
+            (this.config.spinalConnector.port
+                ? `:${this.config.spinalConnector.port}`
+                : '');
         const login = `${this.config.spinalConnector.user}:${this.config.spinalConnector.password}`;
         const connect_opt = `${protocol}://${login}@${host}/`;
         console.log(`start connect to hub: ${protocol}://${host}/`);
@@ -66,13 +78,6 @@ class SpinalAPIMiddleware {
         this.conn = spinal_core_connectorjs_type_1.spinalCore.connect(connect_opt);
         // get the Model from the spinalhub, "onLoadSuccess" and "onLoadError" are 2
         // callback function.
-    }
-    // singleton class
-    static getInstance() {
-        if (SpinalAPIMiddleware.instance === null) {
-            SpinalAPIMiddleware.instance = new SpinalAPIMiddleware();
-        }
-        return SpinalAPIMiddleware.instance;
     }
     geneGraph() {
         return __asyncGenerator(this, arguments, function* geneGraph_1() {
@@ -154,10 +159,11 @@ class SpinalAPIMiddleware {
         return prom;
     }
     runSocketServer(server, spinalIOMiddleware) {
-        this._waitConnection().then((result) => __awaiter(this, void 0, void 0, function* () {
+        return this._waitConnection().then((result) => __awaiter(this, void 0, void 0, function* () {
             if (spinalIOMiddleware == undefined)
                 spinalIOMiddleware = new spinalIOMiddleware_1.SpinalIOMiddleware(this.conn, this.config);
-            yield (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
+            const io = yield (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
+            return io;
         }));
     }
     _waitConnection() {

@@ -24,7 +24,11 @@
  */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -54,14 +58,17 @@ function initApiServer(app, spinalAPIMiddleware, log_body = false) {
     (0, api_server_1.useLogger)(app, log_body);
     (0, swagger_1.initSwagger)(app);
     app.get('/logo.png', (req, res) => {
-        res.sendFile('spinalcore.png', { root: path.resolve(__dirname + '../../../uploads') });
+        res.sendFile('spinalcore.png', {
+            root: path.resolve(__dirname + '../../../uploads'),
+        });
     });
     (0, routes_1.default)({}, app, spinalAPIMiddleware);
 }
 function runServerRest(server, app, spinalAPIMiddleware, spinalIOMiddleware, log_body = false) {
     return __awaiter(this, void 0, void 0, function* () {
         initApiServer(app, spinalAPIMiddleware, log_body);
-        yield (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
+        const io = yield (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
+        return { app, io };
     });
 }
 exports.runServerRest = runServerRest;

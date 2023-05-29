@@ -22,17 +22,18 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { Server } from 'http';
-import { spinalCore, FileSystem } from 'spinal-core-connectorjs_type';
-import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
-import { SpinalContext, SpinalGraph, SpinalNode } from 'spinal-model-graph';
-import { runSocketServer } from 'spinal-organ-api-pubsub';
-import { IConfig } from 'src/interfaces';
-import { ISpinalAPIMiddleware } from './interfaces/ISpinalAPIMiddleware';
+import {Server} from 'http';
+import {spinalCore, FileSystem} from 'spinal-core-connectorjs_type';
+import {SpinalGraphService} from 'spinal-env-viewer-graph-service';
+import {SpinalContext, SpinalGraph, SpinalNode} from 'spinal-model-graph';
+import {runSocketServer} from 'spinal-organ-api-pubsub';
+import {IConfig} from 'src/interfaces';
+import {ISpinalAPIMiddleware} from './interfaces/ISpinalAPIMiddleware';
 const Q = require('q');
 // get the config
 import config from './config';
-import { SpinalIOMiddleware } from './spinalIOMiddleware';
+import {SpinalIOMiddleware} from './spinalIOMiddleware';
+import {Server as SocketServer} from 'socket.io';
 
 class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
   static instance: SpinalAPIMiddleware = null;
@@ -52,8 +53,14 @@ class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
   constructor() {
     this.loadedPtr = new Map();
     // connection string to connect to spinalhub
-    const protocol = this.config.spinalConnector.protocol ? this.config.spinalConnector.protocol : 'http';
-    const host = this.config.spinalConnector.host + (this.config.spinalConnector.port ? `:${this.config.spinalConnector.port}` : '');
+    const protocol = this.config.spinalConnector.protocol
+      ? this.config.spinalConnector.protocol
+      : 'http';
+    const host =
+      this.config.spinalConnector.host +
+      (this.config.spinalConnector.port
+        ? `:${this.config.spinalConnector.port}`
+        : '');
     const login = `${this.config.spinalConnector.user}:${this.config.spinalConnector.password}`;
     const connect_opt = `${protocol}://${login}@${host}/`;
 
@@ -150,10 +157,15 @@ class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
     return prom;
   }
 
-  runSocketServer(server: Server, spinalIOMiddleware?: SpinalIOMiddleware) {
-    this._waitConnection().then(async (result) => {
-      if (spinalIOMiddleware == undefined) spinalIOMiddleware = new SpinalIOMiddleware(this.conn, this.config);
-      await runSocketServer(server, spinalIOMiddleware);
+  runSocketServer(
+    server: Server,
+    spinalIOMiddleware?: SpinalIOMiddleware
+  ): Promise<SocketServer> {
+    return this._waitConnection().then(async (result) => {
+      if (spinalIOMiddleware == undefined)
+        spinalIOMiddleware = new SpinalIOMiddleware(this.conn, this.config);
+      const io = await runSocketServer(server, spinalIOMiddleware);
+      return io;
     });
   }
 

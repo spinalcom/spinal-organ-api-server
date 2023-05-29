@@ -22,13 +22,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-
 import config from './config';
 import APIServer from './api-server';
 import SpinalAPIMiddleware from './spinalAPIMiddleware';
-import { getSwaggerDocs, initSwagger } from './swagger';
-
-
+import {getSwaggerDocs, initSwagger} from './swagger';
 
 function Requests(logger) {
   async function initSpinalHub() {
@@ -42,17 +39,15 @@ function Requests(logger) {
     let api = APIServer(logger, spinalAPIMiddleware);
 
     // TODO add swagger specs here for external documentation and for the organ to ask for it
-    initSwagger(api)
+    initSwagger(api);
 
     // serve logo.png file
     api.get('/logo.png', (req, res) => {
-      res.sendFile('spinalcore.png', { root: process.cwd() + '/uploads' });
+      res.sendFile('spinalcore.png', {root: process.cwd() + '/uploads'});
     });
 
     return api;
   }
-
-
 
   return {
     // TODO host should be configurable

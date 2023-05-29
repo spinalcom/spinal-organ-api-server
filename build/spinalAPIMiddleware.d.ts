@@ -4,6 +4,7 @@ import { SpinalGraph } from 'spinal-model-graph';
 import { IConfig } from 'src/interfaces';
 import { ISpinalAPIMiddleware } from './interfaces/ISpinalAPIMiddleware';
 import { SpinalIOMiddleware } from './spinalIOMiddleware';
+import { Server as SocketServer } from 'socket.io';
 declare class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
     static instance: SpinalAPIMiddleware;
     loadedPtr: Map<number, any>;
@@ -17,7 +18,7 @@ declare class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
     getProfileGraph(): Promise<SpinalGraph>;
     load<T extends spinal.Model>(server_id: number): Promise<T>;
     loadPtr<T extends spinal.Model>(ptr: spinal.File<T> | spinal.Ptr<T> | spinal.Pbr<T>): Promise<T>;
-    runSocketServer(server: Server, spinalIOMiddleware?: SpinalIOMiddleware): void;
+    runSocketServer(server: Server, spinalIOMiddleware?: SpinalIOMiddleware): Promise<SocketServer>;
     _waitConnection(): Promise<Boolean>;
 }
 export default SpinalAPIMiddleware;
