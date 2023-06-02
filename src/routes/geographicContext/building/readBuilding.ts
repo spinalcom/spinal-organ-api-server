@@ -63,7 +63,7 @@ module.exports = function (
     try {
       var _address: string;
       var _area: string | number;
-      var geographicContexts = await SpinalGraphService.getContextWithType(
+      var geographicContexts = SpinalGraphService.getContextWithType(
         'geographicContext'
       );
       var building = await geographicContexts[0].getChildren(
@@ -78,7 +78,7 @@ module.exports = function (
             if (attribut.label.toLowerCase() === 'Adresse') {
               _address = attribut.value;
             }
-            else if (attribut.label.toLowerCase() === 'Surface' || attribut.label.toLowerCase() === 'area') {
+            if (attribut.label.toLowerCase() === 'Surface' || attribut.label.toLowerCase() === 'area') {
               _area = attribut.value
             }
           }
