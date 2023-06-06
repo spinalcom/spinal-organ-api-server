@@ -22,15 +22,12 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service'
+import { SpinalNode } from 'spinal-env-viewer-graph-service'
 import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { CurrentValue } from '../interfacesEndpointAndTimeSeries'
-import spinalServiceTimeSeries from '../spinalTimeSeries'
-// import { SpinalServiceTimeseries } from 'spinal-model-timeseries'
-import { NetworkService, ConfigService, InputDataEndpoint, InputDataEndpointType } from 'spinal-model-bmsnetwork';
+import { NetworkService, InputDataEndpoint } from 'spinal-model-bmsnetwork';
+import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service'
 
-import getInstance from '../networkService';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
 
@@ -80,8 +77,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
   app.put("/api/v1/endpoint/:id/update", async (req, res, next) => {
     let info;
     try {
+      let savetimeseries: boolean;
       var node: SpinalNode = await spinalAPIMiddleware.load(parseInt(req.params.id, 10))
       SpinalGraphService._addNode(node);
+      const allAttributes = await serviceDocumentation.getAllAttributes(node)
+      for (const attr of allAttributes) {
+        if (attr.label.get() === "savetimeseries") {
+          attr.value.get() === 0 ? savetimeseries = false : savetimeseries = true
+        }
+      }
+      const networkService = new NetworkService(savetimeseries);
       const reference: InputDataEndpoint = {
         id: "",
         name: "",
@@ -93,7 +98,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         nodeTypeName: ""  // should be SpinalBmsEndpoint.nodeTypeName || 'BmsEndpoint'
       }
       const refNode = SpinalGraphService.getInfo(node.getId().get())
-      await getInstance().updateEndpoint(refNode, reference)
+      await networkService.updateEndpoint(refNode, reference)
       var element = await node.element.load();
       info = { NewValue: element.currentValue.get() };
     } catch (error) {
