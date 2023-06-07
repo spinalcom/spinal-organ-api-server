@@ -5260,7 +5260,7 @@
             ]
           }
         ],
-        "description": "update the current value of endpoint",
+        "description": "update the current value of endpoint. If the endpoint or the control point has an attribut call \"saveTimeSeries\" and the value is not \"0\", the value is save in a time serie. By default, the value is not saved in a time serie.",
         "summary": "update the current value of endpoint",
         "tags": [
           "IoTNetwork & Time Series"

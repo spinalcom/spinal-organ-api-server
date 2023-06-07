@@ -38,7 +38,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
  *     security: 
  *       - OauthSecurity: 
  *         - read
- *     description: update the current value of endpoint 
+ *     description: update the current value of endpoint. If the endpoint or the control point has an attribut call "saveTimeSeries" and the value is not "0", the value is save in a time serie. By default, the value is not saved in a time serie.
  *     summary: update the current value of endpoint
  *     tags:
  *       - IoTNetwork & Time Series
@@ -77,12 +77,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
   app.put("/api/v1/endpoint/:id/update", async (req, res, next) => {
     let info;
     try {
-      let savetimeseries: boolean;
+      let savetimeseries: boolean = false;
       var node: SpinalNode = await spinalAPIMiddleware.load(parseInt(req.params.id, 10))
       SpinalGraphService._addNode(node);
       const allAttributes = await serviceDocumentation.getAllAttributes(node)
       for (const attr of allAttributes) {
-        if (attr.label.get() === "savetimeseries") {
+        if (attr.label.get().toLowerCase() === "savetimeseries") {
           attr.value.get() === 0 ? savetimeseries = false : savetimeseries = true
         }
       }
