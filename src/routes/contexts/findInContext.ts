@@ -24,10 +24,7 @@
 
 import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import {
-  childrensNode,
-  parentsNode,
-} from '../../utilities/corseChildrenAndParentNode';
+import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import {
   SpinalContext,
   SpinalNode,
@@ -35,6 +32,7 @@ import {
 } from 'spinal-env-viewer-graph-service';
 import { findOneInContext } from '../../utilities/findOneInContext';
 import { spinalCore, FileSystem } from 'spinal-core-connectorjs_type';
+import { NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service/dist/Models/constants";
 
 module.exports = function (
   logger,
@@ -158,6 +156,20 @@ module.exports = function (
                   elementSelected = parent;
                 }
               }
+              let categories = await _node.getChildren(NODE_TO_CATEGORY_RELATION);
+              const promise_infoCategories = categories.map(async (categorie): Promise<any> => {
+                let attributs = await categorie.element.load();
+                let infoCategories: any = {
+                  dynamicId: categorie._server_id,
+                  staticId: categorie.getId().get(),
+                  name: categorie.getName().get(),
+                  type: categorie.getType().get(),
+                  attributs: attributs.get(),
+                };
+                return infoCategories;
+              });
+              const _infoCategories = await Promise.all(promise_infoCategories);
+
               info = {
                 dynamicId: _node._server_id,
                 staticId: _node.getId().get(),
@@ -208,6 +220,7 @@ module.exports = function (
                 },
                 workflowId: context._server_id,
                 workflowName: context.getName().get(),
+                categories: _infoCategories
               };
               result.push(info);
             } else {
@@ -279,6 +292,19 @@ module.exports = function (
                     elementSelected = parent;
                   }
                 }
+                let categories = await _node.getChildren(NODE_TO_CATEGORY_RELATION);
+                const promise_infoCategories = categories.map(async (categorie): Promise<any> => {
+                  let attributs = await categorie.element.load();
+                  let infoCategories: any = {
+                    dynamicId: categorie._server_id,
+                    staticId: categorie.getId().get(),
+                    name: categorie.getName().get(),
+                    type: categorie.getType().get(),
+                    attributs: attributs.get(),
+                  };
+                  return infoCategories;
+                });
+                const _infoCategories = await Promise.all(promise_infoCategories);
                 info = {
                   dynamicId: _node._server_id,
                   staticId: _node.getId().get(),
@@ -329,6 +355,7 @@ module.exports = function (
                   },
                   workflowId: context._server_id,
                   workflowName: context.getName().get(),
+                  categories: _infoCategories
                 };
                 result.push(info);
               } else {
@@ -391,7 +418,7 @@ module.exports = function (
                     });
                   // element Selected
                   let elementSelected: SpinalNode<any>;
-                  const parentsTicket = await _node.getParents(
+                  const parentsTicket = await node.getParents(
                     'SpinalSystemServiceTicketHasTicket'
                   );
                   for (const parent of parentsTicket) {
@@ -401,13 +428,28 @@ module.exports = function (
                       elementSelected = parent;
                     }
                   }
+
+                  let categories = await node.getChildren(NODE_TO_CATEGORY_RELATION);
+                  const promise_infoCategories = categories.map(async (categorie): Promise<any> => {
+                    let attributs = await categorie.element.load();
+                    let infoCategories: any = {
+                      dynamicId: categorie._server_id,
+                      staticId: categorie.getId().get(),
+                      name: categorie.getName().get(),
+                      type: categorie.getType().get(),
+                      attributs: attributs.get(),
+                    };
+                    return infoCategories;
+                  });
+                  const _infoCategories = await Promise.all(promise_infoCategories);
+
                   info = {
-                    dynamicId: _node._server_id,
-                    staticId: _node.getId().get(),
-                    name: _node.getName().get(),
-                    type: _node.getType().get(),
-                    priority: _node.info.priority.get(),
-                    creationDate: _node.info.creationDate.get(),
+                    dynamicId: node._server_id,
+                    staticId: node.getId().get(),
+                    name: node.getName().get(),
+                    type: node.getType().get(),
+                    priority: node.info.priority.get(),
+                    creationDate: node.info.creationDate.get(),
                     elementSelected:
                       elementSelected == undefined
                         ? 0
@@ -418,25 +460,25 @@ module.exports = function (
                           type: elementSelected.getType().get(),
                         },
                     userName:
-                      _node.info.user == undefined
+                      node.info.user == undefined
                         ? ''
-                        : _node.info.user.name == undefined ? _node.info.user.username.get() : _node.info.user.name.get(),
+                        : node.info.user.name == undefined ? node.info.user.username.get() : node.info.user.name.get(),
                     gmaoId:
-                      _node.info.gmaoId == undefined
+                      node.info.gmaoId == undefined
                         ? ''
-                        : _node.info.gmaoId.get(),
+                        : node.info.gmaoId.get(),
                     gmaoDateCreation:
-                      _node.info.gmaoDateCreation == undefined
+                      node.info.gmaoDateCreation == undefined
                         ? ''
-                        : _node.info.gmaoDateCreation.get(),
+                        : node.info.gmaoDateCreation.get(),
                     description:
-                      _node.info.description == undefined
+                      node.info.description == undefined
                         ? ''
-                        : _node.info.description.get(),
+                        : node.info.description.get(),
                     declarer_id:
-                      _node.info.declarer_id == undefined
+                      node.info.declarer_id == undefined
                         ? ''
-                        : _node.info.declarer_id.get(),
+                        : node.info.declarer_id.get(),
                     process: {
                       dynamicId: _process._server_id,
                       staticId: _process.getId().get(),
@@ -453,6 +495,7 @@ module.exports = function (
                     },
                     workflowId: context._server_id,
                     workflowName: context.getName().get(),
+                    categories: _infoCategories
                   };
                   result.push(info);
                 } else {
