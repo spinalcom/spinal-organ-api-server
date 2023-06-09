@@ -149,6 +149,7 @@ module.exports = function (
                   for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
                     if (bmsEndPoint.getName().get() === command.key) {
                       await updateControlEndpointWithAnalytic(bmsEndPoint, command.value, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
+                      bmsEndPoint.info.directModificationDate.set(Date.now());
                     }
                   }
                 }

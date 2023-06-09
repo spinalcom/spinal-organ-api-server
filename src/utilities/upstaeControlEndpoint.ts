@@ -45,7 +45,6 @@ export async function updateControlEndpointWithAnalytic(node, valueToPush: any, 
     };
     const time = new Date();   //Register in TimeSeries
     await networkService.updateEndpoint(node, input, time);
-    node.info.directModificationDate.set(Date.now());
     console.log(node.info.name.get() + " ==>  is updated ");
   }
   else {
