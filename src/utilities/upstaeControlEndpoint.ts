@@ -24,13 +24,13 @@
 import { NetworkService, InputDataEndpoint, InputDataEndpointDataType, InputDataEndpointType } from "spinal-model-bmsnetwork"
 
 /**
-    * @param  {SpinalNodeRef} model
+    * @param  {SpinalNode} node
     * @param  {any} valueToPush
     * @param  {any} dataType
     * @param  {any} type
     * @returns Promise
     */
-export async function updateControlEndpointWithAnalytic(model, valueToPush: any, dataType: any, type: any): Promise<void> {
+export async function updateControlEndpointWithAnalytic(node, valueToPush: any, dataType: any, type: any): Promise<void> {
   var networkService = new NetworkService()
   if (valueToPush != undefined) {
     const input: InputDataEndpoint = {
@@ -44,11 +44,12 @@ export async function updateControlEndpointWithAnalytic(model, valueToPush: any,
       nodeTypeName: "BmsEndpoint"// should be SpinalBmsEndpoint.nodeTypeName || 'BmsEndpoint'
     };
     const time = new Date();   //Register in TimeSeries
-    await networkService.updateEndpoint(model, input, time);
-    console.log(model.info.name.get() + " ==>  is updated ");
+    await networkService.updateEndpoint(node, input, time);
+    node.info.directModificationDate.set(time);
+    console.log(node.info.name.get() + " ==>  is updated ");
   }
   else {
-    console.log(valueToPush + " value to push in node : " + model.name.get() + " -- ABORTED !");
+    console.log(valueToPush + " value to push in node : " + node.info.name.get() + " -- ABORTED !");
   }
 }
 
