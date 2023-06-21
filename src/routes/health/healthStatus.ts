@@ -76,7 +76,8 @@ module.exports = function (
               state = "OFF"
             }
 
-            let infoHealth: HealthStatus = {
+
+            let infoOrganHealth: HealthStatus = {
               name: fileLoaded.genericOrganData.name.get(),
               bootTimestamp: fileLoaded.genericOrganData.bootTimestamp.get(),
               lastHealthTime: fileLoaded.genericOrganData.lastHealthTime.get(),
@@ -84,10 +85,24 @@ module.exports = function (
               state: state,
               logList: []
             };
-            organs.push(infoHealth)
+            organs.push(infoOrganHealth)
           }
         }
-        res.send(organs);
+        console.log(organs);
+        let bootTimestamp: number
+        spinalAPIMiddleware.conn.load_or_make_dir("/etc", async (directory: spinal.Directory) => {
+          for (const file of directory) {
+            if (file._info.model_type.get() === "model_status") {
+              var fileLoaded = await file.load();
+              bootTimestamp = fileLoaded.boot_timestamp.get();
+            }
+          }
+          const healObject = {
+            bootTimestampBos: bootTimestamp,
+            organsHealth: organs
+          }
+          res.send(healObject);
+        })
       })
     } catch (error) {
       console.error(error);
