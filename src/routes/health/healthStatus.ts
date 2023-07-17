@@ -60,7 +60,6 @@ module.exports = function (
   app.get('/api/v1/healthStatus', async (req, res, next) => {
     let organs = [];
     try {
-      const fileName = "spinal-organ-api-server-config";
       spinalAPIMiddleware.conn.load_or_make_dir("/etc/Organs", async (directory: spinal.Directory) => {
         for (const file of directory) {
           var fileLoaded = await file.load()
@@ -81,14 +80,13 @@ module.exports = function (
               name: fileLoaded.genericOrganData.name.get(),
               bootTimestamp: fileLoaded.genericOrganData.bootTimestamp.get(),
               lastHealthTime: fileLoaded.genericOrganData.lastHealthTime.get(),
-              ramHeapUsed: fileLoaded.genericOrganData.ramHeapUsed.get(),
+              ramRssUsed: fileLoaded.genericOrganData.ramRssUsed.get(),
               state: state,
               logList: []
             };
             organs.push(infoOrganHealth)
           }
         }
-        console.log(organs);
         let bootTimestamp: number
         spinalAPIMiddleware.conn.load_or_make_dir("/etc", async (directory: spinal.Directory) => {
           for (const file of directory) {

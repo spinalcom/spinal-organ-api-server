@@ -35,7 +35,7 @@
  *           type: "string"
  *         lastHealthTime:
  *           type: "string"
- *         ramHeapUsed:
+ *         ramRssUsed:
  *           type: "string"
  *         logList:
  *           type: "array"
@@ -46,7 +46,7 @@ export interface HealthStatus {
   name: string;
   bootTimestamp: number;
   lastHealthTime: number;
-  ramHeapUsed: string;
+  ramRssUsed: string;
   state: string;
   logList: string[];
 }
