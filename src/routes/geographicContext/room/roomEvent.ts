@@ -135,7 +135,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
               staticId: _child.getId().get(),
               name: _child.getName().get(),
               type: _child.getType().get(),
-              groupeID: _child.info.groupId.get(),
+              groupID: _child.info.groupId.get(),
               categoryID: child.categoryId.get(),
               nodeId: _child.info.nodeId.get(),
               startDate: _child.info.startDate.get(),

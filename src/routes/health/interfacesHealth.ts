@@ -37,6 +37,10 @@
  *           type: "string"
  *         ramRssUsed:
  *           type: "string"
+ *         ipAdress:
+ *           type: "string"
+ *         macAdress:
+ *           type: "string"
  *         logList:
  *           type: "array"
  *           items: 
@@ -47,6 +51,8 @@ export interface HealthStatus {
   bootTimestamp: number;
   lastHealthTime: number;
   ramRssUsed: string;
+  ipAdress: string;
+  macAdress: string;
   state: string;
   logList: string[];
 }

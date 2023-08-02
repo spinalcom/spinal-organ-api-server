@@ -69,7 +69,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
 *                 type: string
 *     responses:
 *       200:
-*         description: Create Successfully
+*         description: Success
+*         content:
+*           application/json:
+*             schema: 
+*                $ref: '#/components/schemas/Context'
 *       400:
 *         description: Bad request
 */
@@ -84,7 +88,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
       SpinalGraphService._addNode(category)
       if (context instanceof SpinalContext && category.belongsToContext(context)) {
         if (context.getType().get() === "SpinalEventGroupContext") {
-          SpinalEventService.createEventGroup(context.getId().get(), category.getId().get(), req.body.groupName, req.body.color)
+          const group = await SpinalEventService.createEventGroup(context.getId().get(), category.getId().get(), req.body.groupName, req.body.color)
+          if (group !== undefined) {
+            var objgroup = {
+              staticId: group.id.get(),
+              name: group.name.get(),
+              type: group.type.get(),
+              color: group.color.get(),
+            }
+            res.json(objgroup);
+          }
         }
         else {
           return res.status(400).send("this context is not a SpinalEventGroupContext");
@@ -97,7 +110,6 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
       console.error(error)
       res.status(400).send()
     }
-    res.json();
   })
 
 }

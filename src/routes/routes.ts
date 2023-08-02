@@ -527,6 +527,7 @@ function routes(
   require('./calendar/Events/updateEvent')(logger, app, spinalAPIMiddleware);
   require('./calendar/Events/createEvent')(logger, app, spinalAPIMiddleware);
   require('./calendar/Events/readEvent')(logger, app, spinalAPIMiddleware);
+  require('./calendar/Events/eventList')(logger, app, spinalAPIMiddleware);
 
   // group context
   require('./groupContext/groupeContextTypeList')(

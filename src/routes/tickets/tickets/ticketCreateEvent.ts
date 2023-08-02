@@ -172,7 +172,7 @@ module.exports = function (
             staticId: ticketCreated.getId().get(),
             name: ticketCreated.getName().get(),
             type: ticketCreated.getType().get(),
-            groupeID: ticketCreated.info.groupId.get(),
+            groupID: ticketCreated.info.groupId.get(),
             categoryID: ticketCreated.info.categoryId.get(),
             nodeId: ticketCreated.info.nodeId.get(),
             startDate: ticketCreated.info.startDate.get(),

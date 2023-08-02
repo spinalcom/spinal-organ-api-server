@@ -51,7 +51,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
 *                 type: string
 *     responses:
 *       200:
-*         description: Create Successfully
+*         description: Success
+*         content:
+*           application/json:
+*             schema: 
+*                $ref: '#/components/schemas/Context'
 *       400:
 *         description: Bad request
 */
@@ -62,12 +66,21 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: Sp
 
     try {
       let steps = []
-      SpinalEventService.createEventContext(req.body.contextName, steps)
+      const contextNode = await SpinalEventService.createEventContext(req.body.contextName, steps);
+      if (contextNode !== undefined) {
+        var objContext = {
+          staticId: contextNode.id.get(),
+          name: contextNode.name.get(),
+          type: contextNode.type.get(),
+          steps: contextNode.steps.get(),
+        }
+        res.json(objContext);
+      }
+
     } catch (error) {
       console.error(error)
       res.status(400).send("ko")
     }
-    res.json();
   })
 
 }

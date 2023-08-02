@@ -39,7 +39,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 *     security: 
 *       - OauthSecurity: 
 *         - read
-*     description: create event
+*     description: create event, by using this api, please check the repeat attribute that it must be false, if you want to set it to true you must fill in the repeatend attribute, the startDate and endDate attributes must be in this format DD MM YYYY 
 *     summary: create event
 *     tags:
 *       - Calendar & Event
@@ -114,18 +114,20 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
             groupId: groupe.getId().get(),
             categoryId: category.getId().get(),
             nodeId: node.getId().get(),
-            startDate: (moment(req.body.startDate, "DD MM YYYY HH:mm:ss", true)).toString(),
+            startDate: (moment(req.body.startDate, "DD MM YYYY HH:mm:ss", true)).toISOString(),
             description: req.body.description,
-            endDate: (moment(req.body.endDate, "DD MM YYYY HH:mm:ss", true)).toString(),
+            endDate: (moment(req.body.endDate, "DD MM YYYY HH:mm:ss", true)).toISOString(),
             periodicity: { count: req.body.count, period: req.body.period },
             repeat: req.body.repeat,
             name: req.body.name,
-            creationDate: (Date.now()).toString(),
-            repeatEnd: req.body.repeatEnd
+            creationDate: (moment(Date.now(), "DD MM YYYY HH:mm:ss", true)).toISOString(),
+            repeatEnd: (moment(req.body.repeatEnd, "DD MM YYYY HH:mm:ss", true)).toISOString()
           }
-          let user = { username: "string", userId: 0 }
 
-          await SpinalEventService.createEvent(context.getId().get(), groupe.getId().get(), node.getId().get(), eventInfo, user)
+          let user = { username: "string", userId: 0 }
+          const res = await SpinalEventService.createEvent(context.getId().get(), groupe.getId().get(), node.getId().get(), eventInfo, user)
+          //@ts-ignore
+          // const res = await SpinalEventService.createEventNode(eventInfo.contextId, eventInfo.groupId, eventInfo.nodeId, eventInfo, user);
 
         }
         else {

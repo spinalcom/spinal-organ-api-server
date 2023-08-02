@@ -81,6 +81,8 @@ module.exports = function (
               bootTimestamp: fileLoaded.genericOrganData.bootTimestamp.get(),
               lastHealthTime: fileLoaded.genericOrganData.lastHealthTime.get(),
               ramRssUsed: fileLoaded.genericOrganData.ramRssUsed.get(),
+              ipAdress: fileLoaded.specificOrganData.ipAdress.get(),
+              macAdress: fileLoaded.genericOrganData.macAdress.get(),
               state: state,
               logList: []
             };
