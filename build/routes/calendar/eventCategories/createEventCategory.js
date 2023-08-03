@@ -69,7 +69,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   *                 type: string
   *     responses:
   *       200:
-  *         description: Create Successfully
+  *         description: Success
+  *         content:
+  *           application/json:
+  *             schema:
+  *                $ref: '#/components/schemas/Context'
   *       400:
   *         description: Bad request
   */
@@ -79,7 +83,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             var context = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            spinal_env_viewer_task_service_1.SpinalEventService.createEventCategory(context.getId().get(), req.body.categoryName, req.body.icon);
+            const gategory = yield spinal_env_viewer_task_service_1.SpinalEventService.createEventCategory(context.getId().get(), req.body.categoryName, req.body.icon);
+            if (gategory !== undefined) {
+                var objCategory = {
+                    staticId: gategory.id.get(),
+                    name: gategory.name.get(),
+                    type: gategory.type.get(),
+                    icon: gategory.icon.get(),
+                };
+                res.json(objCategory);
+            }
+            res.json();
         }
         catch (error) {
             console.error(error);
@@ -87,7 +101,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             res.status(400).send("ko");
         }
-        res.json();
     }));
 };
 //# sourceMappingURL=createEventCategory.js.map

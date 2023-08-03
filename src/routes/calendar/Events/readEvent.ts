@@ -77,7 +77,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           staticId: event.getId().get(),
           name: event.getName().get(),
           type: event.getType().get(),
-          groupeId: event.info.groupId.get(),
+          groupId: event.info.groupId.get(),
           categoryId: event.info.categoryId.get(),
           nodeId: event.info.nodeId.get(),
           repeat: event.info.repeat.get(),

@@ -105,7 +105,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         }
 
         else if (req.body.period === undefined || req.body.period === "week") {
-          var curr = new Date; // get current date
+          var curr = new Date(); // get current date
           var first = (curr.getDate() - curr.getDay()) + 1; // First day is the day of the month - the day of the week
           var last = first + 6; // last day is the first day + 6
           var firstday = new Date(curr.setDate(first));
@@ -120,8 +120,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           if (!verifDate(req.body.startDate) || !verifDate(req.body.endDate)) {
             res.status(400).send("invalid Date")
           } else {
-            const start = sendDate(req.body.startDate)
-            const end = sendDate(req.body.endDate)
+            const start = sendDate(req.body.startDate);
+            const end = sendDate(req.body.endDate);
             let listEvents = await SpinalEventService.getEvents(node.getId()?.get(), start.toDate(), end.toDate());
             ListEvents(listEvents);
           }
@@ -141,7 +141,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
               staticId: _child.getId()?.get(),
               name: _child.getName()?.get(),
               type: _child.getType()?.get(),
-              groupeID: _child.info.groupId?.get(),
+              groupID: _child.info.groupId?.get(),
               categoryID: child.categoryId?.get(),
               nodeId: _child.info.nodeId?.get(),
               startDate: _child.info.startDate?.get(),

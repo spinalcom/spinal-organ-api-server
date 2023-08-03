@@ -526,6 +526,8 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   require('./calendar/Events/updateEvent')(logger, app, spinalAPIMiddleware);
   require('./calendar/Events/createEvent')(logger, app, spinalAPIMiddleware);
   require('./calendar/Events/readEvent')(logger, app, spinalAPIMiddleware);
+  require('./calendar/Events/eventList')(logger, app, spinalAPIMiddleware);
+
 
   // group context
   require('./groupContext/groupeContextTypeList')(
@@ -989,6 +991,8 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   );
   require('./nodes/nodeReadControlEndpoint')(logger, app, spinalAPIMiddleware);
   require('./command/commandMultiple')(logger, app, spinalAPIMiddleware);
+  // require('./health/healthStatus')(logger, app, spinalAPIMiddleware);
+
 }
 
 export default routes;

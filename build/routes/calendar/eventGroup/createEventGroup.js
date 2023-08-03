@@ -76,7 +76,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   *                 type: string
   *     responses:
   *       200:
-  *         description: Create Successfully
+  *         description: Success
+  *         content:
+  *           application/json:
+  *             schema:
+  *                $ref: '#/components/schemas/Context'
   *       400:
   *         description: Bad request
   */
@@ -91,7 +95,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && category.belongsToContext(context)) {
                 if (context.getType().get() === "SpinalEventGroupContext") {
-                    spinal_env_viewer_task_service_1.SpinalEventService.createEventGroup(context.getId().get(), category.getId().get(), req.body.groupName, req.body.color);
+                    const group = yield spinal_env_viewer_task_service_1.SpinalEventService.createEventGroup(context.getId().get(), category.getId().get(), req.body.groupName, req.body.color);
+                    if (group !== undefined) {
+                        var objgroup = {
+                            staticId: group.id.get(),
+                            name: group.name.get(),
+                            type: group.type.get(),
+                            color: group.color.get(),
+                        };
+                        res.json(objgroup);
+                    }
                 }
                 else {
                     return res.status(400).send("this context is not a SpinalEventGroupContext");
@@ -99,7 +112,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
             else {
                 res.status(400).send("node not found in context");
+                return;
             }
+            res.json();
         }
         catch (error) {
             console.error(error);
@@ -107,7 +122,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             res.status(400).send();
         }
-        res.json();
     }));
 };
 //# sourceMappingURL=createEventGroup.js.map

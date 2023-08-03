@@ -79,7 +79,7 @@ export interface GroupEvent {
  *           type: "string"
  *         type:
  *           type: "string"
- *         groupeId:
+ *         groupId:
  *           type: "string"
  *         categoryId:
  *           type: "string"
@@ -103,7 +103,7 @@ export interface Event {
     staticId: string;
     name: string;
     type: string;
-    groupeId: string;
+    groupId: string;
     categoryId: string;
     nodeId: string;
     repeat: boolean;

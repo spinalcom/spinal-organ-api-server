@@ -52,13 +52,6 @@ const Q = require('q');
 const config_1 = require("./config");
 const spinalIOMiddleware_1 = require("./spinalIOMiddleware");
 class SpinalAPIMiddleware {
-    // singleton class
-    static getInstance() {
-        if (SpinalAPIMiddleware.instance === null) {
-            SpinalAPIMiddleware.instance = new SpinalAPIMiddleware();
-        }
-        return SpinalAPIMiddleware.instance;
-    }
     constructor() {
         this.iteratorGraph = this.geneGraph();
         this.config = config_1.default;
@@ -78,6 +71,13 @@ class SpinalAPIMiddleware {
         this.conn = spinal_core_connectorjs_type_1.spinalCore.connect(connect_opt);
         // get the Model from the spinalhub, "onLoadSuccess" and "onLoadError" are 2
         // callback function.
+    }
+    // singleton class
+    static getInstance() {
+        if (SpinalAPIMiddleware.instance === null) {
+            SpinalAPIMiddleware.instance = new SpinalAPIMiddleware();
+        }
+        return SpinalAPIMiddleware.instance;
     }
     geneGraph() {
         return __asyncGenerator(this, arguments, function* geneGraph_1() {

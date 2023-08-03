@@ -72,17 +72,17 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *                 type: string
    *               startDate:
    *                 type: string
-*                 default: YYYY-MM-DD
+*                 default: DD MM YYYY HH:mm:ss
    *               endDate:
    *                 type: string
-*                 default: YYYY-MM-DD
+*                 default: DD MM YYYY HH:mm:ss
    *               description:
    *                 type: string
    *               repeat:
    *                 type: boolean
    *               repeatEnd:
 *                 type: string
-*                 default: YYYY-MM-DD
+*                 default: DD MM YYYY HH:mm:ss
    *               count:
    *                 type: number
    *               period:
@@ -95,7 +95,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *                   - email
    *                   - gsm
    *                 properties:
-*                   username:
+*                   userName:
    *                     type: string
    *                   email:
    *                     type: string
@@ -132,14 +132,26 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
             groupId: group.id.get(),
             categoryId: category.id.get(),
             nodeId: node.getId().get(),
-            startDate: (moment(new Date(req.body.startDate))).toString(),
+            startDate: moment(
+              req.body.startDate,
+              'DD MM YYYY HH:mm:ss',
+              true
+            ).toString(),
             description: req.body.description,
-            endDate: (moment(new Date(req.body.endDate))).toString(),
+            endDate: moment(
+              req.body.endDate,
+              'DD MM YYYY HH:mm:ss',
+              true
+            ).toString(),
             periodicity: { count: req.body.count, period: Period[req.body.period] },
             repeat: req.body.repeat,
             name: req.body.name,
             creationDate: moment(new Date().toISOString()).toString(),
-            repeatEnd: (moment(new Date(req.body.repeatEnd))).toString()
+            repeatEnd: moment(
+              req.body.repeatEnd,
+              'DD MM YYYY HH:mm:ss',
+              true
+            ).toString(),
           };
           let user = {
             username: req.body.user.userName,
@@ -162,7 +174,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
             staticId: ticketCreated.getId().get(),
             name: ticketCreated.getName().get(),
             type: ticketCreated.getType().get(),
-            groupeID: ticketCreated.info.groupId.get(),
+            groupID: ticketCreated.info.groupId.get(),
             categoryID: ticketCreated.info.categoryId.get(),
             nodeId: ticketCreated.info.nodeId.get(),
             startDate: ticketCreated.info.startDate.get(),
@@ -193,7 +205,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }
-    // res.json(info);
+    res.json(info);
   })
 }
 

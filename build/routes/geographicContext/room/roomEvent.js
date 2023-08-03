@@ -141,7 +141,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             staticId: (_a = _child.getId()) === null || _a === void 0 ? void 0 : _a.get(),
                             name: (_b = _child.getName()) === null || _b === void 0 ? void 0 : _b.get(),
                             type: (_c = _child.getType()) === null || _c === void 0 ? void 0 : _c.get(),
-                            groupeID: (_d = _child.info.groupId) === null || _d === void 0 ? void 0 : _d.get(),
+                            groupID: (_d = _child.info.groupId) === null || _d === void 0 ? void 0 : _d.get(),
                             categoryID: (_e = child.categoryId) === null || _e === void 0 ? void 0 : _e.get(),
                             nodeId: (_f = _child.info.nodeId) === null || _f === void 0 ? void 0 : _f.get(),
                             startDate: (_g = _child.info.startDate) === null || _g === void 0 ? void 0 : _g.get(),

@@ -54,7 +54,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 *                 type: string
 *     responses:
 *       200:
-*         description: Create Successfully
+*         description: Success
+*         content:
+*           application/json:
+*             schema: 
+*                $ref: '#/components/schemas/Context'
 *       400:
 *         description: Bad request
 */
@@ -78,8 +82,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       res.status(200).json({
         name: context.getName().get(),
         staticId: context.getId().get(),
-        dynamicId: context._server_id,
-        type: context.getType().get()
+        type: context.getType().get(),
+        steps: context.info.steps?.get()
       });
 
     } catch (error) {

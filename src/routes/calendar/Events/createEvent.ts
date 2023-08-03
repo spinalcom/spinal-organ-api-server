@@ -41,7 +41,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 *     security: 
 *       - bearerAuth: 
 *         - read
-*     description: create event
+*     description: create event, by using this api, please check the repeat attribute that it must be false, if you want to set it to true you must fill in the repeatend attribute, the startDate and endDate attributes must be in this format DD MM YYYY 
 *     summary: create event
 *     tags:
 *       - Calendar & Event
@@ -76,17 +76,17 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 *                 type: number
 *               startDate:
 *                 type: string
-*                 default: YYYY-MM-DD
+*                 default: DD MM YYYY HH:mm:ss
 *               endDate:
 *                 type: string
-*                 default: YYYY-MM-DD
+*                 default: DD MM YYYY HH:mm:ss
 *               description:
 *                 type: string
 *               repeat:
 *                 type: boolean
 *               repeatEnd:
 *                 type: number
-*                 default: YYYY-MM-DD
+*                 default: DD MM YYYY HH:mm:ss
 *               count:
 *                 type: number
 *               period:
@@ -121,14 +121,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
             groupId: groupe.getId().get(),
             categoryId: category.getId().get(),
             nodeId: node.getId().get(),
-            startDate: (moment(new Date(req.body.startDate))).toString(),
+            startDate: (moment(req.body.startDate, "DD MM YYYY HH:mm:ss", true)).toISOString(),
             description: req.body.description,
-            endDate: (moment(new Date(req.body.endDate))).toString(),
+            endDate: (moment(req.body.endDate, "DD MM YYYY HH:mm:ss", true)).toISOString(),
             periodicity: { count: req.body.count, period: Period[req.body.period] },
             repeat: req.body.repeat,
             name: req.body.name,
-            creationDate: (moment(new Date().toISOString())).toString(),
-            repeatEnd: (moment(new Date(req.body.repeatEnd))).toString()
+            creationDate: (moment(Date.now(), "DD MM YYYY HH:mm:ss", true)).toISOString(),
+            repeatEnd: (moment(req.body.repeatEnd, "DD MM YYYY HH:mm:ss", true)).toISOString()
           }
           let user = { username: "admin", userId: 168 }
 

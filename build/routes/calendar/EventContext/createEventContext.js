@@ -59,11 +59,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   *                 type: string
   *     responses:
   *       200:
-  *         description: Create Successfully
+  *         description: Success
+  *         content:
+  *           application/json:
+  *             schema:
+  *                $ref: '#/components/schemas/Context'
   *       400:
   *         description: Bad request
   */
     app.post("/api/v1/eventContext/create", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+        var _a;
         try {
             let steps = [];
             const profileId = (0, requestUtilities_1.getProfileId)(req);
@@ -76,8 +81,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(200).json({
                 name: context.getName().get(),
                 staticId: context.getId().get(),
-                dynamicId: context._server_id,
-                type: context.getType().get()
+                type: context.getType().get(),
+                steps: (_a = context.info.steps) === null || _a === void 0 ? void 0 : _a.get()
             });
         }
         catch (error) {

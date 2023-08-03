@@ -107,7 +107,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     ListEvents(listEvents);
                 }
                 else if (req.body.period === undefined || req.body.period === "week") {
-                    var curr = new Date; // get current date
+                    var curr = new Date(); // get current date
                     var first = (curr.getDate() - curr.getDay()) + 1; // First day is the day of the month - the day of the week
                     var last = first + 6; // last day is the first day + 6
                     var firstday = new Date(curr.setDate(first));
@@ -143,7 +143,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             staticId: (_c = _child.getId()) === null || _c === void 0 ? void 0 : _c.get(),
                             name: (_d = _child.getName()) === null || _d === void 0 ? void 0 : _d.get(),
                             type: (_e = _child.getType()) === null || _e === void 0 ? void 0 : _e.get(),
-                            groupeID: (_f = _child.info.groupId) === null || _f === void 0 ? void 0 : _f.get(),
+                            groupID: (_f = _child.info.groupId) === null || _f === void 0 ? void 0 : _f.get(),
                             categoryID: (_g = child.categoryId) === null || _g === void 0 ? void 0 : _g.get(),
                             nodeId: (_h = _child.info.nodeId) === null || _h === void 0 ? void 0 : _h.get(),
                             startDate: (_j = _child.info.startDate) === null || _j === void 0 ? void 0 : _j.get(),

@@ -176,6 +176,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./calendar/Events/updateEvent')(logger, app, spinalAPIMiddleware);
     require('./calendar/Events/createEvent')(logger, app, spinalAPIMiddleware);
     require('./calendar/Events/readEvent')(logger, app, spinalAPIMiddleware);
+    require('./calendar/Events/eventList')(logger, app, spinalAPIMiddleware);
     // group context
     require('./groupContext/groupeContextTypeList')(logger, app, spinalAPIMiddleware);
     require('./groupContext/contextsOfType')(logger, app, spinalAPIMiddleware);
@@ -306,6 +307,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./command/roomCommandTempSetValue')(logger, app, spinalAPIMiddleware);
     require('./nodes/nodeReadControlEndpoint')(logger, app, spinalAPIMiddleware);
     require('./command/commandMultiple')(logger, app, spinalAPIMiddleware);
+    // require('./health/healthStatus')(logger, app, spinalAPIMiddleware);
 }
 exports.default = routes;
 //# sourceMappingURL=routes.js.map

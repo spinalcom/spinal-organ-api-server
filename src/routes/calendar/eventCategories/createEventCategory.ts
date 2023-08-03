@@ -64,7 +64,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 *                 type: string
 *     responses:
 *       200:
-*         description: Create Successfully
+*         description: Success
+*         content:
+*           application/json:
+*             schema: 
+*                $ref: '#/components/schemas/Context'
 *       400:
 *         description: Bad request
 */
@@ -78,14 +82,22 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
-      SpinalEventService.createEventCategory(context.getId().get(), req.body.categoryName, req.body.icon);
-
+      const gategory = await SpinalEventService.createEventCategory(context.getId().get(), req.body.categoryName, req.body.icon);
+      if (gategory !== undefined) {
+        var objCategory = {
+          staticId: gategory.id.get(),
+          name: gategory.name.get(),
+          type: gategory.type.get(),
+          icon: gategory.icon.get(),
+        }
+        res.json(objCategory);
+      }
+      res.json();
     } catch (error) {
       console.error(error)
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("ko")
     }
-    res.json();
   })
 
 }

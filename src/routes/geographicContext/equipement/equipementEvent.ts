@@ -81,7 +81,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
               staticId: _child.getId()?.get(),
               name: _child.getName()?.get(),
               type: _child.getType()?.get(),
-              groupeID: _child.info.groupId?.get(),
+              groupID: _child.info.groupId?.get(),
               categoryID: child.categoryId?.get(),
               nodeId: _child.info.nodeId?.get(),
               repeat: _child.info.repeat?.get(),
@@ -94,6 +94,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         }
       } else {
         res.status(400).send("node is not of type  BIMObject");
+        return
       }
 
 
