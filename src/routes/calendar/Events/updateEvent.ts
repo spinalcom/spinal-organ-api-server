@@ -28,6 +28,7 @@ import * as express from 'express';
 import { SpinalEventService } from "spinal-env-viewer-task-service";
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
+import * as moment from 'moment'
 
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
@@ -69,10 +70,17 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 *                 type: string
 *               startDate:
 *                 type: string
+*                 default: DD MM YYYY HH:mm:ss
 *               endDate:
 *                 type: string
+*                 default: DD MM YYYY HH:mm:ss
 *               repeat:
 *                 type: boolean
+*               count:
+*                 type: number
+*               period:
+*                 type: number
+*                 default: day|week|month|year
 *     responses:
 *       200:
 *         description: Updated successfully
@@ -99,11 +107,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
               count: 0,
               period: 3
             },
-            startDate: req.body.startDate,
-            endDate: req.body.endDate,
+            startDate: (moment(req.body.startDate, "DD MM YYYY HH:mm:ss", true)).toISOString(),
+            endDate: (moment(req.body.endDate, "DD MM YYYY HH:mm:ss", true)).toISOString(),
             repeat: req.body.repeat,
-            name: req.body.name
+            name: req.body.name,
+            creationDate: (moment(Date.now(), "DD MM YYYY HH:mm:ss", true)).toISOString(),
+            repeatEnd: (moment(req.body.repeatEnd, "DD MM YYYY HH:mm:ss", true)).toISOString()
           }
+          
           await SpinalEventService.updateEvent(event.getId().get(), newEventInfo)
 
         }

@@ -35,6 +35,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const moment = require("moment");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
   * @swagger
@@ -73,10 +74,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   *                 type: string
   *               startDate:
   *                 type: string
+  *                 default: DD MM YYYY HH:mm:ss
   *               endDate:
   *                 type: string
+  *                 default: DD MM YYYY HH:mm:ss
   *               repeat:
   *                 type: boolean
+  *               count:
+  *                 type: number
+  *               period:
+  *                 type: number
+  *                 default: day|week|month|year
   *     responses:
   *       200:
   *         description: Updated successfully
@@ -100,10 +108,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             count: 0,
                             period: 3
                         },
-                        startDate: req.body.startDate,
-                        endDate: req.body.endDate,
+                        startDate: (moment(req.body.startDate, "DD MM YYYY HH:mm:ss", true)).toISOString(),
+                        endDate: (moment(req.body.endDate, "DD MM YYYY HH:mm:ss", true)).toISOString(),
                         repeat: req.body.repeat,
-                        name: req.body.name
+                        name: req.body.name,
+                        creationDate: (moment(Date.now(), "DD MM YYYY HH:mm:ss", true)).toISOString(),
+                        repeatEnd: (moment(req.body.repeatEnd, "DD MM YYYY HH:mm:ss", true)).toISOString()
                     };
                     yield spinal_env_viewer_task_service_1.SpinalEventService.updateEvent(event.getId().get(), newEventInfo);
                 }
