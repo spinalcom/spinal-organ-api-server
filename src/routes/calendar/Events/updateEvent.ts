@@ -81,6 +81,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 *               period:
 *                 type: number
 *                 default: day|week|month|year
+*               repeatEnd:
+*                 type: number
+*                 default: DD MM YYYY HH:mm:ss
 *     responses:
 *       200:
 *         description: Updated successfully
@@ -102,19 +105,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       if (context instanceof SpinalContext && event.belongsToContext(context)) {
         if (context.getType().get() === "SpinalEventGroupContext") {
           let newEventInfo = {
-            nodeId: event.info.nodeId,
-            periodicity: {
-              count: 0,
-              period: 3
-            },
-            startDate: (moment(req.body.startDate, "DD MM YYYY HH:mm:ss", true)).toISOString(),
-            endDate: (moment(req.body.endDate, "DD MM YYYY HH:mm:ss", true)).toISOString(),
-            repeat: req.body.repeat,
             name: req.body.name,
-            creationDate: (moment(Date.now(), "DD MM YYYY HH:mm:ss", true)).toISOString(),
-            repeatEnd: (moment(req.body.repeatEnd, "DD MM YYYY HH:mm:ss", true)).toISOString()
+            nodeId: event.info.nodeId,
+            repeat: req.body.repeat,
+            startDate: new Date((moment(req.body.startDate, "DD MM YYYY HH:mm:ss", true)).toISOString()).toISOString(),
+            endDate: new Date((moment(req.body.endDate, "DD MM YYYY HH:mm:ss", true)).toISOString()).toISOString(),
+            periodicity: {count: req.body.count, period: req.body.period },
+            creationDate: new Date(moment(Date.now(), true).toISOString()).toISOString(),
+            repeatEnd: new Date((moment(req.body.repeatEnd, "DD MM YYYY HH:mm:ss", true)).toISOString()).toISOString()
           }
-          
+
           await SpinalEventService.updateEvent(event.getId().get(), newEventInfo)
 
         }
