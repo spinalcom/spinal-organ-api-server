@@ -69,6 +69,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       let steps = []
+      const graph = await spinalAPIMiddleware.getGraph();
+      await SpinalGraphService.setGraph(graph);
+      
       const profileId = getProfileId(req);
       const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
 

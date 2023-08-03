@@ -25,7 +25,6 @@
 import { SpinalGraph } from "spinal-model-graph";
 import { IConfig } from "./IConfig";
 import { Server } from 'http';
-import { ISpinalIOMiddleware } from 'spinal-organ-api-pubsub';
 
 export interface ISpinalAPIMiddleware {
     config: IConfig;

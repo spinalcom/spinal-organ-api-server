@@ -68,6 +68,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
       if (!userGraph) res.status(406).send(`No graph found for ${profileId}`);
 
+      const graph = await spinalAPIMiddleware.getGraph();
+      await SpinalGraphService.setGraph(graph);
+
       let context = await spinalNomenclatureService.createOrGetContext(req.body.nomenclatureContextName)
 
       userGraph.addContext(context);

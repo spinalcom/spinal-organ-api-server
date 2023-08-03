@@ -33,6 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_plugin_group_manager_service_1 = require("spinal-env-viewer-plugin-group-manager-service");
+const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const constants_1 = require("spinal-env-viewer-context-geographic-service/build/constants");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
@@ -69,6 +70,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const userGraph = yield spinalAPIMiddleware.getProfileGraph(profileId);
             if (!userGraph)
                 res.status(406).send(`No graph found for ${profileId}`);
+            const graph = yield spinalAPIMiddleware.getGraph();
+            yield spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
             const context = yield spinal_env_viewer_plugin_group_manager_service_1.default.createGroupContext(req.body.contextName, constants_1.ROOM_TYPE);
             userGraph.addContext(context);
             res.status(200).json({

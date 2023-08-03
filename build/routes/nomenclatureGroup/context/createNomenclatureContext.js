@@ -32,6 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_nomenclature_service_1 = require("spinal-env-viewer-plugin-nomenclature-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
@@ -68,6 +69,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const userGraph = yield spinalAPIMiddleware.getProfileGraph(profileId);
             if (!userGraph)
                 res.status(406).send(`No graph found for ${profileId}`);
+            const graph = yield spinalAPIMiddleware.getGraph();
+            yield spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
             let context = yield spinal_env_viewer_plugin_nomenclature_service_1.spinalNomenclatureService.createOrGetContext(req.body.nomenclatureContextName);
             userGraph.addContext(context);
             var info = {

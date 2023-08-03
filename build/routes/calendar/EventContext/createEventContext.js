@@ -71,6 +71,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         var _a;
         try {
             let steps = [];
+            const graph = yield spinalAPIMiddleware.getGraph();
+            yield spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const userGraph = yield spinalAPIMiddleware.getProfileGraph(profileId);
             if (!userGraph)
