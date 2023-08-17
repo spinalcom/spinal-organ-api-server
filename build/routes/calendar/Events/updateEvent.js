@@ -122,7 +122,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 }
             }
             else {
-                res.status(400).send("node not found in context");
+                return res.status(400).send("node not found in context");
             }
         }
         catch (error) {
