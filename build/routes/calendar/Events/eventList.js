@@ -41,8 +41,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/eventContext/{ContextId}/eventCategory/{CategoryId}/eventGroup/{GroupId}/event_list:
      *   get:
      *     security:
-     *       - OauthSecurity:
-     *         - readOnly
+     *      - bearerAuth:
+     *        - read
      *     description: Return list of event
      *     summary: Gets a list of event
      *     tags:

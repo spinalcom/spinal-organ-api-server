@@ -1024,7 +1024,7 @@
           "type": {
             "type": "string"
           },
-          "groupeId": {
+          "groupId": {
             "type": "string"
           },
           "categoryId": {
@@ -7230,7 +7230,14 @@
         },
         "responses": {
           "200": {
-            "description": "Create Successfully"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Context"
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request"
@@ -7332,7 +7339,14 @@
         },
         "responses": {
           "200": {
-            "description": "Create Successfully"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Context"
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request"
@@ -7398,7 +7412,14 @@
         },
         "responses": {
           "200": {
-            "description": "Create Successfully"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Context"
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request"
@@ -7471,7 +7492,7 @@
             ]
           }
         ],
-        "description": "create event",
+        "description": "create event, by using this api, please check the repeat attribute that it must be false, if you want to set it to true you must fill in the repeatend attribute, the startDate and endDate attributes must be in this format DD MM YYYY",
         "summary": "create event",
         "tags": [
           "Calendar & Event"
@@ -7513,11 +7534,11 @@
                   },
                   "startDate": {
                     "type": "string",
-                    "default": "YYYY-MM-DD"
+                    "default": "DD MM YYYY HH:mm:ss"
                   },
                   "endDate": {
                     "type": "string",
-                    "default": "YYYY-MM-DD"
+                    "default": "DD MM YYYY HH:mm:ss"
                   },
                   "description": {
                     "type": "string"
@@ -7527,7 +7548,7 @@
                   },
                   "repeatEnd": {
                     "type": "number",
-                    "default": "YYYY-MM-DD"
+                    "default": "DD MM YYYY HH:mm:ss"
                   },
                   "count": {
                     "type": "number"
@@ -7640,13 +7661,26 @@
                     "type": "string"
                   },
                   "startDate": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "DD MM YYYY HH:mm:ss"
                   },
                   "endDate": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "DD MM YYYY HH:mm:ss"
                   },
                   "repeat": {
                     "type": "boolean"
+                  },
+                  "count": {
+                    "type": "number"
+                  },
+                  "period": {
+                    "type": "number",
+                    "default": "day|week|month|year"
+                  },
+                  "repeatEnd": {
+                    "type": "number",
+                    "default": "DD MM YYYY HH:mm:ss"
                   }
                 }
               }
@@ -13110,11 +13144,11 @@
                   },
                   "startDate": {
                     "type": "string",
-                    "default": "YYYY-MM-DD"
+                    "default": "DD MM YYYY HH:mm:ss"
                   },
                   "endDate": {
                     "type": "string",
-                    "default": "YYYY-MM-DD"
+                    "default": "DD MM YYYY HH:mm:ss"
                   },
                   "description": {
                     "type": "string"
@@ -13124,7 +13158,7 @@
                   },
                   "repeatEnd": {
                     "type": "string",
-                    "default": "YYYY-MM-DD"
+                    "default": "DD MM YYYY HH:mm:ss"
                   },
                   "count": {
                     "type": "number"
@@ -13141,7 +13175,7 @@
                       "gsm"
                     ],
                     "properties": {
-                      "username": {
+                      "userName": {
                         "type": "string"
                       },
                       "email": {
@@ -13224,6 +13258,72 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Event"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/eventContext/{ContextId}/eventCategory/{CategoryId}/eventGroup/{GroupId}/event_list": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "description": "Return list of event",
+        "summary": "Gets a list of event",
+        "tags": [
+          "Calendar & Event"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ContextId",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "path",
+            "name": "CategoryId",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "path",
+            "name": "GroupId",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Success",
