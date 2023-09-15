@@ -539,7 +539,99 @@
           }
         }
       },
+      "RoomPosition": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "info": {
+            "type": "object",
+            "properties": {
+              "context": {
+                "$ref": "#/components/schemas/Context"
+              },
+              "building": {
+                "$ref": "#/components/schemas/Building"
+              },
+              "floor": {
+                "$ref": "#/components/schemas/Floor"
+              }
+            }
+          }
+        }
+      },
       "StaticDetailsRoom": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "bimFileId": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "dbid": {
+            "type": "string"
+          },
+          "attributs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Attributs"
+            }
+          },
+          "controlEndpoint": {
+            "type": "object",
+            "properties": {
+              "profileName": {
+                "type": "string"
+              },
+              "endpoints": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Room"
+                }
+              }
+            }
+          },
+          "bimObjects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Equipement"
+            }
+          },
+          "groupParents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Room"
+            }
+          }
+        }
+      },
+      "StaticDetailsEquipment": {
         "type": "object",
         "properties": {
           "dynamicId": {
@@ -572,12 +664,6 @@
                   "$ref": "#/components/schemas/Room"
                 }
               }
-            }
-          },
-          "bimObjects": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Equipement"
             }
           },
           "groupParents": {
@@ -2044,6 +2130,54 @@
         }
       }
     },
+    "/api/v1/node/read_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns an array of node objects with parent and children relation",
+        "summary": "Gets Multiple Nodes",
+        "tags": [
+          "Nodes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Node"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/relation/{id}/children_node": {
       "get": {
         "security": [
@@ -2182,6 +2316,57 @@
         }
       }
     },
+    "/api/v1/node/endpoint_list_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns an array of lists of endpoints for multiple nodes",
+        "summary": "Gets lists of endpoints for multiple nodes",
+        "tags": [
+          "Nodes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/EndPointNode"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/node/{id}/control_endpoint_list": {
       "get": {
         "security": [
@@ -2217,6 +2402,65 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/EndPointNode"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/control_endpoint_list_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns an array of lists of control endpoints for multiple nodes",
+        "summary": "Gets lists of control endpoints for multiple nodes",
+        "tags": [
+          "Nodes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "profileName": {
+                        "type": "string"
+                      },
+                      "endpoints": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/EndPointNode"
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -2270,6 +2514,64 @@
           },
           "400": {
             "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/event_list_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns events of multiple nodes",
+        "summary": "Get list of events for multiple nodes",
+        "tags": [
+          "Nodes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "example": [
+                1,
+                2
+              ]
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Event"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Server error"
           }
         }
       }
@@ -2408,6 +2710,64 @@
           },
           "400": {
             "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/ticket_list_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns a list of ticket objects for multiple nodes",
+        "summary": "Get list of ticket objects for multiple nodes",
+        "tags": [
+          "Nodes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "example": [
+                1,
+                2
+              ]
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Ticket"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Server error"
           }
         }
       }
@@ -2921,7 +3281,7 @@
         }
       }
     },
-    "/api/v1/node/{id}/attributsList": {
+    "/api/v1/node/{id}/attribute_list": {
       "get": {
         "security": [
           {
@@ -2963,6 +3323,64 @@
           },
           "400": {
             "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/attribute_list_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns a list of attributes for multiple nodes",
+        "summary": "Get list of attributes for multiple nodes",
+        "tags": [
+          "Node Attributs"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "example": [
+                1,
+                2
+              ]
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/NodeAttribut"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Server error"
           }
         }
       }
@@ -3547,6 +3965,54 @@
         }
       }
     },
+    "/api/v1/room/read_details_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Read details of multiple rooms",
+        "summary": "Gets details of multiple rooms",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoomDetails"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/room/{id}/endpoint_list": {
       "get": {
         "security": [
@@ -3639,7 +4105,7 @@
         }
       }
     },
-    "/api/v1/room/{id}/equipement_list": {
+    "/api/v1/room/{id}/equipment_list": {
       "get": {
         "security": [
           {
@@ -3685,7 +4151,55 @@
         }
       }
     },
-    "/api/v1/room/{id}/reference_Objects_list": {
+    "/api/v1/room/equipment_list_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return list of equipment for multiple rooms",
+        "summary": "Gets a list of equipment for multiple rooms",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Equipement"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/room/{id}/reference_object_list": {
       "get": {
         "security": [
           {
@@ -3740,6 +4254,54 @@
                         "$ref": "#/components/schemas/Equipement"
                       }
                     }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/room/reference_object_list_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return reference objects for multiple rooms",
+        "summary": "Gets reference objects for multiple rooms",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReferenceObjectInfo"
                   }
                 }
               }
@@ -5257,6 +5819,55 @@
         }
       }
     },
+    "/api/v1/endpoint/read_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Reads the current values for multiple endpoints",
+        "summary": "Read the current values of multiple endpoints",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "requestBody": {
+          "description": "An array of endpoint IDs to fetch the current values for",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CurrentValue"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/endpoint/{id}/update": {
       "put": {
         "security": [
@@ -6704,6 +7315,55 @@
         }
       }
     },
+    "/api/v1/ticket/read_details_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns details for multiple tickets",
+        "summary": "Get details of multiple tickets",
+        "tags": [
+          "Workflow & ticket"
+        ],
+        "requestBody": {
+          "description": "An array of ticket IDs to fetch details for",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TicketDetails"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/ticket/{ticketId}/add_doc": {
       "post": {
         "security": [
@@ -7022,6 +7682,55 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BasicNode"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/ticket/find_entity_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns entities for multiple tickets",
+        "summary": "Get entities of multiple tickets",
+        "tags": [
+          "Workflow & ticket"
+        ],
+        "requestBody": {
+          "description": "An array of ticket IDs to fetch entities for",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNode"
+                  }
                 }
               }
             }
@@ -7747,6 +8456,55 @@
           },
           "400": {
             "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/event/read_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns details for multiple events",
+        "summary": "Get details of multiple events",
+        "tags": [
+          "Calendar & Event"
+        ],
+        "requestBody": {
+          "description": "An array of event IDs to fetch details for",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Event"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "list of event is not loaded"
           }
         }
       }
@@ -12438,7 +13196,7 @@
         }
       }
     },
-    "/api/v1/equipement/{id}/get_postion": {
+    "/api/v1/equipement/{id}/get_position": {
       "get": {
         "security": [
           {
@@ -12471,6 +13229,145 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Position"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/equipement/get_position_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return positions for multiple equipment",
+        "summary": "Gets positions for multiple equipment",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Position"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/room/{id}/get_position": {
+      "get": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Get room position",
+        "summary": "Get room position",
+        "tags": [
+          "Geographic Context"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomPosition"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/room/get_position_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return position for multiple rooms",
+        "summary": "Gets position for multiple rooms",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoomPosition"
+                  }
                 }
               }
             }
@@ -13204,6 +14101,100 @@
         }
       }
     },
+    "/api/v1/equipment/{id}/read_static_details": {
+      "get": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "read static details of equipment",
+        "summary": "Gets static details of equipment",
+        "tags": [
+          "Geographic Context"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaticDetailsRoom"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/equipment/read_static_details_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Read static details of multiple equipments",
+        "summary": "Gets static details of multiple equipments",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StaticDetailsRoom"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
     "/api/v1/room/{id}/read_static_details": {
       "get": {
         "security": [
@@ -13243,6 +14234,57 @@
           },
           "400": {
             "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/room/read_static_details_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Read static details of multiple rooms",
+        "summary": "Gets static details of multiple rooms",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StaticDetailsRoom"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         }
       }

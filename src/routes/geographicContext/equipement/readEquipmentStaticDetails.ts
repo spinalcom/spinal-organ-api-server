@@ -49,7 +49,7 @@ interface IEquipmentInfo {
     revitType: string;
   };
 }
-interface IRoomAttr {
+interface IAttr {
   dynamicId: number;
   staticId: string;
   name: string;
@@ -79,13 +79,13 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/room/{id}/read_static_details:
+   * /api/v1/equipment/{id}/read_static_details:
    *   get:
    *     security:
    *       - OauthSecurity:
    *         - readOnly
-   *     description: read static details of room
-   *     summary: Gets static details of room
+   *     description: read static details of equipment
+   *     summary: Gets static details of equipment
    *     tags:
    *       - Geographic Context
    *     parameters:
@@ -107,38 +107,62 @@ module.exports = function (
    *         description: Bad request
    */
 
-  app.get('/api/v1/room/:id/read_static_details', async (req, res, next) => {
+  app.get('/api/v1/equipment/:id/read_static_details', async (req, res, next) => {
     try {
-      var room: SpinalNode<any> = await spinalAPIMiddleware.load(
+      var equipment: SpinalNode<any> = await spinalAPIMiddleware.load(
         parseInt(req.params.id, 10)
       );
       //@ts-ignore
-      SpinalGraphService._addNode(room);
-      if (room.getType().get() === 'geographicRoom') {
+      SpinalGraphService._addNode(equipment);
+      if (equipment.getType().get() === 'BIMObject') {
         const [
           allNodesControlesEndpoints,
-          equipements,
           CategorieAttributsList,
           groupParents,
         ] = await Promise.all([
-          getNodeControlEndpoints(room),
-          getRoomBimObject(room),
-          getRoomAttributes(room),
-          getRoomParent(room),
+          getNodeControlEndpoints(equipment),
+          getAttributes(equipment),
+          getGroupParent(equipment),
         ]);
 
+        var revitCategory: string = '';
+        var revitFamily: string = '';
+        var revitType: string = '';
+        var categories_bimObjects = await equipment.getChildren(
+            NODE_TO_CATEGORY_RELATION
+          );
+        for (const categorie of categories_bimObjects) {
+            if (categorie.getName().get() === 'default') {
+                var attributs_bimObjects = (await categorie.element.load()).get();
+                for (const child of attributs_bimObjects) {
+                if (child.label === 'revit_category') {
+                    revitCategory = child.value;
+                    break;
+                }
+                }
+            }
+        }
         var info = {
-          dynamicId: room._server_id,
-          staticId: room.getId().get(),
-          name: room.getName().get(),
-          type: room.getType().get(),
-          attributsList: CategorieAttributsList,
-          controlEndpoint: allNodesControlesEndpoints,
-          bimObjects: equipements,
-          groupParents: groupParents,
+            dynamicId: equipment._server_id,
+            staticId: equipment.getId().get(),
+            name: equipment.getName().get(),
+            type: equipment.getType().get(),
+            bimFileId: equipment.info.bimFileId.get(),
+            version: equipment.info.version.get(),
+            externalId: equipment.info.externalId.get(),
+            dbid: equipment.info.dbid.get(),
+            default_attributs: {
+              revitCategory: revitCategory,
+              revitFamily: revitFamily,
+              revitType: revitType,
+            },
+
+            attributsList: CategorieAttributsList,
+            controlEndpoint: allNodesControlesEndpoints,
+            groupParents: groupParents,
         };
       } else {
-        res.status(400).send('node is not of type geographic room');
+        res.status(400).send('node is not of type BIMObject');
       }
     } catch (error) {
       console.log(error);
@@ -150,13 +174,13 @@ module.exports = function (
 
   /**
  * @swagger
- * /api/v1/room/read_static_details_multiple:
+ * /api/v1/equipment/read_static_details_multiple:
  *   post:
  *     security:
  *       - OauthSecurity:
  *         - readOnly
- *     description: Read static details of multiple rooms
- *     summary: Gets static details of multiple rooms
+ *     description: Read static details of multiple equipments
+ *     summary: Gets static details of multiple equipments
  *     tags:
  *       - Geographic Context
  *     requestBody:
@@ -182,7 +206,7 @@ module.exports = function (
  *       500:
  *         description: Internal server error
  */
-  app.post('/api/v1/room/read_static_details_multiple', async (req, res, next) => {
+  app.post('/api/v1/equipment/read_static_details_multiple', async (req, res, next) => {
     const dynamicIds : number[] = req.body;
 
     if (!Array.isArray(dynamicIds)) {
@@ -193,42 +217,63 @@ module.exports = function (
       const results = [];
 
       for (let dynamicId of dynamicIds) {
-        var room: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId);
+        var equipment: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId);
         //@ts-ignore
-        SpinalGraphService._addNode(room);
+        SpinalGraphService._addNode(equipment);
 
-        if (room.getType().get() === 'geographicRoom') {
-          const [
-            allNodesControlesEndpoints,
-            equipements,
-            CategorieAttributsList,
-            groupParents,
-          ] = await Promise.all([
-            getNodeControlEndpoints(room),
-            getRoomBimObject(room),
-            getRoomAttributes(room),
-            getRoomParent(room),
-          ]);
-
-          var info = {
-            dynamicId: room._server_id,
-            staticId: room.getId().get(),
-            name: room.getName().get(),
-            type: room.getType().get(),
-            attributsList: CategorieAttributsList,
-            controlEndpoint: allNodesControlesEndpoints,
-            bimObjects: equipements,
-            groupParents: groupParents,
-          };
-
+        if (equipment.getType().get() === 'BIMObject') {
+            const [
+              allNodesControlesEndpoints,
+              CategorieAttributsList,
+              groupParents,
+            ] = await Promise.all([
+              getNodeControlEndpoints(equipment),
+              getAttributes(equipment),
+              getGroupParent(equipment),
+            ]);
+    
+            var revitCategory: string = '';
+            var revitFamily: string = '';
+            var revitType: string = '';
+            var categories_bimObjects = await equipment.getChildren(
+                NODE_TO_CATEGORY_RELATION
+              );
+            for (const categorie of categories_bimObjects) {
+                if (categorie.getName().get() === 'default') {
+                    var attributs_bimObjects = (await categorie.element.load()).get();
+                    for (const child of attributs_bimObjects) {
+                    if (child.label === 'revit_category') {
+                        revitCategory = child.value;
+                        break;
+                    }
+                    }
+                }
+            }
+            var info = {
+                dynamicId: equipment._server_id,
+                staticId: equipment.getId().get(),
+                name: equipment.getName().get(),
+                type: equipment.getType().get(),
+                bimFileId: equipment.info.bimFileId.get(),
+                version: equipment.info.version.get(),
+                externalId: equipment.info.externalId.get(),
+                dbid: equipment.info.dbid.get(),
+                default_attributs: {
+                  revitCategory: revitCategory,
+                  revitFamily: revitFamily,
+                  revitType: revitType,
+                },
+                attributsList: CategorieAttributsList,
+                controlEndpoint: allNodesControlesEndpoints,
+                groupParents: groupParents,
+            };
           results.push(info);
         } else {
           // If one node is not of type 'geographicRoom', we can either ignore or send an error response.
           // Here, we're opting to send a response for simplicity.
-          return res.status(400).send(`Node with dynamic ID ${dynamicId} is not of type geographic room`);
+          return res.status(400).send(`Node with dynamic ID ${dynamicId} is not of type BIMObject`);
         }
       }
-
       return res.json(results);
     } catch (error) {
       console.log(error);
@@ -238,10 +283,10 @@ module.exports = function (
 
 };
 
-async function getRoomParent(room: SpinalNode<any>): Promise<INodeInfo[]> {
-  let parents = await SpinalGraphService.getParents(room.getId().get(), [
-    'hasGeographicRoom',
-    'groupHasgeographicRoom',
+async function getGroupParent(node: SpinalNode<any>): Promise<INodeInfo[]> {
+  let parents = await SpinalGraphService.getParents(node.getId().get(), [
+    'hasBimObject',
+    'groupHasBIMObject',
   ]);
 
   var groupParents: INodeInfo[] = [];
@@ -259,9 +304,9 @@ async function getRoomParent(room: SpinalNode<any>): Promise<INodeInfo[]> {
   return groupParents;
 }
 
-async function getRoomAttributes(room: SpinalNode<any>): Promise<IRoomAttr[]> {
+async function getAttributes(room: SpinalNode<any>): Promise<IAttr[]> {
   let categories = await room.getChildren(NODE_TO_CATEGORY_RELATION);
-  const promises = categories.map(async (child): Promise<IRoomAttr> => {
+  const promises = categories.map(async (child): Promise<IAttr> => {
     let attributs = await child.element.load();
     return {
       dynamicId: child._server_id,
@@ -274,54 +319,12 @@ async function getRoomAttributes(room: SpinalNode<any>): Promise<IRoomAttr[]> {
   return Promise.all(promises);
 }
 
-async function getRoomBimObject(
-  room: SpinalNode<any>
-): Promise<IEquipmentInfo[]> {
-  // const equipements: IEquipmentInfo[] = [];
-  var bimObjects = await room.getChildren('hasBimObject');
-  var revitCategory: string = '';
-  var revitFamily: string = '';
-  var revitType: string = '';
 
-  const promises = bimObjects.map(async (child): Promise<IEquipmentInfo> => {
-    // attributs BIMObject
-    var categories_bimObjects = await child.getChildren(
-      NODE_TO_CATEGORY_RELATION
-    );
-    for (const categorie of categories_bimObjects) {
-      if (categorie.getName().get() === 'default') {
-        var attributs_bimObjects = (await categorie.element.load()).get();
-        for (const child of attributs_bimObjects) {
-          if (child.label === 'revit_category') {
-            revitCategory = child.value;
-            break;
-          }
-        }
-      }
-    }
-    return {
-      dynamicId: child._server_id,
-      staticId: child.getId().get(),
-      name: child.getName().get(),
-      type: child.getType().get(),
-      bimFileId: child.info.bimFileId.get(),
-      version: child.info.version.get(),
-      externalId: child.info.externalId.get(),
-      dbid: child.info.dbid.get(),
-      default_attributs: {
-        revitCategory: revitCategory,
-        revitFamily: revitFamily,
-        revitType: revitType,
-      },
-    };
-  });
-  return Promise.all(promises);
-}
 
 async function getNodeControlEndpoints(
-  room: SpinalNode<any>
+  node: SpinalNode<any>
 ): Promise<INodeControlEndpoint[]> {
-  var profils = await SpinalGraphService.getChildren(room.getId().get(), [
+  var profils = await SpinalGraphService.getChildren(node.getId().get(), [
     spinalControlPointService.ROOM_TO_CONTROL_GROUP,
   ]);
   var promises = profils.map(async (profile) => {

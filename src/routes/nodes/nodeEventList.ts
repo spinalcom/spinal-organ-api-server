@@ -31,6 +31,8 @@ import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { SpinalEventService } from 'spinal-env-viewer-task-service';
 import { Event } from '../calendar/interfacesContextsEvents';
+import { getEventListInfo } from '../../utilities/getEventListInfo';
+import { parse } from 'path';
 
 module.exports = function (
   logger,
@@ -70,37 +72,72 @@ module.exports = function (
    */
   app.get('/api/v1/node/:id/event_list', async (req, res, next) => {
     try {
-      await spinalAPIMiddleware.getGraph();
-      var nodes = [];
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
-      //@ts-ignore
-      SpinalGraphService._addNode(node);
-      var listEvents = await SpinalEventService.getEvents(node.getId().get());
-
-      for (const child of listEvents) {
-        // @ts-ignore
-        const _child = SpinalGraphService.getRealNode(child.id.get());
-        if (_child.getType().get() === 'SpinalEvent') {
-          let info = {
-            dynamicId: _child._server_id,
-            staticId: _child.getId().get(),
-            name: _child.getName().get(),
-            type: _child.getType().get(),
-            groupID: _child.info.groupId.get(),
-            categoryID: child.categoryId.get(),
-            nodeId: _child.info.nodeId.get(),
-            repeat: _child.info.repeat.get(),
-            description: _child.info.description.get(),
-            startDate: _child.info.startDate.get(),
-            endDate: _child.info.endDate.get(),
-          };
-          nodes.push(info);
-        }
-      }
+      var nodes = await getEventListInfo(
+        spinalAPIMiddleware,
+        parseInt(req.params.id, 10)
+      );
     } catch (error) {
       console.log(error);
       res.status(400).send('ko');
     }
     res.json(nodes);
+  });
+
+  /**
+   * @swagger
+   * /api/v1/node/event_list_multiple:
+   *   post:
+   *     security:
+   *       - OauthSecurity:
+   *         - readOnly
+   *     description: Returns events of multiple nodes
+   *     summary: Get list of events for multiple nodes
+   *     tags:
+   *       - Nodes
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
+   *           example:
+   *             - 1
+   *             - 2
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: array
+   *                 items:
+   *                   $ref: '#/components/schemas/Event'
+   *       400:
+   *         description: Bad request
+   *       500:
+   *         description: Server error
+   */
+  app.post('/api/v1/node/event_list_multiple', async (req, res, next) => {
+    let results = [];
+    try {
+      const ids: number[] = req.body;
+      if (!Array.isArray(ids)) {
+        return res.status(400).send('Expected an array of IDs.');
+      }
+      for (let id of ids) {
+        var info = await getEventListInfo(spinalAPIMiddleware, id);
+        results.push(info);
+      }
+    } catch (error) {
+      console.log(error);
+      return res.status(400).send('An error occurred while fetching event list.');
+    }
+
+    res.json(results);
   });
 };

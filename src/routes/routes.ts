@@ -449,6 +449,11 @@ function routes(
     app,
     spinalAPIMiddleware
   );
+  require('./geographicContext/equipement/readEquipmentStaticDetails')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  )
   require('./geographicContext/equipement/equipementEndpointControlList')(
     logger,
     app,

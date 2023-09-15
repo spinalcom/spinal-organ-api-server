@@ -24,79 +24,127 @@
 
 import SpinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
-import { spinalControlPointService } from 'spinal-env-viewer-plugin-control-endpoint-service'
+import {
+  SpinalContext,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
+import { spinalControlPointService } from 'spinal-env-viewer-plugin-control-endpoint-service';
 import { SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
+import { getControlEndpointsInfo } from '../../utilities/getControlEndpointsInfo';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: SpinalAPIMiddleware
+) {
   /**
-* @swagger
-* /api/v1/node/{id}/control_endpoint_list:
-*   get:
-*     security: 
-*       - OauthSecurity: 
-*         - readOnly
-*     description: Return list of control endpoint
-*     summary: Gets a list of control endpoint
-*     tags:
-*      - Nodes
-*     parameters:
-*      - in: path
-*        name: id
-*        description: use the dynamic ID
-*        required: true
-*        schema:
-*          type: integer
-*          format: int64
-*     responses:
-*       200:
-*         description: Success
-*         content:
-*           application/json:
-*             schema: 
-*               type: array
-*               items: 
-*                $ref: '#/components/schemas/EndPointNode'
-*       400:
-*         description: Bad request
- */
-
-
-
-  app.get("/api/v1/node/:id/control_endpoint_list", async (req, res, next) => {
-
+   * @swagger
+   * /api/v1/node/{id}/control_endpoint_list:
+   *   get:
+   *     security:
+   *       - OauthSecurity:
+   *         - readOnly
+   *     description: Return list of control endpoint
+   *     summary: Gets a list of control endpoint
+   *     tags:
+   *      - Nodes
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/EndPointNode'
+   *       400:
+   *         description: Bad request
+   */
+  app.get('/api/v1/node/:id/control_endpoint_list', async (req, res, next) => {
     try {
-
-      let room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
-      // @ts-ignore
-      SpinalGraphService._addNode(room);
-      var profils = await SpinalGraphService.getChildren(room.getId().get(), [spinalControlPointService.ROOM_TO_CONTROL_GROUP])
-      var promises = profils.map(async (profile) => {
-
-        // var result = await spinalControlPointService.getEndpointsNodeLinked(room.getId().get(), profile.id.get())
-        var result = await SpinalGraphService.getChildren(profile.id.get(), [SpinalBmsEndpoint.relationName])
-        var endpoints = await result.map(async (endpoint) => {
-          var realNode = SpinalGraphService.getRealNode(endpoint.id.get())
-          var element = await endpoint.element.load()
-          var currentValue = element.currentValue.get();
-          return {
-            dynamicId: realNode._server_id,
-            staticId: endpoint.id.get(),
-            name: element.name.get(),
-            type: element.type.get(),
-            currentValue: currentValue
-          };
-        })
-        return { profileName: profile.name.get(), endpoints: await Promise.all(endpoints) }
-      })
-
-      var allNodes = await Promise.all(promises)
-
-
+      var cpInfos = await getControlEndpointsInfo(
+        spinalAPIMiddleware,
+        parseInt(req.params.id, 10)
+      );
     } catch (error) {
       console.error(error);
-      res.status(400).send("list of endpoints is not loaded");
+      res.status(400).send('list of endpoints is not loaded');
     }
-    res.send(allNodes);
+    res.send(cpInfos);
   });
-}
+
+  /**
+   * @swagger
+   * /api/v1/node/control_endpoint_list_multiple:
+   *   post:
+   *     security:
+   *       - OauthSecurity:
+   *         - readOnly
+   *     description: Returns an array of lists of control endpoints for multiple nodes
+   *     summary: Gets lists of control endpoints for multiple nodes
+   *     tags:
+   *       - Nodes
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 properties:
+   *                   profileName:
+   *                     type: string
+   *                   endpoints:
+   *                     type: array
+   *                     items:
+   *                       $ref: '#/components/schemas/EndPointNode'
+   *       400:
+   *         description: Bad request
+   */
+  app.post(
+    '/api/v1/node/control_endpoint_list_multiple',
+    async (req, res, next) => {
+      const results = [];
+
+      try {
+        const ids: number[] = req.body;
+        if (!Array.isArray(ids)) {
+          return res.status(400).send('Expected an array of IDs.');
+        }
+
+        for (let id of ids) {
+          const controlEndpoints = await getControlEndpointsInfo(
+            spinalAPIMiddleware,
+            id
+          );
+          results.push(controlEndpoints);
+        }
+        res.json(results);
+      } catch (error) {
+        console.error(error);
+        res
+          .status(400)
+          .send('An error occurred while fetching control endpoints.');
+      }
+    }
+  );
+};

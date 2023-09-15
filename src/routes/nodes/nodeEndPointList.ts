@@ -25,9 +25,23 @@
 import SpinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { EndPointNode } from './interfacesNodes';
-import { SpinalContext, SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service';
-import { SpinalBmsEndpoint, SpinalBmsDevice, SpinalBmsEndpointGroup } from "spinal-model-bmsnetwork";
-const BMS_ENDPOINT_RELATIONS = ["hasEndPoint", SpinalBmsDevice.relationName, SpinalBmsEndpoint.relationName, SpinalBmsEndpointGroup.relationName];
+import { getEndpointsInfo } from '../../utilities/getEndpointInfo';
+import {
+  SpinalContext,
+  SpinalGraphService,
+  SpinalNode,
+} from 'spinal-env-viewer-graph-service';
+import {
+  SpinalBmsEndpoint,
+  SpinalBmsDevice,
+  SpinalBmsEndpointGroup,
+} from 'spinal-model-bmsnetwork';
+const BMS_ENDPOINT_RELATIONS = [
+  'hasEndPoint',
+  SpinalBmsDevice.relationName,
+  SpinalBmsEndpoint.relationName,
+  SpinalBmsEndpointGroup.relationName,
+];
 
 module.exports = function (
   logger,
@@ -69,28 +83,70 @@ module.exports = function (
   app.get('/api/v1/node/:id/endpoint_list', async (req, res, next) => {
     let nodes = [];
     try {
-      spinalAPIMiddleware.getGraph();
-      let node: SpinalNode = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
-      // @ts-ignore
-      SpinalGraphService._addNode(node);
-      const endpoints = await SpinalGraphService.findNodesByType(node.getId().get(), BMS_ENDPOINT_RELATIONS, SpinalBmsEndpoint.nodeTypeName)
-      //     var endpoints = await node.getChildren(["hasEndPoint", "hasBmsEndpoint"]);
-      for (const endpoint of endpoints) {
-        var element = await endpoint.element.load();
-        var currentValue = element.currentValue.get();
-        let info: EndPointNode = {
-          dynamicId: endpoint._server_id,
-          staticId: endpoint.getId().get(),
-          name: endpoint.getName().get(),
-          type: endpoint.getType().get(),
-          currentValue: currentValue,
-        };
-        nodes.push(info);
-      }
+      nodes = await getEndpointsInfo(
+        spinalAPIMiddleware,
+        parseInt(req.params.id, 10)
+      );
     } catch (error) {
       console.error(error);
       res.status(400).send('list of endpoints is not loaded');
     }
     res.send(nodes);
+  });
+
+  /**
+   * @swagger
+   * /api/v1/node/endpoint_list_multiple:
+   *   post:
+   *     security:
+   *       - OauthSecurity:
+   *         - readOnly
+   *     description: Returns an array of lists of endpoints for multiple nodes
+   *     summary: Gets lists of endpoints for multiple nodes
+   *     tags:
+   *       - Nodes
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: array
+   *                 items:
+   *                   $ref: '#/components/schemas/EndPointNode'
+   *       400:
+   *         description: Bad request
+   */
+  app.post('/api/v1/node/endpoint_list_multiple', async (req, res, next) => {
+    const results = [];
+    try {
+      const ids: number[] = req.body;
+      if (!Array.isArray(ids)) {
+        return res.status(400).send('Expected an array of IDs.');
+      }
+
+      for (let id of ids) {
+        const nodes = await getEndpointsInfo(spinalAPIMiddleware, id);
+        results.push(nodes);
+      }
+    } catch (error) {
+      console.error(error);
+      return res
+        .status(400)
+        .send('An error occurred while fetching endpoints.');
+    }
+
+    res.json(results);
   });
 };

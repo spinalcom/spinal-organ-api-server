@@ -21,6 +21,7 @@
     "express-gateway": "^1.16.10",
     "express-http-proxy": "^1.6.2",
     "flatted": "^3.0.2",
+    "generate-password": "^1.7.0",
     "get-file-object-from-local-path": "^1.0.2",
     "install": "^0.13.0",
     "lodash": "^4.17.21",

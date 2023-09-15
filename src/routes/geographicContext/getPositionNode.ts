@@ -25,40 +25,12 @@
 import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { getEquipmentPosition, getRoomPosition } from '../../utilities/getPosition';
 
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
 
-  /**
- * @swagger
- * /api/v1/equipement/{id}/get_postion:
- *   get:
- *     security: 
- *       - OauthSecurity: 
- *         - readOnly
- *     description: Get equipement position 
- *     summary: Get equipement position
- *     tags:
- *       - Geographic Context
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *                $ref: '#/components/schemas/Position'
- *       400:
- *         description: Bad request
-  */
-
+  // Deprecated typo error
   app.get("/api/v1/equipement/:id/get_postion", async (req, res, next) => {
     try {
 
@@ -134,4 +106,192 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
     }
     res.json(info);
   });
+
+
+  /**
+ * @swagger
+ * /api/v1/equipement/{id}/get_position:
+ *   get:
+ *     security: 
+ *       - OauthSecurity: 
+ *         - readOnly
+ *     description: Get equipement position 
+ *     summary: Get equipement position
+ *     tags:
+ *       - Geographic Context
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        description: use the dynamic ID
+ *        required: true
+ *        schema:
+ *          type: integer
+ *          format: int64
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema: 
+ *                $ref: '#/components/schemas/Position'
+ *       400:
+ *         description: Bad request
+  */
+
+  app.get("/api/v1/equipement/:id/get_position", async (req, res, next) => {
+    try {
+      const position = await getEquipmentPosition(spinalAPIMiddleware, parseInt(req.params.id, 10));
+      res.json(position);
+    } catch (error) {
+      console.error(error);
+      res.status(400).send(error.message || "Failed to get position");
+    }
+  });
+
+  /**
+ * @swagger
+ * /api/v1/equipement/get_position_multiple:
+ *   post:
+ *     security: 
+ *       - OauthSecurity: 
+ *         - readOnly
+ *     description: Return positions for multiple equipment
+ *     summary: Gets positions for multiple equipment
+ *     tags:
+ *      - Geographic Context
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: integer
+ *               format: int64
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Position'
+ *       400:
+ *         description: Bad request
+ */
+app.post("/api/v1/equipement/get_position_multiple", async (req, res, next) => {
+  const results= [];
+  try {
+    const ids: number[] = req.body;
+
+    if (!Array.isArray(ids)) {
+      return res.status(400).send("Expected an array of IDs.");
+    }
+
+    for (const id of ids) {
+      const position = await getEquipmentPosition(spinalAPIMiddleware, id);
+      results.push(position);
+    }
+
+    res.json(results);
+  } catch (error) {
+    console.error(error);
+    return res.status(400).send(error.message || "Failed to get positions");
+  }
+});
+
+/**
+ * @swagger
+ * /api/v1/room/{id}/get_position:
+ *   get:
+ *     security: 
+ *       - OauthSecurity: 
+ *         - readOnly
+ *     description: Get room position 
+ *     summary: Get room position
+ *     tags:
+ *       - Geographic Context
+ *     parameters:
+ *      - in: path
+ *        name: id
+ *        description: use the dynamic ID
+ *        required: true
+ *        schema:
+ *          type: integer
+ *          format: int64
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema: 
+ *                $ref: '#/components/schemas/RoomPosition'
+ *       400:
+ *         description: Bad request
+  */
+app.get("/api/v1/room/:id/get_position", async (req, res, next) => {
+  try {
+    const position = await getRoomPosition(spinalAPIMiddleware, parseInt(req.params.id, 10));
+    res.json(position);
+  } catch (error) {
+    console.error(error);
+    res.status(400).send(error.message || "Failed to get position");
+  }
+});
+
+
+/**
+ * @swagger
+ * /api/v1/room/get_position_multiple:
+ *   post:
+ *     security: 
+ *       - OauthSecurity: 
+ *         - readOnly
+ *     description: Return position for multiple rooms
+ *     summary: Gets position for multiple rooms
+ *     tags:
+ *      - Geographic Context
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: integer
+ *               format: int64
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/RoomPosition'
+ *       400:
+ *         description: Bad request
+ */
+app.post("/api/v1/room/get_position_multiple", async (req, res, next) => {
+  const results = [];
+  try {
+    const ids: number[] = req.body;
+
+    if (!Array.isArray(ids)) {
+      return res.status(400).send("Expected an array of IDs.");
+    }
+
+    for (const id of ids) {
+      const position = await getRoomPosition(spinalAPIMiddleware, id);
+      results.push(position);
+    }
+
+    res.json(results);
+  } catch (error) {
+    console.error(error);
+    return res.status(400).send(error.message || "Failed to get position");
+  }
+});
+
 }

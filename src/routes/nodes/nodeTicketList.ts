@@ -30,6 +30,8 @@ import {
 import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { serviceTicketPersonalized } from 'spinal-service-ticket';
+import { getTicketListInfo } from '../../utilities/getTicketListInfo';
+
 module.exports = function (
   logger,
   app: express.Express,
@@ -132,22 +134,22 @@ module.exports = function (
             _process === undefined
               ? ''
               : {
-                dynamicId: _process._server_id,
-                staticId: _process.getId().get(),
-                name: _process.getName().get(),
-                type: _process.getType().get(),
-              },
+                  dynamicId: _process._server_id,
+                  staticId: _process.getId().get(),
+                  name: _process.getName().get(),
+                  type: _process.getType().get(),
+                },
           step:
             _step === undefined
               ? ''
               : {
-                dynamicId: _step._server_id,
-                staticId: _step.getId().get(),
-                name: _step.getName().get(),
-                type: _step.getType().get(),
-                color: _step.info.color.get(),
-                order: _step.info.order.get(),
-              },
+                  dynamicId: _step._server_id,
+                  staticId: _step.getId().get(),
+                  name: _step.getName().get(),
+                  type: _step.getType().get(),
+                  color: _step.info.color.get(),
+                  order: _step.info.order.get(),
+                },
           workflowId: workflow?._server_id,
           workflowName: workflow?.getName().get(),
         };
@@ -158,5 +160,65 @@ module.exports = function (
       res.status(400).send('ko');
     }
     res.json(nodes);
+  });
+
+  /**
+   * @swagger
+   * /api/v1/node/ticket_list_multiple:
+   *   post:
+   *     security:
+   *       - OauthSecurity:
+   *         - readOnly
+   *     description: Returns a list of ticket objects for multiple nodes
+   *     summary: Get list of ticket objects for multiple nodes
+   *     tags:
+   *       - Nodes
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
+   *           example:
+   *             - 1
+   *             - 2
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: array
+   *                 items:
+   *                   $ref: '#/components/schemas/Ticket'
+   *       400:
+   *         description: Bad request
+   *       500:
+   *         description: Server error
+   */
+  app.post('/api/v1/node/ticket_list_multiple', async (req, res, next) => {
+    const results = [];
+    try {
+      const ids: number[] = req.body;
+      if (!Array.isArray(ids)) {
+        return res.status(400).send('Expected an array of IDs.');
+      }
+
+      for (let id of ids) {
+        const nodes = await getTicketListInfo(spinalAPIMiddleware, id);
+        results.push(nodes);
+      }
+    } catch (error) {
+      console.error(error);
+      return res
+        .status(400)
+        .send('An error occurred while fetching ticket list.');
+    }
+    res.json(results);
   });
 };

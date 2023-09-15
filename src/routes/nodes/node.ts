@@ -24,7 +24,7 @@
 
 import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import { childrensNode, parentsNode } from '../../utilities/corseChildrenAndParentNode'
+import  {getNodeInfo}  from '../../utilities/getNodeInfo'
 import { Node } from './interfacesNodes'
 import { SpinalNode } from 'spinal-model-graph';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
@@ -61,23 +61,67 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
   app.get("/api/v1/node/:id/read", async (req, res, next) => {
     try {
-
-      var node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
-      var childrens_list = childrensNode(node);
-      var parents_list = await parentsNode(node)
-      var info: Node = {
-        dynamicId: node._server_id,
-        staticId: node.getId().get(),
-        name: node.getName().get(),
-        type: node.getType().get(),
-        children_relation_list: childrens_list,
-        parent_relation_list: parents_list
-      }
+      var info = await getNodeInfo(spinalAPIMiddleware, parseInt(req.params.id, 10));
     } catch (error) {
       console.log(error);
       res.status(400).send("ko");
     }
     res.json(info);
   });
+
+
+  /**
+ * @swagger
+ * /api/v1/node/read_multiple:
+ *   post:
+ *     security: 
+ *       - OauthSecurity: 
+ *         - readOnly
+ *     description: Returns an array of node objects with parent and children relation
+ *     summary: Gets Multiple Nodes
+ *     tags:
+ *       - Nodes
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: integer
+ *               format: int64
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Node'
+ *       400:
+ *         description: Bad request
+ */
+
+app.post("/api/v1/node/read_multiple", async (req, res, next) => {
+  let results: Node[] = [];
+  try {
+    const ids: number[] = req.body;
+    if (!Array.isArray(ids)) {
+      return res.status(400).send("Expected an array of IDs.");
+    }
+    for (let id of ids) {  
+      var info: Node = await getNodeInfo(spinalAPIMiddleware, id);
+      results.push(info);
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(400).send("An error occurred while fetching nodes.");
+  }
+  
+  res.json(results);
+});
+
+
 }
 

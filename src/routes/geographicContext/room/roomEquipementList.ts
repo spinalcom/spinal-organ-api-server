@@ -24,54 +24,30 @@
 
 import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { Equipement } from '../interfacesGeoContext'
+import { Equipement } from '../interfacesGeoContext';
 import { SpinalNode } from 'spinal-model-graph';
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import {
+  SpinalContext,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
+import { getEquipmentListInfo } from '../../../utilities/getEquipmentListInfo';
 
-
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
-  /**
- * @swagger
- * /api/v1/room/{id}/equipement_list:
- *   get:
- *     security: 
- *       - OauthSecurity: 
- *         - readOnly
- *     description: Return list of equipement
- *     summary: Gets a list of equipement
- *     tags:
- *      - Geographic Context
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *               type: array
- *               items: 
- *                $ref: '#/components/schemas/Equipement'
- *       400:
- *         description: Bad request
-  */
-
-  app.get("/api/v1/room/:id/equipement_list", async (req, res, next) => {
-
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: spinalAPIMiddleware
+) {
+  app.get('/api/v1/room/:id/equipement_list', async (req, res, next) => {
     let nodes = [];
     try {
-      var room: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10));
+      var room: SpinalNode<any> = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10)
+      );
       //@ts-ignore
-      SpinalGraphService._addNode(room)
+      SpinalGraphService._addNode(room);
 
-      if (room.getType().get() === "geographicRoom") {
-        var childrens = await room.getChildren("hasBimObject");
+      if (room.getType().get() === 'geographicRoom') {
+        var childrens = await room.getChildren('hasBimObject');
 
         for (const child of childrens) {
           let info: Equipement = {
@@ -87,16 +63,111 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
           nodes.push(info);
         }
       } else {
-        res.status(400).send("node is not of type geographic room");
+        res.status(400).send('node is not of type geographic room');
       }
-
-
     } catch (error) {
       console.error(error);
-      res.status(400).send("list of equipement is not loaded");
+      res.status(400).send('list of equipement is not loaded');
     }
 
     res.send(nodes);
-
   });
+
+  /**
+   * @swagger
+   * /api/v1/room/{id}/equipment_list:
+   *   get:
+   *     security:
+   *       - OauthSecurity:
+   *         - readOnly
+   *     description: Return list of equipement
+   *     summary: Gets a list of equipement
+   *     tags:
+   *      - Geographic Context
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/Equipement'
+   *       400:
+   *         description: Bad request
+   */
+
+  app.get('/api/v1/room/:id/equipment_list', async (req, res, next) => {
+    try {
+      const equipmentList = await getEquipmentListInfo(
+        spinalAPIMiddleware,
+        parseInt(req.params.id, 10)
+      );
+      res.send(equipmentList);
+    } catch (error) {
+      console.error(error);
+      res.status(400).send(error.message || 'list of equipment is not loaded');
+    }
+  });
+
+  /**
+ * @swagger
+ * /api/v1/room/equipment_list_multiple:
+ *   post:
+ *     security: 
+ *       - OauthSecurity: 
+ *         - readOnly
+ *     description: Return list of equipment for multiple rooms
+ *     summary: Gets a list of equipment for multiple rooms
+ *     tags:
+ *      - Geographic Context
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: integer
+ *               format: int64
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Equipement'
+ *       400:
+ *         description: Bad request
+ */
+app.post("/api/v1/room/equipment_list_multiple", async (req, res, next) => {
+  const results = [];
+  try {
+      const ids: number[] = req.body;
+      if (!Array.isArray(ids)) {
+          return res.status(400).send("Expected an array of IDs.");
+      }
+
+      for (const id of ids) {
+          const equipmentList = await getEquipmentListInfo(spinalAPIMiddleware, id);
+          results.push({roomId: id, equipment: equipmentList});
+      }
+      
+      res.json(results);
+  } catch (error) {
+      console.error(error);
+      return res.status(400).send(error.message || "An error occurred while fetching equipment lists.");
+  }
+});
+
 };
