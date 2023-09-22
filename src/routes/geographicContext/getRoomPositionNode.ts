@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2021 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
@@ -24,22 +24,23 @@
 
 import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import  {getNodeInfo}  from '../../utilities/getNodeInfo'
-import { Node } from './interfacesNodes'
-import { SpinalNode } from 'spinal-model-graph';
+import { SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { getRoomPosition } from '../../utilities/getPosition';
+
+
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
 
-  /**
+/**
  * @swagger
- * /api/v1/node/{id}/read:
+ * /api/v1/room/{id}/get_position:
  *   get:
  *     security: 
  *       - OauthSecurity: 
  *         - readOnly
- *     description: Return node object with parent and children relation
- *     summary: Gets Node
+ *     description: Get room position 
+ *     summary: Get room position
  *     tags:
- *       - Nodes
+ *       - Geographic Context
  *     parameters:
  *      - in: path
  *        name: id
@@ -54,19 +55,20 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
  *         content:
  *           application/json:
  *             schema: 
- *                $ref: '#/components/schemas/Node'
+ *                $ref: '#/components/schemas/RoomPosition'
  *       400:
  *         description: Bad request
   */
+app.get("/api/v1/room/:id/get_position", async (req, res, next) => {
+  try {
+    const position = await getRoomPosition(spinalAPIMiddleware, parseInt(req.params.id, 10));
+    res.json(position);
+  } catch (error) {
+    console.error(error);
+    res.status(400).send(error.message || "Failed to get position");
+  }
+});
 
-  app.get("/api/v1/node/:id/read", async (req, res, next) => {
-    try {
-      var info = await getNodeInfo(spinalAPIMiddleware, parseInt(req.params.id, 10));
-    } catch (error) {
-      console.log(error);
-      res.status(400).send("ko");
-    }
-    res.json(info);
-  });
+
+
 }
-

@@ -29,44 +29,57 @@ import { Node } from './interfacesNodes'
 import { SpinalNode } from 'spinal-model-graph';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
 
-  /**
+/**
  * @swagger
- * /api/v1/node/{id}/read:
- *   get:
+ * /api/v1/node/read_multiple:
+ *   post:
  *     security: 
  *       - OauthSecurity: 
  *         - readOnly
- *     description: Return node object with parent and children relation
- *     summary: Gets Node
+ *     description: Returns an array of node objects with parent and children relation
+ *     summary: Gets Multiple Nodes
  *     tags:
  *       - Nodes
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: integer
+ *               format: int64
  *     responses:
  *       200:
  *         description: Success
  *         content:
  *           application/json:
- *             schema: 
- *                $ref: '#/components/schemas/Node'
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Node'
  *       400:
  *         description: Bad request
-  */
+ */
 
-  app.get("/api/v1/node/:id/read", async (req, res, next) => {
+app.post("/api/v1/node/read_multiple", async (req, res, next) => {
+    let results: Node[] = [];
     try {
-      var info = await getNodeInfo(spinalAPIMiddleware, parseInt(req.params.id, 10));
+      const ids: number[] = req.body;
+      if (!Array.isArray(ids)) {
+        return res.status(400).send("Expected an array of IDs.");
+      }
+      for (let id of ids) {  
+        var info: Node = await getNodeInfo(spinalAPIMiddleware, id);
+        results.push(info);
+      }
     } catch (error) {
       console.log(error);
-      res.status(400).send("ko");
+      return res.status(400).send("An error occurred while fetching nodes.");
     }
-    res.json(info);
+    
+    res.json(results);
   });
-}
-
+  
+  
+  }

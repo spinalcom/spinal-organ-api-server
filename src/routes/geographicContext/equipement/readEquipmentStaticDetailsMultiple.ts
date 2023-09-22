@@ -78,98 +78,114 @@ module.exports = function (
   spinalAPIMiddleware: spinalAPIMiddleware
 ) {
   /**
-   * @swagger
-   * /api/v1/equipment/{id}/read_static_details:
-   *   get:
-   *     security:
-   *       - OauthSecurity:
-   *         - readOnly
-   *     description: read static details of equipment
-   *     summary: Gets static details of equipment
-   *     tags:
-   *       - Geographic Context
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/StaticDetailsRoom'
-   *       400:
-   *         description: Bad request
-   */
+ * @swagger
+ * /api/v1/equipment/read_static_details_multiple:
+ *   post:
+ *     security:
+ *       - OauthSecurity:
+ *         - readOnly
+ *     description: Read static details of multiple equipments
+ *     summary: Gets static details of multiple equipments
+ *     tags:
+ *       - Geographic Context
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: integer
+ *               format: int64
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/StaticDetailsRoom'
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+  app.post('/api/v1/equipment/read_static_details_multiple', async (req, res, next) => {
+    const dynamicIds : number[] = req.body;
 
-  app.get('/api/v1/equipment/:id/read_static_details', async (req, res, next) => {
+    if (!Array.isArray(dynamicIds)) {
+      return res.status(400).send('Expected an array of dynamic IDs');
+    }
+
     try {
-      var equipment: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10)
-      );
-      //@ts-ignore
-      SpinalGraphService._addNode(equipment);
-      if (equipment.getType().get() === 'BIMObject') {
-        const [
-          allNodesControlesEndpoints,
-          CategorieAttributsList,
-          groupParents,
-        ] = await Promise.all([
-          getNodeControlEndpoints(equipment),
-          getAttributes(equipment),
-          getGroupParent(equipment),
-        ]);
+      const results = [];
 
-        var revitCategory: string = '';
-        var revitFamily: string = '';
-        var revitType: string = '';
-        var categories_bimObjects = await equipment.getChildren(
-            NODE_TO_CATEGORY_RELATION
-          );
-        for (const categorie of categories_bimObjects) {
-            if (categorie.getName().get() === 'default') {
-                var attributs_bimObjects = (await categorie.element.load()).get();
-                for (const child of attributs_bimObjects) {
-                if (child.label === 'revit_category') {
-                    revitCategory = child.value;
-                    break;
-                }
+      for (let dynamicId of dynamicIds) {
+        var equipment: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId);
+        //@ts-ignore
+        SpinalGraphService._addNode(equipment);
+
+        if (equipment.getType().get() === 'BIMObject') {
+            const [
+              allNodesControlesEndpoints,
+              CategorieAttributsList,
+              groupParents,
+            ] = await Promise.all([
+              getNodeControlEndpoints(equipment),
+              getAttributes(equipment),
+              getGroupParent(equipment),
+            ]);
+    
+            var revitCategory: string = '';
+            var revitFamily: string = '';
+            var revitType: string = '';
+            var categories_bimObjects = await equipment.getChildren(
+                NODE_TO_CATEGORY_RELATION
+              );
+            for (const categorie of categories_bimObjects) {
+                if (categorie.getName().get() === 'default') {
+                    var attributs_bimObjects = (await categorie.element.load()).get();
+                    for (const child of attributs_bimObjects) {
+                    if (child.label === 'revit_category') {
+                        revitCategory = child.value;
+                        break;
+                    }
+                    }
                 }
             }
+            var info = {
+                dynamicId: equipment._server_id,
+                staticId: equipment.getId().get(),
+                name: equipment.getName().get(),
+                type: equipment.getType().get(),
+                bimFileId: equipment.info.bimFileId.get(),
+                version: equipment.info.version.get(),
+                externalId: equipment.info.externalId.get(),
+                dbid: equipment.info.dbid.get(),
+                default_attributs: {
+                  revitCategory: revitCategory,
+                  revitFamily: revitFamily,
+                  revitType: revitType,
+                },
+                attributsList: CategorieAttributsList,
+                controlEndpoint: allNodesControlesEndpoints,
+                groupParents: groupParents,
+            };
+          results.push(info);
+        } else {
+          // If one node is not of type 'geographicRoom', we can either ignore or send an error response.
+          // Here, we're opting to send a response for simplicity.
+          return res.status(400).send(`Node with dynamic ID ${dynamicId} is not of type BIMObject`);
         }
-        var info = {
-            dynamicId: equipment._server_id,
-            staticId: equipment.getId().get(),
-            name: equipment.getName().get(),
-            type: equipment.getType().get(),
-            bimFileId: equipment.info.bimFileId.get(),
-            version: equipment.info.version.get(),
-            externalId: equipment.info.externalId.get(),
-            dbid: equipment.info.dbid.get(),
-            default_attributs: {
-              revitCategory: revitCategory,
-              revitFamily: revitFamily,
-              revitType: revitType,
-            },
-
-            attributsList: CategorieAttributsList,
-            controlEndpoint: allNodesControlesEndpoints,
-            groupParents: groupParents,
-        };
-      } else {
-        res.status(400).send('node is not of type BIMObject');
       }
+      return res.json(results);
     } catch (error) {
       console.log(error);
-      return res.status(400).send('ko');
+      return res.status(400).send('Unable to process request');
     }
-    res.json(info);
   });
+
 };
 
 async function getGroupParent(node: SpinalNode<any>): Promise<INodeInfo[]> {

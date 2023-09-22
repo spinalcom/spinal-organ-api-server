@@ -39,7 +39,7 @@ module.exports = function (
   spinalAPIMiddleware: spinalAPIMiddleware
 ) {
 
-
+  // Deprecated but kept for clients that still use it.
   app.get('/api/v1/room/:id/reference_Objects_list', async (req, res, next) => {
     try {
       var room: SpinalNode<any> = await spinalAPIMiddleware.load(

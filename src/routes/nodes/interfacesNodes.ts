@@ -52,8 +52,6 @@ export interface Node {
   parent_relation_list: Relation[];
 }
 
-
-
 /**
  * @swagger
  * components:
@@ -78,28 +76,37 @@ export interface Relation {
 }
 
 /**
-* @swagger
-* components:
-*   schemas:
-*     EndPointNode:
-*       type: "object"
-*       properties:
-*         dynamicId:
-*           type: "integer"
-*         staticId:
-*           type: "string"
-*         name:
-*           type: "string"
-*         type:
-*           type: "string"
-*         currentValue:
-*           type: "integer"
+ * @swagger
+ * components:
+ *   schemas:
+ *     EndPointNode:
+ *       type: "object"
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         staticId:
+ *           type: "string"
+ *         name:
+ *           type: "string"
+ *         type:
+ *           type: "string"
+ *         currentValue:
+ *           type: "integer"
+ *     EndPointNodeWithId:
+ *       type: "object"
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         endpoints:
+ *           type: "array"
+ *           items:
+ *             $ref: "#/components/schemas/EndPointNode"
  */
 
 export interface EndPointNode {
-  dynamicId: number,
-  staticId: string,
-  name: string,
-  type: string,
-  currentValue: number
+  dynamicId: number;
+  staticId: string;
+  name: string;
+  type: string;
+  currentValue: number;
 }

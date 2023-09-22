@@ -48,25 +48,27 @@ module.exports = function (
   app: express.Express,
   spinalAPIMiddleware: SpinalAPIMiddleware
 ) {
+
   /**
    * @swagger
-   * /api/v1/node/{id}/endpoint_list:
-   *   get:
+   * /api/v1/node/endpoint_list_multiple:
+   *   post:
    *     security:
    *       - OauthSecurity:
    *         - readOnly
-   *     description: Return list of endpoint
-   *     summary: Gets a list of endpoint
+   *     description: Returns an array of lists of endpoints for multiple nodes
+   *     summary: Gets lists of endpoints for multiple nodes
    *     tags:
-   *      - Nodes
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - Nodes
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
    *     responses:
    *       200:
    *         description: Success
@@ -75,22 +77,31 @@ module.exports = function (
    *             schema:
    *               type: array
    *               items:
-   *                $ref: '#/components/schemas/EndPointNode'
+   *                 type: array
+   *                 items:
+   *                   $ref: '#/components/schemas/EndPointNodeWithId'
    *       400:
    *         description: Bad request
    */
-
-  app.get('/api/v1/node/:id/endpoint_list', async (req, res, next) => {
-    let nodes = [];
+  app.post('/api/v1/node/endpoint_list_multiple', async (req, res, next) => {
+    const results = [];
     try {
-      nodes = await getEndpointsInfo(
-        spinalAPIMiddleware,
-        parseInt(req.params.id, 10)
-      );
+      const ids: number[] = req.body;
+      if (!Array.isArray(ids)) {
+        return res.status(400).send('Expected an array of IDs.');
+      }
+
+      for (let id of ids) {
+        const nodes = await getEndpointsInfo(spinalAPIMiddleware, id);
+        results.push({dynamicId:id,endpoints:nodes});
+      }
     } catch (error) {
       console.error(error);
-      res.status(400).send('list of endpoints is not loaded');
+      return res
+        .status(400)
+        .send('An error occurred while fetching endpoints.');
     }
-    res.send(nodes);
+
+    res.json(results);
   });
 };

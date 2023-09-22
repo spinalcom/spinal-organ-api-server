@@ -23,7 +23,7 @@ async function getControlEndpointsInfo(spinalAPIMiddleware: SpinalAPIMiddleware,
           currentValue: currentValue
         };
       })
-      return { profileName: profile.name.get(), endpoints: await Promise.all(endpoints) }
+      return { dynamicId:dynamicId ,profileName: profile.name.get(), endpoints: await Promise.all(endpoints) }
     });
     
     return await Promise.all(promises);

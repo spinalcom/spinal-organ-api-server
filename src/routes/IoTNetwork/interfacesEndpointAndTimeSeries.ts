@@ -209,8 +209,16 @@ export interface ConfigService {
  *             type: "integer"
  *           value:
  *             type: "integer"
+ *     TimeserieWithID:
+ *       type: "object"
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         timeseries:
+ *           type: "array"
+ *           items:
+ *             $ref: '#/components/schemas/Timeserie'
  */
-
 
 /**
  * @swagger

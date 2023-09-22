@@ -39,23 +39,24 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/node/{id}/control_endpoint_list:
-   *   get:
+   * /api/v1/node/control_endpoint_list_multiple:
+   *   post:
    *     security:
    *       - OauthSecurity:
    *         - readOnly
-   *     description: Return list of control endpoint
-   *     summary: Gets a list of control endpoint
+   *     description: Returns an array of lists of control endpoints for multiple nodes
+   *     summary: Gets lists of control endpoints for multiple nodes
    *     tags:
-   *      - Nodes
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - Nodes
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
    *     responses:
    *       200:
    *         description: Success
@@ -64,21 +65,44 @@ module.exports = function (
    *             schema:
    *               type: array
    *               items:
-   *                $ref: '#/components/schemas/EndPointNode'
+   *                 type: object
+   *                 properties:
+   *                   dynamicId:
+   *                     type: integer
+   *                   profileName:
+   *                     type: string
+   *                   endpoints:
+   *                     type: array
+   *                     items:
+   *                       $ref: '#/components/schemas/EndPointNode'
    *       400:
    *         description: Bad request
    */
-  app.get('/api/v1/node/:id/control_endpoint_list', async (req, res, next) => {
-    try {
-      var cpInfos = await getControlEndpointsInfo(
-        spinalAPIMiddleware,
-        parseInt(req.params.id, 10)
-      );
-    } catch (error) {
-      console.error(error);
-      res.status(400).send('list of endpoints is not loaded');
-    }
-    res.send(cpInfos);
-  });
+  app.post(
+    '/api/v1/node/control_endpoint_list_multiple',
+    async (req, res, next) => {
+      const results = [];
 
+      try {
+        const ids: number[] = req.body;
+        if (!Array.isArray(ids)) {
+          return res.status(400).send('Expected an array of IDs.');
+        }
+
+        for (let id of ids) {
+          const controlEndpoints = await getControlEndpointsInfo(
+            spinalAPIMiddleware,
+            id
+          );
+          results.push(controlEndpoints);
+        }
+        res.json(results);
+      } catch (error) {
+        console.error(error);
+        res
+          .status(400)
+          .send('An error occurred while fetching control endpoints.');
+      }
+    }
+  );
 };

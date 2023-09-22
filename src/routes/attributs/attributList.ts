@@ -36,6 +36,7 @@ module.exports = function (
 ) {
   
 
+  // Deprecated but kept for clients that still use it.
   app.get('/api/v1/node/:id/attributsList', async (req, res, next) => {
     try {
       let node: SpinalNode = await spinalAPIMiddleware.load(
@@ -102,66 +103,6 @@ module.exports = function (
         res.status(400).send('ko');
     }
 });
-
-/**
-* @swagger
-* /api/v1/node/attribute_list_multiple:
-*   post:
-*     security:
-*       - OauthSecurity:
-*         - readOnly
-*     description: Returns a list of attributes for multiple nodes
-*     summary: Get list of attributes for multiple nodes
-*     tags:
-*       - Node Attributs
-*     requestBody:
-*       required: true
-*       content:
-*         application/json:
-*           schema:
-*             type: array
-*             items:
-*               type: integer
-*               format: int64
-*           example:
-*             - 1
-*             - 2
-*     responses:
-*       200:
-*         description: Success
-*         content:
-*           application/json:
-*             schema:
-*               type: array
-*               items:
-*                 type: array
-*                 items:
-*                   $ref: '#/components/schemas/NodeAttribut'
-*       400:
-*         description: Bad request
-*       500:
-*         description: Server error
-*/
-app.post('/api/v1/node/attribute_list_multiple', async (req, res, next) => {
-  const results = [];
-  try {
-      const ids: number[] = req.body;
-      if (!Array.isArray(ids)) {
-          return res.status(400).send("Expected an array of IDs.");
-      }
-
-      for (const id of ids) {
-          const attributes = await getAttributeListInfo(spinalAPIMiddleware, id);
-          results.push(attributes);
-      }
-      
-      res.json(results);
-  } catch (error) {
-      console.error(error);
-      return res.status(400).send("An error occurred while fetching attributes list.");
-  }
-});
-
 };
 
 

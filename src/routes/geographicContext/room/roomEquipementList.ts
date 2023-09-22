@@ -37,6 +37,8 @@ module.exports = function (
   app: express.Express,
   spinalAPIMiddleware: spinalAPIMiddleware
 ) {
+
+  // Deprecated but kept for clients using the old API
   app.get('/api/v1/room/:id/equipement_list', async (req, res, next) => {
     let nodes = [];
     try {
@@ -117,57 +119,5 @@ module.exports = function (
       res.status(400).send(error.message || 'list of equipment is not loaded');
     }
   });
-
-  /**
- * @swagger
- * /api/v1/room/equipment_list_multiple:
- *   post:
- *     security: 
- *       - OauthSecurity: 
- *         - readOnly
- *     description: Return list of equipment for multiple rooms
- *     summary: Gets a list of equipment for multiple rooms
- *     tags:
- *      - Geographic Context
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: array
- *             items:
- *               type: integer
- *               format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Equipement'
- *       400:
- *         description: Bad request
- */
-app.post("/api/v1/room/equipment_list_multiple", async (req, res, next) => {
-  const results = [];
-  try {
-      const ids: number[] = req.body;
-      if (!Array.isArray(ids)) {
-          return res.status(400).send("Expected an array of IDs.");
-      }
-
-      for (const id of ids) {
-          const equipmentList = await getEquipmentListInfo(spinalAPIMiddleware, id);
-          results.push({roomId: id, equipment: equipmentList});
-      }
-      
-      res.json(results);
-  } catch (error) {
-      console.error(error);
-      return res.status(400).send(error.message || "An error occurred while fetching equipment lists.");
-  }
-});
 
 };

@@ -36,44 +36,60 @@ module.exports = function (
   app: express.Express,
   spinalAPIMiddleware: spinalAPIMiddleware
 ) {
+
   /**
    * @swagger
-   * /api/v1/room/{id}/read_details:
-   *   get:
+   * /api/v1/room/read_details_multiple:
+   *   post:
    *     security:
    *       - OauthSecurity:
    *         - readOnly
-   *     description: read details of room
-   *     summary: Gets details of room
+   *     description: Read details of multiple rooms
+   *     summary: Gets details of multiple rooms
    *     tags:
    *       - Geographic Context
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
    *     responses:
    *       200:
    *         description: Success
    *         content:
    *           application/json:
    *             schema:
-   *                $ref: '#/components/schemas/RoomDetails'
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/RoomDetails'
    *       400:
    *         description: Bad request
    */
-
-  app.get("/api/v1/room/:id/read_details", async (req, res, next) => {
+  app.post('/api/v1/room/read_details_multiple', async (req, res, next) => {
+    const results = [];
     try {
-        const details = await getRoomDetailsInfo(spinalAPIMiddleware, parseInt(req.params.id, 10));
-        res.json(details);
-    } catch (error) {
-        console.log(error);
-        res.status(400).send(error.message || "ko");
-    }
-});
+      const ids: number[] = req.body;
+      if (!Array.isArray(ids)) {
+        return res.status(400).send('Expected an array of IDs.');
+      }
 
+      for (const id of ids) {
+        const details = await getRoomDetailsInfo(spinalAPIMiddleware, id);
+        results.push(details);
+      }
+
+      res.json(results);
+    } catch (error) {
+      console.error(error);
+      return res
+        .status(400)
+        .send(
+          error.message || 'An error occurred while fetching room details.'
+        );
+    }
+  });
 };

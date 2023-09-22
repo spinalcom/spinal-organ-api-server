@@ -244,6 +244,20 @@
           }
         }
       },
+      "EndPointNodeWithId": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EndPointNode"
+            }
+          }
+        }
+      },
       "CategoriesAttribute": {
         "type": "object",
         "properties": {
@@ -964,6 +978,20 @@
             },
             "value": {
               "type": "integer"
+            }
+          }
+        }
+      },
+      "TimeserieWithID": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "timeseries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Timeserie"
             }
           }
         }
@@ -2354,7 +2382,7 @@
                   "items": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/EndPointNode"
+                      "$ref": "#/components/schemas/EndPointNodeWithId"
                     }
                   }
                 }
@@ -2451,6 +2479,9 @@
                   "items": {
                     "type": "object",
                     "properties": {
+                      "dynamicId": {
+                        "type": "integer"
+                      },
                       "profileName": {
                         "type": "string"
                       },
@@ -6101,6 +6132,74 @@
         }
       }
     },
+    "/api/v1/endpoint/timeSeries/read_multiple/{begin}/{end}": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Get time series for multiple IDs",
+        "summary": "Get time series for multiple IDs",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "begin",
+            "description": "Date Format is DD-MM-YYYY HH:mm:ss or DD MM YYYY HH:mm:ss",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "end",
+            "description": "Date Format is DD-MM-YYYY hh:mm:ss or DD MM YYYY HH:mm:ss",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeserieWithID"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/endpoint/{id}/timeSeries/readCurrentDay": {
       "get": {
         "security": [
@@ -6134,6 +6233,54 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Timeserie"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/endpoint/timeSeries/readCurrentDay_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Get time series of the current day for multiple IDs",
+        "summary": "Get time series of the current day for multiple IDs",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeserieWithID"
+                  }
                 }
               }
             }
@@ -6187,6 +6334,54 @@
         }
       }
     },
+    "/api/v1/endpoint/timeSeries/readCurrentMonth_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Get time series of the current month for multiple IDs",
+        "summary": "Get time series of the current month for multiple IDs",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeserieWithID"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/endpoint/{id}/timeSeries/readCurrentWeek": {
       "get": {
         "security": [
@@ -6220,6 +6415,54 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Timeserie"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/endpoint/timeSeries/readCurrentWeek_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Get time series of the last week for multiple IDs",
+        "summary": "Get time series of the last week for multiple IDs",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeserieWithID"
+                  }
                 }
               }
             }
@@ -6273,6 +6516,54 @@
         }
       }
     },
+    "/api/v1/endpoint/timeSeries/readCurrentYear_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Get time series of the current year for multiple IDs",
+        "summary": "Get time series of the current year for multiple IDs",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeserieWithID"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/endpoint/{id}/timeSeries/readFromLast24H": {
       "get": {
         "security": [
@@ -6306,6 +6597,54 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Timeserie"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/endpoint/timeSeries/readFromLast24H_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Get time series of the last 24 hours for multiple IDs",
+        "summary": "Get time series of the last 24 hours for multiple IDs",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeserieWithID"
+                  }
                 }
               }
             }
@@ -13196,7 +13535,7 @@
         }
       }
     },
-    "/api/v1/equipement/{id}/get_position": {
+    "/api/v1/equipment/{id}/get_position": {
       "get": {
         "security": [
           {
@@ -13239,7 +13578,7 @@
         }
       }
     },
-    "/api/v1/equipement/get_position_multiple": {
+    "/api/v1/equipment/get_position_multiple": {
       "post": {
         "security": [
           {

@@ -33,59 +33,67 @@ import { eventNames } from 'process';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
   /**
 * @swagger
-* /api/v1/event/{eventId}/read:
-*   get:
+* /api/v1/event/read_multiple:
+*   post:
 *     security: 
 *       - OauthSecurity: 
 *         - readOnly
-*     description: Return event 
-*     summary: Get event 
+*     description: Returns details for multiple events
+*     summary: Get details of multiple events
 *     tags:
-*      - Calendar & Event
-*     parameters:
-*      - in: path
-*        name: eventId
-*        description: use the dynamic ID
-*        required: true
-*        schema:
-*          type: integer
-*          format: int64
+*       - Calendar & Event
+*     requestBody:
+*       description: An array of event IDs to fetch details for
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: array
+*             items:
+*               type: integer
+*               format: int64
 *     responses:
 *       200:
 *         description: Success
 *         content:
 *           application/json:
-*             schema: 
-*                $ref: '#/components/schemas/Event'
+*             schema:
+*               type: array
+*               items:
+*                 $ref: '#/components/schemas/Event'
 *       400:
-*         description: Bad request
-  */
-
-  app.get("/api/v1/event/:eventId/read", async (req, res, next) => {
-
+*         description: list of event is not loaded
+*/
+  app.post("/api/v1/event/read_multiple", async (req, res, next) => {
+    const results = [];
     try {
-      var event: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.eventId, 10));
-      //@ts-ignore
-      SpinalGraphService._addNode(event)
-      if (event.getType().get() === "SpinalEvent") {
-        var info: Event = {
-          dynamicId: event._server_id,
-          staticId: event.getId().get(),
-          name: event.getName().get(),
-          type: event.getType().get(),
-          groupId: event.info.groupId.get(),
-          categoryId: event.info.categoryId.get(),
-          nodeId: event.info.nodeId.get(),
-          repeat: event.info.repeat.get(),
-          description: event.info.description.get(),
-          startDate: event.info.startDate.get(),
-          endDate: event.info.endDate.get(),
-        };
+      const ids : number [] = req.body;
+      for(const id of ids){
+        var event: SpinalNode<any> = await spinalAPIMiddleware.load(id);
+        //@ts-ignore
+        SpinalGraphService._addNode(event)
+        if (event.getType().get() === "SpinalEvent") {
+          var info: Event = {
+            dynamicId: event._server_id,
+            staticId: event.getId().get(),
+            name: event.getName().get(),
+            type: event.getType().get(),
+            groupId: event.info.groupId.get(),
+            categoryId: event.info.categoryId.get(),
+            nodeId: event.info.nodeId.get(),
+            repeat: event.info.repeat.get(),
+            description: event.info.description.get(),
+            startDate: event.info.startDate.get(),
+            endDate: event.info.endDate.get(),
+          };
+          results.push(info);
+        }
       }
+      
     } catch (error) {
       console.error(error);
       res.status(400).send("list of event is not loaded");
     }
-    res.send(info);
+    res.send(results);
   });
 };

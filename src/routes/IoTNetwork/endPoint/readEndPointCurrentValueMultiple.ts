@@ -30,47 +30,57 @@ import { CurrentValue } from '../interfacesEndpointAndTimeSeries'
 import { NetworkService } from 'spinal-model-bmsnetwork'
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
-  /**
-  * @swagger
-  * /api/v1/endpoint/{id}/read:
-  *   get:
-  *     security:
-  *       - OauthSecurity:
-  *         - readOnly
-  *     description: read the current value of endpoint 
-  *     summary: read the current value of endpoint
-  *     tags:
-  *       - IoTNetwork & Time Series
-  *     parameters:
-  *      - in: path
-  *        name: id
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *     responses:
-  *       200:
-  *         description: Success
-  *         content:
-  *           application/json:
-  *             schema:
-  *                $ref: '#/components/schemas/CurrentValue'
-  *       400:
-  *         description: Bad request
-  */
 
-  app.get("/api/v1/endpoint/:id/read", async (req, res, next) => {
+  /**
+* @swagger
+* /api/v1/endpoint/read_multiple:
+*   post:
+*     security: 
+*       - OauthSecurity: 
+*         - readOnly
+*     description: Reads the current values for multiple endpoints
+*     summary: Read the current values of multiple endpoints
+*     tags:
+*       - IoTNetwork & Time Series
+*     requestBody:
+*       description: An array of endpoint IDs to fetch the current values for
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: array
+*             items:
+*               type: integer
+*               format: int64
+*     responses:
+*       200:
+*         description: Success
+*         content:
+*           application/json:
+*             schema:
+*               type: array
+*               items:
+*                 $ref: '#/components/schemas/CurrentValue'
+*       400:
+*         description: Bad request
+*/
+  app.post("/api/v1/endpoint/read_multiple", async (req, res, next) => {
+    const results = []
     try {
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10))
-      // @ts-ignore
-      SpinalGraphService._addNode(node);
-      var element = await node.element.load()
-      var info = { currentValue: element.currentValue.get() };
+      const ids : number[] = req.body
+      for(const id of ids){
+        var node = await spinalAPIMiddleware.load(id)
+        // @ts-ignore
+        SpinalGraphService._addNode(node);
+        var element = await node.element.load()
+        var info = { currentValue: element.currentValue.get() };
+        results.push(info)
+      }
+      
     } catch (error) {
       console.log(error);
       res.status(400).send("ko")
     }
-    res.json(info);
+    res.json(results);
   });
 }
