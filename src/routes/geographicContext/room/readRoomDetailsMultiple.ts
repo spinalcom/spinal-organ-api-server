@@ -65,7 +65,7 @@ module.exports = function (
    *             schema:
    *               type: array
    *               items:
-   *                 $ref: '#/components/schemas/RoomDetails'
+   *                 $ref: '#/components/schemas/RoomDetailsWithId'      
    *       400:
    *         description: Bad request
    */
@@ -79,7 +79,7 @@ module.exports = function (
 
       for (const id of ids) {
         const details = await getRoomDetailsInfo(spinalAPIMiddleware, id);
-        results.push(details);
+        results.push({dynamicId: id, ...details});
       }
 
       res.json(results);

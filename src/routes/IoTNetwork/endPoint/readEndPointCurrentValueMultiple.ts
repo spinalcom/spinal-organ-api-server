@@ -60,7 +60,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 *             schema:
 *               type: array
 *               items:
-*                 $ref: '#/components/schemas/CurrentValue'
+*                 $ref: '#/components/schemas/CurrentValueWithId'
 *       400:
 *         description: Bad request
 */
@@ -73,7 +73,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
         // @ts-ignore
         SpinalGraphService._addNode(node);
         var element = await node.element.load()
-        var info = { currentValue: element.currentValue.get() };
+        var info = {dynamicId:id ,currentValue: element.currentValue.get() };
         results.push(info)
       }
       

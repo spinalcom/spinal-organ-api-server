@@ -66,7 +66,22 @@ module.exports = function (
    *             schema:
    *               type: array
    *               items:
-   *                 $ref: '#/components/schemas/ReferenceObjectInfo'
+   *                 type: object
+   *                 properties:
+   *                   dynamicId:
+   *                     type: "integer"
+   *                   staticId:
+   *                     type: "string"
+   *                   name:
+   *                     type: "string"
+   *                   type:
+   *                     type: "string"
+   *                   bimFileId:
+   *                     type: "string"
+   *                   infoReferencesObjects:
+   *                     type: "array"
+   *                     items:
+   *                       $ref: '#/components/schemas/Equipement'
    *       400:
    *         description: Bad request
    */

@@ -62,9 +62,15 @@ module.exports = function (
 *             schema:
 *               type: array
 *               items:
-*                 type: array
-*                 items:
-*                   $ref: '#/components/schemas/NodeAttribut'
+*                 type: object
+*                 properties:
+*                   dynamicId:
+*                     type: integer
+*                   categoryAttributes:
+*                     type: array
+*                     items:
+*                       $ref: '#/components/schemas/NodeAttribut'
+
 *       400:
 *         description: Bad request
 *       500:
@@ -80,7 +86,7 @@ app.post('/api/v1/node/attribute_list_multiple', async (req, res, next) => {
 
       for (const id of ids) {
           const attributes = await getAttributeListInfo(spinalAPIMiddleware, id);
-          results.push(attributes);
+          results.push({dynamicId: id, categoryAttributes:attributes});
       }
       
       res.json(results);

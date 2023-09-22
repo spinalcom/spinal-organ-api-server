@@ -453,6 +453,46 @@
           }
         }
       },
+      "RoomDetailsWithId": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "area": {
+            "type": "integer"
+          },
+          "bimFileId": {
+            "type": "string"
+          },
+          "_bimObjects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "staticId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                },
+                "externalId": {
+                  "type": "string"
+                },
+                "dbid": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
       "Equipement": {
         "type": "object",
         "properties": {
@@ -955,6 +995,17 @@
       "CurrentValue": {
         "type": "object",
         "properties": {
+          "currentValue": {
+            "type": "integer"
+          }
+        }
+      },
+      "CurrentValueWithId": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
           "currentValue": {
             "type": "integer"
           }
@@ -2589,9 +2640,17 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/Event"
+                    "type": "object",
+                    "properties": {
+                      "dynamicId": {
+                        "type": "integer"
+                      },
+                      "events": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Event"
+                        }
+                      }
                     }
                   }
                 }
@@ -2785,9 +2844,17 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/Ticket"
+                    "type": "object",
+                    "properties": {
+                      "dynamicId": {
+                        "type": "integer"
+                      },
+                      "tickets": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Ticket"
+                        }
+                      }
                     }
                   }
                 }
@@ -3398,9 +3465,17 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/NodeAttribut"
+                    "type": "object",
+                    "properties": {
+                      "dynamicId": {
+                        "type": "integer"
+                      },
+                      "categoryAttributes": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/NodeAttribut"
+                        }
+                      }
                     }
                   }
                 }
@@ -4032,7 +4107,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/RoomDetails"
+                    "$ref": "#/components/schemas/RoomDetailsWithId"
                   }
                 }
               }
@@ -4218,7 +4293,18 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Equipement"
+                    "type": "object",
+                    "properties": {
+                      "dynamicId": {
+                        "type": "integer"
+                      },
+                      "equipments": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Equipement"
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -4332,7 +4418,30 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/ReferenceObjectInfo"
+                    "type": "object",
+                    "properties": {
+                      "dynamicId": {
+                        "type": "integer"
+                      },
+                      "staticId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "bimFileId": {
+                        "type": "string"
+                      },
+                      "infoReferencesObjects": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Equipement"
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -5887,7 +5996,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/CurrentValue"
+                    "$ref": "#/components/schemas/CurrentValueWithId"
                   }
                 }
               }

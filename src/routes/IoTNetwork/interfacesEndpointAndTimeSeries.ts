@@ -160,6 +160,13 @@ export interface EndPointAttributs {
  *       properties:
  *         currentValue:
  *           type: "integer"
+ *     CurrentValueWithId:
+ *       type: "object"
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         currentValue:
+ *           type: "integer"
  */
 export interface CurrentValue {
   label: string,

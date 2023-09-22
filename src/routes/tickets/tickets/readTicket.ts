@@ -83,54 +83,6 @@ module.exports = function (
     }
     res.json(details);
   });
-
-  /**
-   * @swagger
-   * /api/v1/ticket/read_details_multiple:
-   *   post:
-   *     security:
-   *       - OauthSecurity:
-   *         - readOnly
-   *     description: Returns details for multiple tickets
-   *     summary: Get details of multiple tickets
-   *     tags:
-   *       - Workflow & ticket
-   *     requestBody:
-   *       description: An array of ticket IDs to fetch details for
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: array
-   *             items:
-   *               type: integer
-   *               format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                 $ref: '#/components/schemas/TicketDetails'
-   *       400:
-   *         description: Bad request
-   */
-  app.post('/api/v1/ticket/read_details_multiple', async (req, res, next) => {
-    const result = [];
-    try {
-      const ids: number[] = req.body;
-      for (const id of ids) {
-        const details = await getTicketDetails(spinalAPIMiddleware, id);
-        result.push(details);
-      }
-    } catch (error) {
-      console.log(error);
-      res.status(400).send('ko');
-    }
-    res.json(result);
-  });
 };
 
 async function getTicketDetails(

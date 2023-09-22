@@ -66,7 +66,14 @@ module.exports = function (
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Equipement'
+ *                 type: object
+ *                 properties:
+ *                   dynamicId:
+ *                     type: integer
+ *                   equipments:
+ *                     type: array
+ *                     items:
+ *                       $ref: '#/components/schemas/Equipement'
  *       400:
  *         description: Bad request
  */
@@ -80,7 +87,7 @@ app.post("/api/v1/room/equipment_list_multiple", async (req, res, next) => {
 
       for (const id of ids) {
           const equipmentList = await getEquipmentListInfo(spinalAPIMiddleware, id);
-          results.push({roomId: id, equipment: equipmentList});
+          results.push({dynamicId: id, equipments: equipmentList});
       }
       
       res.json(results);

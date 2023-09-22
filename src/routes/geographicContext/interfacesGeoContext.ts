@@ -167,6 +167,32 @@ export interface Room {
 *                 type: "string"
 *               dbid:
 *                 type: "integer"
+*     RoomDetailsWithId:
+*       type: "object"
+*       properties:
+*         dynamicId:
+*           type: "integer"
+*         area:
+*           type: "integer"
+*         bimFileId:
+*           type: "string"
+*         _bimObjects:
+*           type: "array"
+*           items:
+*             type: "object"
+*             properties:
+*               staticId:
+*                 type: "string"
+*               name:
+*                 type: "string"
+*               type:
+*                 type: "string"
+*               version:
+*                 type: "integer"
+*               externalId:
+*                 type: "string"
+*               dbid:
+*                 type: "integer"
 */
 
 export interface RoomDetails {

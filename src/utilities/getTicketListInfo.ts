@@ -43,10 +43,10 @@ async function getTicketListInfo(
       staticId: ticket.getId().get(),
       name: ticket.getName().get(),
       type: ticket.getType().get(),
-      priority: ticket.info.priority.get(),
+      priority: ticket.info.priority == undefined ? '' : ticket.info.priority.get(),
       creationDate: ticket.info.creationDate.get(),
       userName:
-        ticket.info.user == undefined ? '' : ticket.info.user.name.get(),
+        ticket.info.user?.name == undefined ? '' : ticket.info.user.name.get(),
       gmaoId: ticket.info.gmaoId == undefined ? '' : ticket.info.gmaoId.get(),
       gmaoDateCreation:
         ticket.info.gmaoDateCreation == undefined
@@ -85,6 +85,7 @@ async function getTicketListInfo(
     };
     nodes.push(info);
   }
+  return nodes;
 }
 
 export { getTicketListInfo };

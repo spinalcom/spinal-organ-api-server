@@ -82,5 +82,4 @@ module.exports = function (
     }
     res.json(nodes);
   });
-
 };

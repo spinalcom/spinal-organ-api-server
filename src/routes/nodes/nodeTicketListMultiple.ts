@@ -68,9 +68,15 @@ import {
      *             schema:
      *               type: array
      *               items:
-     *                 type: array
-     *                 items:
-     *                   $ref: '#/components/schemas/Ticket'
+     *                 type: object
+     *                 properties:
+     *                   dynamicId:
+     *                     type: integer
+     *                   tickets:
+     *                     type: array
+     *                     items:
+     *                       $ref: '#/components/schemas/Ticket'
+     *            
      *       400:
      *         description: Bad request
      *       500:
@@ -86,7 +92,8 @@ import {
   
         for (let id of ids) {
           const nodes = await getTicketListInfo(spinalAPIMiddleware, id);
-          results.push(nodes);
+          console.log(nodes)
+          results.push({dynamicId: id, tickets:nodes});
         }
       } catch (error) {
         console.error(error);
