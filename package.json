@@ -1,5 +1,5 @@
 {
-  "name": "spinal-organ-api-gateway",
+  "name": "spinal-organ-api-server",
   "description": "REST API for SpinalCom BOS",
   "repository": {},
   "scripts": {
