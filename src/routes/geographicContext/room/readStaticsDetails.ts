@@ -23,6 +23,7 @@
  */
 
 import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import type SpinalAPIMiddleware from 'src/spinalAPIMiddleware';
 import * as express from 'express';
 import { Room } from '../interfacesGeoContext';
 import {
@@ -109,37 +110,10 @@ module.exports = function (
 
   app.get('/api/v1/room/:id/read_static_details', async (req, res, next) => {
     try {
-      var room: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10)
+      var info = await getReadStaticDetailsInfo(
+        parseInt(req.params.id,10),
+        spinalAPIMiddleware
       );
-      //@ts-ignore
-      SpinalGraphService._addNode(room);
-      if (room.getType().get() === 'geographicRoom') {
-        const [
-          allNodesControlesEndpoints,
-          equipements,
-          CategorieAttributsList,
-          groupParents,
-        ] = await Promise.all([
-          getNodeControlEndpoints(room),
-          getRoomBimObject(room),
-          getRoomAttributes(room),
-          getRoomParent(room),
-        ]);
-
-        var info = {
-          dynamicId: room._server_id,
-          staticId: room.getId().get(),
-          name: room.getName().get(),
-          type: room.getType().get(),
-          attributsList: CategorieAttributsList,
-          controlEndpoint: allNodesControlesEndpoints,
-          bimObjects: equipements,
-          groupParents: groupParents,
-        };
-      } else {
-        res.status(400).send('node is not of type geographic room');
-      }
     } catch (error) {
       console.log(error);
       return res.status(400).send('ko');
@@ -147,6 +121,46 @@ module.exports = function (
     res.json(info);
   });
 };
+
+
+
+async function getReadStaticDetailsInfo(roomId:number, spinalAPIMiddleware: SpinalAPIMiddleware){
+  var room: SpinalNode<any> = await spinalAPIMiddleware.load(
+    roomId
+  );
+  //@ts-ignore
+  SpinalGraphService._addNode(room);
+  if (room.getType().get() === 'geographicRoom') {
+    const [
+      allNodesControlesEndpoints,
+      equipements,
+      CategorieAttributsList,
+      groupParents,
+    ] = await Promise.all([
+      getNodeControlEndpoints(room),
+      getRoomBimObject(room),
+      getRoomAttributes(room),
+      getRoomParent(room),
+    ]);
+
+    var info = {
+      dynamicId: room._server_id,
+      staticId: room.getId().get(),
+      name: room.getName().get(),
+      type: room.getType().get(),
+      attributsList: CategorieAttributsList,
+      controlEndpoint: allNodesControlesEndpoints,
+      bimObjects: equipements,
+      groupParents: groupParents,
+    };
+    return info;
+  } else {
+    throw('node is not of type geographic room');
+  }
+}
+
+
+
 
 async function getRoomParent(room: SpinalNode<any>): Promise<INodeInfo[]> {
   let parents = await SpinalGraphService.getParents(room.getId().get(), [
@@ -157,8 +171,9 @@ async function getRoomParent(room: SpinalNode<any>): Promise<INodeInfo[]> {
   var groupParents: INodeInfo[] = [];
   for (const parent of parents) {
     if (!(parent.type.get() === 'RoomContext')) {
+      let realNode = SpinalGraphService.getRealNode(parent.id.get());
       let info = {
-        dynamicId: parent._server_id,
+        dynamicId: realNode._server_id,
         staticId: parent.id.get(),
         name: parent.name.get(),
         type: parent.type.get(),
@@ -257,11 +272,11 @@ async function getNodeControlEndpoints(
       } else {
         category = 'Other';
       }
-      // var currentValue = element.currentValue.get();
       return {
         dynamicId: realNode._server_id,
         staticId: endpoint.id.get(),
         name: element.name.get(),
+        value: element.currentValue?.get(),
         category: category,
       };
     });

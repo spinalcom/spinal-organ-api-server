@@ -23,6 +23,7 @@
  */
 
 import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import type SpinalAPIMiddleware from 'src/spinalAPIMiddleware';
 import * as express from 'express';
 import { Room } from '../interfacesGeoContext';
 import {
@@ -113,60 +114,66 @@ module.exports = function (
  *         description: Internal server error
  */
   app.post('/api/v1/room/read_static_details_multiple', async (req, res, next) => {
-    const dynamicIds : number[] = req.body;
+    const dynamicIds: number[] = req.body;
 
     if (!Array.isArray(dynamicIds)) {
-      return res.status(400).send('Expected an array of dynamic IDs');
+        return res.status(400).send('Expected an array of dynamic IDs');
     }
 
-    try {
-      const results = [];
+    // Map each dynamicId to a promise
+    const promises = dynamicIds.map(dynamicId => getReadStaticDetailsInfo(dynamicId, spinalAPIMiddleware));
 
-      for (let dynamicId of dynamicIds) {
-        var room: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId);
-        //@ts-ignore
-        SpinalGraphService._addNode(room);
+    const settledResults = await Promise.allSettled(promises);
 
-        if (room.getType().get() === 'geographicRoom') {
-          const [
-            allNodesControlesEndpoints,
-            equipements,
-            CategorieAttributsList,
-            groupParents,
-          ] = await Promise.all([
-            getNodeControlEndpoints(room),
-            getRoomBimObject(room),
-            getRoomAttributes(room),
-            getRoomParent(room),
-          ]);
-
-          var info = {
-            dynamicId: room._server_id,
-            staticId: room.getId().get(),
-            name: room.getName().get(),
-            type: room.getType().get(),
-            attributsList: CategorieAttributsList,
-            controlEndpoint: allNodesControlesEndpoints,
-            bimObjects: equipements,
-            groupParents: groupParents,
-          };
-
-          results.push(info);
+    const finalResults = settledResults.map((result, index) => {
+        if (result.status === 'fulfilled') {
+            return result.value;
         } else {
-          // If one node is not of type 'geographicRoom', we can either ignore or send an error response.
-          // Here, we're opting to send a response for simplicity.
-          return res.status(400).send(`Node with dynamic ID ${dynamicId} is not of type geographic room`);
+            console.error(`Error with dynamicId ${dynamicIds[index]}: ${result.reason}`);
+            return { dynamicId: dynamicIds[index], ...{} }; // Return the dynamicId with an empty object
         }
-      }
+    });
 
-      return res.json(results);
-    } catch (error) {
-      console.log(error);
-      return res.status(400).send('Unable to process request');
-    }
-  });
+    return res.json(finalResults);
+});
 
 };
+
+
+async function getReadStaticDetailsInfo(roomId:number, spinalAPIMiddleware: SpinalAPIMiddleware){
+  var room: SpinalNode<any> = await spinalAPIMiddleware.load(
+    roomId
+  );
+  //@ts-ignore
+  SpinalGraphService._addNode(room);
+  if (room.getType().get() === 'geographicRoom') {
+    const [
+      allNodesControlesEndpoints,
+      equipements,
+      CategorieAttributsList,
+      groupParents,
+    ] = await Promise.all([
+      getNodeControlEndpoints(room),
+      getRoomBimObject(room),
+      getRoomAttributes(room),
+      getRoomParent(room),
+    ]);
+
+    var info = {
+      dynamicId: room._server_id,
+      staticId: room.getId().get(),
+      name: room.getName().get(),
+      type: room.getType().get(),
+      attributsList: CategorieAttributsList,
+      controlEndpoint: allNodesControlesEndpoints,
+      bimObjects: equipements,
+      groupParents: groupParents,
+    };
+    return info;
+  } else {
+    throw('node is not of type geographic room');
+  }
+}
 
 async function getRoomParent(room: SpinalNode<any>): Promise<INodeInfo[]> {
   let parents = await SpinalGraphService.getParents(room.getId().get(), [
@@ -177,8 +184,9 @@ async function getRoomParent(room: SpinalNode<any>): Promise<INodeInfo[]> {
   var groupParents: INodeInfo[] = [];
   for (const parent of parents) {
     if (!(parent.type.get() === 'RoomContext')) {
+      let realNode = SpinalGraphService.getRealNode(parent.id.get());
       let info = {
-        dynamicId: parent._server_id,
+        dynamicId: realNode._server_id,
         staticId: parent.id.get(),
         name: parent.name.get(),
         type: parent.type.get(),
@@ -282,6 +290,7 @@ async function getNodeControlEndpoints(
         dynamicId: realNode._server_id,
         staticId: endpoint.id.get(),
         name: element.name.get(),
+        value: element.currentValue?.get(),
         category: category,
       };
     });

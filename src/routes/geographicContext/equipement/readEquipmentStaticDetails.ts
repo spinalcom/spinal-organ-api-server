@@ -23,6 +23,7 @@
  */
 
 import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import type SpinalAPIMiddleware from 'src/spinalAPIMiddleware';
 import * as express from 'express';
 import { Room } from '../interfacesGeoContext';
 import {
@@ -109,61 +110,10 @@ module.exports = function (
 
   app.get('/api/v1/equipment/:id/read_static_details', async (req, res, next) => {
     try {
-      var equipment: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10)
+      var info = await getReadStaticDetailsInfo(
+        parseInt(req.params.id,10),
+        spinalAPIMiddleware
       );
-      //@ts-ignore
-      SpinalGraphService._addNode(equipment);
-      if (equipment.getType().get() === 'BIMObject') {
-        const [
-          allNodesControlesEndpoints,
-          CategorieAttributsList,
-          groupParents,
-        ] = await Promise.all([
-          getNodeControlEndpoints(equipment),
-          getAttributes(equipment),
-          getGroupParent(equipment),
-        ]);
-
-        var revitCategory: string = '';
-        var revitFamily: string = '';
-        var revitType: string = '';
-        var categories_bimObjects = await equipment.getChildren(
-            NODE_TO_CATEGORY_RELATION
-          );
-        for (const categorie of categories_bimObjects) {
-            if (categorie.getName().get() === 'default') {
-                var attributs_bimObjects = (await categorie.element.load()).get();
-                for (const child of attributs_bimObjects) {
-                if (child.label === 'revit_category') {
-                    revitCategory = child.value;
-                    break;
-                }
-                }
-            }
-        }
-        var info = {
-            dynamicId: equipment._server_id,
-            staticId: equipment.getId().get(),
-            name: equipment.getName().get(),
-            type: equipment.getType().get(),
-            bimFileId: equipment.info.bimFileId.get(),
-            version: equipment.info.version.get(),
-            externalId: equipment.info.externalId.get(),
-            dbid: equipment.info.dbid.get(),
-            default_attributs: {
-              revitCategory: revitCategory,
-              revitFamily: revitFamily,
-              revitType: revitType,
-            },
-
-            attributsList: CategorieAttributsList,
-            controlEndpoint: allNodesControlesEndpoints,
-            groupParents: groupParents,
-        };
-      } else {
-        res.status(400).send('node is not of type BIMObject');
-      }
     } catch (error) {
       console.log(error);
       return res.status(400).send('ko');
@@ -171,6 +121,69 @@ module.exports = function (
     res.json(info);
   });
 };
+
+
+
+async function getReadStaticDetailsInfo(equipementId:number, spinalAPIMiddleware: SpinalAPIMiddleware){
+  var equipment: SpinalNode<any> = await spinalAPIMiddleware.load(
+    equipementId
+  );
+  //@ts-ignore
+  SpinalGraphService._addNode(equipment);
+  if (equipment.getType().get() === 'BIMObject') {
+    const [
+      allNodesControlesEndpoints,
+      CategorieAttributsList,
+      groupParents,
+    ] = await Promise.all([
+      getNodeControlEndpoints(equipment),
+      getAttributes(equipment),
+      getGroupParent(equipment),
+    ]);
+
+    var revitCategory: string = '';
+    var revitFamily: string = '';
+    var revitType: string = '';
+    var categories_bimObjects = await equipment.getChildren(
+        NODE_TO_CATEGORY_RELATION
+      );
+    for (const categorie of categories_bimObjects) {
+        if (categorie.getName().get() === 'default') {
+            var attributs_bimObjects = (await categorie.element.load()).get();
+            for (const child of attributs_bimObjects) {
+            if (child.label === 'revit_category') {
+                revitCategory = child.value;
+                break;
+            }
+            }
+        }
+    }
+    var info = {
+        dynamicId: equipment._server_id,
+        staticId: equipment.getId().get(),
+        name: equipment.getName().get(),
+        type: equipment.getType().get(),
+        bimFileId: equipment.info.bimFileId.get(),
+        version: equipment.info.version.get(),
+        externalId: equipment.info.externalId.get(),
+        dbid: equipment.info.dbid.get(),
+        default_attributs: {
+          revitCategory: revitCategory,
+          revitFamily: revitFamily,
+          revitType: revitType,
+        },
+
+        attributsList: CategorieAttributsList,
+        controlEndpoint: allNodesControlesEndpoints,
+        groupParents: groupParents,
+    };
+    return info;
+  } else {
+    throw('node is not of type BIMObject');
+  }
+}
+
+
 
 async function getGroupParent(node: SpinalNode<any>): Promise<INodeInfo[]> {
   let parents = await SpinalGraphService.getParents(node.getId().get(), [
@@ -181,8 +194,9 @@ async function getGroupParent(node: SpinalNode<any>): Promise<INodeInfo[]> {
   var groupParents: INodeInfo[] = [];
   for (const parent of parents) {
     if (!(parent.type.get() === 'RoomContext')) {
+      let realNode = SpinalGraphService.getRealNode(parent.id.get());
       let info = {
-        dynamicId: parent._server_id,
+        dynamicId: realNode._server_id,
         staticId: parent.id.get(),
         name: parent.name.get(),
         type: parent.type.get(),
@@ -244,6 +258,7 @@ async function getNodeControlEndpoints(
         dynamicId: realNode._server_id,
         staticId: endpoint.id.get(),
         name: element.name.get(),
+        value: element.currentValue?.get(),
         category: category,
       };
     });
