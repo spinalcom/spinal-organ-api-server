@@ -70,12 +70,21 @@ app.post("/api/v1/equipment/get_position_multiple", async (req, res, next) => {
       return res.status(400).send("Expected an array of IDs.");
     }
 
-    for (const id of ids) {
-      const position = await getEquipmentPosition(spinalAPIMiddleware, id);
-      results.push(position);
-    }
+    // Map each id to a promise
+    const promises = ids.map(id => getEquipmentPosition(spinalAPIMiddleware, id));
 
-    res.json(results);
+    const settledResults = await Promise.allSettled(promises);
+
+    const finalResults = settledResults.map((result, index) => {
+        if (result.status === 'fulfilled') {
+            return result.value;
+        } else {
+            console.error(`Error with id ${ids[index]}: ${result.reason}`);
+            return { id: ids[index], ...{} }; 
+        }
+    });
+
+    return res.json(finalResults);
   } catch (error) {
     console.error(error);
     return res.status(400).send(error.message || "Failed to get positions");

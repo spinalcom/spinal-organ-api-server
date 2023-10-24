@@ -23,7 +23,7 @@
  */
 
 const dotenv = require('dotenv');
-dotenv.config();
+dotenv.config({override : true});
 
 const Requests = require('./build/index').default;
 module.exports = Requests;

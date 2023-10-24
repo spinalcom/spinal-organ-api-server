@@ -63,23 +63,31 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
  *         description: Bad request
  */
 app.post("/api/v1/room/get_position_multiple", async (req, res, next) => {
-  const results = [];
   try {
-    const ids: number[] = req.body;
+      const ids: number[] = req.body;
 
-    if (!Array.isArray(ids)) {
-      return res.status(400).send("Expected an array of IDs.");
-    }
+      if (!Array.isArray(ids)) {
+          return res.status(400).send("Expected an array of IDs.");
+      }
 
-    for (const id of ids) {
-      const position = await getRoomPosition(spinalAPIMiddleware, id);
-      results.push(position);
-    }
+      // Map each id to a promise
+      const promises = ids.map(id => getRoomPosition(spinalAPIMiddleware, id));
 
-    res.json(results);
+      const settledResults = await Promise.allSettled(promises);
+
+      const finalResults = settledResults.map((result, index) => {
+          if (result.status === 'fulfilled') {
+              return result.value;
+          } else {
+              console.error(`Error with id ${ids[index]}: ${result.reason}`);
+              return { id: ids[index], ...{} }; 
+          }
+      });
+
+      return res.json(finalResults);
   } catch (error) {
-    console.error(error);
-    return res.status(400).send(error.message || "Failed to get position");
+      console.error(error);
+      return res.status(400).send(error.message || "Failed to get position");
   }
 });
 
