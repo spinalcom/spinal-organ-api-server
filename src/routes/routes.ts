@@ -466,6 +466,11 @@ function routes(
     app,
     spinalAPIMiddleware
   );
+  require('./geographicContext/room/roomInventoryMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./geographicContext/room/readRoomDetails')(
     logger,
     app,

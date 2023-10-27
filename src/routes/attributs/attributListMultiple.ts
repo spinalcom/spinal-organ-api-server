@@ -32,64 +32,88 @@ module.exports = function (
   spinalAPIMiddleware: spinalAPIMiddleware
 ) {
 /**
-* @swagger
-* /api/v1/node/attribute_list_multiple:
-*   post:
-*     security:
-*       - OauthSecurity:
-*         - readOnly
-*     description: Returns a list of attributes for multiple nodes
-*     summary: Get list of attributes for multiple nodes
-*     tags:
-*       - Node Attributs
-*     requestBody:
-*       required: true
-*       content:
-*         application/json:
-*           schema:
-*             type: array
-*             items:
-*               type: integer
-*               format: int64
-*           example:
-*             - 1
-*             - 2
-*     responses:
-*       200:
-*         description: Success
-*         content:
-*           application/json:
-*             schema:
-*               type: array
-*               items:
-*                 type: object
-*                 properties:
-*                   dynamicId:
-*                     type: integer
-*                   categoryAttributes:
-*                     type: array
-*                     items:
-*                       $ref: '#/components/schemas/NodeAttribut'
-
-*       400:
-*         description: Bad request
-*       500:
-*         description: Server error
-*/
+ * @swagger
+ * /api/v1/node/attribute_list_multiple:
+ *   post:
+ *     security:
+ *       - OauthSecurity:
+ *         - readOnly
+ *     description: Returns a list of attributes for multiple nodes, including error details where applicable.
+ *     summary: Get list of attributes for multiple nodes
+ *     tags:
+ *       - Node Attributes
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: integer
+ *               format: int64
+ *     responses:
+ *       200:
+ *         description: Success - All attribute lists fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   dynamicId:
+ *                     type: integer
+ *                   categoryAttributes:
+ *                     type: array
+ *                     items:
+ *                       $ref: '#/components/schemas/NodeAttribut'
+ *       206:
+ *         description: Partial Content - Some attributes could not be fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 oneOf:
+ *                   - type: object
+ *                     properties:
+ *                       dynamicId:
+ *                         type: integer
+ *                       categoryAttributes:
+ *                         type: array
+ *                         items:
+ *                           $ref: '#/components/schemas/NodeAttribut'
+ *                   - $ref: '#/components/schemas/Error'
+ *       400:
+ *         description: Bad request
+ */
 app.post('/api/v1/node/attribute_list_multiple', async (req, res, next) => {
-  const results = [];
   try {
-      const ids: number[] = req.body;
-      if (!Array.isArray(ids)) {
-          return res.status(400).send("Expected an array of IDs.");
-      }
+    const ids: number[] = req.body;
+    if (!Array.isArray(ids)) {
+        return res.status(400).send("Expected an array of IDs.");
+    }
 
-      for (const id of ids) {
-          const attributes = await getAttributeListInfo(spinalAPIMiddleware, id);
-          results.push({dynamicId: id, categoryAttributes:attributes});
-      }
-      
-      res.json(results);
+    const promises = ids.map(id => getAttributeListInfo(spinalAPIMiddleware, id).then(attributes => ({ dynamicId: id, categoryAttributes: attributes })));
+    const settledResults = await Promise.allSettled(promises);
+
+    const finalResults = settledResults.map((result, index) => {
+        if (result.status === 'fulfilled') {
+            return result.value;
+        } else {
+            console.error(`Error with id ${ids[index]}: ${result.reason}`);
+            return {
+                dynamicId: ids[index],
+                error: result.reason?.message || result.reason || "Failed to get Attributes"
+            };
+        }
+    });
+
+    const isGotError = settledResults.some(result => result.status === 'rejected');
+    if (isGotError) {
+        return res.status(206).json(finalResults);
+    }
+    return res.status(200).json(finalResults);
   } catch (error) {
       console.error(error);
       return res.status(400).send("An error occurred while fetching attributes list.");

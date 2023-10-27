@@ -79,46 +79,53 @@ module.exports = function (
   spinalAPIMiddleware: spinalAPIMiddleware
 ) {
   /**
-   * @swagger
-   * /api/v1/equipment/read_static_details_multiple:
-   *   post:
-   *     security:
-   *       - OauthSecurity:
-   *         - readOnly
-   *     description: Read static details of multiple equipments
-   *     summary: Gets static details of multiple equipments
-   *     tags:
-   *       - Geographic Context
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: array
-   *             items:
-   *               type: integer
-   *               format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                 $ref: '#/components/schemas/StaticDetailsRoom'
-   *       400:
-   *         description: Bad request
-   *       500:
-   *         description: Internal server error
-   */
-  app.post(
-    '/api/v1/equipment/read_static_details_multiple',
-    async (req, res, next) => {
-      const dynamicIds: number[] = req.body;
+ * @swagger
+ * /api/v1/equipment/read_static_details_multiple:
+ *   post:
+ *     security:
+ *       - OauthSecurity:
+ *         - readOnly
+ *     description: Read static details of multiple equipments
+ *     summary: Gets static details of multiple equipments
+ *     tags:
+ *       - Geographic Context
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: integer
+ *               format: int64
+ *     responses:
+ *       200:
+ *         description: Success - All equipment static details fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/StaticDetailsRoom'
+ *       206:
+ *         description: Partial Content - Some equipment static details could not be fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 oneOf:
+ *                   - $ref: '#/components/schemas/StaticDetailsRoom'
+ *                   - $ref: '#/components/schemas/Error'
+ *       400:
+ *         description: Bad request
+ */
+app.post('/api/v1/equipment/read_static_details_multiple', async (req, res, next) => {
+  try {
+    const dynamicIds = req.body;
 
     if (!Array.isArray(dynamicIds)) {
-        return res.status(400).send('Expected an array of dynamic IDs');
+      return res.status(400).send('Expected an array of dynamic IDs');
     }
 
     // Map each dynamicId to a promise
@@ -131,13 +138,21 @@ module.exports = function (
             return result.value;
         } else {
             console.error(`Error with dynamicId ${dynamicIds[index]}: ${result.reason}`);
-            return { dynamicId: dynamicIds[index], ...{} }; // Return the dynamicId with an empty object
+            return {
+              dynamicId: dynamicIds[index],
+              error: result.reason?.message || result.reason || "Failed to get static details"
+            };
         }
     });
 
-    return res.json(finalResults);
-    }
-  );
+    const isGotError = settledResults.some(result => result.status === 'rejected');
+    if (isGotError) return res.status(206).json(finalResults);
+    return res.status(200).json(finalResults);
+  } catch (error) {
+    console.log(error);
+        res.status(400).send(error.message || "ko");
+  }
+});
 };
 
 async function getReadStaticDetailsInfo(

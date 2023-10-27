@@ -40,67 +40,91 @@ module.exports = function (
   spinalAPIMiddleware: spinalAPIMiddleware
 ) {
   /**
-   * @swagger
-   * /api/v1/node/event_list_multiple:
-   *   post:
-   *     security:
-   *       - OauthSecurity:
-   *         - readOnly
-   *     description: Returns events of multiple nodes
-   *     summary: Get list of events for multiple nodes
-   *     tags:
-   *       - Nodes
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: array
-   *             items:
-   *               type: integer
-   *               format: int64
-   *           example:
-   *             - 1
-   *             - 2
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                 type: object
-   *                 properties:
-   *                   dynamicId:
-   *                     type: integer
-   *                   events:
-   *                     type: array
-   *                     items:
-   *                       $ref: '#/components/schemas/Event'
-   *       400:
-   *         description: Bad request
-   *       500:
-   *         description: Server error
-   */
-  app.post('/api/v1/node/event_list_multiple', async (req, res, next) => {
-    let results = [];
-    try {
+ * @swagger
+ * /api/v1/node/event_list_multiple:
+ *   post:
+ *     security:
+ *       - OauthSecurity:
+ *         - readOnly
+ *     description: Returns events of multiple nodes, including error details where applicable.
+ *     summary: Get list of events for multiple nodes
+ *     tags:
+ *       - Nodes
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: integer
+ *               format: int64
+ *     responses:
+ *       200:
+ *         description: Success - All events fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   dynamicId:
+ *                     type: integer
+ *                   events:
+ *                     type: array
+ *                     items:
+ *                       $ref: '#/components/schemas/Event'
+ *       206:
+ *         description: Partial Content - Some events could not be fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 oneOf:
+ *                   - type: object
+ *                     properties:
+ *                       dynamicId:
+ *                         type: integer
+ *                       events:
+ *                         type: array
+ *                         items:
+ *                           $ref: '#/components/schemas/Event'
+ *                   - $ref: '#/components/schemas/Error'
+ *       400:
+ *         description: Bad request
+ */
+app.post('/api/v1/node/event_list_multiple', async (req, res, next) => {
+  try {
       const ids: number[] = req.body;
       if (!Array.isArray(ids)) {
-        return res.status(400).send('Expected an array of IDs.');
+          return res.status(400).send('Expected an array of IDs.');
       }
-      for (let id of ids) {
-        var info = await getEventListInfo(spinalAPIMiddleware, id);
-        results.push({ dynamicId: id, events: info });
-      }
-    } catch (error) {
-      console.log(error);
-      return res
-        .status(400)
-        .send('An error occurred while fetching event list.');
-    }
 
-    res.json(results);
-  });
+      const promises = ids.map(id => getEventListInfo(spinalAPIMiddleware, id).then(events => ({dynamicId: id, events})));
+      const settledResults = await Promise.allSettled(promises);
+      
+      const finalResults = settledResults.map((result, index) => {
+          if (result.status === 'fulfilled') {
+              return result.value;
+          } else {
+              console.error(`Error with id ${ids[index]}: ${result.reason}`);
+              return {
+                  dynamicId: ids[index],
+                  error: result.reason?.message || result.reason || "Failed to get Events"
+              };
+          }
+      });
+
+      const isGotError = settledResults.some(result => result.status === 'rejected');
+      if (isGotError) {
+          return res.status(206).json(finalResults);
+      }
+      return res.status(200).json(finalResults);
+  } catch (error) {
+      console.error(error);
+      res.status(400).send('An error occurred while fetching event list.');
+  }
+});
 };

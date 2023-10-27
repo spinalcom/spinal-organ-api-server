@@ -52,43 +52,58 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
  *               format: int64
  *     responses:
  *       200:
- *         description: Success
+ *         description: Success - All room positions fetched
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/RoomPosition'
+ *       206:
+ *         description: Partial Content - Some room positions could not be fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 oneOf:
+ *                   - $ref: '#/components/schemas/RoomPosition'
+ *                   - $ref: '#/components/schemas/Error'
  *       400:
  *         description: Bad request
  */
 app.post("/api/v1/room/get_position_multiple", async (req, res, next) => {
-  try {
-      const ids: number[] = req.body;
-
-      if (!Array.isArray(ids)) {
-          return res.status(400).send("Expected an array of IDs.");
-      }
-
-      // Map each id to a promise
-      const promises = ids.map(id => getRoomPosition(spinalAPIMiddleware, id));
-
-      const settledResults = await Promise.allSettled(promises);
-
-      const finalResults = settledResults.map((result, index) => {
-          if (result.status === 'fulfilled') {
-              return result.value;
-          } else {
-              console.error(`Error with id ${ids[index]}: ${result.reason}`);
-              return { id: ids[index], ...{} }; 
-          }
-      });
-
-      return res.json(finalResults);
-  } catch (error) {
-      console.error(error);
-      return res.status(400).send(error.message || "Failed to get position");
-  }
-});
+    try {
+        const ids = req.body;
+  
+        if (!Array.isArray(ids)) {
+            return res.status(400).send("Expected an array of IDs.");
+        }
+  
+        // Map each id to a promise
+        const promises = ids.map(id => getRoomPosition(spinalAPIMiddleware, id));
+  
+        const settledResults = await Promise.allSettled(promises);
+  
+        const finalResults = settledResults.map((result, index) => {
+            if (result.status === 'fulfilled') {
+                return result.value;
+            } else {
+                console.error(`Error with id ${ids[index]}: ${result.reason}`);
+                return {
+                  id: ids[index],
+                  error: result.reason?.message || result.reason || "Failed to get position"
+                };
+            }
+        });
+  
+        const isGotError = settledResults.some(result => result.status === 'rejected');
+        if(isGotError) return res.status(206).json(finalResults);
+        return res.status(200).json(finalResults);
+    } catch (error) {
+        console.error(error);
+        res.status(400).send(error.message || "Failed to get position");
+    }
+  });
 
 }

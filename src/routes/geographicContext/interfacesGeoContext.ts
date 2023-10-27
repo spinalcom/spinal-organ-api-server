@@ -143,6 +143,28 @@ export interface Room {
 * @swagger
 * components:
 *   schemas:
+*     ControlEndpoint:
+*       type: "object"
+*       properties:
+*         dynamicId:
+*           type: "integer"
+*         staticId:
+*           type: "string"
+*         name:
+*           type: "string"
+*         category:
+*           type: "string"
+*         value:
+*           oneOf:
+*             - type: string
+*             - type: integer
+*             - type: boolean
+ */
+
+/**
+* @swagger
+* components:
+*   schemas:
 *     RoomDetails:
 *       type: "object"
 *       properties:
@@ -377,7 +399,7 @@ export interface Note {
 *             endpoints:
 *               type: array
 *               items:
-*                    $ref: "#/components/schemas/Room"
+*                    $ref: "#/components/schemas/ControlEndpoint"
 *         bimObjects:
 *           type: "array"
 *           items:
@@ -422,3 +444,112 @@ export interface Note {
 *           items:
 *                $ref: "#/components/schemas/Room"
  */
+
+
+/**
+* @swagger
+* components:
+*  schemas:
+*    InventoryRoomDetails:
+*      type: object
+*      properties:
+*        dynamicId:
+*          type: string
+*        staticId:
+*          type: integer
+*          format: int64
+*        type:
+*          type: string
+*        name:
+*          type: string
+*        inventories:
+*          type: array
+*          items:
+*            $ref: '#/components/schemas/InventoryEquipmentCategory'
+*    InventoryEquipmentCategory:
+*      type: object
+*      properties:
+*        staticId:
+*          type: string
+*        dynamicId:
+*          type: integer
+*          format: int64
+*        name:
+*          type: string
+*        type:
+*          type: string
+*        inventory:
+*          type: array
+*          items:
+*            $ref: '#/components/schemas/InventoryEquipmentGroup'
+*    InventoryEquipmentGroup:
+*      type: object
+*      properties:
+*        staticId:
+*          type: string
+*        dynamicId:
+*          type: integer
+*          format: int64
+*        name:
+*          type: string
+*        type:
+*          type: string
+*        equipments:
+*          type: array
+*          items:
+*            $ref: '#/components/schemas/InventoryBIMObject'
+*    InventoryBIMObject:
+*      type: object
+*      properties:
+*        staticId:
+*          type: string
+*        dynamicId:
+*          type: integer
+*          format: int64
+*        name:
+*          type: string
+*        type:
+*          type: string
+ */
+
+/**
+* @swagger
+* components:
+*  schemas:
+*    Error:
+*      type: object
+*      properties:
+*        dynamicId:
+*          type: integer
+*          format: int64
+*        error:
+*          type: string
+*/
+
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     RoomReferenceObjectResponse:
+ *       type: object
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         staticId:
+ *           type: "string"
+ *         name:
+ *           type: "string"
+ *         type:
+ *           type: "string"
+ *         bimFileId:
+ *           type: "string"
+ *         infoReferencesObjects:
+ *           type: "array"
+ *           items:
+ *             $ref: '#/components/schemas/Equipement'
+ */
+
+
+
+

@@ -21,72 +21,111 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import { SpinalContext, SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service'
-import spinalServiceTimeSeries from '../spinalTimeSeries'
+import {
+  SpinalContext,
+  SpinalGraphService,
+  SpinalNode,
+} from 'spinal-env-viewer-graph-service';
+import spinalServiceTimeSeries from '../spinalTimeSeries';
 import SpinalAPIMiddleware from '../../../spinalAPIMiddleware';
-
+import { getTimeSeriesData } from '../../../utilities/getTimeSeriesData';
 import * as express from 'express';
-import * as moment from 'moment'
+import * as moment from 'moment';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: SpinalAPIMiddleware) {  
-/**
- * @swagger
- * /api/v1/endpoint/timeSeries/readFromLast24H_multiple:
- *   post:
- *     security:
- *       - OauthSecurity:
- *         - readOnly
- *     description: Get time series of the last 24 hours for multiple IDs
- *     summary: Get time series of the last 24 hours for multiple IDs
- *     tags:
- *       - IoTNetwork & Time Series
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: array
- *             items:
- *               type: integer
- *               format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema:
- *                type: array
- *                items:
- *                  $ref: '#/components/schemas/TimeserieWithID'
- *       400:
- *         description: Bad request
- */
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: SpinalAPIMiddleware
+) {
+  /**
+   * @swagger
+   * /api/v1/endpoint/timeSeries/readFromLast24H_multiple:
+   *   post:
+   *     security:
+   *       - OauthSecurity:
+   *         - readOnly
+   *     description: Get time series of the last 24 hours for multiple IDs
+   *     summary: Get time series of the last 24 hours for multiple IDs
+   *     tags:
+   *       - IoTNetwork & Time Series
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
+   *     responses:
+   *       200:
+   *         description: Success - All time series data of the last 24 hours fetched
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/TimeserieWithID'
+   *       206:
+   *         description: Partial Content - Some time series data of the last 24 hours could not be fetched
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 oneOf:
+   *                   - $ref: '#/components/schemas/TimeserieWithID'
+   *                   - $ref: '#/components/schemas/Error'
+   *       400:
+   *         description: Bad request
+   */
 
-app.post("/api/v1/endpoint/timeSeries/readFromLast24H_multiple", async (req, res, next) => {
-    try {
-      const ids: number[] = req.body; // Directly using the body as the array of IDs
-      if (!Array.isArray(ids)) {
-        return res.status(400).send("Expected an array of IDs.");
+  app.post(
+    '/api/v1/endpoint/timeSeries/readFromLast24H_multiple',
+    async (req, res, next) => {
+      try {
+        const ids: number[] = req.body; // Directly using the body as the array of IDs
+        if (!Array.isArray(ids)) {
+          return res.status(400).send('Expected an array of IDs.');
+        }
+
+        const timeSeriesIntervalDate =
+          spinalServiceTimeSeries().getDateFromLastHours(24);
+        // Map each id to a promise
+        const promises = ids.map((id) =>
+          getTimeSeriesData(spinalAPIMiddleware, id, timeSeriesIntervalDate)
+        );
+
+        const settledResults = await Promise.allSettled(promises);
+
+        const finalResults = settledResults.map((result, index) => {
+          if (result.status === 'fulfilled') {
+            return { dynamicId: ids[index], timeseries: result.value };
+          } else {
+            console.error(`Error with id ${ids[index]}: ${result.reason}`);
+            return {
+              dynamicId: ids[index],
+              error:
+                result.reason?.message ||
+                result.reason ||
+                'Failed to get Time Series Data',
+            };
+          }
+        });
+
+        const isGotError = settledResults.some(
+          (result) => result.status === 'rejected'
+        );
+        if (isGotError) {
+          return res.status(206).json(finalResults);
+        }
+        return res.status(200).json(finalResults);
+      } catch (error) {
+        console.error(error);
+        return res
+          .status(400)
+          .send(error.message || 'Error in fetching time series data');
       }
-      const results = [];
-  
-      const timeSeriesIntervalDate = spinalServiceTimeSeries().getDateFromLastHours(24);
-  
-      for (const id of ids) {
-        const node: SpinalNode<any> = await spinalAPIMiddleware.load(id);
-        // @ts-ignore
-        SpinalGraphService._addNode(node);
-  
-        const datas = await spinalServiceTimeSeries().getData(node.getId().get(), timeSeriesIntervalDate);
-        results.push({dynamicId:id, timeseries: datas});
-      }
-  
-      res.json(results);
-  
-    } catch (error) {
-      console.error(error);
-      return res.status(400).send("ko");
     }
-  });
-  
-}
+  );
+};

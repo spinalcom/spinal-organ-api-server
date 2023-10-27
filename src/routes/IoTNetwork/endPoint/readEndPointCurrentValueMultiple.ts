@@ -31,56 +31,88 @@ import { NetworkService } from 'spinal-model-bmsnetwork'
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
 
-  /**
-* @swagger
-* /api/v1/endpoint/read_multiple:
-*   post:
-*     security: 
-*       - OauthSecurity: 
-*         - readOnly
-*     description: Reads the current values for multiple endpoints
-*     summary: Read the current values of multiple endpoints
-*     tags:
-*       - IoTNetwork & Time Series
-*     requestBody:
-*       description: An array of endpoint IDs to fetch the current values for
-*       required: true
-*       content:
-*         application/json:
-*           schema:
-*             type: array
-*             items:
-*               type: integer
-*               format: int64
-*     responses:
-*       200:
-*         description: Success
-*         content:
-*           application/json:
-*             schema:
-*               type: array
-*               items:
-*                 $ref: '#/components/schemas/CurrentValueWithId'
-*       400:
-*         description: Bad request
-*/
-  app.post("/api/v1/endpoint/read_multiple", async (req, res, next) => {
-    const results = []
-    try {
-      const ids : number[] = req.body
-      for(const id of ids){
-        var node = await spinalAPIMiddleware.load(id)
-        // @ts-ignore
-        SpinalGraphService._addNode(node);
-        var element = await node.element.load()
-        var info = {dynamicId:id ,currentValue: element.currentValue.get() };
-        results.push(info)
+/**
+ * @swagger
+ * /api/v1/endpoint/read_multiple:
+ *   post:
+ *     security: 
+ *       - OauthSecurity: 
+ *         - readOnly
+ *     description: Reads the current values for multiple endpoints
+ *     summary: Read the current values of multiple endpoints
+ *     tags:
+ *       - IoTNetwork & Time Series
+ *     requestBody:
+ *       description: An array of endpoint IDs to fetch the current values for
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: integer
+ *               format: int64
+ *     responses:
+ *       200:
+ *         description: Success - All endpoints' current values fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/CurrentValueWithId'
+ *       206:
+ *         description: Partial Content - Some endpoints' current values could not be fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 oneOf:
+ *                   - $ref: '#/components/schemas/CurrentValueWithId'
+ *                   - $ref: '#/components/schemas/Error'
+ *       400:
+ *         description: Bad request - Incorrect request format or server error
+ */
+app.post("/api/v1/endpoint/read_multiple", async (req, res, next) => {
+  try {
+      const ids: number[] = req.body;
+
+      if (!Array.isArray(ids)) {
+          return res.status(400).send("Expected an array of IDs.");
       }
-      
-    } catch (error) {
+
+      // Map each id to a promise
+      const promises = ids.map(async id => {
+          try {
+              var node = await spinalAPIMiddleware.load(id);
+              // @ts-ignore
+              SpinalGraphService._addNode(node);
+              var element = await node.element.load();
+              return { dynamicId: id, currentValue: element.currentValue.get() };
+          } catch (error) {
+              console.error(`Error with id ${id}: ${error.message || error}`);
+              return {
+                  dynamicId: id,
+                  error: error.message || "Failed to get current value"
+              };
+          }
+      });
+
+      const settledResults = await Promise.allSettled(promises);
+    
+      const finalResults = settledResults.map(result => {
+          return result.status === 'fulfilled' ? result.value : result.reason;
+      });
+
+      const isGotError = settledResults.some(result => result.status === 'rejected');
+      if (isGotError) {
+          return res.status(206).json(finalResults);
+      }
+      return res.status(200).json(finalResults);
+  } catch (error) {
       console.log(error);
-      res.status(400).send("ko")
-    }
-    res.json(results);
-  });
+      res.status(400).send(error.message || "Error processing the request");
+  }
+});
 }

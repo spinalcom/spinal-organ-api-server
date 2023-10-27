@@ -39,81 +39,93 @@ module.exports = function (
   spinalAPIMiddleware: spinalAPIMiddleware
 ) {
   /**
-   * @swagger
-   * /api/v1/room/reference_object_list_multiple:
-   *   post:
-   *     security:
-   *       - OauthSecurity:
-   *         - readOnly
-   *     description: Return reference objects for multiple rooms
-   *     summary: Gets reference objects for multiple rooms
-   *     tags:
-   *      - Geographic Context
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: array
-   *             items:
-   *               type: integer
-   *               format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                 type: object
-   *                 properties:
-   *                   dynamicId:
-   *                     type: "integer"
-   *                   staticId:
-   *                     type: "string"
-   *                   name:
-   *                     type: "string"
-   *                   type:
-   *                     type: "string"
-   *                   bimFileId:
-   *                     type: "string"
-   *                   infoReferencesObjects:
-   *                     type: "array"
-   *                     items:
-   *                       $ref: '#/components/schemas/Equipement'
-   *       400:
-   *         description: Bad request
-   */
-  app.post(
-    '/api/v1/room/reference_object_list_multiple',
-    async (req, res, next) => {
-      const results = [];
-      try {
-        const ids: number[] = req.body;
+ * @swagger
+ * /api/v1/room/reference_object_list_multiple:
+ *   post:
+ *     security:
+ *       - OauthSecurity:
+ *         - readOnly
+ *     description: Return reference objects for multiple rooms
+ *     summary: Gets reference objects for multiple rooms
+ *     tags:
+ *      - Geographic Context
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: integer
+ *               format: int64
+ *     responses:
+ *       200:
+ *         description: Success - All reference objects fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   dynamicId:
+ *                     type: "integer"
+ *                   staticId:
+ *                     type: "string"
+ *                   name:
+ *                     type: "string"
+ *                   type:
+ *                     type: "string"
+ *                   bimFileId:
+ *                     type: "string"
+ *                   infoReferencesObjects:
+ *                     type: "array"
+ *                     items:
+ *                       $ref: '#/components/schemas/RoomReferenceObjectResponse'
+ *       206:
+ *         description: Partial Content - Some reference objects could not be fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 oneOf:
+ *                   - $ref: '#/components/schemas/RoomReferenceObjectResponse'
+ *                   - $ref: '#/components/schemas/Error'
+ *       400:
+ *         description: Bad request
+ */
+app.post('/api/v1/room/reference_object_list_multiple', async (req, res, next) => {
+  try {
+    const ids: number[] = req.body;
 
-        if (!Array.isArray(ids)) {
-          return res.status(400).send('Expected an array of IDs.');
-        }
-
-        for (const id of ids) {
-          const referenceObjects = await getRoomReferenceObjectsListInfo(
-            spinalAPIMiddleware,
-            id
-          );
-          results.push(referenceObjects);
-        }
-
-        res.json(results);
-      } catch (error) {
-        console.error(error);
-        return res
-          .status(400)
-          .send(
-            error.message ||
-              'An error occurred while fetching reference objects.'
-          );
-      }
+    if (!Array.isArray(ids)) {
+      return res.status(400).send('Expected an array of IDs.');
     }
-  );
+
+    // Map each id to a promise
+    const promises = ids.map(id => getRoomReferenceObjectsListInfo(spinalAPIMiddleware, id));
+
+    const settledResults = await Promise.allSettled(promises);
+
+    const finalResults = settledResults.map((result, index) => {
+      if (result.status === 'fulfilled') {
+        return result.value;
+      } else {
+        console.error(`Error with id ${ids[index]}: ${result.reason}`);
+        return {
+          dynamicId: ids[index],
+          error: result.reason?.message || result.reason || "Failed to get Reference Objects"
+        };
+      }
+    });
+
+    const isGotError = settledResults.some(result => result.status === 'rejected');
+    if(isGotError) return res.status(206).json(finalResults);
+    return res.status(200).json(finalResults);
+  } catch (error) {
+    console.error(error);
+    return res.status(400).send(error.message || "An error occurred while fetching reference objects.");
+  }
+});
 };

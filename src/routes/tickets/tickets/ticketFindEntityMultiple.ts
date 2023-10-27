@@ -23,84 +23,96 @@
  */
 
 import {
-    SpinalContext,
-    SpinalNode,
-    SpinalGraphService,
-  } from 'spinal-env-viewer-graph-service';
-  import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
-  import * as express from 'express';
-  import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-  import { serviceTicketPersonalized } from 'spinal-service-ticket';
-  module.exports = function (
-    logger,
-    app: express.Express,
-    spinalAPIMiddleware: spinalAPIMiddleware
-  ) {    
-    /**
-     * @swagger
-     * /api/v1/ticket/find_entity_multiple:
-     *   post:
-     *     security:
-     *       - OauthSecurity:
-     *         - readOnly
-     *     description: Returns entities for multiple tickets
-     *     summary: Get entities of multiple tickets
-     *     tags:
-     *       - Workflow & ticket
-     *     requestBody:
-     *       description: An array of ticket IDs to fetch entities for
-     *       required: true
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: array
-     *             items:
-     *               type: integer
-     *               format: int64
-     *     responses:
-     *       200:
-     *         description: Success
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: array
-     *               items:
-     *                 $ref: '#/components/schemas/BasicNode'
-     *       400:
-     *         description: Bad request
-     */
-    app.post(
-      '/api/v1/ticket/find_entity_multiple',
-      async (req, res, next) => {
-        const results = [];
-        try {
-          const ids: number[] = req.body;
-          if (!Array.isArray(ids)) {
-            return res.status(400).send('Expected an array of IDs.');
-          }
-          for (const id of ids) {
-            var _ticket = await spinalAPIMiddleware.load(id);
-            //@ts-ignore
-            SpinalGraphService._addNode(_ticket);
-  
-            var elementSelected = await spinalAPIMiddleware.loadPtr(
-              _ticket.info.elementSelected
-            );
-  
-            var info = {
-              dynamicId: elementSelected._server_id,
-              staticId: elementSelected.getId().get(),
-              name: elementSelected.getName().get(),
-              type: elementSelected.getType().get(),
-            };
-            results.push(info);
-          }
-        } catch (error) {
-          console.log(error);
-          res.status(400).send('ko');
-        }
-        res.json(results);
+  SpinalContext,
+  SpinalNode,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
+import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import * as express from 'express';
+import { getTicketEntityInfo } from '../../../utilities/getTicketEntityInfo';
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: spinalAPIMiddleware
+) {
+  /**
+   * @swagger
+   * /api/v1/ticket/find_entity_multiple:
+   *   post:
+   *     security:
+   *       - OauthSecurity:
+   *         - readOnly
+   *     description: Returns entities for multiple tickets
+   *     summary: Get entities of multiple tickets
+   *     tags:
+   *       - Workflow & ticket
+   *     requestBody:
+   *       description: An array of ticket IDs to fetch entities for
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
+   *     responses:
+   *       200:
+   *         description: Success - All entities fetched for the tickets
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/BasicNode'
+   *       206:
+   *         description: Partial Content - Some entities could not be fetched
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 oneOf:
+   *                   - $ref: '#/components/schemas/BasicNode'
+   *                   - $ref: '#/components/schemas/Error'
+   *       400:
+   *         description: Bad request
+   */
+  app.post('/api/v1/ticket/find_entity_multiple', async (req, res, next) => {
+    try {
+      const ids: number[] = req.body;
+      if (!Array.isArray(ids)) {
+        return res.status(400).send('Expected an array of IDs.');
       }
-    );
-  };
-  
+
+      // Map each id to a promise
+      const promises = ids.map((id) =>
+        getTicketEntityInfo(spinalAPIMiddleware, id)
+      );
+
+      const settledResults = await Promise.allSettled(promises);
+
+      const finalResults = settledResults.map((result, index) => {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        } else {
+          console.error(`Error with ticket id ${ids[index]}: ${result.reason}`);
+          return {
+            dynamicId: ids[index],
+            error:
+              result.reason?.message || result.reason || 'Failed to get Entity',
+          };
+        }
+      });
+
+      const isGotError = settledResults.some(
+        (result) => result.status === 'rejected'
+      );
+      if (isGotError) return res.status(206).json(finalResults);
+      return res.status(200).json(finalResults);
+    } catch (error) {
+      console.error(error);
+      res.status(400).send(error.message || 'ko');
+    }
+  });
+};

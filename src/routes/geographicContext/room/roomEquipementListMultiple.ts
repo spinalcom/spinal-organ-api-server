@@ -38,7 +38,7 @@ module.exports = function (
   spinalAPIMiddleware: spinalAPIMiddleware
 ) {
 
-  /**
+ /**
  * @swagger
  * /api/v1/room/equipment_list_multiple:
  *   post:
@@ -60,7 +60,7 @@ module.exports = function (
  *               format: int64
  *     responses:
  *       200:
- *         description: Success
+ *         description: Success - All equipment lists fetched
  *         content:
  *           application/json:
  *             schema:
@@ -74,23 +74,50 @@ module.exports = function (
  *                     type: array
  *                     items:
  *                       $ref: '#/components/schemas/Equipement'
+ *       206:
+ *         description: Partial Content - Some equipment lists could not be fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 oneOf:
+ *                   - $ref: '#/components/schemas/Equipement'
+ *                   - $ref: '#/components/schemas/Error'
  *       400:
  *         description: Bad request
  */
 app.post("/api/v1/room/equipment_list_multiple", async (req, res, next) => {
-  const results = [];
   try {
       const ids: number[] = req.body;
+
       if (!Array.isArray(ids)) {
           return res.status(400).send("Expected an array of IDs.");
       }
 
-      for (const id of ids) {
-          const equipmentList = await getEquipmentListInfo(spinalAPIMiddleware, id);
-          results.push({dynamicId: id, equipments: equipmentList});
-      }
-      
-      res.json(results);
+      // Map each id to a promise
+      const promises = ids.map(id => getEquipmentListInfo(spinalAPIMiddleware, id));
+
+      const settledResults = await Promise.allSettled(promises);
+
+      const finalResults = settledResults.map((result, index) => {
+          if (result.status === 'fulfilled') {
+              return {
+                dynamicId: ids[index],
+                equipments: result.value
+              };
+          } else {
+              console.error(`Error with id ${ids[index]}: ${result.reason}`);
+              return {
+                dynamicId: ids[index],
+                error: result.reason?.message || result.reason || "Failed to get Equipment List"
+              }; 
+          }
+      });
+
+      const isGotError = settledResults.some(result => result.status === 'rejected');
+      if(isGotError) return res.status(206).json(finalResults);
+      return res.status(200).json(finalResults);
   } catch (error) {
       console.error(error);
       return res.status(400).send(error.message || "An error occurred while fetching equipment lists.");

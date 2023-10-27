@@ -51,35 +51,62 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
  *               format: int64
  *     responses:
  *       200:
- *         description: Success
+ *         description: Success - All nodes fetched successfully
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Node'
+ *       206:
+ *         description: Partial Content - Some nodes could not be fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 oneOf:
+ *                   - $ref: '#/components/schemas/Node'
+ *                   - $ref: '#/components/schemas/Error'
  *       400:
  *         description: Bad request
  */
 
 app.post("/api/v1/node/read_multiple", async (req, res, next) => {
-    let results: Node[] = [];
-    try {
+  try {
       const ids: number[] = req.body;
+
       if (!Array.isArray(ids)) {
-        return res.status(400).send("Expected an array of IDs.");
+          return res.status(400).send("Expected an array of IDs.");
       }
-      for (let id of ids) {  
-        var info: Node = await getNodeInfo(spinalAPIMiddleware, id);
-        results.push(info);
+
+      // Map each id to a promise
+      const promises = ids.map(id => getNodeInfo(spinalAPIMiddleware, id));
+
+      const settledResults = await Promise.allSettled(promises);
+      
+      const finalResults = settledResults.map((result, index) => {
+          if (result.status === 'fulfilled') {
+              return result.value;
+          } else {
+              console.error(`Error with id ${ids[index]}: ${result.reason}`);
+              return {
+                  dynamicId: ids[index],
+                  error: result.reason?.message || result.reason || "Failed to get Node info"
+              };
+          }
+      });
+
+      const isGotError = settledResults.some(result => result.status === 'rejected');
+      if (isGotError) {
+          return res.status(206).json(finalResults); // If any errors, send 206 Partial Content
       }
-    } catch (error) {
+      return res.status(200).json(finalResults); // If all successful, send 200 OK
+  } catch (error) {
       console.log(error);
-      return res.status(400).send("An error occurred while fetching nodes.");
-    }
-    
-    res.json(results);
-  });
-  
-  
+      return res.status(400).send(error.message || "An error occurred while fetching nodes.");
   }
+});
+  
+  
+}

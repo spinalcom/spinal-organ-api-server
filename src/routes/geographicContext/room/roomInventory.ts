@@ -37,35 +37,34 @@ module.exports = function (
   spinalAPIMiddleware: spinalAPIMiddleware
 ) {
   /**
-   * @swagger
-   * /api/v1/room/{id}/inventory:
-   *   get:
-   *     security:
-   *       - OauthSecurity:
-   *         - readOnly
-   *     description: read details of room
-   *     summary: Gets details of room
-   *     tags:
-   *       - Geographic Context
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/RoomDetails'
-   *       400:
-   *         description: Bad request
-   */
-
+ * @swagger
+ * /api/v1/room/{id}/inventory:
+ *   get:
+ *     security:
+ *       - OauthSecurity:
+ *         - readOnly
+ *     description: Reads details of a room including its inventory
+ *     summary: Gets inventory details of a room
+ *     tags:
+ *       - Geographic Context
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Use the dynamic ID of the room
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           format: int64
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InventoryRoomDetails'
+ *       400:
+ *         description: Bad request
+ */
   app.get("/api/v1/room/:id/inventory", async (req, res, next) => {
     try {
         const inventory = await getRoomInventory(spinalAPIMiddleware, parseInt(req.params.id, 10));

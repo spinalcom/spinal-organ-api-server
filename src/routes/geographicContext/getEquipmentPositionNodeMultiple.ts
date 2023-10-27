@@ -24,73 +24,100 @@
 
 import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import { SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import {
+  SpinalNode,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
 import { getEquipmentPosition } from '../../utilities/getPosition';
 
-
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: spinalAPIMiddleware
+) {
   /**
- * @swagger
- * /api/v1/equipment/get_position_multiple:
- *   post:
- *     security: 
- *       - OauthSecurity: 
- *         - readOnly
- *     description: Return positions for multiple equipment
- *     summary: Gets positions for multiple equipment
- *     tags:
- *      - Geographic Context
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: array
- *             items:
- *               type: integer
- *               format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Position'
- *       400:
- *         description: Bad request
- */
-app.post("/api/v1/equipment/get_position_multiple", async (req, res, next) => {
-  const results= [];
-  try {
-    const ids: number[] = req.body;
+   * @swagger
+   * /api/v1/equipment/get_position_multiple:
+   *   post:
+   *     security:
+   *       - OauthSecurity:
+   *         - readOnly
+   *     description: Return positions for multiple equipment
+   *     summary: Gets positions for multiple equipment
+   *     tags:
+   *      - Geographic Context
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
+   *     responses:
+   *       200:
+   *         description: Success - All equipment positions fetched
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Position'
+   *       206:
+   *         description: Partial Content - Some equipment positions could not be fetched
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 oneOf:
+   *                   - $ref: '#/components/schemas/Position'
+   *                   - $ref: '#/components/schemas/Error'
+   *       400:
+   *         description: Bad request
+   */
+  app.post(
+    '/api/v1/equipment/get_position_multiple',
+    async (req, res, next) => {
+      try {
+        const ids = req.body;
 
-    if (!Array.isArray(ids)) {
-      return res.status(400).send("Expected an array of IDs.");
-    }
-
-    // Map each id to a promise
-    const promises = ids.map(id => getEquipmentPosition(spinalAPIMiddleware, id));
-
-    const settledResults = await Promise.allSettled(promises);
-
-    const finalResults = settledResults.map((result, index) => {
-        if (result.status === 'fulfilled') {
-            return result.value;
-        } else {
-            console.error(`Error with id ${ids[index]}: ${result.reason}`);
-            return { id: ids[index], ...{} }; 
+        if (!Array.isArray(ids)) {
+          return res.status(400).send('Expected an array of IDs.');
         }
-    });
 
-    return res.json(finalResults);
-  } catch (error) {
-    console.error(error);
-    return res.status(400).send(error.message || "Failed to get positions");
-  }
-});
+        // Map each id to a promise
+        const promises = ids.map((id) =>
+          getEquipmentPosition(spinalAPIMiddleware, id)
+        );
 
+        const settledResults = await Promise.allSettled(promises);
 
+        const finalResults = settledResults.map((result, index) => {
+          if (result.status === 'fulfilled') {
+            return result.value;
+          } else {
+            console.error(`Error with id ${ids[index]}: ${result.reason}`);
+            return {
+              id: ids[index],
+              error:
+                result.reason?.message ||
+                result.reason ||
+                'Failed to get position',
+            };
+          }
+        });
 
-}
+        const isGotError = settledResults.some(
+          (result) => result.status === 'rejected'
+        );
+        if (isGotError) return res.status(206).json(finalResults);
+        return res.status(200).json(finalResults);
+      } catch (error) {
+        console.error(error);
+        return res.status(400).send(error.message || 'Failed to get positions');
+      }
+    }
+  );
+};

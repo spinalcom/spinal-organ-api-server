@@ -22,78 +22,101 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
+import {
+  SpinalContext,
+  SpinalNode,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
 import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { SpinalEventService } from "spinal-env-viewer-task-service";
-import { Event } from '../interfacesContextsEvents'
-import { eventNames } from 'process';
+import { SpinalEventService } from 'spinal-env-viewer-task-service';
+import { Event } from '../interfacesContextsEvents';
+import { getEventInfo } from '../../../utilities/getEventInfo';
 
-
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: spinalAPIMiddleware
+) {
   /**
-* @swagger
-* /api/v1/event/read_multiple:
-*   post:
-*     security: 
-*       - OauthSecurity: 
-*         - readOnly
-*     description: Returns details for multiple events
-*     summary: Get details of multiple events
-*     tags:
-*       - Calendar & Event
-*     requestBody:
-*       description: An array of event IDs to fetch details for
-*       required: true
-*       content:
-*         application/json:
-*           schema:
-*             type: array
-*             items:
-*               type: integer
-*               format: int64
-*     responses:
-*       200:
-*         description: Success
-*         content:
-*           application/json:
-*             schema:
-*               type: array
-*               items:
-*                 $ref: '#/components/schemas/Event'
-*       400:
-*         description: list of event is not loaded
-*/
-  app.post("/api/v1/event/read_multiple", async (req, res, next) => {
-    const results = [];
+   * @swagger
+   * /api/v1/event/read_multiple:
+   *   post:
+   *     security:
+   *       - OauthSecurity:
+   *         - readOnly
+   *     description: Returns details for multiple events
+   *     summary: Get details of multiple events
+   *     tags:
+   *       - Calendar & Event
+   *     requestBody:
+   *       description: An array of event IDs to fetch details for
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
+   *     responses:
+   *       200:
+   *         description: Success - All event details fetched
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Event'
+   *       206:
+   *         description: Partial Content - Some event details could not be fetched
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 oneOf:
+   *                   - $ref: '#/components/schemas/Event'
+   *                   - $ref: '#/components/schemas/Error'
+   *       400:
+   *         description: List of events is not loaded
+   */
+  app.post('/api/v1/event/read_multiple', async (req, res, next) => {
     try {
-      const ids : number [] = req.body;
-      for(const id of ids){
-        var event: SpinalNode<any> = await spinalAPIMiddleware.load(id);
-        //@ts-ignore
-        SpinalGraphService._addNode(event)
-        if (event.getType().get() === "SpinalEvent") {
-          var info: Event = {
-            dynamicId: event._server_id,
-            staticId: event.getId().get(),
-            name: event.getName().get(),
-            type: event.getType().get(),
-            groupId: event.info.groupId.get(),
-            categoryId: event.info.categoryId.get(),
-            nodeId: event.info.nodeId.get(),
-            repeat: event.info.repeat.get(),
-            description: event.info.description.get(),
-            startDate: event.info.startDate.get(),
-            endDate: event.info.endDate.get(),
-          };
-          results.push(info);
-        }
+      const ids: number[] = req.body;
+
+      if (!Array.isArray(ids)) {
+        return res.status(400).send('Expected an array of IDs.');
       }
-      
+
+      // Map each id to a promise
+      const promises = ids.map((id) => getEventInfo(spinalAPIMiddleware, id));
+
+      const settledResults = await Promise.allSettled(promises);
+
+      const finalResults = settledResults.map((result, index) => {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        } else {
+          console.error(`Error with event id ${ids[index]}: ${result.reason}`);
+          return {
+            eventId: ids[index],
+            error:
+              result.reason?.message ||
+              result.reason ||
+              'Failed to get Event Info',
+          };
+        }
+      });
+
+      const isGotError = settledResults.some(
+        (result) => result.status === 'rejected'
+      );
+      if (isGotError) return res.status(206).json(finalResults);
+      return res.status(200).json(finalResults);
     } catch (error) {
       console.error(error);
-      res.status(400).send("list of event is not loaded");
+      res.status(400).send('List of events is not loaded');
     }
-    res.send(results);
   });
 };
