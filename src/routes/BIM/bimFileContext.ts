@@ -77,11 +77,12 @@ module.exports = function (
             );
             const items: BIMFileContextItems[] = [];
             for (let i = 0; i < currentVersion.items.length; i++) {
-              const element = currentVersion.items[i];
+              const _element = currentVersion.items[i];
               items.push({
-                name: element.name?.get(),
-                path: element.path?.get(),
-                thumbnail: element.thumbnail?.get(),
+                name: _element.name?.get(),
+                path: _element.path?.get(),
+                thumbnail: _element.thumbnail?.get(),
+                aecPath: currentVersion.aecPath?.get(),
               });
             }
             let info: BIMFileContext = {
