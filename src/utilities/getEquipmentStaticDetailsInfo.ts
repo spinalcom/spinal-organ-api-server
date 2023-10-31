@@ -49,6 +49,8 @@ interface IEquipmentInfo {
     type: string;
   }
 
+  const ENDPOINT_RELATIONS = ['hasBmsEndpoint','hasBmsDevice','hasBmsEndpointGroup','hasEndPoint']
+
   async function getEquipmentStaticDetailsInfo(
     equipementId: number,
     spinalAPIMiddleware: SpinalAPIMiddleware
@@ -57,9 +59,10 @@ interface IEquipmentInfo {
     //@ts-ignore
     SpinalGraphService._addNode(equipment);
     if (equipment.getType().get() === 'BIMObject') {
-      const [allNodesControlesEndpoints, CategorieAttributsList, groupParents] =
+      const [allNodesControlesEndpoints, allEndpoints, CategorieAttributsList, groupParents] =
         await Promise.all([
           getNodeControlEndpoints(equipment),
+          getEndpointsInfo(equipment),
           getAttributes(equipment),
           getGroupParent(equipment),
         ]);
@@ -98,6 +101,7 @@ interface IEquipmentInfo {
   
         attributsList: CategorieAttributsList,
         controlEndpoint: allNodesControlesEndpoints,
+        endpoints: allEndpoints,
         groupParents: groupParents,
       };
       return info;
@@ -106,6 +110,7 @@ interface IEquipmentInfo {
     }
   }
   
+
   async function getGroupParent(node: SpinalNode<any>): Promise<INodeInfo[]> {
     let parents = await SpinalGraphService.getParents(node.getId().get(), [
       'hasBimObject',
@@ -143,6 +148,34 @@ interface IEquipmentInfo {
     return Promise.all(promises);
   }
   
+  async function getEndpoints(node: SpinalNode<any>): Promise<SpinalNode<any>[]> {
+    let res: SpinalNode<any>[] = [];
+    const children = await node.getChildren(ENDPOINT_RELATIONS);
+    for (const child of children) {
+      if (child.info.type.get() === 'BmsEndpoint') {
+        res.push(child);
+      } else {
+        res = res.concat(await getEndpoints(child));
+      }
+    }
+    return res;
+  }
+  
+  async function getEndpointsInfo(node: SpinalNode<any>){
+    const endpoints = await getEndpoints(node);
+    const endpointsInfo = await endpoints.map( async (el) => {
+      var element = await  el.element.load();
+      return {
+        dynamicId: el._server_id,
+        staticId: el.getId().get(),
+        name: el.getName().get(),
+        type: el.getType().get(),
+        value: element.currentValue?.get(),
+      }
+    })
+  
+    return Promise.all(endpointsInfo);
+  }
   async function getNodeControlEndpoints(
     node: SpinalNode<any>
   ): Promise<INodeControlEndpoint[]> {

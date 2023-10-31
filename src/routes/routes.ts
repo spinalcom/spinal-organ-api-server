@@ -58,6 +58,12 @@ function routes(
   require('./nodes/readNodeMultiple')(logger, app, spinalAPIMiddleware);
   require('./nodes/relationChildrenNode')(logger, app, spinalAPIMiddleware);
   require('./nodes/relationParentNode')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeChildren')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeChildrenSpecificRelations')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeChildrenSpecificRelationsMultiple')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeParentsSpecificRelations')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeParentsSpecificRelationsMultiple')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeParents')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeEndPointList')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeEndPointListMultiple')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeControlEndPointList')(logger, app, spinalAPIMiddleware);

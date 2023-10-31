@@ -215,23 +215,6 @@ export interface TicketDetails {
 * @swagger
 * components:
 *   schemas:
-*     BasicNode:
-*       type: "object"
-*       properties:
-*         dynamicId:
-*           type: "integer"
-*         staticId:
-*           type: "string"
-*         name:
-*           type: "string"
-*         type:
-*           type: "string"
-*/
-
-/**
-* @swagger
-* components:
-*   schemas:
 *     Process:
 *       type: "object"
 *       properties:
