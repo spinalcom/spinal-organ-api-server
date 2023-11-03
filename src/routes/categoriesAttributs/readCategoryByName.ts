@@ -24,7 +24,7 @@
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import { CategoriesAttribute } from './interfacesCategoriesAtrtribut';
+import { CategoriesAttribute } from './interfacesCategoriesAttribute';
 import { SpinalNode } from 'spinal-model-graph';
 import { getCategoryNameInfo } from '../../utilities/getCategoryNameInfo';
 

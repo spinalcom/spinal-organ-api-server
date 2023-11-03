@@ -289,34 +289,6 @@
           }
         }
       },
-      "CategoriesAttribute": {
-        "type": "object",
-        "properties": {
-          "dynamicId": {
-            "type": "integer"
-          },
-          "staticId": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          }
-        }
-      },
-      "CategoriesAttributeMultiple": {
-        "type": "object",
-        "properties": {
-          "dynamicId": {
-            "type": "integer"
-          },
-          "categoryAttribute": {
-            "$ref": "#/components/schemas/CategoriesAttribute"
-          }
-        }
-      },
       "NodeAttribut": {
         "type": "object",
         "properties": {
@@ -1874,6 +1846,48 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Context"
+            }
+          }
+        }
+      },
+      "CategoriesAttribute": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "CategoriesAttributeMultiple": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "categoryAttribute": {
+            "$ref": "#/components/schemas/CategoriesAttribute"
+          }
+        }
+      },
+      "CategoriesAttributesMultiple": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "categoryAttribute": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoriesAttribute"
             }
           }
         }
@@ -15507,6 +15521,89 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Node"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/categoriesByName/read_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Read multiple categories attributes for multiple nodes",
+        "summary": "Read multiple categories attributes for multiple nodes",
+        "tags": [
+          "Node Attribut Categories"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "dynamicId",
+                    "categoryNames"
+                  ],
+                  "properties": {
+                    "dynamicId": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "categoryNames": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All attribute nodes info fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoriesAttributesMultiple"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some attribute info could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/CategoriesAttributesMultiple"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
                 }
               }
             }

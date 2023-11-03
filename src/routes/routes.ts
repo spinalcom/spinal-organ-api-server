@@ -134,6 +134,11 @@ function routes(
     app,
     spinalAPIMiddleware
   );
+  require('./categoriesAttributs/readCategoriesByNameMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
 
   // scenes routes
   require('./BIM/scenes/list')(logger, app);

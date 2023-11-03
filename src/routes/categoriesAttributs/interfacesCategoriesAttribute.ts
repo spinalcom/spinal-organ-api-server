@@ -60,3 +60,18 @@ export interface CategoriesAttribute {
 *         categoryAttribute:
 *           $ref: '#/components/schemas/CategoriesAttribute'
 */
+
+/**
+* @swagger
+* components:
+*   schemas:
+*     CategoriesAttributesMultiple:
+*       type: "object"
+*       properties:
+*         dynamicId:
+*           type: "integer"
+*         categoryAttribute:
+*           type: "array"
+*           items:
+*             $ref: '#/components/schemas/CategoriesAttribute'
+*/

@@ -25,7 +25,7 @@
 import { NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service/dist/Models/constants";
 import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import { CategoriesAttribute } from './interfacesCategoriesAtrtribut'
+import { CategoriesAttribute } from './interfacesCategoriesAttribute'
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: spinalAPIMiddleware) {
 
