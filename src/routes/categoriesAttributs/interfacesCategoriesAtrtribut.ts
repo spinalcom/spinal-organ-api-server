@@ -37,7 +37,7 @@
 *           type: "string"
 *         type:
 *           type: "string"
- */
+*/
 
 export interface CategoriesAttribute {
   dynamicId: number,
@@ -45,3 +45,18 @@ export interface CategoriesAttribute {
   name: string,
   type: string
 }
+
+
+
+/**
+* @swagger
+* components:
+*   schemas:
+*     CategoriesAttributeMultiple:
+*       type: "object"
+*       properties:
+*         dynamicId:
+*           type: "integer"
+*         categoryAttribute:
+*           $ref: '#/components/schemas/CategoriesAttribute'
+*/

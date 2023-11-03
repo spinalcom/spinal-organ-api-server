@@ -60,7 +60,8 @@ function getDetail(obj : SpinalNode<any>){
         dynamicId: obj._server_id,
         name: obj.getName().get(),
         type: obj.getType().get(),
-
+        dbid : obj.info.dbid?.get(),
+        bimFileId: obj.info.bimFileId?.get()
     };
     return infoObject;
 }

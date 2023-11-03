@@ -26,6 +26,7 @@ import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { CategoriesAttribute } from './interfacesCategoriesAtrtribut';
 import { SpinalNode } from 'spinal-model-graph';
+import { getCategoryNameInfo } from '../../utilities/getCategoryNameInfo';
 
 module.exports = function (
   logger,
@@ -70,30 +71,18 @@ module.exports = function (
   app.get(
     '/api/v1/node/:nodeId/categoryByName/:categoryName/read',
     async (req, res, next) => {
-      let info: CategoriesAttribute;
       try {
-        let node: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.nodeId, 10)
-        );
-        const result = await serviceDocumentation._categoryExist(
-          node,
+        const info = await getCategoryNameInfo(
+          spinalAPIMiddleware,
+          parseInt(req.params.nodeId, 10),
           req.params.categoryName
         );
-        if (result === undefined) {
-          res.status(400).send('category not found in node');
-        } else {
-          info = {
-            dynamicId: result._server_id,
-            staticId: result.getId().get(),
-            name: result.getName().get(),
-            type: result.getType().get(),
-          };
-        }
+        res.json(info);
       } catch (error) {
         console.log(error);
-        res.status(400).send('ko');
+
+        res.status(400).send(error.message || 'ko');
       }
-      res.json(info);
     }
   );
 };

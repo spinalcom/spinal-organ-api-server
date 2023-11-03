@@ -306,6 +306,17 @@
           }
         }
       },
+      "CategoriesAttributeMultiple": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "categoryAttribute": {
+            "$ref": "#/components/schemas/CategoriesAttribute"
+          }
+        }
+      },
       "NodeAttribut": {
         "type": "object",
         "properties": {
@@ -15496,6 +15507,84 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Node"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/categoryByName/{categoryName}/read_multiple": {
+      "post": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Read category attribute for multiple nodes",
+        "summary": "Read category attribute for multiple nodes",
+        "tags": [
+          "Node Attribut Categories"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "categoryName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All attribute nodes info fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoriesAttributeMultiple"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some attribute info could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/CategoriesAttributeMultiple"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
                 }
               }
             }
