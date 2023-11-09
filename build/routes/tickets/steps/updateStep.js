@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
@@ -87,18 +78,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.put("/api/v1/workflow/:workflowId/process/:processId/step/:stepId/update_step", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.put("/api/v1/workflow/:workflowId/process/:processId/step/:stepId/update_step", async (req, res, next) => {
         try {
-            yield spinalAPIMiddleware.getGraph();
+            await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            let workflow = yield spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-            var process = yield spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
-            var step = yield spinalAPIMiddleware.load(parseInt(req.params.stepId, 10), profileId);
+            let workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+            var process = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
+            var step = await spinalAPIMiddleware.load(parseInt(req.params.stepId, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(process);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(step);
-            var allSteps = yield spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(process.getId().get(), ["SpinalSystemServiceTicketHasStep"]);
+            var allSteps = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(process.getId().get(), ["SpinalSystemServiceTicketHasStep"]);
             for (let index = 0; index < allSteps.length; index++) {
                 const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(allSteps[index].id.get());
                 if (realNode.getName().get() === req.body.newNameStep || req.body.newNameStep === "string") {
@@ -124,6 +115,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             return res.status(400).send(error.message);
         }
         res.json();
-    }));
+    });
 };
 //# sourceMappingURL=updateStep.js.map

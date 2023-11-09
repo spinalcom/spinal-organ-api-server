@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const findOneInContext_1 = require("../../utilities/findOneInContext");
@@ -81,45 +72,42 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.post('/api/v1/find_node_in_context', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-        var _a;
+    app.post('/api/v1/find_node_in_context', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             var info;
-            yield spinalAPIMiddleware.getGraph();
+            await spinalAPIMiddleware.getGraph();
             const tab = req.body.array;
             const paramContext = req.body.context;
             var result = [];
-            var context = yield verifyContext(paramContext);
+            var context = await verifyContext(paramContext);
             /**********************context************************/
-            function verifyContext(paramContext) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    if (typeof spinal_core_connectorjs_type_1.FileSystem._objects[paramContext] !== 'undefined') {
-                        return (context = yield spinalAPIMiddleware.load(parseInt(paramContext, 10), profileId));
-                    }
-                    else if (spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(paramContext)) {
-                        return (context = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(paramContext));
-                    }
-                    else if (spinal_env_viewer_graph_service_1.SpinalGraphService.getContext(paramContext)) {
-                        return (context = spinal_env_viewer_graph_service_1.SpinalGraphService.getContext(paramContext));
-                    }
-                    else {
-                        res.status(400).send('context not exist');
-                    }
-                });
+            async function verifyContext(paramContext) {
+                if (typeof spinal_core_connectorjs_type_1.FileSystem._objects[paramContext] !== 'undefined') {
+                    return (context = await spinalAPIMiddleware.load(parseInt(paramContext, 10), profileId));
+                }
+                else if (spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(paramContext)) {
+                    return (context = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(paramContext));
+                }
+                else if (spinal_env_viewer_graph_service_1.SpinalGraphService.getContext(paramContext)) {
+                    return (context = spinal_env_viewer_graph_service_1.SpinalGraphService.getContext(paramContext));
+                }
+                else {
+                    res.status(400).send('context not exist');
+                }
             }
             /***************** ***optionSearchNodes**************/
             if (req.body.optionSearchNodes === 'dynamicId') {
                 let nodes = [];
                 for (let index = 0; index < tab.length; index++) {
-                    let node = yield spinalAPIMiddleware.load(parseInt(tab[index], 10), profileId);
+                    let node = await spinalAPIMiddleware.load(parseInt(tab[index], 10), profileId);
                     nodes.push(node);
                 }
                 for (const _node of nodes) {
                     if (_node.belongsToContext(context)) {
                         if (req.body.optionResult === 'ticket') {
                             //Step
-                            let _step = yield _node
+                            let _step = await _node
                                 .getParents('SpinalSystemServiceTicketHasTicket')
                                 .then((steps) => {
                                 for (const step of steps) {
@@ -129,7 +117,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                                     }
                                 }
                             });
-                            let _process = yield _step
+                            let _process = await _step
                                 .getParents('SpinalSystemServiceTicketHasStep')
                                 .then((processes) => {
                                 for (const process of processes) {
@@ -141,7 +129,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             let elementSelected;
                             try {
                                 if (_node.info.elementSelected !== undefined)
-                                    elementSelected = yield spinalAPIMiddleware.loadPtr(_node.info.elementSelected);
+                                    elementSelected = await spinalAPIMiddleware.loadPtr(_node.info.elementSelected);
                                 else
                                     elementSelected = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(_node.info.nodeId.get());
                             }
@@ -214,7 +202,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 for (let index = 0; index < tab.length; index++) {
                     let node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(tab[index]);
                     if (typeof node === 'undefined') {
-                        node = yield (0, findOneInContext_1.findOneInContext)(context, context, (n) => n.getId().get() === tab[index]);
+                        node = await (0, findOneInContext_1.findOneInContext)(context, context, (n) => n.getId().get() === tab[index]);
                     }
                     nodes.push(node);
                 }
@@ -224,7 +212,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             _node.belongsToContext(context)) {
                             if (req.body.optionResult === 'ticket') {
                                 //Step
-                                let _step = yield _node
+                                let _step = await _node
                                     .getParents('SpinalSystemServiceTicketHasTicket')
                                     .then((steps) => {
                                     for (const step of steps) {
@@ -234,7 +222,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                                         }
                                     }
                                 });
-                                let _process = yield _step
+                                let _process = await _step
                                     .getParents('SpinalSystemServiceTicketHasStep')
                                     .then((processes) => {
                                     for (const process of processes) {
@@ -246,9 +234,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                                 let elementSelected;
                                 try {
                                     if (_node.info.elementSelected !== undefined)
-                                        elementSelected = yield spinalAPIMiddleware.loadPtr(_node.info.elementSelected);
+                                        elementSelected = await spinalAPIMiddleware.loadPtr(_node.info.elementSelected);
                                     else
-                                        elementSelected = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode((_a = _node.info.nodeId) === null || _a === void 0 ? void 0 : _a.get());
+                                        elementSelected = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(_node.info.nodeId?.get());
                                 }
                                 catch (error) {
                                     console.error(error);
@@ -317,17 +305,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
             else if (req.body.optionSearchNodes === 'name') {
                 if (context) {
-                    let res = yield spinal_env_viewer_graph_service_1.SpinalGraphService.findInContext(context.getId().get(), context.getId().get());
+                    let res = await spinal_env_viewer_graph_service_1.SpinalGraphService.findInContext(context.getId().get(), context.getId().get());
                     for (const _node of res) {
                         for (const _name of tab) {
                             if (_node.name.get() === _name) {
                                 let node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(_node.id.get());
                                 if (typeof node === 'undefined') {
-                                    node = yield (0, findOneInContext_1.findOneInContext)(context, context, (n) => n.getId().get() === _node.id.get());
+                                    node = await (0, findOneInContext_1.findOneInContext)(context, context, (n) => n.getId().get() === _node.id.get());
                                 }
                                 if (req.body.optionResult === 'ticket') {
                                     //Step
-                                    let _step = yield node
+                                    let _step = await node
                                         .getParents('SpinalSystemServiceTicketHasTicket')
                                         .then((steps) => {
                                         for (const step of steps) {
@@ -337,7 +325,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                                             }
                                         }
                                     });
-                                    let _process = yield _step
+                                    let _process = await _step
                                         .getParents('SpinalSystemServiceTicketHasStep')
                                         .then((processes) => {
                                         for (const process of processes) {
@@ -350,7 +338,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                                     let elementSelected;
                                     try {
                                         if (node.info.elementSelected !== undefined)
-                                            elementSelected = yield spinalAPIMiddleware.loadPtr(node.info.elementSelected);
+                                            elementSelected = await spinalAPIMiddleware.loadPtr(node.info.elementSelected);
                                         else
                                             elementSelected = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(node.info.nodeId.get());
                                     }
@@ -427,6 +415,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(400).send('ko');
         }
         res.json(result);
-    }));
+    });
 };
 //# sourceMappingURL=findInContext.js.map

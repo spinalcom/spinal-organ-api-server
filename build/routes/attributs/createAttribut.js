@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
@@ -88,25 +79,25 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   *       400:
   *         description: Bad request
   */
-    app.post("/api/v1/node/:IdNode/category/:IdCategory/attribut/create", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post("/api/v1/node/:IdNode/category/:IdCategory/attribut/create", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            let node = yield spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
+            let node = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
             var test = false;
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            let category = yield spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
+            let category = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
             let attributeLabel = req.body.attributeLabel;
             let attributeValue = req.body.attributeValue;
             let attributeType = req.body.attributeType;
             let attributeUnit = req.body.attributeUnit;
-            let childrens = yield node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+            let childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
             for (const children of childrens) {
                 if (children.getId().get() === category.getId().get()) {
                     test = true;
-                    const created = yield spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addAttributeByCategoryName(node, category.getName().get(), attributeLabel, attributeValue, attributeType, attributeUnit);
+                    const created = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addAttributeByCategoryName(node, category.getName().get(), attributeLabel, attributeValue, attributeType, attributeUnit);
                     if (created === undefined) {
                         return res.status(400).send("not found");
                     }
@@ -122,6 +113,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             return res.status(400).send(error.message);
         }
         res.json();
-    }));
+    });
 };
 //# sourceMappingURL=createAttribut.js.map

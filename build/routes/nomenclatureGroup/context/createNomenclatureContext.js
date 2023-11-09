@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_nomenclature_service_1 = require("spinal-env-viewer-plugin-nomenclature-service");
@@ -63,15 +54,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *       400:
    *         description: Bad request
   */
-    app.post("/api/v1/nomenclatureGroup/create", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post("/api/v1/nomenclatureGroup/create", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const userGraph = yield spinalAPIMiddleware.getProfileGraph(profileId);
+            const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
             if (!userGraph)
                 res.status(406).send(`No graph found for ${profileId}`);
-            const graph = yield spinalAPIMiddleware.getGraph();
-            yield spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
-            let context = yield spinal_env_viewer_plugin_nomenclature_service_1.spinalNomenclatureService.createOrGetContext(req.body.nomenclatureContextName);
+            const graph = await spinalAPIMiddleware.getGraph();
+            await spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
+            let context = await spinal_env_viewer_plugin_nomenclature_service_1.spinalNomenclatureService.createOrGetContext(req.body.nomenclatureContextName);
             userGraph.addContext(context);
             var info = {
                 dynamicId: context._server_id,
@@ -86,6 +77,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             res.status(400).send(error.message);
         }
-    }));
+    });
 };
 //# sourceMappingURL=createNomenclatureContext.js.map

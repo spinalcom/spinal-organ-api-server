@@ -22,13 +22,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { Room } from '../interfacesGeoContext'
-import { SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service';
-import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { getRoomDetailsInfo } from '../../../utilities/getRoomDetailsInfo';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
@@ -65,61 +62,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.get("/api/v1/room/:id/read_details", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-
-      let area = 0
-      let _bimObjects = [];
-      var room: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      const t: { bimFileId: string, bimFileName: string, dbids: number[] }[] = []
-      var bimFileId: string
-      //@ts-ignore
-      SpinalGraphService._addNode(room)
-      if (room.getType().get() === "geographicRoom") {
-        var bimObjects = await room.getChildren("hasBimObject");
-        for (const bimObject of bimObjects) {
-          bimFileId = bimObject.info.bimFileId.get();
-
-          const infoBimObject = {
-            staticId: bimObject.getId().get(),
-            name: bimObject.getName().get(),
-            type: bimObject.getType().get(),
-            version: bimObject.info.version.get(),
-            externalId: bimObject.info.externalId.get(),
-            dbid: bimObject.info.dbid.get(),
-          }
-          _bimObjects.push(infoBimObject)
-        }
-
-
-
-
-
-
-        let categories = await room.getChildren(NODE_TO_CATEGORY_RELATION);
-        for (const child of categories) {
-          if (child.getName().get() === "Spatial") {
-            let attributs = await child.element.load();
-            for (const attribut of attributs.get()) {
-              if (attribut.label === "area") {
-                area = attribut.value
-              }
-            }
-          }
-        }
-
-        var info = {
-          area: area,
-          bimFileId: bimFileId,
-          _bimObjects: _bimObjects
-        }
-      } else {
-        res.status(400).send("node is not of type geographic room");
-      }
-
+      const result = await getRoomDetailsInfo(spinalAPIMiddleware,profileId, parseInt(req.params.id,10));
+      return res.json(result);
     } catch (error) {
-
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }
-    res.json(info);
   });
 }

@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
@@ -81,13 +72,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Add not Successfully
      */
-    app.post('/api/v1/ticket/:ticketId/add_doc', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post('/api/v1/ticket/:ticketId/add_doc', async (req, res, next) => {
         try {
             // var workflow = await spinalAPIMiddleware.load(parseInt(req.body.workflowId, 10));
             // //@ts-ignore
             // SpinalGraphService._addNode(workflow)
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var ticket = yield spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
+            var ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(ticket);
             // @ts-ignore
@@ -104,7 +95,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     name: file.name,
                     buffer: file.data,
                 };
-                yield spinal_env_viewer_plugin_documentation_service_1.FileExplorer.uploadFiles(ticket, data);
+                await spinal_env_viewer_plugin_documentation_service_1.FileExplorer.uploadFiles(ticket, data);
                 res.send({
                     status: true,
                     message: 'File is uploaded',
@@ -122,6 +113,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(400).send('ko');
         }
         // res.json();
-    }));
+    });
 };
 //# sourceMappingURL=ticketAddDoc.js.map

@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 const mime = require('mime-types');
@@ -60,19 +51,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Download not Successfully
      */
-    app.use('/api/v1/node/:id/download_file', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.use('/api/v1/node/:id/download_file', async (req, res, next) => {
         try {
-            yield spinalAPIMiddleware.getGraph();
+            await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             const { http, hubUri } = getHost(spinalAPIMiddleware.config);
-            yield down(node, http, hubUri, res);
+            await down(node, http, hubUri, res);
         }
         catch (error) {
             console.log(error);
             res.status(400).send('ko');
         }
-    }));
+    });
 };
 function down(file, http, hubUri, res) {
     return new Promise((resolve, reject) => {
@@ -80,13 +71,12 @@ function down(file, http, hubUri, res) {
             // const p = `${__dirname}/${path.name.get()}`;
             // const f = fs.createWriteStream(p);
             http.get(`${hubUri}/sceen/_?u=${argPath._server_id}`, function (response) {
-                var _a;
-                var type = mime.lookup((_a = file === null || file === void 0 ? void 0 : file.name) === null || _a === void 0 ? void 0 : _a.get()) || 'application/octet-stream';
+                var type = mime.lookup(file?.name?.get()) || 'application/octet-stream';
                 res.set('Content-Type', type);
                 response.pipe(res);
-                response.on('end', () => __awaiter(this, void 0, void 0, function* () {
+                response.on('end', async () => {
                     resolve();
-                }));
+                });
                 response.on('error', function (err) {
                     console.log(err);
                 });

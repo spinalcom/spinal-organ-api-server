@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
@@ -76,11 +67,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/analytics/room/:id/status/:option', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get('/api/v1/analytics/room/:id/status/:option', async (req, res, next) => {
         try {
-            yield spinalAPIMiddleware.getGraph();
+            await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var room = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            var room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
             var ticketList = [];
@@ -89,11 +80,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 ///////////////////////////////////////////////////////////////////////////////////
                 ////////////////////////////////// Room //////////////////////////////////////////
                 ////////////////////////////////////////////////////////////////////////////////////////
-                var ticketListRoom = yield spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(room.getId().get());
+                var ticketListRoom = await spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(room.getId().get());
                 for (let index = 0; index < ticketListRoom.length; index++) {
                     var realNodeTicket = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(ticketListRoom[index].id);
                     //Step
-                    var _step = yield realNodeTicket
+                    var _step = await realNodeTicket
                         .getParents('SpinalSystemServiceTicketHasTicket')
                         .then((steps) => {
                         for (const step of steps) {
@@ -104,7 +95,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     });
                     //Log Ticket Room
                     var _logs = [];
-                    var logs = yield spinal_service_ticket_1.serviceTicketPersonalized.getLogs(realNodeTicket.getId().get());
+                    var logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(realNodeTicket.getId().get());
                     for (const log of logs) {
                         let lastActionDate = log.creationDate;
                         _logs.push(lastActionDate);
@@ -139,17 +130,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 ////////////////////////////////////////////////////////////////////////////////////////
                 // Equipement List
                 var equipementList = [];
-                var equipements = yield room.getChildren('hasBimObject');
+                var equipements = await room.getChildren('hasBimObject');
                 for (const equipement of equipements) {
                     var _ticketListEquipemnt = [];
                     var _ticketListEquipemntStandard = [];
                     //@ts-ignore
                     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(equipement);
-                    var ticketListEquipemnt = yield spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(equipement.getId().get());
+                    var ticketListEquipemnt = await spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(equipement.getId().get());
                     for (const ticketEquipemnt of ticketListEquipemnt) {
                         var realNodeEquipementTicket = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(ticketEquipemnt.id);
                         //Step
-                        var _stepTicketEquipement = yield realNodeEquipementTicket
+                        var _stepTicketEquipement = await realNodeEquipementTicket
                             .getParents('SpinalSystemServiceTicketHasTicket')
                             .then((steps) => {
                             for (const step of steps) {
@@ -162,7 +153,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         //Log Ticket Room
                         var _logsEquipement;
                         var _logsTicketEquipement = [];
-                        var logs = yield spinal_service_ticket_1.serviceTicketPersonalized.getLogs(realNodeEquipementTicket.getId().get());
+                        var logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(realNodeEquipementTicket.getId().get());
                         for (const log of logs) {
                             let lastActionDate = log.creationDate;
                             _logsTicketEquipement.push(lastActionDate);
@@ -218,12 +209,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 ///////////////////////////////////////////////////////////////////////////////////
                 ////////////////////////////////// Alarm //////////////////////////////////////////
                 ////////////////////////////////////////////////////////////////////////////////////////
-                var profils = yield spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(room.getId().get(), [spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP]);
-                var promises = profils.map((profile) => __awaiter(this, void 0, void 0, function* () {
-                    var result = yield spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(profile.id.get(), [spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName]);
-                    var endpoints = yield result.map((endpoint) => __awaiter(this, void 0, void 0, function* () {
+                var profils = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(room.getId().get(), [spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP]);
+                var promises = profils.map(async (profile) => {
+                    var result = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(profile.id.get(), [spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName]);
+                    var endpoints = await result.map(async (endpoint) => {
                         var realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(endpoint.id.get());
-                        var element = yield endpoint.element.load();
+                        var element = await endpoint.element.load();
                         var currentValue = element.currentValue.get();
                         return {
                             dynamicId: realNode._server_id,
@@ -232,13 +223,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             type: element.type.get(),
                             currentValue: currentValue,
                         };
-                    }));
+                    });
                     return {
                         profileName: profile.name.get(),
-                        endpoints: yield Promise.all(endpoints),
+                        endpoints: await Promise.all(endpoints),
                     };
-                }));
-                var allNodes = yield Promise.all(promises);
+                });
+                var allNodes = await Promise.all(promises);
                 var _alarmList = [];
                 for (const node of allNodes) {
                     for (const endpoint of node.endpoints) {
@@ -333,6 +324,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(400).send('ko');
         }
         res.json(info);
-    }));
+    });
 };
 //# sourceMappingURL=roomResume.js.map

@@ -22,12 +22,11 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import spinalAPIMiddleware from '../../spinalAPIMiddleware';
+
 import * as express from 'express';
-import { SpinalEventService } from "spinal-env-viewer-task-service";
-import { Event } from '../calendar/interfacesContextsEvents'
+
 import { getProfileId } from '../../utilities/requestUtilities';
+import { getEventListInfo } from '../../utilities/getEventListInfo';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
@@ -64,37 +63,13 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    */
   app.get("/api/v1/node/:id/event_list", async (req, res, next) => {
     try {
-      await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);
-      var nodes = [];
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(node)
-      var listEvents = await SpinalEventService.getEvents(node.getId().get())
-
-      for (const child of listEvents) {
-        // @ts-ignore
-        const _child = SpinalGraphService.getRealNode(child.id.get())
-        if (_child.getType().get() === "SpinalEvent") {
-          let info = {
-            dynamicId: _child._server_id,
-            staticId: _child.getId()?.get(),
-            name: _child.getName()?.get(),
-            type: _child.getType()?.get(),
-            groupID: _child.info.groupId?.get(),
-            categoryID: child.categoryId?.get(),
-            nodeId: _child.info.nodeId?.get(),
-            repeat: _child.info.repeat?.get(),
-            description: _child.info.description?.get(),
-            startDate: _child.info.startDate?.get(),
-            endDate: _child.info.endDate?.get(),
-          };
-          nodes.push(info);
-        }
-      }
-
+      var nodes = await getEventListInfo(
+        spinalAPIMiddleware,
+        profileId,
+        parseInt(req.params.id, 10)
+      );
     } catch (error) {
-
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }

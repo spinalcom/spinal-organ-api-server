@@ -22,20 +22,30 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { Floor } from '../interfacesGeoContext'
-import { SpinalNode } from 'spinal-model-graph';
-import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { getRoomReferenceObjectsListInfo } from '../../../utilities/getRoomReferenceObjectListInfo';
 
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
+  app.get("/api/v1/room/:id/reference_Objects_list", async (req, res, next) => {
+
+    try {
+      const profileId = getProfileId(req);
+      const info = await getRoomReferenceObjectsListInfo(spinalAPIMiddleware,profileId, parseInt(req.params.id,10));
+      return res.send(info);
+    } catch (error) {
+      console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(400).send("list of reference_Objects is not loaded");
+    }
+  });
+
   /**
  * @swagger
- * /api/v1/room/{id}/reference_Objects_list:
+ * /api/v1/room/{id}/reference_object_list:
  *   get:
  *     security: 
  *       - bearerAuth: 
@@ -78,44 +88,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  *         description: Bad request
   */
 
-  app.get("/api/v1/room/:id/reference_Objects_list", async (req, res, next) => {
+  app.get("/api/v1/room/:id/reference_object_list", async (req, res, next) => {
 
     try {
       const profileId = getProfileId(req);
-      var room: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(room)
-      var bimFileId: string;
-      let referenceObjets = await room.getChildren("hasReferenceObject.ROOM");
-      var _objects = []
-      for (let index = 0; index < referenceObjets.length; index++) {
-        bimFileId = referenceObjets[index].info.bimFileId.get()
-        var infoReferencesObject = {
-          dynamicId: referenceObjets[index]._server_id,
-          staticId: referenceObjets[index].getId().get(),
-          name: referenceObjets[index].getName().get(),
-          type: referenceObjets[index].getType().get(),
-          version: referenceObjets[index].info.version.get(),
-          externalId: referenceObjets[index].info.externalId.get(),
-          dbid: referenceObjets[index].info.dbid.get(),
-        }
-        _objects.push(infoReferencesObject)
-      }
-      var info = {
-        dynamicId: room._server_id,
-        staticId: room.getId().get(),
-        name: room.getName().get(),
-        type: room.getType().get(),
-        bimFileId: bimFileId,
-        infoReferencesObjects: _objects
-      }
+      const info = await getRoomReferenceObjectsListInfo(spinalAPIMiddleware,profileId, parseInt(req.params.id,10));
+      return res.send(info);
     } catch (error) {
       console.error(error);
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("list of reference_Objects is not loaded");
     }
-
-    res.send(info);
-
   });
 };

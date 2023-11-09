@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service");
@@ -117,14 +108,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.post("/api/v1/ticket/:id/create_event", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post("/api/v1/ticket/:id/create_event", async (req, res, next) => {
         try {
-            yield spinalAPIMiddleware.getGraph();
+            await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            var tree = yield spinal_env_viewer_task_service_1.SpinalEventService.createOrgetDefaultTreeStructure();
+            var tree = await spinal_env_viewer_task_service_1.SpinalEventService.createOrgetDefaultTreeStructure();
             var context = tree.context;
             var category = tree.category;
             var group = tree.group;
@@ -149,7 +140,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         email: req.body.user.email,
                         gsm: req.body.user.gsm,
                     };
-                    var result = yield spinal_env_viewer_task_service_1.SpinalEventService.createEvent(context.id.get(), group.id.get(), node.getId().get(), eventInfo, user);
+                    var result = await spinal_env_viewer_task_service_1.SpinalEventService.createEvent(context.id.get(), group.id.get(), node.getId().get(), eventInfo, user);
                     var ticketCreated = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(result.id.get());
                     console.log(ticketCreated._server_id);
                     var info = {
@@ -190,6 +181,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(500).send(error.message);
         }
         res.json(info);
-    }));
+    });
 };
 //# sourceMappingURL=ticketCreateEvent.js.map

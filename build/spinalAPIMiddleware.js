@@ -22,27 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __await = (this && this.__await) || function (v) { return this instanceof __await ? (this.v = v, this) : new __await(v); }
-var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _arguments, generator) {
-    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-    var g = generator.apply(thisArg, _arguments || []), i, q = [];
-    return i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i;
-    function verb(n) { if (g[n]) i[n] = function (v) { return new Promise(function (a, b) { q.push([n, v, a, b]) > 1 || resume(n, v); }); }; }
-    function resume(n, v) { try { step(g[n](v)); } catch (e) { settle(q[0][3], e); } }
-    function step(r) { r.value instanceof __await ? Promise.resolve(r.value.v).then(fulfill, reject) : settle(q[0][2], r); }
-    function fulfill(value) { resume("next", value); }
-    function reject(value) { resume("throw", value); }
-    function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_core_connectorjs_type_1 = require("spinal-core-connectorjs_type");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
@@ -52,6 +31,13 @@ const Q = require('q');
 const config_1 = require("./config");
 const spinalIOMiddleware_1 = require("./spinalIOMiddleware");
 class SpinalAPIMiddleware {
+    // singleton class
+    static getInstance() {
+        if (SpinalAPIMiddleware.instance === null) {
+            SpinalAPIMiddleware.instance = new SpinalAPIMiddleware();
+        }
+        return SpinalAPIMiddleware.instance;
+    }
     constructor() {
         this.iteratorGraph = this.geneGraph();
         this.config = config_1.default;
@@ -72,42 +58,31 @@ class SpinalAPIMiddleware {
         // get the Model from the spinalhub, "onLoadSuccess" and "onLoadError" are 2
         // callback function.
     }
-    // singleton class
-    static getInstance() {
-        if (SpinalAPIMiddleware.instance === null) {
-            SpinalAPIMiddleware.instance = new SpinalAPIMiddleware();
-        }
-        return SpinalAPIMiddleware.instance;
-    }
-    geneGraph() {
-        return __asyncGenerator(this, arguments, function* geneGraph_1() {
-            const init = new Promise((resolve, reject) => {
-                spinal_core_connectorjs_type_1.spinalCore.load(this.conn, config_1.default.file.path, (graph) => {
-                    spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph)
-                        .then(() => {
-                        resolve(graph);
-                    })
-                        .catch((e) => {
-                        console.error(e);
-                        reject();
-                    });
-                }, () => {
-                    console.error(`File does not exist in location ${config_1.default.file.path}`);
+    async *geneGraph() {
+        const init = new Promise((resolve, reject) => {
+            spinal_core_connectorjs_type_1.spinalCore.load(this.conn, config_1.default.file.path, (graph) => {
+                spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph)
+                    .then(() => {
+                    resolve(graph);
+                })
+                    .catch((e) => {
+                    console.error(e);
                     reject();
                 });
+            }, () => {
+                console.error(`File does not exist in location ${config_1.default.file.path}`);
+                reject();
             });
-            const graph = yield __await(init);
-            while (true) {
-                yield yield __await(graph);
-            }
         });
+        const graph = await init;
+        while (true) {
+            yield graph;
+        }
     }
     // called if connected to the server and if the spinalhub sent us the Model
-    getGraph() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const g = yield this.iteratorGraph.next();
-            return g.value;
-        });
+    async getGraph() {
+        const g = await this.iteratorGraph.next();
+        return g.value;
     }
     getProfileGraph() {
         return this.getGraph();
@@ -159,12 +134,12 @@ class SpinalAPIMiddleware {
         return prom;
     }
     runSocketServer(server, spinalIOMiddleware) {
-        return this._waitConnection().then((result) => __awaiter(this, void 0, void 0, function* () {
+        return this._waitConnection().then(async (result) => {
             if (spinalIOMiddleware == undefined)
                 spinalIOMiddleware = new spinalIOMiddleware_1.SpinalIOMiddleware(this.conn, this.config);
-            const io = yield (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
+            const io = await (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
             return io;
-        }));
+        });
     }
     _waitConnection() {
         const deferred = Q.defer();

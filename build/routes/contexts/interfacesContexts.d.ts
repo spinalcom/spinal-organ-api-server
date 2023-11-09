@@ -74,6 +74,7 @@ export interface BIMFileContextItems {
     name: string;
     path: string;
     thumbnail?: string;
+    aecPath?: string;
 }
 /**
  * @swagger

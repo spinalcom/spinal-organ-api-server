@@ -36,15 +36,6 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
 var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runServerRest = void 0;
 const swagger_1 = require("../swagger");
@@ -64,12 +55,10 @@ function initApiServer(app, spinalAPIMiddleware, log_body = false) {
     });
     (0, routes_1.default)({}, app, spinalAPIMiddleware);
 }
-function runServerRest(server, app, spinalAPIMiddleware, spinalIOMiddleware, log_body = false) {
-    return __awaiter(this, void 0, void 0, function* () {
-        initApiServer(app, spinalAPIMiddleware, log_body);
-        const io = yield (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
-        return { app, io };
-    });
+async function runServerRest(server, app, spinalAPIMiddleware, spinalIOMiddleware, log_body = false) {
+    initApiServer(app, spinalAPIMiddleware, log_body);
+    const io = await (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
+    return { app, io };
 }
 exports.runServerRest = runServerRest;
 __exportStar(require("../interfaces"), exports);

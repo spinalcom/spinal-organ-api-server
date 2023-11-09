@@ -21,15 +21,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 const BimObjectUtils = require('./BimObjectUtils');
 module.exports = function (logger, app) {
     /**
@@ -75,7 +66,7 @@ module.exports = function (logger, app) {
      *                $ref: '#/components/schemas/IBimObjectsInfo'
      *
      */
-    app.post('/api/v1/BIM/getBimObjectsInfo', (req, res) => __awaiter(this, void 0, void 0, function* () {
+    app.post('/api/v1/BIM/getBimObjectsInfo', async (req, res) => {
         try {
             const bimObjectUtils = BimObjectUtils.getInstance();
             // data : { bimFileId: string, dbids: number[] }[]
@@ -85,7 +76,7 @@ module.exports = function (logger, app) {
             const result = [];
             for (const d of data) {
                 // eslint-disable-next-line no-await-in-loop
-                const info = yield bimObjectUtils.getBimObjectsInfo(d.bimFileId, d.dbids);
+                const info = await bimObjectUtils.getBimObjectsInfo(d.bimFileId, d.dbids);
                 result.push(info);
             }
             res.json(result);
@@ -93,6 +84,6 @@ module.exports = function (logger, app) {
         catch (e) {
             res.status(500).json(e);
         }
-    }));
+    });
 };
 //# sourceMappingURL=getBimObjectsInfo.js.map

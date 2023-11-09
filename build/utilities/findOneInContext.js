@@ -22,48 +22,37 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.findOneInContext = void 0;
-function findOneInContext(node, context, predicate) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (typeof predicate !== 'function') {
-            throw new Error('The predicate function must be a function');
-        }
-        const seen = new Set([node]);
-        let promises = [];
-        let nextGen = [node];
-        let currentGen = [];
-        while (nextGen.length) {
-            currentGen = nextGen;
-            promises = [];
-            nextGen = [];
-            for (const object of currentGen) {
-                if (predicate(object)) {
-                    return object;
-                }
+async function findOneInContext(node, context, predicate) {
+    if (typeof predicate !== 'function') {
+        throw new Error('The predicate function must be a function');
+    }
+    const seen = new Set([node]);
+    let promises = [];
+    let nextGen = [node];
+    let currentGen = [];
+    while (nextGen.length) {
+        currentGen = nextGen;
+        promises = [];
+        nextGen = [];
+        for (const object of currentGen) {
+            if (predicate(object)) {
+                return object;
             }
-            promises = currentGen.map((object) => object.getChildrenInContext(context));
-            const childrenArrays = yield Promise.all(promises);
-            for (const children of childrenArrays) {
-                for (const child of children) {
-                    if (!seen.has(child)) {
-                        nextGen.push(child);
-                        seen.add(child);
-                    }
+        }
+        promises = currentGen.map((object) => object.getChildrenInContext(context));
+        const childrenArrays = await Promise.all(promises);
+        for (const children of childrenArrays) {
+            for (const child of children) {
+                if (!seen.has(child)) {
+                    nextGen.push(child);
+                    seen.add(child);
                 }
             }
         }
-        return undefined;
-    });
+    }
+    return undefined;
 }
 exports.findOneInContext = findOneInContext;
 //# sourceMappingURL=findOneInContext.js.map

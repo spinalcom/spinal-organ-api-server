@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
@@ -106,8 +97,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Add not Successfully
      */
-    app.post('/api/v1/ticket/create_ticket', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-        var _a, _b, _c, _d;
+    app.post('/api/v1/ticket/create_ticket', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             let ticketCreated;
@@ -117,13 +107,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 description: req.body.description,
                 declarer_id: req.body.declarer_id,
             };
-            yield spinalAPIMiddleware.getGraph();
+            await spinalAPIMiddleware.getGraph();
             let arrayofServerId = [
                 parseInt(req.body.workflow, 10),
                 parseInt(req.body.process, 10),
             ];
-            const [workflowById, processById] = yield yield (0, loadNode_1._load)(arrayofServerId, spinalAPIMiddleware, profileId);
-            const node = yield (0, getNode_1.default)(spinalAPIMiddleware, req.body.nodeDynamicId, req.body.nodeStaticId, profileId);
+            const [workflowById, processById] = await await (0, loadNode_1._load)(arrayofServerId, spinalAPIMiddleware, profileId);
+            const node = await (0, getNode_1.default)(spinalAPIMiddleware, req.body.nodeDynamicId, req.body.nodeStaticId, profileId);
             if (!node)
                 return res.status(400).send('invalid nodeDynamicId or nodeStaticId');
             //@ts-ignore
@@ -139,7 +129,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     }
                 }
                 if (workflowByName) {
-                    var allProcess = yield spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflowByName.getId().get());
+                    var allProcess = await spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflowByName.getId().get());
                     for (const process of allProcess) {
                         if (process.name.get() === req.body.process) {
                             let result = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(process.id.get());
@@ -150,7 +140,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     }
                 }
                 if (processByName.belongsToContext(workflowByName)) {
-                    ticketCreated = yield spinal_service_ticket_1.serviceTicketPersonalized.addTicket(ticketInfo, processByName.getId().get(), workflowByName.getId().get(), node.getId().get());
+                    ticketCreated = await spinal_service_ticket_1.serviceTicketPersonalized.addTicket(ticketInfo, processByName.getId().get(), workflowByName.getId().get(), node.getId().get());
                 }
                 else {
                     res.status(400).send('the workflow does not contain this process');
@@ -163,18 +153,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(processById);
                 if (processById) {
                     if (processById.belongsToContext(workflowById)) {
-                        ticketCreated = yield spinal_service_ticket_1.serviceTicketPersonalized.addTicket(ticketInfo, processById.getId().get(), workflowById.getId().get(), node.getId().get());
+                        ticketCreated = await spinal_service_ticket_1.serviceTicketPersonalized.addTicket(ticketInfo, processById.getId().get(), workflowById.getId().get(), node.getId().get());
                     }
                     else {
                         res.status(400).send('the workflow does not contain this process');
                     }
                 }
             }
-            var ticketList = yield spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(node.getId().get());
+            var ticketList = await spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(node.getId().get());
             for (let index = 0; index < ticketList.length; index++) {
                 if (ticketList[index].id === ticketCreated) {
                     var realNodeTicket = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(ticketList[index].id);
-                    yield (0, awaitSync_1.awaitSync)(realNodeTicket);
+                    await (0, awaitSync_1.awaitSync)(realNodeTicket);
                     var info = {
                         dynamicId: realNodeTicket._server_id,
                         staticId: realNodeTicket.getId().get(),
@@ -182,8 +172,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         type: realNodeTicket.getType().get(),
                         elementSelcted: req.body.nodeDynamicId,
                         priority: realNodeTicket.info.priority.get(),
-                        description: (_a = realNodeTicket.info) === null || _a === void 0 ? void 0 : _a.description.get(),
-                        declarer_id: (_b = realNodeTicket.info) === null || _b === void 0 ? void 0 : _b.declarer_id.get(),
+                        description: realNodeTicket.info?.description.get(),
+                        declarer_id: realNodeTicket.info?.declarer_id.get(),
                         creationDate: realNodeTicket.info.creationDate.get(),
                     };
                 }
@@ -194,7 +184,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 for (const image of req.body.images) {
                     // @ts-ignore
                     var user = {
-                        username: ((_d = (_c = realNodeTicket.info) === null || _c === void 0 ? void 0 : _c.declarer_id) === null || _d === void 0 ? void 0 : _d.get()) || 'user',
+                        username: realNodeTicket.info?.declarer_id?.get() || 'user',
                         userId: 0,
                     };
                     const base64Image = image.value;
@@ -202,7 +192,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     if (/^data:image\/\w+;base64,/.test(base64Image) === true) {
                         const imageData = base64Image.replace(/^data:image\/\w+;base64,/, '');
                         const imageBufferData = Buffer.from(imageData, 'base64');
-                        yield spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addFileAsNote(realNodeTicket, { name: image.name, buffer: imageBufferData }, user);
+                        await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addFileAsNote(realNodeTicket, { name: image.name, buffer: imageBufferData }, user);
                     }
                 }
             }
@@ -230,6 +220,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(400).send({ ko: error });
         }
         res.json(info);
-    }));
+    });
 };
 //# sourceMappingURL=createTicket.js.map

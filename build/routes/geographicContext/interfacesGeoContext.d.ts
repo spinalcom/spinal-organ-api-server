@@ -24,7 +24,7 @@ export interface Building {
     name: string;
     type: string;
     address: string;
-    area: number;
+    area: number | string;
 }
 /**
 * @swagger
@@ -107,9 +107,56 @@ export interface Room {
 * @swagger
 * components:
 *   schemas:
+*     ControlEndpoint:
+*       type: "object"
+*       properties:
+*         dynamicId:
+*           type: "integer"
+*         staticId:
+*           type: "string"
+*         name:
+*           type: "string"
+*         category:
+*           type: "string"
+*         value:
+*           oneOf:
+*             - type: string
+*             - type: integer
+*             - type: boolean
+ */
+/**
+* @swagger
+* components:
+*   schemas:
 *     RoomDetails:
 *       type: "object"
 *       properties:
+*         area:
+*           type: "integer"
+*         bimFileId:
+*           type: "string"
+*         _bimObjects:
+*           type: "array"
+*           items:
+*             type: "object"
+*             properties:
+*               staticId:
+*                 type: "string"
+*               name:
+*                 type: "string"
+*               type:
+*                 type: "string"
+*               version:
+*                 type: "integer"
+*               externalId:
+*                 type: "string"
+*               dbid:
+*                 type: "integer"
+*     RoomDetailsWithId:
+*       type: "object"
+*       properties:
+*         dynamicId:
+*           type: "integer"
 *         area:
 *           type: "integer"
 *         bimFileId:
@@ -245,7 +292,77 @@ export interface Note {
 * @swagger
 * components:
 *   schemas:
+*     RoomPosition:
+*       type: "object"
+*       properties:
+*         dynamicId:
+*           type: "integer"
+*         staticId:
+*           type: "string"
+*         name:
+*           type: "string"
+*         type:
+*           type: "string"
+*         info:
+*           type: "object"
+*           properties:
+*             context:
+*                  $ref: "#/components/schemas/Context"
+*             building:
+*                  $ref: "#/components/schemas/Building"
+*             floor:
+*                  $ref: "#/components/schemas/Floor"
+ */
+/**
+* @swagger
+* components:
+*   schemas:
 *     StaticDetailsRoom:
+*       type: "object"
+*       properties:
+*         dynamicId:
+*           type: "integer"
+*         staticId:
+*           type: "string"
+*         name:
+*           type: "string"
+*         type:
+*           type: "string"
+*         bimFileId:
+*           type: "string"
+*         version:
+*           type: "number"
+*         externalId:
+*           type: "string"
+*         dbid:
+*           type: "string"
+*         attributs:
+*           type: "array"
+*           items:
+*                $ref: "#/components/schemas/Attributs"
+*         controlEndpoint:
+*           type: "object"
+*           properties:
+*             profileName:
+*               type: "string"
+*             endpoints:
+*               type: array
+*               items:
+*                    $ref: "#/components/schemas/ControlEndpoint"
+*         bimObjects:
+*           type: "array"
+*           items:
+*                $ref: "#/components/schemas/Equipement"
+*         groupParents:
+*           type: "array"
+*           items:
+*                $ref: "#/components/schemas/Room"
+ */
+/**
+* @swagger
+* components:
+*   schemas:
+*     StaticDetailsEquipment:
 *       type: "object"
 *       properties:
 *         dynamicId:
@@ -269,12 +386,108 @@ export interface Note {
 *               type: array
 *               items:
 *                    $ref: "#/components/schemas/Room"
-*         bimObjects:
-*           type: "array"
-*           items:
-*                $ref: "#/components/schemas/Equipement"
 *         groupParents:
 *           type: "array"
 *           items:
 *                $ref: "#/components/schemas/Room"
+ */
+/**
+* @swagger
+* components:
+*  schemas:
+*    InventoryRoomDetails:
+*      type: object
+*      properties:
+*        dynamicId:
+*          type: string
+*        staticId:
+*          type: integer
+*          format: int64
+*        type:
+*          type: string
+*        name:
+*          type: string
+*        inventories:
+*          type: array
+*          items:
+*            $ref: '#/components/schemas/InventoryEquipmentCategory'
+*    InventoryEquipmentCategory:
+*      type: object
+*      properties:
+*        staticId:
+*          type: string
+*        dynamicId:
+*          type: integer
+*          format: int64
+*        name:
+*          type: string
+*        type:
+*          type: string
+*        inventory:
+*          type: array
+*          items:
+*            $ref: '#/components/schemas/InventoryEquipmentGroup'
+*    InventoryEquipmentGroup:
+*      type: object
+*      properties:
+*        staticId:
+*          type: string
+*        dynamicId:
+*          type: integer
+*          format: int64
+*        name:
+*          type: string
+*        type:
+*          type: string
+*        equipments:
+*          type: array
+*          items:
+*            $ref: '#/components/schemas/InventoryBIMObject'
+*    InventoryBIMObject:
+*      type: object
+*      properties:
+*        staticId:
+*          type: string
+*        dynamicId:
+*          type: integer
+*          format: int64
+*        name:
+*          type: string
+*        type:
+*          type: string
+ */
+/**
+* @swagger
+* components:
+*  schemas:
+*    Error:
+*      type: object
+*      properties:
+*        dynamicId:
+*          type: integer
+*          format: int64
+*        error:
+*          type: string
+*/
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     RoomReferenceObjectResponse:
+ *       type: object
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         staticId:
+ *           type: "string"
+ *         name:
+ *           type: "string"
+ *         type:
+ *           type: "string"
+ *         bimFileId:
+ *           type: "string"
+ *         infoReferencesObjects:
+ *           type: "array"
+ *           items:
+ *             $ref: '#/components/schemas/Equipement'
  */

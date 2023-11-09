@@ -22,15 +22,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { SpinalEventService } from "spinal-env-viewer-task-service";
-import { Event } from '../interfacesContextsEvents'
-import { eventNames } from 'process';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
-
+import { getEventInfo } from '../../../utilities/getEventInfo';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
@@ -67,27 +62,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var event: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.eventId, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(event)
-
-      if (event.getType().get() === "SpinalEvent") {
-        var info: Event = {
-          dynamicId: event._server_id,
-          staticId: event.getId().get(),
-          name: event.getName().get(),
-          type: event.getType().get(),
-          groupId: event.info.groupId.get(),
-          categoryId: event.info.categoryId.get(),
-          nodeId: event.info.nodeId.get(),
-          repeat: event.info.repeat.get(),
-          description: event.info.description.get(),
-          startDate: event.info.startDate.get(),
-          endDate: event.info.endDate.get(),
-        };
-      }
-
-
+      var info = await getEventInfo(spinalAPIMiddleware, profileId, parseInt(req.params.eventId,10));
     } catch (error) {
       console.error(error);
       if (error.code && error.message) return res.status(error.code).send(error.message);

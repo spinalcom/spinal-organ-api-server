@@ -22,12 +22,9 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
-import { serviceTicketPersonalized, STEP_TYPE } from 'spinal-service-ticket'
 import { getProfileId } from '../../../utilities/requestUtilities';
+import { getTicketEntityInfo } from '../../../utilities/getTicketEntityInfo';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
@@ -62,33 +59,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.get("/api/v1/ticket/:ticketId/find_entity", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var _ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(_ticket)
-
-      // var elementSelected = await spinalAPIMiddleware.loadPtr(_ticket.info.elementSelected)
-      const parents = await _ticket.getParents();
-      const parent = parents.find(el => el.getType().get() !== STEP_TYPE);
-      let info = {};
-      if (parent) {
-        info = {
-          dynamicId: parent._server_id,
-          staticId: parent.getId().get(),
-          name: parent.getName().get(),
-          type: parent.getType().get(),
-        }
-      }
-
-      // var info = {
-      //   dynamicId: elementSelected._server_id,
-      //   staticId: elementSelected.getId().get(),
-      //   name: elementSelected.getName().get(),
-      //   type: elementSelected.getType().get(),
-      // }
-
-      res.status(200).json(info);
+      const info = await getTicketEntityInfo(spinalAPIMiddleware, profileId, parseInt(req.params.ticketId,10))
+      return res.status(200).json(info);
     } catch (error) {
-
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }

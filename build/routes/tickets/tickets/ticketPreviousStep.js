@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
@@ -74,20 +65,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     *       400:
     *         description: move to previous step not Successfully
     */
-    app.post("/api/v1/ticket/:ticketId/previous_step", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post("/api/v1/ticket/:ticketId/previous_step", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var workflow = yield spinalAPIMiddleware.load(parseInt(req.body.workflowDynamicId, 10), profileId);
+            var workflow = await spinalAPIMiddleware.load(parseInt(req.body.workflowDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(workflow);
-            var process = yield spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10), profileId);
+            var process = await spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(process);
-            var ticket = yield spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
+            var ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(ticket);
-            yield spinal_service_ticket_1.serviceTicketPersonalized.moveTicketToPreviousStep(workflow.getId().get(), process.getId().get(), ticket.getId().get());
-            var step = yield ticket.getParents("SpinalSystemServiceTicketHasTicket").then((steps) => {
+            await spinal_service_ticket_1.serviceTicketPersonalized.moveTicketToPreviousStep(workflow.getId().get(), process.getId().get(), ticket.getId().get());
+            var step = await ticket.getParents("SpinalSystemServiceTicketHasTicket").then((steps) => {
                 for (const step of steps) {
                     if (step.getType().get() === "SpinalSystemServiceTicketTypeStep") {
                         return step;
@@ -108,6 +99,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(500).send(error.message);
         }
         res.json(info);
-    }));
+    });
 };
 //# sourceMappingURL=ticketPreviousStep.js.map

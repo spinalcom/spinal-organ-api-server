@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const recTree_1 = require("../../utilities/recTree");
@@ -72,12 +63,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get("/api/v1/context/:idContext/node/:idNode/tree", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/context/:idContext/node/:idNode/tree", async (req, res, next) => {
         let tree;
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = yield spinalAPIMiddleware.load(parseInt(req.params.idContext, 10), profileId);
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.idNode, 10), profileId);
+            var context = await spinalAPIMiddleware.load(parseInt(req.params.idContext, 10), profileId);
+            var node = await spinalAPIMiddleware.load(parseInt(req.params.idNode, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
             // @ts-ignore
@@ -88,7 +79,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     staticId: node.getId().get(),
                     name: node.getName().get(),
                     type: node.getType().get(),
-                    children: yield (0, recTree_1.recTree)(node, context),
+                    children: await (0, recTree_1.recTree)(node, context),
                 };
             }
             else {
@@ -101,6 +92,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(500).send(error.message);
         }
         res.json(tree);
-    }));
+    });
 };
 //# sourceMappingURL=nodeTreeInContext.js.map

@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const networkService_1 = require("../networkService");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
@@ -72,13 +63,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.post("/api/v1/endpoint/create", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post("/api/v1/endpoint/create", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var device = yield spinalAPIMiddleware.load(parseInt(req.body.deviceDynamicId), profileId);
+            var device = await spinalAPIMiddleware.load(parseInt(req.body.deviceDynamicId), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(device);
-            var contextId = yield device.getContextIds();
+            var contextId = await device.getContextIds();
             var contextNetwork = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(contextId[0]);
             var obj = {
                 name: req.body.name,
@@ -93,7 +84,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 networkName: "NetworkVirtual",
                 networkType: "NetworkVirtual"
             };
-            const graph = yield spinalAPIMiddleware.getProfileGraph(profileId);
+            const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
             (0, networkService_1.default)().init(graph, configService, true);
             //@ts-ignore
             (0, networkService_1.default)().createNewBmsEndpoint(device.getId().get(), obj);
@@ -104,6 +95,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(400).send();
         }
         res.json();
-    }));
+    });
 };
 //# sourceMappingURL=createEndPoint.js.map

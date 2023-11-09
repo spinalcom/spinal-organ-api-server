@@ -75,7 +75,6 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       var node = await spinalAPIMiddleware.load(parseInt(req.params.id), profileId)
       // @ts-ignore
       SpinalGraphService._addNode(node);
-
       var timeseries = await spinalServiceTimeSeries().getOrCreateTimeSeries(node.getId().get())
       await timeseries.push(req.body.newValue)
     } catch (error) {

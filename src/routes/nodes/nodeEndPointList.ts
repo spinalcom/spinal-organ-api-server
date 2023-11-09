@@ -22,13 +22,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import SpinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { EndPointNode } from './interfacesNodes';
-import { SpinalGraph } from 'spinal-model-graph';
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { getEndpointsInfo } from '../../utilities/getEndpointInfo';
 import { getProfileId } from '../../utilities/requestUtilities';
-import { SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
@@ -68,30 +65,15 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/node/:id/endpoint_list", async (req, res, next) => {
 
-    let nodes = [];
+    let nodes: EndPointNode[] = [];
     try {
       const profileId = getProfileId(req);
-      let node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      // @ts-ignore
-      SpinalGraphService._addNode(node);
-      var endpoints = await node.getChildren(["hasEndPoint", SpinalBmsEndpoint.relationName]);
-
-
-      for (const endpoint of endpoints) {
-        var element = await endpoint.element.load();
-        var currentValue = element.currentValue.get();
-        let info: EndPointNode = {
-          dynamicId: endpoint._server_id,
-          staticId: endpoint.getId().get(),
-          name: endpoint.getName().get(),
-          type: endpoint.getType().get(),
-          currentValue: currentValue,
-        };
-        nodes.push(info);
-      }
-
+      nodes = await getEndpointsInfo(
+        spinalAPIMiddleware,
+        profileId,
+        parseInt(req.params.id, 10)
+      );
     } catch (error) {
-
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("list of endpoints is not loaded");
     }

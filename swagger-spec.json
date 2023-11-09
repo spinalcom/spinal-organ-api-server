@@ -200,6 +200,37 @@
           }
         }
       },
+      "BasicNode": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "BasicNodeMultiple": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BasicNode"
+            }
+          }
+        }
+      },
       "Relation": {
         "type": "object",
         "properties": {
@@ -237,20 +268,17 @@
           }
         }
       },
-      "CategoriesAttribute": {
+      "EndPointNodeWithId": {
         "type": "object",
         "properties": {
           "dynamicId": {
             "type": "integer"
           },
-          "staticId": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EndPointNode"
+            }
           }
         }
       },
@@ -395,9 +423,79 @@
           }
         }
       },
+      "ControlEndpoint": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "value": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          }
+        }
+      },
       "RoomDetails": {
         "type": "object",
         "properties": {
+          "area": {
+            "type": "integer"
+          },
+          "bimFileId": {
+            "type": "string"
+          },
+          "_bimObjects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "staticId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                },
+                "externalId": {
+                  "type": "string"
+                },
+                "dbid": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "RoomDetailsWithId": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
           "area": {
             "type": "integer"
           },
@@ -532,7 +630,99 @@
           }
         }
       },
+      "RoomPosition": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "info": {
+            "type": "object",
+            "properties": {
+              "context": {
+                "$ref": "#/components/schemas/Context"
+              },
+              "building": {
+                "$ref": "#/components/schemas/Building"
+              },
+              "floor": {
+                "$ref": "#/components/schemas/Floor"
+              }
+            }
+          }
+        }
+      },
       "StaticDetailsRoom": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "bimFileId": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "dbid": {
+            "type": "string"
+          },
+          "attributs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Attributs"
+            }
+          },
+          "controlEndpoint": {
+            "type": "object",
+            "properties": {
+              "profileName": {
+                "type": "string"
+              },
+              "endpoints": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ControlEndpoint"
+                }
+              }
+            }
+          },
+          "bimObjects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Equipement"
+            }
+          },
+          "groupParents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Room"
+            }
+          }
+        }
+      },
+      "StaticDetailsEquipment": {
         "type": "object",
         "properties": {
           "dynamicId": {
@@ -567,16 +757,138 @@
               }
             }
           },
-          "bimObjects": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Equipement"
-            }
-          },
           "groupParents": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Room"
+            }
+          }
+        }
+      },
+      "InventoryRoomDetails": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "string"
+          },
+          "staticId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "type": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "inventories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InventoryEquipmentCategory"
+            }
+          }
+        }
+      },
+      "InventoryEquipmentCategory": {
+        "type": "object",
+        "properties": {
+          "staticId": {
+            "type": "string"
+          },
+          "dynamicId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "inventory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InventoryEquipmentGroup"
+            }
+          }
+        }
+      },
+      "InventoryEquipmentGroup": {
+        "type": "object",
+        "properties": {
+          "staticId": {
+            "type": "string"
+          },
+          "dynamicId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "equipments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InventoryBIMObject"
+            }
+          }
+        }
+      },
+      "InventoryBIMObject": {
+        "type": "object",
+        "properties": {
+          "staticId": {
+            "type": "string"
+          },
+          "dynamicId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "RoomReferenceObjectResponse": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "bimFileId": {
+            "type": "string"
+          },
+          "infoReferencesObjects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Equipement"
             }
           }
         }
@@ -695,6 +1007,17 @@
           }
         }
       },
+      "CurrentValueWithId": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "currentValue": {
+            "type": "integer"
+          }
+        }
+      },
       "NewValue": {
         "type": "object",
         "properties": {
@@ -713,6 +1036,20 @@
             },
             "value": {
               "type": "integer"
+            }
+          }
+        }
+      },
+      "TimeserieWithID": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "timeseries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Timeserie"
             }
           }
         }
@@ -885,23 +1222,6 @@
         }
       },
       "Ticket": {
-        "type": "object",
-        "properties": {
-          "dynamicId": {
-            "type": "integer"
-          },
-          "staticId": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          }
-        }
-      },
-      "BasicNode": {
         "type": "object",
         "properties": {
           "dynamicId": {
@@ -1432,6 +1752,23 @@
             "items": {
               "$ref": "#/components/schemas/Context"
             }
+          }
+        }
+      },
+      "CategoriesAttribute": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
           }
         }
       }
@@ -2826,7 +3163,7 @@
         }
       }
     },
-    "/api/v1/node/{id}/attributsList": {
+    "/api/v1/node/{id}/attribute_list": {
       "get": {
         "security": [
           {
@@ -3544,7 +3881,7 @@
         }
       }
     },
-    "/api/v1/room/{id}/equipement_list": {
+    "/api/v1/room/{id}/equipment_list": {
       "get": {
         "security": [
           {
@@ -3590,7 +3927,7 @@
         }
       }
     },
-    "/api/v1/room/{id}/reference_Objects_list": {
+    "/api/v1/room/{id}/reference_object_list": {
       "get": {
         "security": [
           {
@@ -12315,49 +12652,6 @@
         }
       }
     },
-    "/api/v1/equipement/{id}/get_postion": {
-      "get": {
-        "security": [
-          {
-            "bearerAuth": [
-              "readOnly"
-            ]
-          }
-        ],
-        "description": "Get equipement position",
-        "summary": "Get equipement position",
-        "tags": [
-          "Geographic Context"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "description": "use the dynamic ID",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Position"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request"
-          }
-        }
-      }
-    },
     "/api/v1/analytics/room/{id}/status/{option}": {
       "get": {
         "security": [
@@ -12944,6 +13238,596 @@
         }
       }
     },
+    "/api/v1/node/{id}/children": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return node's children",
+        "summary": "Gets Node children",
+        "tags": [
+          "Nodes"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNode"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return node's children based on specified relations",
+        "summary": "Gets Node children by relations (POST)",
+        "tags": [
+          "Nodes"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "Node dynamic Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNode"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/children_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns an array of lists of children nodes for multiple parent nodes based on specified relations, including details of the child nodes or error information.",
+        "summary": "Retrieve children of multiple nodes based on relations",
+        "tags": [
+          "Nodes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "dynamicId": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "relations": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All children nodes information for the specified relations fetched successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNodeMultiple"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some children node information based on the specified relations could not be fetched.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/BasicNodeMultiple"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters."
+          }
+        }
+      }
+    },
+    "/api/v1/node/control_endpoint_list_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns an array of lists of control endpoints for multiple nodes, or error details.",
+        "summary": "Gets lists of control endpoints for multiple nodes",
+        "tags": [
+          "Nodes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All control endpoint lists fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EndPointNode"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some control endpoint lists could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/EndPointNode"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/endpoint_list_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns an array of lists of endpoints for multiple nodes, or error details.",
+        "summary": "Gets lists of endpoints for multiple nodes",
+        "tags": [
+          "Nodes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All endpoint lists fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EndPointNodeWithId"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some endpoint lists could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/EndPointNodeWithId"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/event_list_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns events of multiple nodes, including error details where applicable.",
+        "summary": "Get list of events for multiple nodes",
+        "tags": [
+          "Nodes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All events fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "dynamicId": {
+                        "type": "integer"
+                      },
+                      "events": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Event"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some events could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "dynamicId": {
+                            "type": "integer"
+                          },
+                          "events": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/Event"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/{id}/parents": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return node's parents",
+        "summary": "Gets Node parents",
+        "tags": [
+          "Nodes"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNode"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return node's parents based on specified relations",
+        "summary": "Gets Node parents by relations (POST)",
+        "tags": [
+          "Nodes"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "Node dynamic Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNode"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/parents_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns an array of lists of children nodes for multiple parent nodes based on specified relations, including details of the child nodes or error information.",
+        "summary": "Retrieve children of multiple nodes based on relations",
+        "tags": [
+          "Nodes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "dynamicId": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "relations": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All children nodes information for the specified relations fetched successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNodeMultiple"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some children node information based on the specified relations could not be fetched.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/BasicNodeMultiple"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters."
+          }
+        }
+      }
+    },
     "/api/v1/node/read_control_endpoint": {
       "post": {
         "security": [
@@ -13005,6 +13889,164 @@
         }
       }
     },
+    "/api/v1/node/ticket_list_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns a list of ticket objects for multiple nodes, including error details where applicable.",
+        "summary": "Get list of ticket objects for multiple nodes",
+        "tags": [
+          "Nodes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All ticket lists fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "dynamicId": {
+                        "type": "integer"
+                      },
+                      "tickets": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Ticket"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some tickets could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "dynamicId": {
+                            "type": "integer"
+                          },
+                          "tickets": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/Ticket"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/read_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns an array of node objects with parent and children relation",
+        "summary": "Gets Multiple Nodes",
+        "tags": [
+          "Nodes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All nodes fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Node"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some nodes could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/Node"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/node/convert_base_64": {
       "post": {
         "security": [
@@ -13053,6 +14095,658 @@
         }
       }
     },
+    "/api/v1/node/categoriesByName/read_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Read multiple categories attributes for multiple nodes",
+        "summary": "Read multiple categories attributes for multiple nodes",
+        "tags": [
+          "Node Attribut Categories"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "dynamicId",
+                    "categoryNames"
+                  ],
+                  "properties": {
+                    "dynamicId": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "categoryNames": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All attribute nodes info fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoriesAttributesMultiple"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some attribute info could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/CategoriesAttributesMultiple"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/categoryByName/{categoryName}/read_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Read category attribute for multiple nodes",
+        "summary": "Read category attribute for multiple nodes",
+        "tags": [
+          "Node Attribut Categories"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "categoryName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All attribute nodes info fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoriesAttributeMultiple"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some attribute info could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/CategoriesAttributeMultiple"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/attribute_list_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns a list of attributes for multiple nodes, including error details where applicable.",
+        "summary": "Get list of attributes for multiple nodes",
+        "tags": [
+          "Node Attributs"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All attribute lists fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "dynamicId": {
+                        "type": "integer"
+                      },
+                      "categoryAttributes": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/NodeAttribut"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some attributes could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "dynamicId": {
+                            "type": "integer"
+                          },
+                          "categoryAttributes": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/NodeAttribut"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/equipment/{id}/read_static_details": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "read static details of equipment",
+        "summary": "Gets static details of equipment",
+        "tags": [
+          "Geographic Context"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaticDetailsRoom"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/equipment/read_static_details_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Read static details of multiple equipments",
+        "summary": "Gets static details of multiple equipments",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All equipment static details fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StaticDetailsRoom"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some equipment static details could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/StaticDetailsRoom"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/equipment/{id}/get_position": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Get equipement position",
+        "summary": "Get equipement position",
+        "tags": [
+          "Geographic Context"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Position"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/equipment/get_position_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return positions for multiple equipment",
+        "summary": "Gets positions for multiple equipment",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All equipment positions fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Position"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some equipment positions could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/Position"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/room/{id}/get_position": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Get room position",
+        "summary": "Get room position",
+        "tags": [
+          "Geographic Context"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomPosition"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/room/get_position_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return position for multiple rooms",
+        "summary": "Gets position for multiple rooms",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All room positions fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoomPosition"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some room positions could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/RoomPosition"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/room/read_details_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Read details of multiple rooms, including error details where applicable.",
+        "summary": "Gets details of multiple rooms",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All room details fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoomDetailsWithId"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some room details could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/RoomDetailsWithId"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/room/{id}/read_static_details": {
       "get": {
         "security": [
@@ -13086,6 +14780,898 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StaticDetailsRoom"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/room/read_static_details_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Read static details of multiple rooms",
+        "summary": "Gets static details of multiple rooms",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All room static details fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StaticDetailsRoom"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some room static details could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/StaticDetailsRoom"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/room/equipment_list_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return list of equipment for multiple rooms",
+        "summary": "Gets a list of equipment for multiple rooms",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All equipment lists fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "dynamicId": {
+                        "type": "integer"
+                      },
+                      "equipments": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Equipement"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some equipment lists could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/Equipement"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/room/{id}/inventory": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Reads details of a room including its inventory",
+        "summary": "Gets inventory details of a room",
+        "tags": [
+          "Geographic Context"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "Use the dynamic ID of the room",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryRoomDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/room/inventory_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns inventory details for multiple rooms",
+        "summary": "Gets inventory for multiple rooms",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All room inventories fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InventoryRoomDetails"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some room inventories could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/InventoryRoomDetails"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/room/reference_object_list_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return reference objects for multiple rooms",
+        "summary": "Gets reference objects for multiple rooms",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All reference objects fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoomReferenceObjectResponse"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some reference objects could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/RoomReferenceObjectResponse"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/endpoint/read_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Reads the current values for multiple endpoints",
+        "summary": "Read the current values of multiple endpoints",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "requestBody": {
+          "description": "An array of endpoint IDs to fetch the current values for",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All endpoints' current values fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CurrentValueWithId"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some endpoints' current values could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/CurrentValueWithId"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Incorrect request format or server error"
+          }
+        }
+      }
+    },
+    "/api/v1/endpoint/timeSeries/readCurrentDay_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Retrieve time series data for the current day for multiple IDs.",
+        "summary": "Time series data for the current day for multiple IDs",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All time series data for the current day fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeserieWithID"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some time series data for the current day could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/TimeserieWithID"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Incorrect request format or data"
+          }
+        }
+      }
+    },
+    "/api/v1/endpoint/timeSeries/readCurrentMonth_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Retrieve time series data for the current month for multiple IDs.",
+        "summary": "Time series data for the current month for multiple IDs",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All time series data for the current month fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeserieWithID"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some time series data for the current month could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/TimeserieWithID"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Incorrect request format or data"
+          }
+        }
+      }
+    },
+    "/api/v1/endpoint/timeSeries/readCurrentWeek_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Get time series data of the last week for multiple IDs",
+        "summary": "Get time series data of the last week for multiple IDs",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All time series data of the last week fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeserieWithID"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some time series data of the last week could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/TimeserieWithID"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/endpoint/timeSeries/readCurrentYear_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Get time series of the current year for multiple IDs",
+        "summary": "Get time series of the current year for multiple IDs",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All time series data of the current year fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeserieWithID"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some time series data of the current year could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/TimeserieWithID"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/endpoint/timeSeries/readFromLast24H_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Get time series of the last 24 hours for multiple IDs",
+        "summary": "Get time series of the last 24 hours for multiple IDs",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All time series data of the last 24 hours fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeserieWithID"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some time series data of the last 24 hours could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/TimeserieWithID"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/endpoint/timeSeries/read_multiple/{begin}/{end}": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Get time series for multiple IDs",
+        "summary": "Get time series for multiple IDs",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "begin",
+            "description": "Date Format is DD-MM-YYYY HH:mm:ss or DD MM YYYY HH:mm:ss",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "end",
+            "description": "Date Format is DD-MM-YYYY HH:mm:ss or DD MM YYYY HH:mm:ss",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success - All time series data fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeserieWithID"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some time series data could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/TimeserieWithID"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/ticket/read_details_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns details for multiple tickets",
+        "summary": "Get details of multiple tickets",
+        "tags": [
+          "Workflow & ticket"
+        ],
+        "requestBody": {
+          "description": "An array of ticket IDs to fetch details for",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All ticket details fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TicketDetails"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some ticket details could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/TicketDetails"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
                 }
               }
             }
@@ -13278,6 +15864,75 @@
         }
       }
     },
+    "/api/v1/ticket/find_entity_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns entities for multiple tickets",
+        "summary": "Get entities of multiple tickets",
+        "tags": [
+          "Workflow & ticket"
+        ],
+        "requestBody": {
+          "description": "An array of ticket IDs to fetch entities for",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All entities fetched for the tickets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNode"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some entities could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/BasicNode"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/eventContext/{ContextId}/eventCategory/{CategoryId}/eventGroup/{GroupId}/event_list": {
       "get": {
         "security": [
@@ -13340,6 +15995,75 @@
           },
           "400": {
             "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/event/read_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns details for multiple events",
+        "summary": "Get details of multiple events",
+        "tags": [
+          "Calendar & Event"
+        ],
+        "requestBody": {
+          "description": "An array of event IDs to fetch details for",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All event details fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Event"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some event details could not be fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/Event"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "List of events is not loaded"
           }
         }
       }

@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
@@ -80,24 +71,24 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/roomsGroup/:contextId/category/:categoryId/group/:groupId/roomList', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get('/api/v1/roomsGroup/:contextId/category/:categoryId/group/:groupId/roomList', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             var _roomList = [];
-            var context = yield spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            var context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = yield spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+            var category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            var group = yield spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
+            var group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(group);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
                 category.belongsToContext(context) &&
                 group.belongsToContext(context)) {
                 if (context.getType().get() === 'geographicRoomGroupContext') {
-                    const roomList = yield group.getChildren('groupHasgeographicRoom');
+                    const roomList = await group.getChildren('groupHasgeographicRoom');
                     for (const room of roomList) {
                         var info = {
                             dynamicId: room._server_id,
@@ -124,6 +115,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             res.status(400).send('ko');
         }
-    }));
+    });
 };
 //# sourceMappingURL=listRoom.js.map

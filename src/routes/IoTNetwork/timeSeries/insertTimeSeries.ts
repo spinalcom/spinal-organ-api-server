@@ -84,7 +84,6 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       var timeseries = await spinalServiceTimeSeries().getOrCreateTimeSeries(node.getId().get())
       const newValue = req.body.newValue;
       const date = moment(req.body.date, ["DD-MM-YYYY HH:mm:ss", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY HH:mm:ss"], true)
-
       await timeseries.insert(newValue, date.toDate())
 
 

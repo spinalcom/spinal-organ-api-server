@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
@@ -67,15 +58,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get("/api/v1/workflow/:id/processList", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/workflow/:id/processList", async (req, res, next) => {
         let nodes = [];
         try {
-            yield spinalAPIMiddleware.getGraph();
+            await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var workflow = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            var workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(workflow);
-            var allProcess = yield spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflow.getId().get());
+            var allProcess = await spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflow.getId().get());
             for (let index = 0; index < allProcess.length; index++) {
                 const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(allProcess[index].id.get());
                 var info = {
@@ -93,6 +84,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             return res.status(500).send(error.message);
         }
         res.json(nodes);
-    }));
+    });
 };
 //# sourceMappingURL=processList.js.map

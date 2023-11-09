@@ -28,11 +28,39 @@ import { NodeAttribut, Attributs } from './interfacesAttributs'
 import { FileSystem } from 'spinal-core-connectorjs_type';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 import { getProfileId } from "../../utilities/requestUtilities";
+import { getAttributeListInfo } from '../../utilities/getAttributeListInfo'
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
+  //deprecated
+  app.get("/api/v1/node/:id/attributsList", async (req, res, next) => {
+
+    try {
+      const profileId = getProfileId(req);
+      let node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      let childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
+      const prom = childrens.map(async (child): Promise<NodeAttribut> => {
+        let attributs = await child.element.load();
+        let info: NodeAttribut = {
+          dynamicId: child._server_id,
+          staticId: child.getId().get(),
+          name: child.getName().get(),
+          type: child.getType().get(),
+          attributs: attributs.get(),
+        };
+        return info;
+      });
+      const json = await Promise.all(prom);
+      return res.json(json);
+    } catch (error) {
+      if (error.code) return res.status(error.code).send({ message: error.message });
+      return res.status(400).send(error.message);
+    }
+  });
+
   /**
 * @swagger
-* /api/v1/node/{id}/attributsList:
+* /api/v1/node/{id}/attribute_list:
 *   get:
 *     security: 
 *       - bearerAuth: 
@@ -63,25 +91,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   */
 
 
-  app.get("/api/v1/node/:id/attributsList", async (req, res, next) => {
-
+  app.get("/api/v1/node/:id/attribute_list", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      let node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      let childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
-      const prom = childrens.map(async (child): Promise<NodeAttribut> => {
-        let attributs = await child.element.load();
-        let info: NodeAttribut = {
-          dynamicId: child._server_id,
-          staticId: child.getId().get(),
-          name: child.getName().get(),
-          type: child.getType().get(),
-          attributs: attributs.get(),
-        };
-        return info;
-      });
-      const json = await Promise.all(prom);
-      return res.json(json);
+      const result = await getAttributeListInfo(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+      return res.json(result);
     } catch (error) {
       if (error.code) return res.status(error.code).send({ message: error.message });
       return res.status(400).send(error.message);

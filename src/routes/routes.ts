@@ -54,21 +54,33 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
 
   //nodes routes
   require('./nodes/node')(logger, app, spinalAPIMiddleware);
+  require('./nodes/readNodeMultiple')(logger, app, spinalAPIMiddleware);
   require('./nodes/relationChildrenNode')(logger, app, spinalAPIMiddleware);
   require('./nodes/relationParentNode')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeChildren')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeChildrenSpecificRelations')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeChildrenSpecificRelationsMultiple')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeParentsSpecificRelations')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeParentsSpecificRelationsMultiple')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeParents')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeEndPointList')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeEndPointListMultiple')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeControlEndPointList')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeControlEndPointListMultiple')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeTicketList')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeTicketListMultiple')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeNoteList')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeFileList')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeUploadFile')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeDownloadFile')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeEventList')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeEventListMultiple')(logger, app, spinalAPIMiddleware);
   // require('./nodes/findInContext')(logger, app, spinalAPIMiddleware);
   require('./nodes/testUploadFileBase64')(logger, app, spinalAPIMiddleware);
 
   //attributs routes
   require('./attributs/attributList')(logger, app, spinalAPIMiddleware);
+  require('./attributs/attributListMultiple')(logger, app, spinalAPIMiddleware);
   require('./attributs/createAttribut')(logger, app, spinalAPIMiddleware);
   require('./attributs/updateAttribute')(logger, app, spinalAPIMiddleware);
   require('./attributs/deleteAttribute')(logger, app, spinalAPIMiddleware);
@@ -112,6 +124,17 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     spinalAPIMiddleware
   );
   require('./categoriesAttributs/readCategoryByName')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./categoriesAttributs/readCategoryByNameMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+
+  require('./categoriesAttributs/readCategoriesByNameMultiple')(
     logger,
     app,
     spinalAPIMiddleware
@@ -188,6 +211,7 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   );
   require('./tickets/tickets/ticketArchive')(logger, app, spinalAPIMiddleware);
   require('./tickets/tickets/readTicket')(logger, app, spinalAPIMiddleware);
+  require('./tickets/tickets/readTicketMultiple')(logger, app, spinalAPIMiddleware);
   require('./tickets/tickets/ticketChangeProcess')(
     logger,
     app,
@@ -305,6 +329,11 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
+  require('./IoTNetwork/endPoint/readEndPointCurrentValueMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./IoTNetwork/endPoint/updateEndPointCurrentValue')(
     logger,
     app,
@@ -316,7 +345,17 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
+  require('./IoTNetwork/timeSeries/readTimeSeriesMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./IoTNetwork/timeSeries/readTimeSeriesFrom Last24H')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./IoTNetwork/timeSeries/readTimeSeriesFromLast24HMultiple')(
     logger,
     app,
     spinalAPIMiddleware
@@ -326,7 +365,17 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
+  require('./IoTNetwork/timeSeries/readTimeSeriesCurrentDayMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./IoTNetwork/timeSeries/readTimeSeriesCurrentWeek')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./IoTNetwork/timeSeries/readTimeSeriesCurrentWeekMultiple')(
     logger,
     app,
     spinalAPIMiddleware
@@ -336,7 +385,17 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
+  require('./IoTNetwork/timeSeries/readTimeSeriesCurrentMonthMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./IoTNetwork/timeSeries/readTimeSeriesCurrentYear')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./IoTNetwork/timeSeries/readTimeSeriesCurrentYearMultiple')(
     logger,
     app,
     spinalAPIMiddleware
@@ -393,7 +452,17 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
+  require('./geographicContext/room/roomEquipementListMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./geographicContext/room/roomReferenceObjectsList')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./geographicContext/room/roomReferenceObjectsListMultiple')(
     logger,
     app,
     spinalAPIMiddleware
@@ -403,7 +472,22 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
+  require('./geographicContext/room/roomInventory')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./geographicContext/room/roomInventoryMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./geographicContext/room/readRoomDetails')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./geographicContext/room/readRoomDetailsMultiple')(
     logger,
     app,
     spinalAPIMiddleware
@@ -443,7 +527,22 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
+  require('./geographicContext/room/readStaticsDetailsMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./geographicContext/equipement/readEquipement')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./geographicContext/equipement/readEquipmentStaticDetails')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./geographicContext/equipement/readEquipmentStaticDetailsMultiple')(
     logger,
     app,
     spinalAPIMiddleware
@@ -478,11 +577,27 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
-  require('./geographicContext/getPositionNode')(
+  require('./geographicContext/getEquipmentPositionNode')(
     logger,
     app,
     spinalAPIMiddleware
   );
+  require('./geographicContext/getEquipmentPositionNodeMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./geographicContext/getRoomPositionNode')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./geographicContext/getRoomPositionNodeMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+
   require('./geographicContext/viewInfo')(logger, app, spinalAPIMiddleware);
 
   // calendar & Event
@@ -526,6 +641,7 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   require('./calendar/Events/updateEvent')(logger, app, spinalAPIMiddleware);
   require('./calendar/Events/createEvent')(logger, app, spinalAPIMiddleware);
   require('./calendar/Events/readEvent')(logger, app, spinalAPIMiddleware);
+  require('./calendar/Events/readEventMultiple')(logger, app, spinalAPIMiddleware);
   require('./calendar/Events/eventList')(logger, app, spinalAPIMiddleware);
 
 

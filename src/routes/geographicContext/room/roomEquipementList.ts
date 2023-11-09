@@ -22,19 +22,31 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+
 import * as express from 'express';
-import { Equipement } from '../interfacesGeoContext'
-import { SpinalNode } from 'spinal-model-graph';
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { getEquipmentListInfo } from '../../../utilities/getEquipmentListInfo';
 
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
+  app.get("/api/v1/room/:id/equipement_list", async (req, res, next) => {
+
+    try {
+      const profileId = getProfileId(req);
+      const result = await getEquipmentListInfo(spinalAPIMiddleware, profileId, parseInt(req.params.id,10));
+      return res.send(result);
+    } catch (error) {
+      console.error(error);
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(400).send("list of equipement is not loaded");
+    }
+  });
+
   /**
  * @swagger
- * /api/v1/room/{id}/equipement_list:
+ * /api/v1/room/{id}/equipment_list:
  *   get:
  *     security: 
  *       - bearerAuth: 
@@ -64,43 +76,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  *         description: Bad request
   */
 
-  app.get("/api/v1/room/:id/equipement_list", async (req, res, next) => {
+  app.get("/api/v1/room/:id/equipment_list", async (req, res, next) => {
 
-    let nodes = [];
     try {
       const profileId = getProfileId(req);
-      var room: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(room)
-
-      if (room.getType().get() === "geographicRoom") {
-        var childrens = await room.getChildren("hasBimObject");
-
-        for (const child of childrens) {
-          let info: Equipement = {
-            dynamicId: child._server_id,
-            staticId: child.getId().get(),
-            name: child.getName().get(),
-            type: child.getType().get(),
-            bimFileId: child.info.bimFileId.get(),
-            version: child.info.version.get(),
-            externalId: child.info.externalId.get(),
-            dbid: child.info.dbid.get(),
-          };
-          nodes.push(info);
-        }
-      } else {
-        res.status(400).send("node is not of type geographic room");
-      }
-
-
+      const result = await getEquipmentListInfo(spinalAPIMiddleware, profileId, parseInt(req.params.id,10));
+      return res.send(result);
     } catch (error) {
       console.error(error);
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("list of equipement is not loaded");
     }
-
-    res.send(nodes);
-
   });
 };

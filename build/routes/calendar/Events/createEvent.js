@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service");
@@ -101,19 +92,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   *       400:
   *         description: Bad request
     */
-    app.post("/api/v1/event/create", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post("/api/v1/event/create", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = yield spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId);
+            var context = await spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var groupe = yield spinalAPIMiddleware.load(parseInt(req.body.groupDynamicId, 10), profileId);
+            var groupe = await spinalAPIMiddleware.load(parseInt(req.body.groupDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(groupe);
-            var node = yield spinalAPIMiddleware.load(parseInt(req.body.nodeDynamicId, 10), profileId);
+            var node = await spinalAPIMiddleware.load(parseInt(req.body.nodeDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            var category = yield spinalAPIMiddleware.load(parseInt(req.body.categoryDynamicId, 10), profileId);
+            var category = await spinalAPIMiddleware.load(parseInt(req.body.categoryDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext) {
@@ -133,7 +124,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         repeatEnd: (moment(req.body.repeatEnd, "DD MM YYYY HH:mm:ss", true)).toISOString()
                     };
                     let user = { username: "admin", userId: 168 };
-                    let result = yield spinal_env_viewer_task_service_1.SpinalEventService.createEvent(context.getId().get(), groupe.getId().get(), node.getId().get(), eventInfo, user);
+                    let result = await spinal_env_viewer_task_service_1.SpinalEventService.createEvent(context.getId().get(), groupe.getId().get(), node.getId().get(), eventInfo, user);
                     if (!Array.isArray(result))
                         result = [result];
                     const infos = result.map(ticketCreated => {
@@ -172,6 +163,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(500).send(error.message);
         }
         res.json();
-    }));
+    });
 };
 //# sourceMappingURL=createEvent.js.map

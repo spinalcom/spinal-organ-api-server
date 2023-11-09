@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
@@ -57,20 +48,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get("/api/v1/Network/list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/Network/list", async (req, res, next) => {
         let nodes = [];
         let contextNetwork;
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const graph = yield spinalAPIMiddleware.getProfileGraph(profileId);
-            var childrens = yield graph.getChildren("hasContext");
+            const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
+            var childrens = await graph.getChildren("hasContext");
             for (const child of childrens) {
                 if (child.getType().get() === "Network") {
                     contextNetwork = child;
                     break;
                 }
             }
-            var networks = yield contextNetwork.getChildrenInContext(contextNetwork);
+            var networks = await contextNetwork.getChildrenInContext(contextNetwork);
             for (const network of networks) {
                 let info = {
                     dynamicId: network._server_id,
@@ -87,6 +78,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(400).send("list of networks is not loaded");
         }
         res.send(nodes);
-    }));
+    });
 };
 //# sourceMappingURL=bmsNetworkList.js.map

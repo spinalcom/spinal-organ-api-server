@@ -22,22 +22,26 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const getEquipmentListInfo_1 = require("../../../utilities/getEquipmentListInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
+    app.get("/api/v1/room/:id/equipement_list", async (req, res, next) => {
+        try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const result = await (0, getEquipmentListInfo_1.getEquipmentListInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+            return res.send(result);
+        }
+        catch (error) {
+            console.error(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(400).send("list of equipement is not loaded");
+        }
+    });
     /**
    * @swagger
-   * /api/v1/room/{id}/equipement_list:
+   * /api/v1/room/{id}/equipment_list:
    *   get:
    *     security:
    *       - bearerAuth:
@@ -66,32 +70,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *       400:
    *         description: Bad request
     */
-    app.get("/api/v1/room/:id/equipement_list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-        let nodes = [];
+    app.get("/api/v1/room/:id/equipment_list", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var room = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            //@ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
-            if (room.getType().get() === "geographicRoom") {
-                var childrens = yield room.getChildren("hasBimObject");
-                for (const child of childrens) {
-                    let info = {
-                        dynamicId: child._server_id,
-                        staticId: child.getId().get(),
-                        name: child.getName().get(),
-                        type: child.getType().get(),
-                        bimFileId: child.info.bimFileId.get(),
-                        version: child.info.version.get(),
-                        externalId: child.info.externalId.get(),
-                        dbid: child.info.dbid.get(),
-                    };
-                    nodes.push(info);
-                }
-            }
-            else {
-                res.status(400).send("node is not of type geographic room");
-            }
+            const result = await (0, getEquipmentListInfo_1.getEquipmentListInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+            return res.send(result);
         }
         catch (error) {
             console.error(error);
@@ -99,7 +82,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             res.status(400).send("list of equipement is not loaded");
         }
-        res.send(nodes);
-    }));
+    });
 };
 //# sourceMappingURL=roomEquipementList.js.map

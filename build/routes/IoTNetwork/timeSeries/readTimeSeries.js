@@ -22,25 +22,16 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinalTimeSeries_1 = require("../spinalTimeSeries");
 const dateFunctions_1 = require("../../../utilities/dateFunctions");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
-    app.get("/api/v1/endpoint/:id/timeSeries/read/:begin/:end", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/endpoint/:id/timeSeries/read/:begin/:end", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             if ((0, dateFunctions_1.verifDate)(req.params.begin) === 1 || (0, dateFunctions_1.verifDate)(req.params.end) === 1) {
@@ -51,7 +42,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     start: (0, dateFunctions_1.verifDate)(req.params.begin),
                     end: (0, dateFunctions_1.verifDate)(req.params.end)
                 };
-                var datas = yield (0, spinalTimeSeries_1.default)().getData(node.getId().get(), timeSeriesIntervalDate);
+                var datas = await (0, spinalTimeSeries_1.default)().getData(node.getId().get(), timeSeriesIntervalDate);
             }
         }
         catch (error) {
@@ -60,6 +51,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             return res.status(400).send(error.message);
         }
         res.json(datas);
-    }));
+    });
 };
 //# sourceMappingURL=readTimeSeries.js.map

@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Copyright 2021 SpinalCom - www.spinalcom.com
@@ -67,14 +58,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *       400:
    *         description: Bad request
     */
-    app.get("/api/v1/nomenclatureGroup/:contextId/profile_list", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/nomenclatureGroup/:contextId/profile_list", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = yield spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            var context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
             if (context.getType().get() === "AttributeConfigurationGroupContext") {
-                let listProfiles = yield spinal_env_viewer_plugin_nomenclature_service_1.spinalNomenclatureService.findOrGetProfiles(context.getId().get());
+                let listProfiles = await spinal_env_viewer_plugin_nomenclature_service_1.spinalNomenclatureService.findOrGetProfiles(context.getId().get());
                 listProfiles = Array.isArray(listProfiles) ? listProfiles : [listProfiles];
                 var profile_tab = [];
                 for (const profile of listProfiles) {
@@ -102,8 +93,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         categories_tab.push(info_category);
                     }
                     const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(_profile.id);
-                    const groupProfile = yield realNode.getParents("groupHasAttributeConfiguration");
-                    const categoryProfile = yield groupProfile[0].getParents("hasGroup");
+                    const groupProfile = await realNode.getParents("groupHasAttributeConfiguration");
+                    const categoryProfile = await groupProfile[0].getParents("hasGroup");
                     let info_profile = {
                         dynamicId: realNode._server_id,
                         staticId: realNode.getId().get(),
@@ -136,6 +127,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             return res.status(400).send("list of group is not loaded");
         }
         res.send(profile_tab);
-    }));
+    });
 };
 //# sourceMappingURL=listProfiles.js.map

@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
@@ -62,20 +53,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: create not Successfully
      */
-    app.post("/api/v1/workflow/create", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post("/api/v1/workflow/create", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const userGraph = yield spinalAPIMiddleware.getProfileGraph(profileId);
-            const graph = yield spinalAPIMiddleware.getGraph();
-            var childrens = yield graph.getChildren("hasContext");
+            const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
+            const graph = await spinalAPIMiddleware.getGraph();
+            var childrens = await graph.getChildren("hasContext");
             for (const child of childrens) {
                 if (child.getName().get() === req.body.nameWorkflow) {
                     return res.status(400).send('the name context already exists');
                 }
             }
             if (req.body.nameWorkflow !== "string") {
-                const context = yield spinal_service_ticket_1.serviceTicketPersonalized.createContext(req.body.nameWorkflow, []);
-                yield userGraph.addContext(context);
+                const context = await spinal_service_ticket_1.serviceTicketPersonalized.createContext(req.body.nameWorkflow, []);
+                await userGraph.addContext(context);
                 return res.status(200).json({
                     name: context.getName().get(),
                     type: context.getType().get(),
@@ -92,6 +83,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             return res.status(500).send(error.message);
         }
-    }));
+    });
 };
 //# sourceMappingURL=createWorkflow.js.map

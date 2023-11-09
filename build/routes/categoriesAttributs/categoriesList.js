@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
 const requestUtilities_1 = require("../../utilities/requestUtilities");
@@ -43,12 +34,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   *       400:
   *         description: Bad request
     */
-    app.get("/api/v1/node/:id/categoriesList", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/node/:id/categoriesList", async (req, res, next) => {
         let nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            var childrens = yield node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            var childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
             for (const child of childrens) {
                 let info = {
                     dynamicId: child._server_id,
@@ -65,6 +56,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(500).send(error.message);
         }
         res.json(nodes);
-    }));
+    });
 };
 //# sourceMappingURL=categoriesList.js.map

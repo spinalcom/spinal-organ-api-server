@@ -22,18 +22,9 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const getEventInfo_1 = require("../../../utilities/getEventInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
   * @swagger
@@ -64,27 +55,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   *       400:
   *         description: Bad request
     */
-    app.get("/api/v1/event/:eventId/read", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/event/:eventId/read", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var event = yield spinalAPIMiddleware.load(parseInt(req.params.eventId, 10), profileId);
-            //@ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(event);
-            if (event.getType().get() === "SpinalEvent") {
-                var info = {
-                    dynamicId: event._server_id,
-                    staticId: event.getId().get(),
-                    name: event.getName().get(),
-                    type: event.getType().get(),
-                    groupId: event.info.groupId.get(),
-                    categoryId: event.info.categoryId.get(),
-                    nodeId: event.info.nodeId.get(),
-                    repeat: event.info.repeat.get(),
-                    description: event.info.description.get(),
-                    startDate: event.info.startDate.get(),
-                    endDate: event.info.endDate.get(),
-                };
-            }
+            var info = await (0, getEventInfo_1.getEventInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.eventId, 10));
         }
         catch (error) {
             console.error(error);
@@ -93,6 +67,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(400).send("list of event is not loaded");
         }
         res.send(info);
-    }));
+    });
 };
 //# sourceMappingURL=readEvent.js.map

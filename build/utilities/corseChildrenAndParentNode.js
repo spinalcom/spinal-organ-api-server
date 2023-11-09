@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parentsNode = exports.childrensNode = void 0;
 function childrensNode(node) {
@@ -51,23 +42,21 @@ function childrensNode(node) {
     return res;
 }
 exports.childrensNode = childrensNode;
-function parentsNode(node) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let parents = node.parents;
-        let auxtab = [];
-        let res = [];
-        for (const [, ptrList] of parents) {
-            for (let i = 0; i < ptrList.length; i++) {
-                auxtab.push(ptrList[i].load());
-            }
+async function parentsNode(node) {
+    let parents = node.parents;
+    let auxtab = [];
+    let res = [];
+    for (const [, ptrList] of parents) {
+        for (let i = 0; i < ptrList.length; i++) {
+            auxtab.push(ptrList[i].load());
         }
-        res = yield Promise.all(auxtab).then((values) => {
-            return values.map((node) => {
-                return { dynamicId: node._server_id, staticId: node.getId().get(), name: node.getName().get(), children_number: node.getNbChildren() };
-            });
+    }
+    res = await Promise.all(auxtab).then((values) => {
+        return values.map((node) => {
+            return { dynamicId: node._server_id, staticId: node.getId().get(), name: node.getName().get(), children_number: node.getNbChildren() };
         });
-        return res;
     });
+    return res;
 }
 exports.parentsNode = parentsNode;
 //# sourceMappingURL=corseChildrenAndParentNode.js.map

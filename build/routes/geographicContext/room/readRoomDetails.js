@@ -22,19 +22,9 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const getRoomDetailsInfo_1 = require("../../../utilities/getRoomDetailsInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -65,57 +55,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *       400:
    *         description: Bad request
     */
-    app.get("/api/v1/room/:id/read_details", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/room/:id/read_details", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            let area = 0;
-            let _bimObjects = [];
-            var room = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            const t = [];
-            var bimFileId;
-            //@ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
-            if (room.getType().get() === "geographicRoom") {
-                var bimObjects = yield room.getChildren("hasBimObject");
-                for (const bimObject of bimObjects) {
-                    bimFileId = bimObject.info.bimFileId.get();
-                    const infoBimObject = {
-                        staticId: bimObject.getId().get(),
-                        name: bimObject.getName().get(),
-                        type: bimObject.getType().get(),
-                        version: bimObject.info.version.get(),
-                        externalId: bimObject.info.externalId.get(),
-                        dbid: bimObject.info.dbid.get(),
-                    };
-                    _bimObjects.push(infoBimObject);
-                }
-                let categories = yield room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
-                for (const child of categories) {
-                    if (child.getName().get() === "Spatial") {
-                        let attributs = yield child.element.load();
-                        for (const attribut of attributs.get()) {
-                            if (attribut.label === "area") {
-                                area = attribut.value;
-                            }
-                        }
-                    }
-                }
-                var info = {
-                    area: area,
-                    bimFileId: bimFileId,
-                    _bimObjects: _bimObjects
-                };
-            }
-            else {
-                res.status(400).send("node is not of type geographic room");
-            }
+            const result = await (0, getRoomDetailsInfo_1.getRoomDetailsInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+            return res.json(result);
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
             res.status(500).send(error.message);
         }
-        res.json(info);
-    }));
+    });
 };
 //# sourceMappingURL=readRoomDetails.js.map

@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service");
@@ -67,24 +58,23 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   *       400:
   *         description: Bad request
   */
-    app.post("/api/v1/eventContext/create", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
-        var _a;
+    app.post("/api/v1/eventContext/create", async (req, res, next) => {
         try {
             let steps = [];
-            const graph = yield spinalAPIMiddleware.getGraph();
-            yield spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
+            const graph = await spinalAPIMiddleware.getGraph();
+            await spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const userGraph = yield spinalAPIMiddleware.getProfileGraph(profileId);
+            const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
             if (!userGraph)
                 res.status(406).send(`No graph found for ${profileId}`);
-            const info = yield spinal_env_viewer_task_service_1.SpinalEventService.createEventContext(req.body.contextName, steps);
+            const info = await spinal_env_viewer_task_service_1.SpinalEventService.createEventContext(req.body.contextName, steps);
             const context = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(info.id.get());
             userGraph.addContext(context);
             res.status(200).json({
                 name: context.getName().get(),
                 staticId: context.getId().get(),
                 type: context.getType().get(),
-                steps: (_a = context.info.steps) === null || _a === void 0 ? void 0 : _a.get()
+                steps: context.info.steps?.get()
             });
         }
         catch (error) {
@@ -93,6 +83,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             res.status(500).send(error.message);
         }
-    }));
+    });
 };
 //# sourceMappingURL=createEventContext.js.map

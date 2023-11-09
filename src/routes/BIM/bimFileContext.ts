@@ -79,6 +79,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
                 name: element.name?.get(),
                 path: element.path?.get(),
                 thumbnail: element.thumbnail?.get(),
+                aecPath: currentVersion.aecPath?.get(),
               });
             }
             let info: BIMFileContext = {

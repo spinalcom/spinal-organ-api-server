@@ -123,6 +123,13 @@ export interface EndPointAttributs {
  *       properties:
  *         currentValue:
  *           type: "integer"
+ *     CurrentValueWithId:
+ *       type: "object"
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         currentValue:
+ *           type: "integer"
  */
 export interface CurrentValue {
     label: string;
@@ -167,6 +174,15 @@ export interface ConfigService {
  *             type: "integer"
  *           value:
  *             type: "integer"
+ *     TimeserieWithID:
+ *       type: "object"
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         timeseries:
+ *           type: "array"
+ *           items:
+ *             $ref: '#/components/schemas/Timeserie'
  */
 /**
  * @swagger

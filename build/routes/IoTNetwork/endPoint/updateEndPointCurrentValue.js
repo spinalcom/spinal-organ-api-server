@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
@@ -75,13 +66,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     */
     const { NODE_TO_CATEGORY_RELATION } = require('spinal-env-viewer-plugin-documentation-service/dist/Models/constants');
     const { SpinalGraphService } = require('spinal-env-viewer-graph-service');
-    app.put("/api/v1/endpoint/:id/update", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.put("/api/v1/endpoint/:id/update", async (req, res, next) => {
         let info;
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             SpinalGraphService._addNode(node);
-            var element = yield node.element.load();
+            var element = await node.element.load();
             element.currentValue.set(req.body.newValue);
             info = { NewValue: element.currentValue.get() };
         }
@@ -91,6 +82,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(400).send(error.message);
         }
         res.json(info);
-    }));
+    });
 };
 //# sourceMappingURL=updateEndPointCurrentValue.js.map

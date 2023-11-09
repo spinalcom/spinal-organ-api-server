@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
@@ -73,10 +64,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Upload not Successfully
      */
-    app.post('/api/v1/node/:id/upload_file', (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post('/api/v1/node/:id/upload_file', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             // @ts-ignore
@@ -95,7 +86,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     name: file.name,
                     buffer: file.data,
                 };
-                yield spinal_env_viewer_plugin_documentation_service_1.FileExplorer.uploadFiles(node, data);
+                await spinal_env_viewer_plugin_documentation_service_1.FileExplorer.uploadFiles(node, data);
                 //send response
                 res.send({
                     status: true,
@@ -114,6 +105,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(400).send('ko');
         }
         // res.json();
-    }));
+    });
 };
 //# sourceMappingURL=nodeUploadFile.js.map

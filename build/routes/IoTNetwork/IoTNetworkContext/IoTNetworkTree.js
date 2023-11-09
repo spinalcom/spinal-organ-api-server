@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const recTree_1 = require("../../../utilities/recTree");
@@ -65,18 +56,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     *       400:
     *         description: Bad request
     */
-    app.get("/api/v1/IoTNetworkContext/:id/tree", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/IoTNetworkContext/:id/tree", async (req, res, next) => {
         var IoTNetworks;
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var IoTNetwork = yield spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            var IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             if (IoTNetwork instanceof spinal_env_viewer_graph_service_1.SpinalContext) {
                 IoTNetworks = {
                     dynamicId: IoTNetwork._server_id,
                     staticId: IoTNetwork.getId().get(),
                     name: IoTNetwork.getName().get(),
                     type: IoTNetwork.getType().get(),
-                    children: yield (0, recTree_1.recTree)(IoTNetwork, IoTNetwork)
+                    children: await (0, recTree_1.recTree)(IoTNetwork, IoTNetwork)
                 };
             }
         }
@@ -86,6 +77,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(500).send(error.message);
         }
         res.json(IoTNetworks);
-    }));
+    });
 };
 //# sourceMappingURL=IoTNetworkTree.js.map

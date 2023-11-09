@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
@@ -67,11 +58,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     *       400:
     *         description: Bad request
     */
-    app.delete("/api/v1/workflow/:workflowId/process/:processId/delete_process", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.delete("/api/v1/workflow/:workflowId/process/:processId/delete_process", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            let workflow = yield spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-            var process = yield spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
+            let workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+            var process = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(process);
             if (workflow instanceof spinal_env_viewer_graph_service_1.SpinalContext && process.belongsToContext(workflow)) {
@@ -92,6 +83,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(500).send(error.message);
         }
         res.json();
-    }));
+    });
 };
 //# sourceMappingURL=deleteProcess.js.map

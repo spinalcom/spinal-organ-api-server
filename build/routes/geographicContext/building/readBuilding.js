@@ -22,15 +22,6 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
@@ -56,24 +47,24 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get("/api/v1/building/read", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/api/v1/building/read", async (req, res, next) => {
         try {
             var address;
             var sommes = 0;
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const graph = yield spinalAPIMiddleware.getProfileGraph(profileId);
-            const contexts = yield graph.getChildren("hasContext");
+            const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
+            const contexts = await graph.getChildren("hasContext");
             // var geographicContexts = await SpinalGraphService.getContextWithType("geographicContext");
             var geographicContexts = contexts.filter(el => el.getType().get() === "geographicContext");
-            var building = yield geographicContexts[0].getChildren("hasGeographicBuilding");
-            var floors = yield building[0].getChildren("hasGeographicFloor");
+            var building = await geographicContexts[0].getChildren("hasGeographicBuilding");
+            var floors = await building[0].getChildren("hasGeographicFloor");
             for (let index = 0; index < floors.length; index++) {
-                var rooms = yield floors[index].getChildren("hasGeographicRoom");
+                var rooms = await floors[index].getChildren("hasGeographicRoom");
                 for (const room of rooms) {
-                    let categories = yield room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+                    let categories = await room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
                     for (const child of categories) {
                         if (child.getName().get() === "Spatial") {
-                            let attributs = yield child.element.load();
+                            let attributs = await child.element.load();
                             for (const attribut of attributs.get()) {
                                 if (attribut.label === "area") {
                                     sommes = sommes + attribut.value;
@@ -83,10 +74,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     }
                 }
             }
-            let categories = yield building[0].getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+            let categories = await building[0].getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
             for (const child of categories) {
                 if (child.getName().get() === "Spinal Building Information") {
-                    let attributs = yield child.element.load();
+                    let attributs = await child.element.load();
                     for (const attribut of attributs.get()) {
                         if (attribut.label === "Adresse") {
                             address = attribut.value;
@@ -114,6 +105,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(500).send(error.message);
         }
         res.json(info);
-    }));
+    });
 };
 //# sourceMappingURL=readBuilding.js.map

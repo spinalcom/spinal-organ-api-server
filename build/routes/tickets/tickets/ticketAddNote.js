@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
@@ -71,15 +62,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     *       400:
     *         description: Add not Successfully
     */
-    app.post("/api/v1/ticket/:ticketId/add_note", (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+    app.post("/api/v1/ticket/:ticketId/add_note", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var ticket = yield spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
+            var ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(ticket);
             var user = { username: "admin", userId: 168 };
-            const note = yield spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addNote(ticket, user, req.body.note);
-            const elementNote = yield note.element.load();
+            const note = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addNote(ticket, user, req.body.note);
+            const elementNote = await note.element.load();
             var info = {
                 dynamicId: note._server_id,
                 staticId: note.getId().get(),
@@ -97,6 +88,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(500).send(error.message);
         }
         res.json(info);
-    }));
+    });
 };
 //# sourceMappingURL=ticketAddNote.js.map
