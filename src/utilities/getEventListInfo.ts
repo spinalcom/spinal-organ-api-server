@@ -1,7 +1,5 @@
 import { SpinalEventService } from 'spinal-env-viewer-task-service';
 import type SpinalAPIMiddleware from 'src/spinalAPIMiddleware';
-
-import type { SpinalNode } from 'spinal-model-graph';
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 
 async function getEventListInfo(

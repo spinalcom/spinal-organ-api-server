@@ -2616,7 +2616,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -2648,10 +2648,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/EndPointNodeWithId"
-                    }
+                    "$ref": "#/components/schemas/EndPointNodeWithId"
                   }
                 }
               }
@@ -2666,10 +2663,7 @@
                   "items": {
                     "oneOf": [
                       {
-                        "type": "array",
-                        "items": {
-                          "$ref": "#/components/schemas/EndPointNodeWithId"
-                        }
+                        "$ref": "#/components/schemas/EndPointNodeWithId"
                       },
                       {
                         "$ref": "#/components/schemas/Error"

@@ -39,7 +39,6 @@ async function getEndpointsInfo(
       // @ts-ignore
       SpinalGraphService._addNode(node);
       const endpoints = await SpinalGraphService.findNodesByType(node.getId().get(), BMS_ENDPOINT_RELATIONS, SpinalBmsEndpoint.nodeTypeName)
-      //     var endpoints = await node.getChildren(["hasEndPoint", "hasBmsEndpoint"]);
       for (const endpoint of endpoints) {
         var element = await endpoint.element.load();
         var currentValue = element.currentValue.get();

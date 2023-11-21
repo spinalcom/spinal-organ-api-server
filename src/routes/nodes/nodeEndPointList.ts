@@ -24,24 +24,7 @@
 
 import SpinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import { EndPointNode } from './interfacesNodes';
 import { getEndpointsInfo } from '../../utilities/getEndpointInfo';
-import {
-  SpinalContext,
-  SpinalGraphService,
-  SpinalNode,
-} from 'spinal-env-viewer-graph-service';
-import {
-  SpinalBmsEndpoint,
-  SpinalBmsDevice,
-  SpinalBmsEndpointGroup,
-} from 'spinal-model-bmsnetwork';
-const BMS_ENDPOINT_RELATIONS = [
-  'hasEndPoint',
-  SpinalBmsDevice.relationName,
-  SpinalBmsEndpoint.relationName,
-  SpinalBmsEndpointGroup.relationName,
-];
 
 module.exports = function (
   logger,

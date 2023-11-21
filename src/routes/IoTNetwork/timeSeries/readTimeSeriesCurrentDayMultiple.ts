@@ -89,8 +89,6 @@ module.exports = function (
         if (!Array.isArray(ids)) {
           return res.status(400).send('Expected an array of IDs.');
         }
-        const results = [];
-
         const date = new Date(Date.now());
         const lastHour = date.getHours();
         const timeSeriesIntervalDate =

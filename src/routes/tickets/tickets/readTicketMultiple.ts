@@ -22,18 +22,8 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
 import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
-import getFiles from '../../../utilities/getFiles';
-import { LOGS_EVENTS } from 'spinal-service-ticket/dist/Constants';
-import { parse } from 'path';
 import { getTicketDetails } from '../../../utilities/getTicketDetails';
 
 module.exports = function (

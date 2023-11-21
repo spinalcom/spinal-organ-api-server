@@ -24,12 +24,6 @@
 
 import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { Room } from '../interfacesGeoContext';
-import {
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
-import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
 import { getRoomDetailsInfo } from '../../../utilities/getRoomDetailsInfo';
 module.exports = function (
   logger,

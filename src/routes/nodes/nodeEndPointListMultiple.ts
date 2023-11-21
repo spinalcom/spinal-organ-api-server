@@ -49,12 +49,12 @@ module.exports = function (
   spinalAPIMiddleware: SpinalAPIMiddleware
 ) {
 
-  /**
+ /**
  * @swagger
  * /api/v1/node/endpoint_list_multiple:
  *   post:
  *     security:
- *       - OauthSecurity:
+ *       - bearerAuth:
  *         - readOnly
  *     description: Returns an array of lists of endpoints for multiple nodes, or error details.
  *     summary: Gets lists of endpoints for multiple nodes
@@ -77,9 +77,7 @@ module.exports = function (
  *             schema:
  *               type: array
  *               items:
- *                 type: array
- *                 items:
- *                   $ref: '#/components/schemas/EndPointNodeWithId'
+ *                 $ref: '#/components/schemas/EndPointNodeWithId'
  *       206:
  *         description: Partial Content - Some endpoint lists could not be fetched
  *         content:
@@ -88,9 +86,7 @@ module.exports = function (
  *               type: array
  *               items:
  *                 oneOf:
- *                   - type: array
- *                     items:
- *                       $ref: '#/components/schemas/EndPointNodeWithId'
+ *                   - $ref: '#/components/schemas/EndPointNodeWithId'
  *                   - $ref: '#/components/schemas/Error'
  *       400:
  *         description: Bad request
