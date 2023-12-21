@@ -58,31 +58,52 @@ module.exports = function (
    */
 
   app.get('/api/v1/healthStatus', async (req, res, next) => {
+    function isWithinTwoMinutes(timestamp) {
+      var twoMinutesAgo = Date.now() - (2 * 60 * 1000); // calculate timestamp for 2 minutes ago
+      return (timestamp >= twoMinutesAgo && timestamp <= Date.now()); // check if timestamp is within 2 minutes
+    }
+
     let organs = [];
     try {
-      spinalAPIMiddleware.conn.load_or_make_dir("/etc/Organs", async (directory: spinal.Directory) => {
+      spinalAPIMiddleware.conn.load("/etc/Organs/Monitoring", async (directory: spinal.Directory) => {
+        if (!directory) return
         for (const file of directory) {
           var fileLoaded = await file.load()
           if (file._info.model_type.get() === "ConfigFile") {
             let state: string;
-            function isWithinTwoMinutes(timestamp) {
-              var twoMinutesAgo = Date.now() - (2 * 60 * 1000); // calculate timestamp for 2 minutes ago
-              return (timestamp >= twoMinutesAgo && timestamp <= Date.now()); // check if timestamp is within 2 minutes
-            }
+            
             if (isWithinTwoMinutes(fileLoaded.genericOrganData.lastHealthTime.get())) {
               state = "ON"
             } else {
               state = "OFF"
             }
-
-
             let infoOrganHealth: HealthStatus = {
               name: fileLoaded.genericOrganData.name.get(),
               bootTimestamp: fileLoaded.genericOrganData.bootTimestamp.get(),
               lastHealthTime: fileLoaded.genericOrganData.lastHealthTime.get(),
               ramRssUsed: fileLoaded.genericOrganData.ramRssUsed.get(),
-              ipAdress: fileLoaded.specificOrganData.ipAdress.get(),
-              macAdress: fileLoaded.genericOrganData.macAdress.get(),
+              state: state,
+              logList: []
+            };
+            organs.push(infoOrganHealth)
+          }
+        }
+      });
+      spinalAPIMiddleware.conn.load_or_make_dir("/etc/Organs", async (directory: spinal.Directory) => {
+        for (const file of directory) {
+          var fileLoaded = await file.load()
+          if (file._info.model_type.get() === "ConfigFile") {
+            let state: string;
+            if (isWithinTwoMinutes(fileLoaded.genericOrganData.lastHealthTime.get())) {
+              state = "ON"
+            } else {
+              state = "OFF"
+            }
+            let infoOrganHealth: HealthStatus = {
+              name: fileLoaded.genericOrganData.name.get(),
+              bootTimestamp: fileLoaded.genericOrganData.bootTimestamp.get(),
+              lastHealthTime: fileLoaded.genericOrganData.lastHealthTime.get(),
+              ramRssUsed: fileLoaded.genericOrganData.ramRssUsed.get(),
               state: state,
               logList: []
             };

@@ -1460,12 +1460,6 @@
           "ramRssUsed": {
             "type": "string"
           },
-          "ipAdress": {
-            "type": "string"
-          },
-          "macAdress": {
-            "type": "string"
-          },
           "logList": {
             "type": "array",
             "items": {
