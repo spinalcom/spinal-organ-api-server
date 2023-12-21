@@ -113,7 +113,7 @@ function Requests(logger) {
                 let port = config_1.default.api.port;
                 const server = api.listen(port, () => {
                     // console.log(ConfigFile);
-                    spinal_lib_organ_monitoring_1.default.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME, process.env.SPINALHUB_IP, process.env.SPINALHUB_PROTOCOL, parseInt(process.env.REQUESTS_PORT));
+                    spinal_lib_organ_monitoring_1.default.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME + '-config', process.env.SPINALHUB_IP, process.env.SPINALHUB_PROTOCOL, parseInt(process.env.REQUESTS_PORT));
                     // ConfigFile.pushLog(`Api server is listening at 0.0.0.0:${port}`)
                     // ConfigFile.pushLastAction(`Api server is listening at 0.0.0.0:${port}`)
                     console.log(`\nApi server is listening at 0.0.0.0:${port}`);

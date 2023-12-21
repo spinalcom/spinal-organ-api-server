@@ -70,13 +70,14 @@ module.exports = function (
         for (const file of directory) {
           var fileLoaded = await file.load()
           if (file._info.model_type.get() === "ConfigFile") {
+            if (!fileLoaded.genericOrganData) continue;
             let state: string;
-            
             if (isWithinTwoMinutes(fileLoaded.genericOrganData.lastHealthTime.get())) {
               state = "ON"
             } else {
               state = "OFF"
             }
+            
             let infoOrganHealth: HealthStatus = {
               name: fileLoaded.genericOrganData.name.get(),
               bootTimestamp: fileLoaded.genericOrganData.bootTimestamp.get(),
@@ -93,6 +94,7 @@ module.exports = function (
         for (const file of directory) {
           var fileLoaded = await file.load()
           if (file._info.model_type.get() === "ConfigFile") {
+            if (!fileLoaded.genericOrganData) continue;
             let state: string;
             if (isWithinTwoMinutes(fileLoaded.genericOrganData.lastHealthTime.get())) {
               state = "ON"
