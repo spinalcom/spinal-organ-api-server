@@ -79,10 +79,10 @@ module.exports = function (
             }
             
             let infoOrganHealth: HealthStatus = {
-              name: fileLoaded.genericOrganData.name.get(),
-              bootTimestamp: fileLoaded.genericOrganData.bootTimestamp.get(),
-              lastHealthTime: fileLoaded.genericOrganData.lastHealthTime.get(),
-              ramRssUsed: fileLoaded.genericOrganData.ramRssUsed.get(),
+              name: fileLoaded.genericOrganData?.name?.get(),
+              bootTimestamp: fileLoaded.genericOrganData?.bootTimestamp?.get(),
+              lastHealthTime: fileLoaded.genericOrganData?.lastHealthTime?.get(),
+              ramRssUsed: fileLoaded.genericOrganData?.ramRssUsed?.get(),
               state: state,
               logList: []
             };
@@ -102,10 +102,10 @@ module.exports = function (
               state = "OFF"
             }
             let infoOrganHealth: HealthStatus = {
-              name: fileLoaded.genericOrganData.name.get(),
-              bootTimestamp: fileLoaded.genericOrganData.bootTimestamp.get(),
-              lastHealthTime: fileLoaded.genericOrganData.lastHealthTime.get(),
-              ramRssUsed: fileLoaded.genericOrganData.ramRssUsed.get(),
+              name: fileLoaded.genericOrganData?.name?.get(),
+              bootTimestamp: fileLoaded.genericOrganData?.bootTimestamp?.get(),
+              lastHealthTime: fileLoaded.genericOrganData?.lastHealthTime?.get(),
+              ramRssUsed: fileLoaded.genericOrganData?.ramRssUsed?.get(),
               state: state,
               logList: []
             };
