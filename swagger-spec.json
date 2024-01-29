@@ -2719,8 +2719,8 @@
             ]
           }
         ],
-        "description": "Download a Doc",
-        "summary": "Download a Doc",
+        "description": "Download a document in either binary or Base64 encoding",
+        "summary": "Download a document",
         "tags": [
           "Nodes"
         ],
@@ -2728,20 +2728,33 @@
           {
             "in": "path",
             "name": "id",
-            "description": "use the dynamic ID",
+            "description": "Use the dynamic ID",
             "required": true,
             "schema": {
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "in": "query",
+            "name": "encoding",
+            "description": "Specify the encoding type for the downloaded file ('binary' or 'base64'). Default is 'binary'.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "binary",
+                "base64"
+              ]
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Download Successfully"
+            "description": "File downloaded successfully"
           },
           "400": {
-            "description": "Download not Successfully"
+            "description": "Error in downloading file"
           }
         }
       }

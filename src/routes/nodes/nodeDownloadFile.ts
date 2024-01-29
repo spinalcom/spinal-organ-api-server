@@ -22,7 +22,8 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { ISpinalAPIMiddleware } from '../../interfaces'; import * as express from 'express';
+import { ISpinalAPIMiddleware } from '../../interfaces';
+import * as express from 'express';
 import * as fs from 'fs';
 import { getProfileId } from '../../utilities/requestUtilities';
 const mime = require('mime-types');
@@ -39,32 +40,43 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - read
-   *     description: Download a Doc
-   *     summary: Download a Doc
+   *     description: Download a document in either binary or Base64 encoding
+   *     summary: Download a document
    *     tags:
    *       - Nodes
    *     parameters:
    *       - in: path
    *         name: id
-   *         description: use the dynamic ID
+   *         description: Use the dynamic ID
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
+   *       - in: query
+   *         name: encoding
+   *         description: Specify the encoding type for the downloaded file ('binary' or 'base64'). Default is 'binary'.
+   *         required: false
+   *         schema:
+   *           type: string
+   *           enum: [binary, base64]
    *     responses:
    *       200:
-   *         description: Download Successfully
+   *         description: File downloaded successfully
    *       400:
-   *         description: Download not Successfully
+   *         description: Error in downloading file
    */
 
   app.use('/api/v1/node/:id/download_file', async (req, res, next) => {
     try {
       await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      var node = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10),
+        profileId
+      );
       const { http, hubUri } = getHost(spinalAPIMiddleware.config);
-      await down(node, http, hubUri, res);
+      const encoding = req.query.encoding || 'binary';
+      await down(node, http, hubUri, res, encoding);
     } catch (error) {
       console.log(error);
       res.status(400).send('ko');
@@ -72,7 +84,7 @@ module.exports = function (
   });
 };
 
-function down(file, http, hubUri, res): Promise<void> {
+function down(file, http, hubUri, res, encoding): Promise<void> {
   return new Promise((resolve, reject) => {
     file.load((argPath) => {
       // const p = `${__dirname}/${path.name.get()}`;
@@ -82,20 +94,37 @@ function down(file, http, hubUri, res): Promise<void> {
         function (response) {
           var type =
             mime.lookup(file?.name?.get()) || 'application/octet-stream';
-          res.set('Content-Type', type);
-          response.pipe(res);
-          response.on('end', async () => {
-            resolve();
-          });
+
+          if (encoding === 'base64') {
+            // Change response type for base64
+            let chunks = [];
+            response.on('data', (chunk) => {
+              chunks.push(chunk);
+            });
+            response.on('end', () => {
+              let binary = Buffer.concat(chunks);
+              let base64 = binary.toString('base64');
+              res.set('Content-Type', 'text/plain');
+              res.send(base64);
+              resolve();
+            });
+          } else {
+            // Handle binary response
+            res.set('Content-Type', type);
+            response.pipe(res);
+            response.on('end', () => {
+              resolve();
+            });
+          }
           response.on('error', function (err) {
             console.log(err);
+            reject(err);
           });
         }
       );
     });
   });
 }
-
 
 function getHost(config: any) {
   let http;
@@ -112,5 +141,5 @@ function getHost(config: any) {
     hubUri = `${hubUri}:${config.spinalConnector.port}`;
   }
 
-  return { http, hubUri }
+  return { http, hubUri };
 }

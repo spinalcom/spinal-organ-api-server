@@ -33,23 +33,30 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - read
-     *     description: Download a Doc
-     *     summary: Download a Doc
+     *     description: Download a document in either binary or Base64 encoding
+     *     summary: Download a document
      *     tags:
      *       - Nodes
      *     parameters:
      *       - in: path
      *         name: id
-     *         description: use the dynamic ID
+     *         description: Use the dynamic ID
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
+     *       - in: query
+     *         name: encoding
+     *         description: Specify the encoding type for the downloaded file ('binary' or 'base64'). Default is 'binary'.
+     *         required: false
+     *         schema:
+     *           type: string
+     *           enum: [binary, base64]
      *     responses:
      *       200:
-     *         description: Download Successfully
+     *         description: File downloaded successfully
      *       400:
-     *         description: Download not Successfully
+     *         description: Error in downloading file
      */
     app.use('/api/v1/node/:id/download_file', async (req, res, next) => {
         try {
@@ -57,7 +64,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             const { http, hubUri } = getHost(spinalAPIMiddleware.config);
-            await down(node, http, hubUri, res);
+            const encoding = req.query.encoding || 'binary';
+            await down(node, http, hubUri, res, encoding);
         }
         catch (error) {
             console.log(error);
@@ -65,20 +73,38 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
     });
 };
-function down(file, http, hubUri, res) {
+function down(file, http, hubUri, res, encoding) {
     return new Promise((resolve, reject) => {
         file.load((argPath) => {
             // const p = `${__dirname}/${path.name.get()}`;
             // const f = fs.createWriteStream(p);
             http.get(`${hubUri}/sceen/_?u=${argPath._server_id}`, function (response) {
                 var type = mime.lookup(file?.name?.get()) || 'application/octet-stream';
-                res.set('Content-Type', type);
-                response.pipe(res);
-                response.on('end', async () => {
-                    resolve();
-                });
+                if (encoding === 'base64') {
+                    // Change response type for base64
+                    let chunks = [];
+                    response.on('data', (chunk) => {
+                        chunks.push(chunk);
+                    });
+                    response.on('end', () => {
+                        let binary = Buffer.concat(chunks);
+                        let base64 = binary.toString('base64');
+                        res.set('Content-Type', 'text/plain');
+                        res.send(base64);
+                        resolve();
+                    });
+                }
+                else {
+                    // Handle binary response
+                    res.set('Content-Type', type);
+                    response.pipe(res);
+                    response.on('end', () => {
+                        resolve();
+                    });
+                }
                 response.on('error', function (err) {
                     console.log(err);
+                    reject(err);
                 });
             });
         });

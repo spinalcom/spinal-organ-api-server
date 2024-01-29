@@ -52,9 +52,12 @@ module.exports = function (logger, app: express.Express) {
   app.get('/api/v1/BIM/scene/list', async (req, res) => {
     try {
       const scenes = await sceneUtils.getScenes();
-      const body: ISceneListReturn = {
-        scenes: scenes.map((scene) => {
-          const sc: IScenesItem = {
+      
+      const body: ISceneListReturn =  {
+        scenes: await Promise.all(scenes.map( async (scene) => {
+          const items = await sceneUtils.sceneGetItems(scene);
+          //console.log(items);  
+          const sc = {
             dynamicId: scene._server_id,
             staticId: scene.getId().get(),
             name: scene.info.name.get(),
@@ -63,6 +66,8 @@ module.exports = function (logger, app: express.Express) {
             autoLoad: scene.info.autoLoad.get(),
             sceneAlignMethod: scene.info.sceneAlignMethod?.get(),
             useAllDT: scene.info.useAllDT?.get(),
+            scenesItems: items
+           // bimFiles : itemsInfo
           };
           // if (typeof scene.info.options !== 'undefined') {
           //   sc.options = [];
@@ -79,7 +84,7 @@ module.exports = function (logger, app: express.Express) {
           //   }
           // }
           return sc;
-        }),
+        })),
       };
       res.json(body);
     } catch (e) {
