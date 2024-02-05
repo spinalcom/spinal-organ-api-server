@@ -143,7 +143,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     ticketCreated = await spinal_service_ticket_1.serviceTicketPersonalized.addTicket(ticketInfo, processByName.getId().get(), workflowByName.getId().get(), node.getId().get());
                 }
                 else {
-                    res.status(400).send('the workflow does not contain this process');
+                    return res
+                        .status(400)
+                        .send('the workflow does not contain this process');
                 }
             }
             else {
@@ -156,7 +158,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         ticketCreated = await spinal_service_ticket_1.serviceTicketPersonalized.addTicket(ticketInfo, processById.getId().get(), workflowById.getId().get(), node.getId().get());
                     }
                     else {
-                        res.status(400).send('the workflow does not contain this process');
+                        return res
+                            .status(400)
+                            .send('the workflow does not contain this process');
                     }
                 }
             }
@@ -219,7 +223,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             res.status(400).send({ ko: error });
         }
-        res.json(info);
+        return res.json(info);
     });
 };
 //# sourceMappingURL=createTicket.js.map

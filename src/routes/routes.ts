@@ -1107,7 +1107,7 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   );
   require('./nodes/nodeReadControlEndpoint')(logger, app, spinalAPIMiddleware);
   require('./command/commandMultiple')(logger, app, spinalAPIMiddleware);
-  // require('./health/healthStatus')(logger, app, spinalAPIMiddleware);
+  require('./health/healthStatus')(logger, app, spinalAPIMiddleware);
 
 }
 

@@ -43,6 +43,7 @@
     "spinal-env-viewer-plugin-nomenclature-service": "git+https://github.com/spinalcom/spinal-env-viewer-plugin-nomenclature-service.git",
     "spinal-env-viewer-task-service": "git+https://github.com/spinalcom/spinal-env-viewer-task-service.git",
     "spinal-lib-forgefile": "git+https://github.com/spinalcom/spinal-lib-forgefile.git",
+    "spinal-lib-organ-monitoring": "git+https://github.com/spinalcom/spinal-lib-organ-monitoring.git",
     "spinal-model-graph": "git+https://github.com/spinalcom/spinal-model-graph.git",
     "spinal-model-timeseries": "git+https://github.com/spinalcom/spinal-model-timeseries.git",
     "spinal-organ-api-pubsub": "git+https://github.com/spinalcom/spinal-organ-api-pubsub.git#bos_config",
@@ -57,7 +58,6 @@
   },
   "devDependencies": {
     "@types/chai": "^4.2.21",
-    "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.13",
     "@types/mocha": "^8.2.3",
     "@types/morgan": "^1.9.3",

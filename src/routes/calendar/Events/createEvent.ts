@@ -130,7 +130,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
             creationDate: (moment(Date.now(), "DD MM YYYY HH:mm:ss", true)).toISOString(),
             repeatEnd: (moment(req.body.repeatEnd, "DD MM YYYY HH:mm:ss", true)).toISOString()
           }
-          let user = { username: "admin", userId: 168 }
+          let user = { username: "string", userId: 0 }
 
           let result = await SpinalEventService.createEvent(context.getId().get(), groupe.getId().get(), node.getId().get(), eventInfo, user)
           if (!Array.isArray(result)) result = [result];

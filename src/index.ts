@@ -26,6 +26,25 @@ import config from './config';
 import APIServer from './api-server';
 import SpinalAPIMiddleware from './spinalAPIMiddleware';
 import {getSwaggerDocs, initSwagger} from './swagger';
+import ConfigFile from 'spinal-lib-organ-monitoring';
+import {spinalGraphUtils} from 'spinal-organ-api-pubsub';
+
+
+//////////////////////////////////////////////////
+//     Redefine Filesystem.onConnectionError
+//////////////////////////////////////////////////
+
+
+//@ts-ignore
+FileSystem.onConnectionError = async (error_code: number) => {
+  if (error_code === 0) {
+    await spinalGraphUtils.rebindAllNodes();
+  } else if (error_code === 1 || error_code === 2 || error_code === 3 || error_code === 4) {
+    process.exit(error_code);
+  }
+
+}
+
 
 function Requests(logger) {
   async function initSpinalHub() {
@@ -56,6 +75,13 @@ function Requests(logger) {
       const api = initApiServer(spinalAPIMiddleware);
       let port = config.api.port;
       const server = api.listen(port, () => {
+        ConfigFile.init(
+          spinalAPIMiddleware.conn,
+          process.env.ORGAN_NAME,
+          process.env.ORGAN_TYPE,
+          process.env.SPINALHUB_IP,
+          parseInt(process.env.REQUESTS_PORT)
+        );
         console.log(`\nApi server is listening at 0.0.0.0:${port}`);
         console.log(`  openapi :\thttp://localhost:${port}/docs/swagger.json`);
         console.log(

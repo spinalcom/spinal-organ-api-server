@@ -23,7 +23,8 @@
  */
 
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import { SpinalNode } from 'spinal-env-viewer-graph-service'
+import spinalServiceTimeSeries from '../spinalTimeSeries'
 import * as express from 'express';
 import { CurrentValue } from '../interfacesEndpointAndTimeSeries'
 import { getProfileId } from '../../../utilities/requestUtilities';
@@ -75,13 +76,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   const { SpinalGraphService } = require('spinal-env-viewer-graph-service')
   app.put("/api/v1/endpoint/:id/update", async (req, res, next) => {
     let info;
-
     try {
       const profileId = getProfileId(req);
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
+      var node : SpinalNode = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
       SpinalGraphService._addNode(node);
-      var element = await node.element.load()
+     
+      var timeseries = await spinalServiceTimeSeries().getOrCreateTimeSeries(node.getId().get())
+      await timeseries.push(req.body.newValue);
+      var element = await node.element.load();
       element.currentValue.set(req.body.newValue)
+      node.info.directModificationDate.set(Date.now());
       info = { NewValue: element.currentValue.get() };
     } catch (error) {
 

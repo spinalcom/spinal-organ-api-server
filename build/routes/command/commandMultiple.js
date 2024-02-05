@@ -77,12 +77,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             var arrayList = [];
             const nodetypes = ["geographicRoom", "BIMObject", "BIMObjectGroup", "geographicRoomGroup", "geographicFloor"];
-            const controlPointTypes = ["COMMAND_BLIND", "COMMAND_LIGHT", "COMMAND_TEMP"];
+            const controlPointTypes = ["COMMAND_BLIND", "COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE"];
             const nodes = req.body.propertyReference;
             for (const node of nodes) {
                 const _node = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10), profileId);
                 if (nodetypes.includes(_node.getType().get())) {
-                    for (const command of node.commands) {
+                    for (const command of node.keys) {
                         if (controlPointTypes.includes(command.key)) {
                             let controlPoints = await _node.getChildren('hasControlPoints');
                             for (const controlPoint of controlPoints) {
@@ -91,6 +91,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                                     for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
                                         if (bmsEndPoint.getName().get() === command.key) {
                                             await (0, upstaeControlEndpoint_1.updateControlEndpointWithAnalytic)(bmsEndPoint, command.value, spinal_model_bmsnetwork_1.InputDataEndpointDataType.Real, spinal_model_bmsnetwork_1.InputDataEndpointType.Other);
+                                            bmsEndPoint.info.directModificationDate.set(Date.now());
                                         }
                                     }
                                 }

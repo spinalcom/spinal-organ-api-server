@@ -123,7 +123,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         creationDate: (moment(Date.now(), "DD MM YYYY HH:mm:ss", true)).toISOString(),
                         repeatEnd: (moment(req.body.repeatEnd, "DD MM YYYY HH:mm:ss", true)).toISOString()
                     };
-                    let user = { username: "admin", userId: 168 };
+                    let user = { username: "string", userId: 0 };
                     let result = await spinal_env_viewer_task_service_1.SpinalEventService.createEvent(context.getId().get(), groupe.getId().get(), node.getId().get(), eventInfo, user);
                     if (!Array.isArray(result))
                         result = [result];

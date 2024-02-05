@@ -21,8 +21,12 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service';
-import { FileSystem, Lst, Ptr } from 'spinal-core-connectorjs_type';
+import {
+  SpinalContext,
+  SpinalNode,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
+import { File, FileSystem, Lst, Ptr } from 'spinal-core-connectorjs_type';
 import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
 import { Step } from '../interfacesWorkflowAndTickets';
@@ -161,7 +165,9 @@ module.exports = function (
             node.getId().get()
           );
         } else {
-          res.status(400).send('the workflow does not contain this process');
+          return res
+            .status(400)
+            .send('the workflow does not contain this process');
         }
       } else {
         //@ts-ignore
@@ -177,7 +183,9 @@ module.exports = function (
               node.getId().get()
             );
           } else {
-            res.status(400).send('the workflow does not contain this process');
+            return res
+              .status(400)
+              .send('the workflow does not contain this process');
           }
         }
       }
@@ -249,13 +257,11 @@ module.exports = function (
       //     console.log("filedata", fileData);
       //   });
       // }
-
-
     } catch (error) {
 
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send({ ko: error });
     }
-    res.json(info);
+    return res.json(info);
   });
 };

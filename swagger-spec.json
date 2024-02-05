@@ -1699,6 +1699,29 @@
           }
         }
       },
+      "HealthStatus": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "integer"
+          },
+          "bootTimestamp": {
+            "type": "string"
+          },
+          "lastHealthTime": {
+            "type": "string"
+          },
+          "ramRssUsed": {
+            "type": "string"
+          },
+          "logList": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
       "ProfilesList": {
         "type": "object",
         "properties": {
@@ -13133,6 +13156,40 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/Room"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/healthStatus": {
+      "get": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return list of health Status organ",
+        "summary": "Gets a list of health Status organ",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HealthStatus"
                   }
                 }
               }
