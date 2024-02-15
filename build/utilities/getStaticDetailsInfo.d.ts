@@ -1,4 +1,19 @@
 import { ISpinalAPIMiddleware } from '../interfaces';
+interface IEquipmentInfo {
+    dynamicId: number;
+    staticId: string;
+    name: string;
+    type: string;
+    bimFileId: any;
+    version: any;
+    externalId: any;
+    dbid: any;
+    default_attributs: {
+        revitCategory: string;
+        revitFamily: string;
+        revitType: string;
+    };
+}
 interface IAttr {
     dynamicId: number;
     staticId: string;
@@ -46,5 +61,22 @@ declare function getEquipmentStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMi
     }[];
     groupParents: INodeInfo[];
 }>;
+declare function getRoomStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, roomId: number): Promise<{
+    dynamicId: number;
+    staticId: string;
+    name: string;
+    type: string;
+    attributsList: IAttr[];
+    controlEndpoint: INodeControlEndpoint[];
+    endpoints: {
+        dynamicId: number;
+        staticId: string;
+        name: string;
+        type: string;
+        value: any;
+    }[];
+    bimObjects: IEquipmentInfo[];
+    groupParents: INodeInfo[];
+}>;
 export { getEquipmentStaticDetailsInfo };
-export default getEquipmentStaticDetailsInfo;
+export { getRoomStaticDetailsInfo };

@@ -282,6 +282,58 @@
           }
         }
       },
+      "CreateNode": {
+        "type": "object",
+        "properties": {
+          "parentId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The dynamic ID of the parent node"
+          },
+          "parentToChildRelationName": {
+            "type": "string",
+            "description": "The name of the relation between the parent and the child"
+          },
+          "parentToChildRelationType": {
+            "type": "string",
+            "description": "The type of the relation between the parent and the child",
+            "enum": [
+              "PtrLst",
+              "LstPtr",
+              "Ref"
+            ]
+          },
+          "addInContext": {
+            "type": "boolean",
+            "description": "If true the node will be added in the context of the parent node else it will just be added as a child"
+          },
+          "contextId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Required if 'addInContext' is true. The ID of the context to add the node to."
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the node"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the node"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "description": "Any additional properties"
+          }
+        },
+        "required": [
+          "parentId",
+          "parentToChildRelationName",
+          "parentToChildRelationType",
+          "addInContext",
+          "name",
+          "type"
+        ]
+      },
       "NodeAttribut": {
         "type": "object",
         "properties": {
@@ -13551,6 +13603,83 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/create": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Create a node and return its information",
+        "summary": "Create a node",
+        "tags": [
+          "Nodes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNode"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Node created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicNode"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/{id}/delete": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Create a node and return its information",
+        "summary": "Create a node",
+        "tags": [
+          "Nodes"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Node successfully deleted"
           },
           "400": {
             "description": "Bad request"

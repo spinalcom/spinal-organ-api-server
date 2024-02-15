@@ -39,6 +39,8 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./contexts/contextFindNodeByDate')(logger, app, spinalAPIMiddleware);
     //nodes routes
     require('./nodes/node')(logger, app, spinalAPIMiddleware);
+    require('./nodes/nodeCreate')(logger, app, spinalAPIMiddleware);
+    require('./nodes/nodeDelete')(logger, app, spinalAPIMiddleware);
     require('./nodes/readNodeMultiple')(logger, app, spinalAPIMiddleware);
     require('./nodes/relationChildrenNode')(logger, app, spinalAPIMiddleware);
     require('./nodes/relationParentNode')(logger, app, spinalAPIMiddleware);

@@ -25,7 +25,7 @@
 import * as express from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
-import { getRoomStaticDetailsInfo } from '../../../utilities/getRoomStaticDetailsInfo';
+import { getRoomStaticDetailsInfo } from '../../../utilities/getStaticDetailsInfo';
 
 module.exports = function (
   logger,

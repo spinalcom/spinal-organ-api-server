@@ -29,6 +29,14 @@ interface IAttr {
   type: string;
   attributs: any;
 }
+
+interface IRoomAttr {
+  dynamicId: number;
+  staticId: string;
+  name: string;
+  type: string;
+  attributs: any;
+}
 interface INodeControlEndpoint {
   profileName: any;
   endpoints: {
@@ -45,12 +53,15 @@ interface INodeInfo {
   type: string;
 }
 
+
 const ENDPOINT_RELATIONS = [
   'hasBmsEndpoint',
   'hasBmsDevice',
   'hasBmsEndpointGroup',
   'hasEndPoint',
 ];
+
+
 
 async function getEquipmentStaticDetailsInfo(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
@@ -73,7 +84,7 @@ async function getEquipmentStaticDetailsInfo(
       getNodeControlEndpoints(equipment),
       getEndpointsInfo(equipment),
       getAttributes(equipment),
-      getGroupParent(equipment),
+      getEquipmentGroupParent(equipment),
     ]);
 
     var revitCategory: string = '';
@@ -119,7 +130,69 @@ async function getEquipmentStaticDetailsInfo(
   }
 }
 
-async function getGroupParent(node: SpinalNode<any>): Promise<INodeInfo[]> {
+async function getRoomStaticDetailsInfo(
+  spinalAPIMiddleware: ISpinalAPIMiddleware,
+  profileId: string,
+  roomId: number,
+) {
+  var room: SpinalNode<any> = await spinalAPIMiddleware.load(roomId,profileId);
+  
+  //@ts-ignore
+  SpinalGraphService._addNode(room);
+  if (room.getType().get() === 'geographicRoom') {
+    const [
+      allNodesControlesEndpoints,
+      allEndpoints,
+      equipements,
+      CategorieAttributsList,
+      groupParents,
+    ] = await Promise.all([
+      getNodeControlEndpoints(room),
+      getEndpointsInfo(room),
+      getRoomBimObject(room),
+      getAttributes(room),
+      getRoomParent(room),
+    ]);
+
+    var info = {
+      dynamicId: room._server_id,
+      staticId: room.getId().get(),
+      name: room.getName().get(),
+      type: room.getType().get(),
+      attributsList: CategorieAttributsList,
+      controlEndpoint: allNodesControlesEndpoints,
+      endpoints: allEndpoints,
+      bimObjects: equipements,
+      groupParents: groupParents,
+    };
+    return info;
+  } else {
+    throw 'node is not of type geographic room';
+  }
+}
+
+async function getRoomParent(room: SpinalNode<any>): Promise<INodeInfo[]> {
+  //console.log("room",room);
+  let parents = await room.getParents( [
+    'hasGeographicRoom',
+    'groupHasgeographicRoom',
+  ]);
+  var groupParents: INodeInfo[] = [];
+  for (const parent of parents) {
+    if (!(parent.info.type.get() === 'RoomContext')) {
+      let info = {
+        dynamicId: parent._server_id,
+        staticId: parent.info.id.get(),
+        name: parent.info.name.get(),
+        type: parent.info.type.get(),
+      };
+      groupParents.push(info);
+    }
+  }
+  return groupParents;
+}
+
+async function getEquipmentGroupParent(node: SpinalNode<any>): Promise<INodeInfo[]> {
   let parents = await SpinalGraphService.getParents(node.getId().get(), [
     'hasBimObject',
     'groupHasBIMObject',
@@ -194,18 +267,19 @@ async function getEndpointsInfo(node: SpinalNode<any>) {
 
   return Promise.all(endpointsInfo);
 }
+
 async function getNodeControlEndpoints(
   node: SpinalNode<any>
 ): Promise<INodeControlEndpoint[]> {
-  var profils = await SpinalGraphService.getChildren(node.getId().get(), [
+  var profils = await node.getChildren( [
     spinalControlPointService.ROOM_TO_CONTROL_GROUP,
   ]);
   var promises = profils.map(async (profile) => {
-    var result = await SpinalGraphService.getChildren(profile.id.get(), [
+    var result = await profile.getChildren([
       SpinalBmsEndpoint.relationName,
     ]);
     var endpoints = await result.map(async (endpoint) => {
-      var realNode = SpinalGraphService.getRealNode(endpoint.id.get());
+      
       var element = await endpoint.element.load();
       let category: string;
       if (
@@ -225,15 +299,15 @@ async function getNodeControlEndpoints(
       }
       // var currentValue = element.currentValue.get();
       return {
-        dynamicId: realNode._server_id,
-        staticId: endpoint.id.get(),
+        dynamicId: endpoint._server_id,
+        staticId: endpoint.info.id.get(),
         name: element.name.get(),
         value: element.currentValue?.get(),
         category: category,
       };
     });
     return {
-      profileName: profile.name.get(),
+      profileName: profile.info.name.get(),
       endpoints: await Promise.all(endpoints),
     };
   });
@@ -241,5 +315,50 @@ async function getNodeControlEndpoints(
   return Promise.all(promises);
 }
 
+async function getRoomBimObject(
+  room: SpinalNode<any>
+): Promise<IEquipmentInfo[]> {
+  // const equipements: IEquipmentInfo[] = [];
+  var bimObjects = await room.getChildren('hasBimObject');
+  var revitCategory: string = '';
+  var revitFamily: string = '';
+  var revitType: string = '';
+
+  const promises = bimObjects.map(async (child): Promise<IEquipmentInfo> => {
+    // attributs BIMObject
+    var categories_bimObjects = await child.getChildren(
+      NODE_TO_CATEGORY_RELATION
+    );
+    for (const categorie of categories_bimObjects) {
+      if (categorie.getName().get() === 'default') {
+        var attributs_bimObjects = (await categorie.element.load()).get();
+        for (const child of attributs_bimObjects) {
+          if (child.label === 'revit_category') {
+            revitCategory = child.value;
+            break;
+          }
+        }
+      }
+    }
+    return {
+      dynamicId: child._server_id,
+      staticId: child.getId().get(),
+      name: child.getName().get(),
+      type: child.getType().get(),
+      bimFileId: child.info.bimFileId.get(),
+      version: child.info.version.get(),
+      externalId: child.info.externalId.get(),
+      dbid: child.info.dbid.get(),
+      default_attributs: {
+        revitCategory: revitCategory,
+        revitFamily: revitFamily,
+        revitType: revitType,
+      },
+    };
+  });
+  return Promise.all(promises);
+}
+
 export { getEquipmentStaticDetailsInfo };
-export default getEquipmentStaticDetailsInfo;
+export { getRoomStaticDetailsInfo };
+

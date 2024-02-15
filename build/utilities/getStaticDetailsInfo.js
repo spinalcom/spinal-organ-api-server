@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getEquipmentStaticDetailsInfo = void 0;
+exports.getRoomStaticDetailsInfo = exports.getEquipmentStaticDetailsInfo = void 0;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
 const spinal_env_viewer_plugin_control_endpoint_service_1 = require("spinal-env-viewer-plugin-control-endpoint-service");
@@ -20,7 +20,7 @@ async function getEquipmentStaticDetailsInfo(spinalAPIMiddleware, profileId, equ
             getNodeControlEndpoints(equipment),
             getEndpointsInfo(equipment),
             getAttributes(equipment),
-            getGroupParent(equipment),
+            getEquipmentGroupParent(equipment),
         ]);
         var revitCategory = '';
         var revitFamily = '';
@@ -63,7 +63,57 @@ async function getEquipmentStaticDetailsInfo(spinalAPIMiddleware, profileId, equ
     }
 }
 exports.getEquipmentStaticDetailsInfo = getEquipmentStaticDetailsInfo;
-async function getGroupParent(node) {
+async function getRoomStaticDetailsInfo(spinalAPIMiddleware, profileId, roomId) {
+    var room = await spinalAPIMiddleware.load(roomId, profileId);
+    //@ts-ignore
+    spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
+    if (room.getType().get() === 'geographicRoom') {
+        const [allNodesControlesEndpoints, allEndpoints, equipements, CategorieAttributsList, groupParents,] = await Promise.all([
+            getNodeControlEndpoints(room),
+            getEndpointsInfo(room),
+            getRoomBimObject(room),
+            getAttributes(room),
+            getRoomParent(room),
+        ]);
+        var info = {
+            dynamicId: room._server_id,
+            staticId: room.getId().get(),
+            name: room.getName().get(),
+            type: room.getType().get(),
+            attributsList: CategorieAttributsList,
+            controlEndpoint: allNodesControlesEndpoints,
+            endpoints: allEndpoints,
+            bimObjects: equipements,
+            groupParents: groupParents,
+        };
+        return info;
+    }
+    else {
+        throw 'node is not of type geographic room';
+    }
+}
+exports.getRoomStaticDetailsInfo = getRoomStaticDetailsInfo;
+async function getRoomParent(room) {
+    //console.log("room",room);
+    let parents = await room.getParents([
+        'hasGeographicRoom',
+        'groupHasgeographicRoom',
+    ]);
+    var groupParents = [];
+    for (const parent of parents) {
+        if (!(parent.info.type.get() === 'RoomContext')) {
+            let info = {
+                dynamicId: parent._server_id,
+                staticId: parent.info.id.get(),
+                name: parent.info.name.get(),
+                type: parent.info.type.get(),
+            };
+            groupParents.push(info);
+        }
+    }
+    return groupParents;
+}
+async function getEquipmentGroupParent(node) {
     let parents = await spinal_env_viewer_graph_service_1.SpinalGraphService.getParents(node.getId().get(), [
         'hasBimObject',
         'groupHasBIMObject',
@@ -131,15 +181,14 @@ async function getEndpointsInfo(node) {
     return Promise.all(endpointsInfo);
 }
 async function getNodeControlEndpoints(node) {
-    var profils = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(node.getId().get(), [
+    var profils = await node.getChildren([
         spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP,
     ]);
     var promises = profils.map(async (profile) => {
-        var result = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(profile.id.get(), [
+        var result = await profile.getChildren([
             spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName,
         ]);
         var endpoints = await result.map(async (endpoint) => {
-            var realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(endpoint.id.get());
             var element = await endpoint.element.load();
             let category;
             if (element.type.get() === 'Temperature' ||
@@ -160,19 +209,56 @@ async function getNodeControlEndpoints(node) {
             }
             // var currentValue = element.currentValue.get();
             return {
-                dynamicId: realNode._server_id,
-                staticId: endpoint.id.get(),
+                dynamicId: endpoint._server_id,
+                staticId: endpoint.info.id.get(),
                 name: element.name.get(),
                 value: element.currentValue?.get(),
                 category: category,
             };
         });
         return {
-            profileName: profile.name.get(),
+            profileName: profile.info.name.get(),
             endpoints: await Promise.all(endpoints),
         };
     });
     return Promise.all(promises);
 }
-exports.default = getEquipmentStaticDetailsInfo;
-//# sourceMappingURL=getEquipmentStaticDetailsInfo.js.map
+async function getRoomBimObject(room) {
+    // const equipements: IEquipmentInfo[] = [];
+    var bimObjects = await room.getChildren('hasBimObject');
+    var revitCategory = '';
+    var revitFamily = '';
+    var revitType = '';
+    const promises = bimObjects.map(async (child) => {
+        // attributs BIMObject
+        var categories_bimObjects = await child.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+        for (const categorie of categories_bimObjects) {
+            if (categorie.getName().get() === 'default') {
+                var attributs_bimObjects = (await categorie.element.load()).get();
+                for (const child of attributs_bimObjects) {
+                    if (child.label === 'revit_category') {
+                        revitCategory = child.value;
+                        break;
+                    }
+                }
+            }
+        }
+        return {
+            dynamicId: child._server_id,
+            staticId: child.getId().get(),
+            name: child.getName().get(),
+            type: child.getType().get(),
+            bimFileId: child.info.bimFileId.get(),
+            version: child.info.version.get(),
+            externalId: child.info.externalId.get(),
+            dbid: child.info.dbid.get(),
+            default_attributs: {
+                revitCategory: revitCategory,
+                revitFamily: revitFamily,
+                revitType: revitType,
+            },
+        };
+    });
+    return Promise.all(promises);
+}
+//# sourceMappingURL=getStaticDetailsInfo.js.map

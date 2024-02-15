@@ -24,7 +24,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
-const getRoomStaticDetailsInfo_1 = require("../../../utilities/getRoomStaticDetailsInfo");
+const getStaticDetailsInfo_1 = require("../../../utilities/getStaticDetailsInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -58,7 +58,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/room/:id/read_static_details", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var info = await (0, getRoomStaticDetailsInfo_1.getRoomStaticDetailsInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+            var info = await (0, getStaticDetailsInfo_1.getRoomStaticDetailsInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
         }
         catch (error) {
             if (error.code && error.message)

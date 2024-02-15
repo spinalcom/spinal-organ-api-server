@@ -9,13 +9,14 @@ async function getEquipmentPosition(spinalAPIMiddleware, profileId, dynamicId) {
     if (equipment.getType().get() !== "BIMObject") {
         throw new Error("node is not of type BimObject");
     }
-    const context = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(equipment.getContextIds()[0]);
     const room = (await equipment.getParents("hasBimObject"))
         .find(parent => parent.getType().get() === "geographicRoom");
     const floor = (await room.getParents("hasGeographicRoom"))
         .find(parent => parent.getType().get() === "geographicFloor");
     const building = (await floor.getParents("hasGeographicFloor"))
         .find(parent => parent.getType().get() === "geographicBuilding");
+    const context = (await building.getParents("hasGeographicBuilding"))
+        .find(parent => parent.getType().get() === "geographicContext");
     return {
         dynamicId: equipment._server_id,
         staticId: equipment.getId().get(),
@@ -57,11 +58,12 @@ async function getRoomPosition(spinalAPIMiddleware, profileId, dynamicId) {
     if (room.getType().get() !== "geographicRoom") {
         throw new Error("node is not of type geographicRoom");
     }
-    const context = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(room.getContextIds()[0]);
     const floor = (await room.getParents("hasGeographicRoom"))
         .find(parent => parent.getType().get() === "geographicFloor");
     const building = (await floor.getParents("hasGeographicFloor"))
         .find(parent => parent.getType().get() === "geographicBuilding");
+    const context = (await building.getParents("hasGeographicBuilding"))
+        .find(parent => parent.getType().get() === "geographicContext");
     return {
         dynamicId: room._server_id,
         staticId: room.getId().get(),

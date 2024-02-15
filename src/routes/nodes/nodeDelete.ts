@@ -22,11 +22,15 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
 import * as express from 'express';
-import { getEquipmentStaticDetailsInfo } from '../../../utilities/getStaticDetailsInfo';
-
+import { CreateNode } from './interfacesNodes';
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
+import {
+  SpinalGraphService,
+  SpinalNode,
+  SpinalContext
+} from 'spinal-env-viewer-graph-service';
 module.exports = function (
   logger,
   app: express.Express,
@@ -34,15 +38,15 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/equipment/{id}/read_static_details:
-   *   get:
+   * /api/v1/node/{id}/delete:
+   *   delete:
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: read static details of equipment
-   *     summary: Gets static details of equipment
+   *     description: Create a node and return its information
+   *     summary: Create a node
    *     tags:
-   *       - Geographic Context
+   *       - Nodes
    *     parameters:
    *      - in: path
    *        name: id
@@ -52,33 +56,27 @@ module.exports = function (
    *          type: integer
    *          format: int64
    *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/StaticDetailsRoom'
+   *       204:
+   *         description: Node successfully deleted
    *       400:
    *         description: Bad request
    */
 
-  app.get('/api/v1/equipment/:id/read_static_details', async (req, res, next) => {
+  app.delete('/api/v1/node/:id/delete', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      const info = await getEquipmentStaticDetailsInfo(
-        spinalAPIMiddleware,
-        profileId,
-        parseInt(req.params.id,10),
-      );
-      return res.json(info);
+      const nodeId = req.params.id;
+      const node : SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(nodeId, 10), profileId);
+      SpinalGraphService._addNode(node);
+      await SpinalGraphService.removeFromGraph(node.getId().get());
+      
+      return res.status(204).send("Node successfully deleted");
 
     } catch (error) {
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      return res.status(400).send('ko');
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
+      res.status(500).send(error.message);
     }
-    
+    res.json();
   });
 };
-
-
-

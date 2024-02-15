@@ -25,7 +25,7 @@
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 import * as express from 'express';
-import { getEquipmentStaticDetailsInfo } from '../../../utilities/getEquipmentStaticDetailsInfo';
+import { getEquipmentStaticDetailsInfo } from '../../../utilities/getStaticDetailsInfo';
 
 module.exports = function (
   logger,

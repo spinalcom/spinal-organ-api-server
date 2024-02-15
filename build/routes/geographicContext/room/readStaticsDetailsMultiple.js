@@ -24,7 +24,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
-const getRoomStaticDetailsInfo_1 = require("../../../utilities/getRoomStaticDetailsInfo");
+const getStaticDetailsInfo_1 = require("../../../utilities/getStaticDetailsInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
     * @swagger
@@ -76,7 +76,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(400).send('Expected an array of dynamic IDs');
             }
             // Map each dynamicId to a promise
-            const promises = dynamicIds.map(dynamicId => (0, getRoomStaticDetailsInfo_1.getRoomStaticDetailsInfo)(spinalAPIMiddleware, profileId, dynamicId));
+            const promises = dynamicIds.map(dynamicId => (0, getStaticDetailsInfo_1.getRoomStaticDetailsInfo)(spinalAPIMiddleware, profileId, dynamicId));
             const settledResults = await Promise.allSettled(promises);
             const finalResults = settledResults.map((result, index) => {
                 if (result.status === 'fulfilled') {
