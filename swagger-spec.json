@@ -1774,6 +1774,20 @@
           }
         }
       },
+      "OrganStatus": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "organs_down": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HealthStatus"
+            }
+          }
+        }
+      },
       "ProfilesList": {
         "type": "object",
         "properties": {
@@ -13253,6 +13267,40 @@
         }
       }
     },
+    "/api/v1/organStatus": {
+      "get": {
+        "security": [
+          {
+            "OauthSecurity": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return list of health Status organ",
+        "summary": "Gets a list of health Status organ",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrganStatus"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/nomenclatureGroup/{contextId}/profile_list": {
       "get": {
         "security": [
@@ -13660,8 +13708,8 @@
             ]
           }
         ],
-        "description": "Create a node and return its information",
-        "summary": "Create a node",
+        "description": "Delete a node",
+        "summary": "Delete a node",
         "tags": [
           "Nodes"
         ],
@@ -13680,6 +13728,42 @@
         "responses": {
           "204": {
             "description": "Node successfully deleted"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/node/{id}/delete_smart": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Delete node and all descendants up to the first descendant that have a parent from another branch",
+        "summary": "Delete an entire branch of nodes until the first node that has a parent from another branch",
+        "tags": [
+          "Nodes"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Node(s) successfully deleted"
           },
           "400": {
             "description": "Bad request"

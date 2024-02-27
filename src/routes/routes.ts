@@ -56,6 +56,7 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   require('./nodes/node')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeCreate')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeDelete')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeDeleteSmart')(logger, app, spinalAPIMiddleware);
   require('./nodes/readNodeMultiple')(logger, app, spinalAPIMiddleware);
   require('./nodes/relationChildrenNode')(logger, app, spinalAPIMiddleware);
   require('./nodes/relationParentNode')(logger, app, spinalAPIMiddleware);
@@ -1110,6 +1111,7 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   require('./nodes/nodeReadControlEndpoint')(logger, app, spinalAPIMiddleware);
   require('./command/commandMultiple')(logger, app, spinalAPIMiddleware);
   require('./health/healthStatus')(logger, app, spinalAPIMiddleware);
+  require('./health/organStatus')(logger, app, spinalAPIMiddleware);
 
 }
 

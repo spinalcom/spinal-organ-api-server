@@ -50,3 +50,23 @@ export interface HealthStatus {
   state: string;
   logList: string[];
 }
+
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     OrganStatus:
+ *       type: "object"
+ *       properties:
+ *         message:
+ *           type: "string"
+ *         organs_down:
+ *           type: "array"
+ *           items:
+ *             $ref: '#/components/schemas/HealthStatus'
+ */
+export interface OrganStatus {
+  message: string;
+  organs_down: HealthStatus[];
+}
