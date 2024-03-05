@@ -115,8 +115,8 @@ module.exports = function (
                 staticId: equipement.getId().get(),
                 name: equipement.getName().get(),
                 type: equipement.getType().get(),
-                bimFileId: equipement.info.bimFileId.get(),
-                dbid: equipement.info.dbid.get(),
+                bimFileId: equipement.info.bimFileId?.get(),
+                dbid: equipement.info.dbid?.get(),
               };
               _equipementList.push(info);
             }

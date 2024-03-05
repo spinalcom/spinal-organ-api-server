@@ -114,19 +114,19 @@ async function getRoomParent(room) {
     return groupParents;
 }
 async function getEquipmentGroupParent(node) {
-    let parents = await spinal_env_viewer_graph_service_1.SpinalGraphService.getParents(node.getId().get(), [
+    let parents = await node.getParents([
         'hasBimObject',
         'groupHasBIMObject',
     ]);
     var groupParents = [];
     for (const parent of parents) {
-        if (!(parent.type.get() === 'RoomContext')) {
-            let realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(parent.id.get());
+        if (!(parent.info.type.get() === 'RoomContext')) {
+            //let realNode = SpinalGraphService.getRealNode(parent.id.get());
             let info = {
-                dynamicId: realNode._server_id,
-                staticId: parent.id.get(),
-                name: parent.name.get(),
-                type: parent.type.get(),
+                dynamicId: parent._server_id,
+                staticId: parent.info.id.get(),
+                name: parent.info.name.get(),
+                type: parent.info.type.get(),
             };
             groupParents.push(info);
         }

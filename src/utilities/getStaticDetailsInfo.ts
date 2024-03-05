@@ -193,20 +193,20 @@ async function getRoomParent(room: SpinalNode<any>): Promise<INodeInfo[]> {
 }
 
 async function getEquipmentGroupParent(node: SpinalNode<any>): Promise<INodeInfo[]> {
-  let parents = await SpinalGraphService.getParents(node.getId().get(), [
+  let parents = await node.getParents([
     'hasBimObject',
     'groupHasBIMObject',
   ]);
 
   var groupParents: INodeInfo[] = [];
   for (const parent of parents) {
-    if (!(parent.type.get() === 'RoomContext')) {
-      let realNode = SpinalGraphService.getRealNode(parent.id.get());
+    if (!(parent.info.type.get() === 'RoomContext')) {
+      //let realNode = SpinalGraphService.getRealNode(parent.id.get());
       let info = {
-        dynamicId: realNode._server_id,
-        staticId: parent.id.get(),
-        name: parent.name.get(),
-        type: parent.type.get(),
+        dynamicId: parent._server_id,
+        staticId: parent.info.id.get(),
+        name: parent.info.name.get(),
+        type: parent.info.type.get(),
       };
       groupParents.push(info);
     }

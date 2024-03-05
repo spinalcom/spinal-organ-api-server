@@ -83,15 +83,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       SpinalGraphService._addNode(category)
       if (context instanceof SpinalContext && category.belongsToContext(context)) {
         if (context.getType().get() === "geographicRoomGroupContext") {
-          var listGroups = await groupManagerService.getGroups(category.getId().get())
+          //var listGroups = await groupManagerService.getGroups(category.getId().get())
+          const listGroups = await category.getChildren("hasGroup");
           for (const group of listGroups) {
             // @ts-ignore
-            const realNode = SpinalGraphService.getRealNode(group.id.get())
+            //const realNode = SpinalGraphService.getRealNode(group.id.get())
             let info = {
-              dynamicId: realNode._server_id,
-              staticId: realNode.getId().get(),
-              name: realNode.getName().get(),
-              type: realNode.getType().get(),
+              dynamicId: group._server_id,
+              staticId: group.getId().get(),
+              name: group.getName().get(),
+              type: group.getType().get(),
               color: group.color.get()
             };
             nodes.push(info);

@@ -24,7 +24,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const spinal_env_viewer_plugin_group_manager_service_1 = require("spinal-env-viewer-plugin-group-manager-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
@@ -77,15 +76,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && category.belongsToContext(context)) {
                 if (context.getType().get() === "geographicRoomGroupContext") {
-                    var listGroups = await spinal_env_viewer_plugin_group_manager_service_1.default.getGroups(category.getId().get());
+                    //var listGroups = await groupManagerService.getGroups(category.getId().get())
+                    const listGroups = await category.getChildren("hasGroup");
                     for (const group of listGroups) {
                         // @ts-ignore
-                        const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(group.id.get());
+                        //const realNode = SpinalGraphService.getRealNode(group.id.get())
                         let info = {
-                            dynamicId: realNode._server_id,
-                            staticId: realNode.getId().get(),
-                            name: realNode.getName().get(),
-                            type: realNode.getType().get(),
+                            dynamicId: group._server_id,
+                            staticId: group.getId().get(),
+                            name: group.getName().get(),
+                            type: group.getType().get(),
                             color: group.color.get()
                         };
                         nodes.push(info);

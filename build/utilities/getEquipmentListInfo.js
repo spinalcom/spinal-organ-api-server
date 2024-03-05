@@ -17,10 +17,10 @@ async function getEquipmentListInfo(spinalAPIMiddleware, profileId, roomId) {
             staticId: child.getId().get(),
             name: child.getName().get(),
             type: child.getType().get(),
-            bimFileId: child.info.bimFileId.get(),
-            version: child.info.version.get(),
-            externalId: child.info.externalId.get(),
-            dbid: child.info.dbid.get(),
+            bimFileId: child.info.bimFileId?.get(),
+            version: child.info.version?.get(),
+            externalId: child.info.externalId?.get(),
+            dbid: child.info.dbid?.get(),
         };
         nodes.push(info);
     }
