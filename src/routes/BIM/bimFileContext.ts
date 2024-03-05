@@ -87,6 +87,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
               staticId: children.getId().get(),
               name: children.getName().get(),
               type: children.getType().get(),
+              offset: currentVersion.offset?.get(),
               items,
             };
             nodes.push(info);

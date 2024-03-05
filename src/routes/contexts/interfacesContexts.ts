@@ -76,6 +76,7 @@ export interface BIMFileContext {
   staticId: string;
   name: string;
   type: string;
+  offset: any;
   items: BIMFileContextItems[];
 }
 

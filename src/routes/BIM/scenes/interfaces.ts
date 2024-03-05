@@ -213,5 +213,6 @@ export interface IScenesItemsItem {
   dynamicId: number;
   staticId: string;
   item?: string;
+  offset?: any;
   aecPath?: string;
 }

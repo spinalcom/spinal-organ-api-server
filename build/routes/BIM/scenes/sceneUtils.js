@@ -39,6 +39,7 @@ async function sceneGetItems(sceneNode) {
     const spinalAPIMiddleware = spinalAPIMiddleware_1.default.getInstance();
     const res = [];
     const parts = await sceneNode.getChildren(SCENE_PART_RELATIONS);
+    const sceneId = sceneNode.getId().get();
     for (const part of parts) {
         const bimFile = {
             name: part.info.name.get(),
@@ -67,6 +68,9 @@ async function sceneGetItems(sceneNode) {
                         break;
                     }
                 }
+            }
+            if (currVersion.offset && currVersion.offset[sceneId]) {
+                bimFile.offset = currVersion.offset[sceneId]?.get();
             }
         }
         res.push(bimFile);
