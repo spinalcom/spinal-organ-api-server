@@ -76,35 +76,35 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     let nodes = [];
     try {
       const profileId = getProfileId(req);
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
-      var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+      const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(category)
-      if (context instanceof SpinalContext && category.belongsToContext(context)) {
-        var listGroups = await groupManagerService.getGroups(category.getId().get())
-        for (const group of listGroups) {
-          // @ts-ignore
-          const realNode = SpinalGraphService.getRealNode(group.id.get())
-          let info = {
-            dynamicId: realNode._server_id,
-            staticId: realNode.getId().get(),
-            name: realNode.getName().get(),
-            type: realNode.getType().get(),
-            color: group.color.get()
-          };
-          nodes.push(info);
-        }
-
-
-      } else {
-        res.status(400).send("category not found in context");
+      if(!(context instanceof SpinalContext)){
+        return res.status(400).send("The context Id provided does not represent a context");
+      }
+      if(!category.belongsToContext(context)){
+        return res.status(400).send("The category does not belong to the context");
+      }
+      const listGroups = await groupManagerService.getGroups(category.getId().get())
+      for (const group of listGroups) {
+        // @ts-ignore
+        const realNode = SpinalGraphService.getRealNode(group.id.get())
+        const info = {
+          dynamicId: realNode._server_id,
+          staticId: realNode.getId().get(),
+          name: realNode.getName().get(),
+          type: realNode.getType().get(),
+          color: group.color.get()
+        };
+        nodes.push(info);
       }
     } catch (error) {
       if (error.code && error.message) return res.status(error.code).send(error.message);
 
-      res.status(400).send("list of category event is not loaded");
+      res.status(400).send("ko");
     }
     res.send(nodes);
   });
