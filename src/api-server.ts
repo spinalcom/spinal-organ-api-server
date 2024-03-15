@@ -31,7 +31,40 @@ import * as bodyParser from 'body-parser';
 import type SpinalAPIMiddleware from './spinalAPIMiddleware';
 import routes from './routes/routes';
 import morgan = require('morgan');
+import chalk from 'chalk';
 
+
+export const morganMiddleware = morgan(function (tokens, req, res) {
+  const method = chalk.hex('#34ace0').bold(tokens.method(req, res));
+  const url = chalk.hex('#ff5252').bold(tokens.url(req, res));
+  const status = tokens.status(req, res);
+  const responseTime = chalk.hex('#2ed573').bold(tokens['response-time'](req, res) + ' ms');
+  const date = chalk.hex('#f78fb3').bold('@ ' + tokens.date(req, res));
+  const remoteAddr = chalk.yellow(tokens['remote-addr'](req, res));
+  const referrer = chalk.hex('#fffa65').bold('from ' + tokens.referrer(req, res));
+  let statusColor = chalk.hex('#ffb142'); // Default color
+  if (status) {
+    const statusCode = parseInt(status, 10);
+    if (statusCode >= 500) {
+      statusColor = chalk.hex('#ff4757'); // Red for server errors
+    } else if (statusCode >= 400) {
+      statusColor = chalk.hex('#ffa502'); // Orange for client errors
+    } else if (statusCode >= 300) {
+      statusColor = chalk.hex('#7bed9f'); // Light green for redirects
+    } else if (statusCode >= 200) {
+      statusColor = chalk.hex('#2ed573'); // Green for successful responses
+    }
+  }
+  return [
+    method,
+    url,
+    statusColor.bold(status),
+    responseTime,
+    date,
+    remoteAddr,
+    referrer
+  ].join(' ');
+});
 
 
 export function useLogger(app: express.Application, log_body: boolean | string) {
@@ -44,7 +77,7 @@ export function useLogger(app: express.Application, log_body: boolean | string) 
     });
     app.use('/api/*', morgan(':method :url :status :response-time ms - :res[content-length] :body-req'));
   } else {
-    app.use('/api/*', morgan('dev'));
+    app.use('/api/*', morganMiddleware);
   }
 }
 

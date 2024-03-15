@@ -69,41 +69,40 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         let nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && category.belongsToContext(context)) {
-                if (context.getType().get() === "BmsEndpointGroupContext") {
-                    var listGroups = await spinal_env_viewer_plugin_group_manager_service_1.default.getGroups(category.getId().get());
-                    for (const group of listGroups) {
-                        // @ts-ignore
-                        const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(group.id.get());
-                        let info = {
-                            dynamicId: realNode._server_id,
-                            staticId: realNode.getId().get(),
-                            name: realNode.getName().get(),
-                            type: realNode.getType().get(),
-                            color: group.color.get()
-                        };
-                        nodes.push(info);
-                    }
-                }
-                else {
-                    res.status(400).send("node is not type of BmsEndpointGroupContext ");
-                }
+            if (!(context instanceof spinal_env_viewer_graph_service_1.SpinalContext)) {
+                return res.status(400).send("The context Id provided does not represent a context");
             }
-            else {
-                res.status(400).send("category not found in context");
+            if (!category.belongsToContext(context)) {
+                return res.status(400).send("The category does not belong to the context");
+            }
+            if (context.getType().get() !== "BmsEndpointGroupContext") {
+                return res.status(400).send("node is not type of BmsEndpointGroupContext ");
+            }
+            const listGroups = await spinal_env_viewer_plugin_group_manager_service_1.default.getGroups(category.getId().get());
+            for (const group of listGroups) {
+                // @ts-ignore
+                const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(group.id.get());
+                const info = {
+                    dynamicId: realNode._server_id,
+                    staticId: realNode.getId().get(),
+                    name: realNode.getName().get(),
+                    type: realNode.getType().get(),
+                    color: group.color.get()
+                };
+                nodes.push(info);
             }
         }
         catch (error) {
             console.error(error);
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send("list of group is not loaded");
+            res.status(400).send("ko");
         }
         res.send(nodes);
     });

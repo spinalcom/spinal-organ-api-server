@@ -65,44 +65,49 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get("/api/v1/roomsGroup/:contextId/category/:categoryId/group_list", async (req, res, next) => {
+    app.get('/api/v1/roomsGroup/:contextId/category/:categoryId/group_list', async (req, res, next) => {
         let nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && category.belongsToContext(context)) {
-                if (context.getType().get() === "geographicRoomGroupContext") {
-                    var listGroups = await spinal_env_viewer_plugin_group_manager_service_1.default.getGroups(category.getId().get());
-                    for (const group of listGroups) {
-                        // @ts-ignore
-                        const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(group.id.get());
-                        let info = {
-                            dynamicId: realNode._server_id,
-                            staticId: realNode.getId().get(),
-                            name: realNode.getName().get(),
-                            type: realNode.getType().get(),
-                            color: group.color.get()
-                        };
-                        nodes.push(info);
-                    }
-                }
-                else {
-                    res.status(400).send("node is not type of geographicRoomGroupContext ");
-                }
+            if (!(context instanceof spinal_env_viewer_graph_service_1.SpinalContext)) {
+                return res
+                    .status(400)
+                    .send('The context Id provided does not represent a context');
             }
-            else {
-                res.status(400).send("category not found in context");
+            if (!category.belongsToContext(context)) {
+                return res
+                    .status(400)
+                    .send('The category does not belong to the context');
+            }
+            if (context.getType().get() !== 'geographicRoomGroupContext') {
+                return res
+                    .status(400)
+                    .send('The context is not a geographicRoomGroupContext');
+            }
+            const listGroups = await spinal_env_viewer_plugin_group_manager_service_1.default.getGroups(category.getId().get());
+            for (const group of listGroups) {
+                // @ts-ignore
+                const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(group.id.get());
+                const info = {
+                    dynamicId: realNode._server_id,
+                    staticId: realNode.getId().get(),
+                    name: realNode.getName().get(),
+                    type: realNode.getType().get(),
+                    color: group.color.get(),
+                };
+                nodes.push(info);
             }
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            return res.status(400).send("list of category event is not loaded");
+            return res.status(400).send('ko');
         }
         res.send(nodes);
     });

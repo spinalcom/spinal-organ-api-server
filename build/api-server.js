@@ -23,13 +23,48 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.useLogger = void 0;
+exports.useLogger = exports.morganMiddleware = void 0;
 const express = require("express");
 const fileUpload = require("express-fileupload");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const routes_1 = require("./routes/routes");
 const morgan = require("morgan");
+const chalk_1 = require("chalk");
+exports.morganMiddleware = morgan(function (tokens, req, res) {
+    const method = chalk_1.default.hex('#34ace0').bold(tokens.method(req, res));
+    const url = chalk_1.default.hex('#ff5252').bold(tokens.url(req, res));
+    const status = tokens.status(req, res);
+    const responseTime = chalk_1.default.hex('#2ed573').bold(tokens['response-time'](req, res) + ' ms');
+    const date = chalk_1.default.hex('#f78fb3').bold('@ ' + tokens.date(req, res));
+    const remoteAddr = chalk_1.default.yellow(tokens['remote-addr'](req, res));
+    const referrer = chalk_1.default.hex('#fffa65').bold('from ' + tokens.referrer(req, res));
+    let statusColor = chalk_1.default.hex('#ffb142'); // Default color
+    if (status) {
+        const statusCode = parseInt(status, 10);
+        if (statusCode >= 500) {
+            statusColor = chalk_1.default.hex('#ff4757'); // Red for server errors
+        }
+        else if (statusCode >= 400) {
+            statusColor = chalk_1.default.hex('#ffa502'); // Orange for client errors
+        }
+        else if (statusCode >= 300) {
+            statusColor = chalk_1.default.hex('#7bed9f'); // Light green for redirects
+        }
+        else if (statusCode >= 200) {
+            statusColor = chalk_1.default.hex('#2ed573'); // Green for successful responses
+        }
+    }
+    return [
+        method,
+        url,
+        statusColor.bold(status),
+        responseTime,
+        date,
+        remoteAddr,
+        referrer
+    ].join(' ');
+});
 function useLogger(app, log_body) {
     if (log_body) {
         morgan.token('body-req', (req) => {
@@ -41,7 +76,7 @@ function useLogger(app, log_body) {
         app.use('/api/*', morgan(':method :url :status :response-time ms - :res[content-length] :body-req'));
     }
     else {
-        app.use('/api/*', morgan('dev'));
+        app.use('/api/*', exports.morganMiddleware);
     }
 }
 exports.useLogger = useLogger;
