@@ -118,7 +118,7 @@ async function getTicketDetails(
     'SpinalSystemServiceTicketHasTicket'
   );
   for (const parent of parentsTicket) {
-    if(['SpinalSystemServiceTicketTypeStep', 'analyticOutputs'].includes(parent.getType().get())) {
+    if(!['SpinalSystemServiceTicketTypeStep','analyticOutputs'].includes(parent.getType().get())) {
       //@ts-ignore
       SpinalGraphService._addNode(parent);
       elementSelected = parent;
