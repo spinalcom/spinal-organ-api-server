@@ -74,18 +74,18 @@ module.exports = function (
 
     try {
       const profileId = getProfileId(req);
-      var network = await spinalAPIMiddleware.load(parseInt(req.body.networkDynamicId), profileId)
+      const network = await spinalAPIMiddleware.load(parseInt(req.body.networkDynamicId), profileId)
       //@ts-ignore
       SpinalGraphService._addNode(network);
-      var contextId = await network.getContextIds();
-      var contextNetwork = SpinalGraphService.getRealNode(contextId[0])
-      var obj = {
+      const contextId = await network.getContextIds();
+      const contextNetwork = SpinalGraphService.getRealNode(contextId[0])
+      const obj = {
         name: req.body.name,
         type: req.body.type,
         children: [],
         nodeTypeName: 'BmsDevice'
       }
-      let configService: ConfigService = {
+      const configService: ConfigService = {
         contextName: contextNetwork.getName().get(),
         contextType: "Network",
         networkName: network.getName().get(),

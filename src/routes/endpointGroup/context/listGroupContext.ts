@@ -57,16 +57,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/endPointsGroup/list", async (req, res, next) => {
 
-    let nodes = [];
+    const nodes = [];
     try {
       const profilId = getProfileId(req);
       const graph = await spinalAPIMiddleware.getProfileGraph(profilId);
-      var groupContexts = await groupManagerService.getGroupContexts(undefined, graph);
+      const groupContexts = await groupManagerService.getGroupContexts(undefined, graph);
 
       for (let index = 0; index < groupContexts.length; index++) {
-        var realNode = SpinalGraphService.getRealNode(groupContexts[index].id)
+        const realNode = SpinalGraphService.getRealNode(groupContexts[index].id)
         if (realNode.getType().get() === "BmsEndpointGroupContext") {
-          let info: Context = {
+          const info: Context = {
             dynamicId: realNode._server_id,
             staticId: realNode.getId().get(),
             name: realNode.getName().get(),

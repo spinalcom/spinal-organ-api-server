@@ -58,8 +58,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/IoTNetworkContext/:id/nodeTypeList", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            var SpinalContextId = IoTNetwork.getId().get();
+            const IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const SpinalContextId = IoTNetwork.getId().get();
             if (IoTNetwork.getType().get() === "Network") {
                 var type_list = await spinal_env_viewer_graph_service_1.SpinalGraphService.browseAndClassifyByTypeInContext(SpinalContextId, SpinalContextId);
             }

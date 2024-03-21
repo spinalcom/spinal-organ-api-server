@@ -69,11 +69,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.post("/api/v1/node/:id/add_note", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(node)
 
-      var user = { username: "string", userId: 0 }
+      const user = { username: "string", userId: 0 }
       await serviceDocumentation.addNote(node, user, req.body.note)
 
     } catch (error) {

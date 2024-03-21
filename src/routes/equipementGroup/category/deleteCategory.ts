@@ -66,10 +66,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.delete("/api/v1/equipementsGroup/:contextId/category/:categoryId/delete", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
-      var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+      const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(category)
 

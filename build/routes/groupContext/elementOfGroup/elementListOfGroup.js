@@ -70,13 +70,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      */
     app.get('/api/v1/groupContext/:contextId/category/:categoryId/group/:groupId/read', async (req, res, next) => {
         try {
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10));
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10));
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10));
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10));
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            var group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10));
+            const group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10));
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(group);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext &&

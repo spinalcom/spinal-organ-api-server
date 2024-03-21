@@ -73,14 +73,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.get(
     '/api/v1/eventContext/:ContextId/eventCategory/:CategoryId/group_list',
     async (req, res, next) => {
-      let nodes = [];
+      const nodes = [];
       try {
         const profileId = getProfileId(req);
-        var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.ContextId, 10), profileId);
+        const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.ContextId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(context);
 
-        var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.CategoryId, 10), profileId);
+        const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.CategoryId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(category);
 
@@ -89,7 +89,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           category.belongsToContext(context)
         ) {
           if (context.getType().get() === 'SpinalEventGroupContext') {
-            var listGroupEvents = await SpinalEventService.getEventsGroups(
+            const listGroupEvents = await SpinalEventService.getEventsGroups(
               category.getId().get()
             );
 
@@ -97,7 +97,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
               // @ts-ignore
               const _child = SpinalGraphService.getRealNode(child.id.get());
               if (_child.getType().get() === 'SpinalEventGroup') {
-                let info: GroupEvent = {
+                const info: GroupEvent = {
                   dynamicId: _child._server_id,
                   staticId: _child.getId().get(),
                   name: _child.getName().get(),

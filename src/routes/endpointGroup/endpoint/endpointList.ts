@@ -87,16 +87,16 @@ module.exports = function (
     async (req, res, next) => {
       try {
         const profileId = getProfileId(req);
-        var _endpointList = [];
-        var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+        const _endpointList = [];
+        const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(context);
 
-        var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+        const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(category);
 
-        var group: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
+        const group: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(group);
 
@@ -108,7 +108,7 @@ module.exports = function (
           if (context.getType().get() === 'BmsEndpointGroupContext') {
             const endpointList = await group.getChildren('groupHasBmsEndpoint');
             for (const endpoint of endpointList) {
-              var info = {
+              const info = {
                 dynamicId: endpoint._server_id,
                 staticId: endpoint.getId().get(),
                 name: endpoint.getName().get(),

@@ -101,16 +101,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         const profileId = getProfileId(req);
 
         var nodes = [];
-        let node: SpinalNode<any> = await spinalAPIMiddleware.load(
+        const node: SpinalNode<any> = await spinalAPIMiddleware.load(
           parseInt(req.params.IdNode, 10), profileId
         );
-        let category: SpinalNode<any> = await spinalAPIMiddleware.load(
+        const category: SpinalNode<any> = await spinalAPIMiddleware.load(
           parseInt(req.params.IdCategory, 10), profileId
         );
-        let childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
+        const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
         for (const children of childrens) {
           if (children.getId().get() === category.getId().get()) {
-            let attributes = await category.getElement();
+            const attributes = await category.getElement();
             for (let index = 0; index < attributes.length; index++) {
               const element = attributes[index];
               if (element.label.get() === req.params.attributName) {
@@ -125,8 +125,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         }
 
         for (const child of childrens) {
-          let attributs = await child.element.load();
-          let info: NodeAttribut = {
+          const attributs = await child.element.load();
+          const info: NodeAttribut = {
             dynamicId: child._server_id,
             staticId: child.getId().get(),
             name: child.getName().get(),

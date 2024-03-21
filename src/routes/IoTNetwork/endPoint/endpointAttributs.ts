@@ -63,13 +63,13 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.get("/api/v1/endpoint/:id/attributsList", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(node);
-      let childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
+      const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
       const prom = childrens.map(async (child) => {
-        let attributs = await child.element.load();
-        let info: EndPointNodeAttribut = {
+        const attributs = await child.element.load();
+        const info: EndPointNodeAttribut = {
           dynamicId: child._server_id,
           staticId: child.getId().get(),
           name: child.getName().get(),

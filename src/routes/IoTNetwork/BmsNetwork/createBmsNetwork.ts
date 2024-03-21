@@ -75,11 +75,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var context = await spinalAPIMiddleware.load(parseInt(req.body.IoTNetworkContext_DynamicId), profileId)
+      const context = await spinalAPIMiddleware.load(parseInt(req.body.IoTNetworkContext_DynamicId), profileId)
       // @ts-ignore
       SpinalGraphService._addNode(context);
 
-      let configService: ConfigService = {
+      const configService: ConfigService = {
         contextName: context.getName().get(),
         contextType: "IoTNetwork",
         networkName: req.body.NetworkName,

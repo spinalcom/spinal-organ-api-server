@@ -57,7 +57,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    */
 
   app.get('/api/v1/BIM/BIMFileContext/list', async (req, res) => {
-    let nodes = [];
+    const nodes = [];
     try {
       const profileId = getProfileId(req);
 
@@ -82,7 +82,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
                 aecPath: currentVersion.aecPath?.get(),
               });
             }
-            let info: BIMFileContext = {
+            const info: BIMFileContext = {
               dynamicId: children._server_id,
               staticId: children.getId().get(),
               name: children.getName().get(),

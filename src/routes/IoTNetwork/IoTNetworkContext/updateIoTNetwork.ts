@@ -70,7 +70,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
+      const IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
       if (IoTNetwork.getType().get() === "Network") {
         IoTNetwork.info.name.set(req.body.newNameIoTNetwork)
       }

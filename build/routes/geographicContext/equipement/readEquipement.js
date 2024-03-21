@@ -58,7 +58,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/equipement/:id/read", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(equipement);
             if (equipement.getType().get() === "BIMObject") {

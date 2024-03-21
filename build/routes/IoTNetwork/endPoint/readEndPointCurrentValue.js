@@ -58,10 +58,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/endpoint/:id/read", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            var element = await node.element.load();
+            const element = await node.element.load();
             var info = { currentValue: element.currentValue.get() };
         }
         catch (error) {

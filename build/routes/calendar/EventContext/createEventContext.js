@@ -60,7 +60,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   */
     app.post("/api/v1/eventContext/create", async (req, res, next) => {
         try {
-            let steps = [];
+            const steps = [];
             const graph = await spinalAPIMiddleware.getGraph();
             await spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
             const profileId = (0, requestUtilities_1.getProfileId)(req);

@@ -78,7 +78,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             // //@ts-ignore
             // SpinalGraphService._addNode(workflow)
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
+            const ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(ticket);
             // @ts-ignore
@@ -90,8 +90,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
             else {
                 //@ts-ignore
-                let file = req.files.file;
-                var data = {
+                const file = req.files.file;
+                const data = {
                     name: file.name,
                     buffer: file.data,
                 };

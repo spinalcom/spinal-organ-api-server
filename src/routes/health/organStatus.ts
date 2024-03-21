@@ -57,18 +57,18 @@ module.exports = function (
 
   app.get('/api/v1/organStatus', async (req, res, next) => {
     function isWithinTimeLimit(timeStamp) {
-      var timeLimit = Date.now() - 5 * 60 * 1000; 
+      const timeLimit = Date.now() - 5 * 60 * 1000; 
       return timeStamp >= timeLimit && timeStamp <= Date.now(); 
     }
 
-    let organDown = [];
+    const organDown = [];
     try {
       spinalAPIMiddleware.conn.load(
         '/etc/Organs/Monitoring',
         async (directory: spinal.Directory) => {
           if (!directory) return;
           for (const file of directory) {
-            var fileLoaded = await file.load();
+            const fileLoaded = await file.load();
             if (file._info.model_type.get() === 'ConfigFile') {
               console.log("testing file ", fileLoaded.genericOrganData.name.get());
 
@@ -79,7 +79,7 @@ module.exports = function (
                   fileLoaded.genericOrganData.lastHealthTime.get()
                 )
               ) {
-                let infoOrganHealth = {
+                const infoOrganHealth = {
                   name: fileLoaded.genericOrganData?.name?.get(),
                   bootTimestamp:
                     fileLoaded.genericOrganData?.bootTimestamp?.get(),
@@ -98,7 +98,7 @@ module.exports = function (
         '/etc/Organs',
         async (directory: spinal.Directory) => {
           for (const file of directory) {
-            var fileLoaded = await file.load();
+            const fileLoaded = await file.load();
             if (file._info.model_type.get() === 'ConfigFile') {
               if (!fileLoaded.genericOrganData) continue;
               if (
@@ -106,7 +106,7 @@ module.exports = function (
                   fileLoaded.genericOrganData.lastHealthTime.get()
                 )
               ) {
-                let infoOrganHealth = {
+                const infoOrganHealth = {
                   name: fileLoaded.genericOrganData?.name?.get(),
                   bootTimestamp:
                     fileLoaded.genericOrganData?.bootTimestamp?.get(),

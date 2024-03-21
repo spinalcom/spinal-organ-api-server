@@ -58,13 +58,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/floor/:id/floor_details", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            var rooms = await floor.getChildren("hasGeographicRoom");
+            const floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const rooms = await floor.getChildren("hasGeographicRoom");
             let sommes = 0;
-            let _bimObjects = [];
-            var bimFileId;
+            const _bimObjects = [];
+            let bimFileId;
             for (const room of rooms) {
-                var bimObjects = await room.getChildren("hasBimObject");
+                const bimObjects = await room.getChildren("hasBimObject");
                 for (const bimObject of bimObjects) {
                     bimFileId = bimObject.info.bimFileId.get();
                     const infoBimObject = {
@@ -78,10 +78,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     };
                     _bimObjects.push(infoBimObject);
                 }
-                let categories = await room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+                const categories = await room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
                 for (const child of categories) {
                     if (child.getName().get() === "Spatial") {
-                        let attributs = await child.element.load();
+                        const attributs = await child.element.load();
                         for (const attribut of attributs.get()) {
                             if (attribut.label === "area") {
                                 sommes = sommes + attribut.value;

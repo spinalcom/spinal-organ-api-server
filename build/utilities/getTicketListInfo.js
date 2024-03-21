@@ -3,17 +3,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getTicketListInfo = void 0;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId) {
-    let nodes = [];
+    const nodes = [];
     await spinalAPIMiddleware.getGraph();
-    var node = await spinalAPIMiddleware.load(dynamicId, profileId);
+    const node = await spinalAPIMiddleware.load(dynamicId, profileId);
     //@ts-ignore
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-    var ticketList = await node.getChildren('SpinalSystemServiceTicketHasTicket');
+    const ticketList = await node.getChildren('SpinalSystemServiceTicketHasTicket');
     for (const ticket of ticketList) {
         //context && workflow
         const workflow = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(ticket.getContextIds()[0]);
         //Step
-        let _step = await ticket
+        const _step = await ticket
             .getParents('SpinalSystemServiceTicketHasTicket')
             .then((steps) => {
             for (const step of steps) {
@@ -22,7 +22,7 @@ async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId) {
                 }
             }
         });
-        let _process = await _step
+        const _process = await _step
             .getParents('SpinalSystemServiceTicketHasStep')
             .then((processes) => {
             for (const process of processes) {
@@ -31,7 +31,7 @@ async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId) {
                 }
             }
         });
-        var info = {
+        const info = {
             dynamicId: ticket._server_id,
             staticId: ticket.getId().get(),
             name: ticket.getName().get(),

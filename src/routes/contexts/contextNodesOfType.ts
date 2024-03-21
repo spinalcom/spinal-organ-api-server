@@ -68,14 +68,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/context/:id/nodesOfType/:type", async (req, res, next) => {
 
-    let nodes = [];
+    const nodes = [];
     try {
       const profileId = getProfileId(req);
-      var context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      var SpinalContextId = context.getId().get();
+      const context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const SpinalContextId = context.getId().get();
 
-      var type_list = await SpinalGraphService.browseAndClassifyByTypeInContext(SpinalContextId, SpinalContextId);
-      var model_list = type_list.data[req.params.type];
+      const type_list = await SpinalGraphService.browseAndClassifyByTypeInContext(SpinalContextId, SpinalContextId);
+      const model_list = type_list.data[req.params.type];
 
       if (model_list === undefined) {
         res.status(400).send("type not found in context");
@@ -83,7 +83,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         for (let index = 0; index < model_list.length; index++) {
           // hacky way use realnode when fiexd
           const realNode = model_list[index]._parents[0];
-          let info: ContextNodeofTypes = {
+          const info: ContextNodeofTypes = {
             dynamicId: realNode._server_id,
             staticId: model_list[index].id.get(),
             name: model_list[index].name.get(),

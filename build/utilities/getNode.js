@@ -27,7 +27,7 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 async function getNode(spinalAPIMiddleware, dynamicId, staticId, profileId) {
     if (dynamicId) {
         try {
-            var node = await spinalAPIMiddleware.load(parseInt(dynamicId, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(dynamicId, 10), profileId);
             return node;
         }
         catch (error) {

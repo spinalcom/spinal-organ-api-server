@@ -81,7 +81,7 @@ module.exports = function (
   app.get(
     '/api/v1/roomsGroup/:contextId/category/:categoryId/group_list',
     async (req, res, next) => {
-      let nodes = [];
+      const nodes = [];
       try {
         const profileId = getProfileId(req);
         const context: SpinalNode<any> = await spinalAPIMiddleware.load(

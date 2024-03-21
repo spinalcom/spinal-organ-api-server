@@ -58,7 +58,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/room/:id/read", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
             if (room.getType().get() === "geographicRoom") {

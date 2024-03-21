@@ -71,10 +71,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post("/api/v1/endpoint/:id/timeSeries/insert", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            var timeseries = await (0, spinalTimeSeries_1.default)().getOrCreateTimeSeries(node.getId().get());
+            const timeseries = await (0, spinalTimeSeries_1.default)().getOrCreateTimeSeries(node.getId().get());
             const newValue = req.body.newValue;
             const date = moment(req.body.date, ["DD-MM-YYYY HH:mm:ss", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY HH:mm:ss"], true);
             await timeseries.insert(newValue, date.toDate());

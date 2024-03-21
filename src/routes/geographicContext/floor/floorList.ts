@@ -58,7 +58,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    */
 
   app.get('/api/v1/floor/list', async (req, res, next) => {
-    let nodes = [];
+    const nodes = [];
     try {
       const { spec } = req.query;
       const profileId = getProfileId(req);
@@ -66,12 +66,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const contexts = await graph.getChildren("hasContext");
 
       // var geographicContexts = await SpinalGraphService.getContextWithType("geographicContext");
-      var geographicContexts = contexts.filter(el => el.getType().get() === "geographicContext");
-      var buildings = await geographicContexts[0].getChildren("hasGeographicBuilding");
-      var floors = await buildings[0].getChildren("hasGeographicFloor")
+      const geographicContexts = contexts.filter(el => el.getType().get() === "geographicContext");
+      const buildings = await geographicContexts[0].getChildren("hasGeographicBuilding");
+      const floors = await buildings[0].getChildren("hasGeographicFloor")
       for (const floor of floors) {
         var info;
-        var categories = await floor.getChildren(NODE_TO_CATEGORY_RELATION);
+        const categories = await floor.getChildren(NODE_TO_CATEGORY_RELATION);
 
         if (spec === "archipel") {
           for (const category of categories) {
@@ -100,10 +100,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
             }
           }
         } else {
-          var categoriesTab = [];
+          const categoriesTab = [];
           for (const category of categories) {
             var attributs = (await category.element.load()).get();
-            var catInfo = {
+            const catInfo = {
               dynamicId: category._server_id,
               staticId: category.getId().get(),
               name: category.getName().get(),

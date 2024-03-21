@@ -62,11 +62,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   */
 
   app.get("/api/v1/IoTNetworkContext/:id/tree", async (req, res, next) => {
-    var IoTNetworks: IoTNetworkTree;
+    let IoTNetworks: IoTNetworkTree;
 
     try {
       const profileId = getProfileId(req);
-      var IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       if (IoTNetwork instanceof SpinalContext) {
         IoTNetworks = {
           dynamicId: IoTNetwork._server_id,

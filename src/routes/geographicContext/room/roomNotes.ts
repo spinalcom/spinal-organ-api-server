@@ -68,16 +68,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.get('/api/v1/room/:id/notes', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var room: SpinalNode<any> = await spinalAPIMiddleware.load(
+      const room: SpinalNode<any> = await spinalAPIMiddleware.load(
         parseInt(req.params.id, 10), profileId
       );
       //@ts-ignore
       SpinalGraphService._addNode(room)
       if (room.getType().get() === "geographicRoom") {
         var _notes = []
-        var notes = await serviceDocumentation.getNotes(room)
+        const notes = await serviceDocumentation.getNotes(room)
         for (const note of notes) {
-          let infoNote: Note = {
+          const infoNote: Note = {
             date: parseInt(note.element.date.get()),
             type: note.element.type.get(),
             message: note.element.message.get(),

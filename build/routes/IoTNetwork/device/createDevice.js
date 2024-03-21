@@ -62,18 +62,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post("/api/v1/device/create", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var network = await spinalAPIMiddleware.load(parseInt(req.body.networkDynamicId), profileId);
+            const network = await spinalAPIMiddleware.load(parseInt(req.body.networkDynamicId), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(network);
-            var contextId = await network.getContextIds();
-            var contextNetwork = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(contextId[0]);
-            var obj = {
+            const contextId = await network.getContextIds();
+            const contextNetwork = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(contextId[0]);
+            const obj = {
                 name: req.body.name,
                 type: req.body.type,
                 children: [],
                 nodeTypeName: 'BmsDevice'
             };
-            let configService = {
+            const configService = {
                 contextName: contextNetwork.getName().get(),
                 contextType: "Network",
                 networkName: network.getName().get(),

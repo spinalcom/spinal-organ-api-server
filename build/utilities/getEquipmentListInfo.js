@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getEquipmentListInfo = void 0;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 async function getEquipmentListInfo(spinalAPIMiddleware, profileId, roomId) {
-    let nodes = [];
+    const nodes = [];
     const room = await spinalAPIMiddleware.load(roomId, profileId);
     //@ts-ignore
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);

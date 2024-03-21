@@ -25,12 +25,12 @@
 import * as moment from 'moment';
 
 export function verifDate(date: string):  number | Date| string {
-  let res = moment(date, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], 'fr', true); // uses 'fr' locale and strict parsing
+  const res = moment(date, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], 'fr', true); // uses 'fr' locale and strict parsing
   if (!res.isValid()) return 1;
   else return res.toDate();
 }
 
 export function sendDate(date: string) {
-  let res = moment(date, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], 'fr', true); // uses 'fr' locale and strict parsing
+  const res = moment(date, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], 'fr', true); // uses 'fr' locale and strict parsing
   return res
 }

@@ -51,14 +51,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *         description: Bad request
     */
     app.get("/api/v1/groupContext/list", async (req, res, next) => {
-        let nodes = [];
+        const nodes = [];
         try {
             const profilId = (0, requestUtilities_1.getProfileId)(req);
             const graph = await spinalAPIMiddleware.getProfileGraph(profilId);
-            var groupContexts = await spinal_env_viewer_plugin_group_manager_service_1.default.getGroupContexts(undefined, graph);
+            const groupContexts = await spinal_env_viewer_plugin_group_manager_service_1.default.getGroupContexts(undefined, graph);
             for (let index = 0; index < groupContexts.length; index++) {
-                var realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(groupContexts[index].id);
-                let info = {
+                const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(groupContexts[index].id);
+                const info = {
                     dynamicId: realNode._server_id,
                     staticId: realNode.getId().get(),
                     name: realNode.getName().get(),
@@ -70,7 +70,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send("list of group contexts is not loaded");
+            return res.status(400).send("list of group contexts is not loaded");
         }
         res.send(nodes);
     });

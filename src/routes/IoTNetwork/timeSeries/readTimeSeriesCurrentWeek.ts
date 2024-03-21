@@ -66,17 +66,17 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
+      const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
       // @ts-ignore
       SpinalGraphService._addNode(node);
       const timeSeriesIntervalDate = spinalServiceTimeSeries().getDateFromLastDays(7)
-      var datas = await spinalServiceTimeSeries().getData(node.getId().get(), timeSeriesIntervalDate)
-
+      const datas = await spinalServiceTimeSeries().getData(node.getId().get(), timeSeriesIntervalDate)
+      return res.json(datas);
     } catch (error) {
       if (error.code && error.message) return res.status(error.code).send(error.message);
       return res.status(400).send(error.message)
     }
-    res.json(datas);
+    
 
   })
 

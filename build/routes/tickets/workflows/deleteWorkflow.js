@@ -53,7 +53,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.delete("/api/v1/workflow/:id/delete", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            let workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             if (workflow.getType().get() === "SpinalSystemServiceTicket") {
                 workflow.removeFromGraph();
             }

@@ -26,10 +26,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getNodeInfo = void 0;
 const corseChildrenAndParentNode_1 = require("./corseChildrenAndParentNode");
 async function getNodeInfo(spinalAPIMiddleware, profileId, dynamicId) {
-    var node = await spinalAPIMiddleware.load(dynamicId, profileId);
-    var childrens_list = (0, corseChildrenAndParentNode_1.childrensNode)(node);
-    var parents_list = await (0, corseChildrenAndParentNode_1.parentsNode)(node);
-    var info = {
+    const node = await spinalAPIMiddleware.load(dynamicId, profileId);
+    const childrens_list = (0, corseChildrenAndParentNode_1.childrensNode)(node);
+    const parents_list = await (0, corseChildrenAndParentNode_1.parentsNode)(node);
+    const info = {
         dynamicId: node._server_id,
         staticId: node.getId().get(),
         name: node.getName().get(),

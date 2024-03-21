@@ -80,31 +80,31 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             //ticket node
             var nodes = [];
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             if (node.getType()?.get() === "SpinalSystemServiceTicketTypeTicket") {
                 if (req.body.period === "all") {
-                    let listEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId()?.get());
+                    const listEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId()?.get());
                     ListEvents(listEvents);
                 }
                 else if (req.body.period === "today") {
-                    var start = new Date();
+                    const start = new Date();
                     start.setHours(2, 0, 0, 0);
-                    var end = new Date();
+                    const end = new Date();
                     end.setHours(25, 59, 59, 999);
-                    let listEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId()?.get(), start, end);
+                    const listEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId()?.get(), start, end);
                     ListEvents(listEvents);
                 }
                 else if (req.body.period === undefined || req.body.period === "week") {
-                    var curr = new Date(); // get current date
-                    var first = (curr.getDate() - curr.getDay()) + 1; // First day is the day of the month - the day of the week
-                    var last = first + 6; // last day is the first day + 6
-                    var firstday = new Date(curr.setDate(first));
+                    const curr = new Date(); // get current date
+                    const first = (curr.getDate() - curr.getDay()) + 1; // First day is the day of the month - the day of the week
+                    const last = first + 6; // last day is the first day + 6
+                    const firstday = new Date(curr.setDate(first));
                     firstday.setHours(2, 0, 0, 0).toString();
-                    var lastday = new Date(curr.setDate(last));
+                    const lastday = new Date(curr.setDate(last));
                     lastday.setHours(25, 59, 59, 999).toString();
-                    let listEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId()?.get(), firstday, lastday);
+                    const listEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId()?.get(), firstday, lastday);
                     ListEvents(listEvents);
                 }
                 else if (req.body.period === "dateInterval") {
@@ -114,7 +114,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     else {
                         const start = (0, dateFunctions_1.sendDate)(req.body.startDate);
                         const end = (0, dateFunctions_1.sendDate)(req.body.endDate);
-                        let listEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId()?.get(), start.toDate(), end.toDate());
+                        const listEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId()?.get(), start.toDate(), end.toDate());
                         ListEvents(listEvents);
                     }
                 }
@@ -127,7 +127,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     // @ts-ignore
                     const _child = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(child.id?.get());
                     if (_child.getType()?.get() === "SpinalEvent") {
-                        let info = {
+                        const info = {
                             dynamicId: _child._server_id,
                             staticId: _child.getId()?.get(),
                             name: _child.getName()?.get(),

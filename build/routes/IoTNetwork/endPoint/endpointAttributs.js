@@ -59,13 +59,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/endpoint/:id/attributsList", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            let childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+            const childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
             const prom = childrens.map(async (child) => {
-                let attributs = await child.element.load();
-                let info = {
+                const attributs = await child.element.load();
+                const info = {
                     dynamicId: child._server_id,
                     staticId: child.getId().get(),
                     name: child.getName().get(),

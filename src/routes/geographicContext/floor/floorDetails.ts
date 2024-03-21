@@ -71,13 +71,13 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     try {
       const profileId = getProfileId(req);
 
-      var floor: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      var rooms = await floor.getChildren("hasGeographicRoom")
+      const floor: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const rooms = await floor.getChildren("hasGeographicRoom")
       let sommes = 0
-      let _bimObjects = [];
-      var bimFileId: string;
+      const _bimObjects = [];
+      let bimFileId: string;
       for (const room of rooms) {
-        var bimObjects = await room.getChildren("hasBimObject");
+        const bimObjects = await room.getChildren("hasBimObject");
         for (const bimObject of bimObjects) {
           bimFileId = bimObject.info.bimFileId.get();
 
@@ -94,10 +94,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           _bimObjects.push(infoBimObject);
         }
 
-        let categories = await room.getChildren(NODE_TO_CATEGORY_RELATION);
+        const categories = await room.getChildren(NODE_TO_CATEGORY_RELATION);
         for (const child of categories) {
           if (child.getName().get() === "Spatial") {
-            let attributs = await child.element.load();
+            const attributs = await child.element.load();
             for (const attribut of attributs.get()) {
               if (attribut.label === "area") {
                 sommes = sommes + attribut.value

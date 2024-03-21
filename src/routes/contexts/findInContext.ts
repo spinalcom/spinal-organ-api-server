@@ -91,12 +91,12 @@ module.exports = function (
   app.post('/api/v1/find_node_in_context', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var info;
+      let info;
       await spinalAPIMiddleware.getGraph();
       const tab = req.body.array;
       const paramContext = req.body.context;
       var result = [];
-      var context: SpinalContext<any> = await verifyContext(paramContext);
+      let context: SpinalContext<any> = await verifyContext(paramContext);
       /**********************context************************/
 
       async function verifyContext(paramContext: string) {
@@ -115,9 +115,9 @@ module.exports = function (
 
       /***************** ***optionSearchNodes**************/
       if (req.body.optionSearchNodes === 'dynamicId') {
-        let nodes = [];
+        const nodes = [];
         for (let index = 0; index < tab.length; index++) {
-          let node: SpinalNode<any> = await spinalAPIMiddleware.load(
+          const node: SpinalNode<any> = await spinalAPIMiddleware.load(
             parseInt(tab[index], 10), profileId
           );
           nodes.push(node);
@@ -126,7 +126,7 @@ module.exports = function (
           if (_node.belongsToContext(context)) {
             if (req.body.optionResult === 'ticket') {
               //Step
-              let _step = await _node
+              const _step = await _node
                 .getParents('SpinalSystemServiceTicketHasTicket')
                 .then((steps) => {
                   for (const step of steps) {
@@ -138,7 +138,7 @@ module.exports = function (
                     }
                   }
                 });
-              let _process = await _step
+              const _process = await _step
                 .getParents('SpinalSystemServiceTicketHasStep')
                 .then((processes) => {
                   for (const process of processes) {
@@ -226,7 +226,7 @@ module.exports = function (
           } else res.status(400).send('one of node not exist in this context');
         }
       } else if (req.body.optionSearchNodes === 'staticId') {
-        let nodes = [];
+        const nodes = [];
         for (let index = 0; index < tab.length; index++) {
           let node: SpinalNode<any> = SpinalGraphService.getRealNode(
             tab[index]
@@ -249,7 +249,7 @@ module.exports = function (
             ) {
               if (req.body.optionResult === 'ticket') {
                 //Step
-                let _step = await _node
+                const _step = await _node
                   .getParents('SpinalSystemServiceTicketHasTicket')
                   .then((steps) => {
                     for (const step of steps) {
@@ -261,7 +261,7 @@ module.exports = function (
                       }
                     }
                   });
-                let _process = await _step
+                const _process = await _step
                   .getParents('SpinalSystemServiceTicketHasStep')
                   .then((processes) => {
                     for (const process of processes) {
@@ -352,7 +352,7 @@ module.exports = function (
         }
       } else if (req.body.optionSearchNodes === 'name') {
         if (context) {
-          let res = await SpinalGraphService.findInContext(
+          const res = await SpinalGraphService.findInContext(
             context.getId().get(),
             context.getId().get()
           );
@@ -371,7 +371,7 @@ module.exports = function (
                 }
                 if (req.body.optionResult === 'ticket') {
                   //Step
-                  let _step = await node
+                  const _step = await node
                     .getParents('SpinalSystemServiceTicketHasTicket')
                     .then((steps) => {
                       for (const step of steps) {
@@ -383,7 +383,7 @@ module.exports = function (
                         }
                       }
                     });
-                  let _process = await _step
+                  const _process = await _step
                     .getParents('SpinalSystemServiceTicketHasStep')
                     .then((processes) => {
                       for (const process of processes) {

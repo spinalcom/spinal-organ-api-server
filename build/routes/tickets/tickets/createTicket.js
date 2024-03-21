@@ -101,14 +101,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             let ticketCreated;
-            let ticketInfo = {
+            const ticketInfo = {
                 name: req.body.name,
                 priority: req.body.priority,
                 description: req.body.description,
                 declarer_id: req.body.declarer_id,
             };
             await spinalAPIMiddleware.getGraph();
-            let arrayofServerId = [
+            const arrayofServerId = [
                 parseInt(req.body.workflow, 10),
                 parseInt(req.body.process, 10),
             ];
@@ -119,20 +119,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             if (workflowById === undefined && processById === undefined) {
-                var allContexts = spinal_service_ticket_1.serviceTicketPersonalized.getContexts();
+                const allContexts = spinal_service_ticket_1.serviceTicketPersonalized.getContexts();
                 for (const context of allContexts) {
                     if (context.name === req.body.workflow) {
-                        let result = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(context.id);
+                        const result = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(context.id);
                         //@ts-ignore
                         spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(result);
                         var workflowByName = result;
                     }
                 }
                 if (workflowByName) {
-                    var allProcess = await spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflowByName.getId().get());
+                    const allProcess = await spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflowByName.getId().get());
                     for (const process of allProcess) {
                         if (process.name.get() === req.body.process) {
-                            let result = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(process.id.get());
+                            const result = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(process.id.get());
                             //@ts-ignore
                             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(result);
                             var processByName = result;
@@ -164,7 +164,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     }
                 }
             }
-            var ticketList = await spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(node.getId().get());
+            const ticketList = await spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(node.getId().get());
             for (let index = 0; index < ticketList.length; index++) {
                 if (ticketList[index].id === ticketCreated) {
                     var realNodeTicket = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(ticketList[index].id);
@@ -187,7 +187,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 // realNodeTicket.info.add_attr('images', new Ptr(objImage));
                 for (const image of req.body.images) {
                     // @ts-ignore
-                    var user = {
+                    const user = {
                         username: realNodeTicket.info?.declarer_id?.get() || 'user',
                         userId: 0,
                     };

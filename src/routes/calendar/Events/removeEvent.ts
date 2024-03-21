@@ -59,7 +59,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.delete("/api/v1/event/:eventId/delete", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var event: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.eventId, 10), profileId);
+      const event: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.eventId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(event)
       if (event.getType().get() === "SpinalEvent") {

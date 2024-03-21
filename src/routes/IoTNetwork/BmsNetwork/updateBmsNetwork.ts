@@ -70,7 +70,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var network = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
+      const network = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
       // @ts-ignore
       SpinalGraphService._addNode(network);
       if (network.getType().get() === "BmsNetwork") {

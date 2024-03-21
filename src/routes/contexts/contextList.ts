@@ -56,16 +56,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/context/list", async (req, res, next) => {
 
-    let nodes = [];
+    const nodes = [];
     try {
       const profileId = getProfileId(req);
-      var graph = await spinalAPIMiddleware.getProfileGraph(profileId)
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId)
 
-      var relationNames = graph.getRelationNames();
-      var childrens = await graph.getChildren(relationNames);
+      const relationNames = graph.getRelationNames();
+      const childrens = await graph.getChildren(relationNames);
 
       for (const child of childrens) {
-        let info: Context = {
+        const info: Context = {
           dynamicId: child._server_id,
           staticId: child.getId().get(),
           name: child.getName().get(),

@@ -76,13 +76,13 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.post("/api/v1/ticket/:ticketId/archive", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var workflow = await spinalAPIMiddleware.load(parseInt(req.body.workflowDynamicId, 10), profileId);
+      const workflow = await spinalAPIMiddleware.load(parseInt(req.body.workflowDynamicId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(workflow)
-      var process = await spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10), profileId);
+      const process = await spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(process)
-      var ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
+      const ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(ticket)
 

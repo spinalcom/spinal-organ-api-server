@@ -55,7 +55,7 @@ function Requests(logger) {
   }
 
   function initApiServer(spinalAPIMiddleware: SpinalAPIMiddleware) {
-    let api = APIServer(logger, spinalAPIMiddleware);
+    const api = APIServer(logger, spinalAPIMiddleware);
 
     // TODO add swagger specs here for external documentation and for the organ to ask for it
     initSwagger(api);
@@ -73,7 +73,7 @@ function Requests(logger) {
     run: async function (): Promise<void> {
       const spinalAPIMiddleware = await initSpinalHub();
       const api = initApiServer(spinalAPIMiddleware);
-      let port = config.api.port;
+      const port = config.api.port;
       const server = api.listen(port, () => {
         ConfigFile.init(
           spinalAPIMiddleware.conn,

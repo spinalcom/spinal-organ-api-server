@@ -78,9 +78,9 @@ module.exports = (_a = class BimObjectUtils {
         async getBimObjectsNodeInfo(bimObjects) {
             const result = [];
             for (const node of bimObjects) {
-                var childrens_list = this.childrensNode(node);
+                const childrens_list = this.childrensNode(node);
                 // eslint-disable-next-line no-await-in-loop
-                var parents_list = await this.parentsNode(node);
+                const parents_list = await this.parentsNode(node);
                 const data = {
                     dynamicId: node._server_id,
                     staticId: node.getId().get(),
@@ -146,12 +146,12 @@ module.exports = (_a = class BimObjectUtils {
             }
         }
         childrensNode(node) {
-            let childs = node.children;
-            let res = [];
+            const childs = node.children;
+            const res = [];
             // childrens relation course
             for (const [, relationTypeMap] of childs) {
                 for (const [, relation] of relationTypeMap) {
-                    let child = {
+                    const child = {
                         dynamicId: relation._server_id,
                         staticId: relation.getId().get(),
                         name: relation.getName().get(),
@@ -163,8 +163,8 @@ module.exports = (_a = class BimObjectUtils {
             return res;
         }
         async parentsNode(node) {
-            let parents = node.parents;
-            let auxtab = [];
+            const parents = node.parents;
+            const auxtab = [];
             let res = [];
             for (const [, ptrList] of parents) {
                 for (let i = 0; i < ptrList.length; i++) {

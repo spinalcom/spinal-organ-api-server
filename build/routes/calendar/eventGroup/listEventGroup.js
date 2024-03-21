@@ -66,24 +66,24 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Bad request
      */
     app.get('/api/v1/eventContext/:ContextId/eventCategory/:CategoryId/group_list', async (req, res, next) => {
-        let nodes = [];
+        const nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.ContextId, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.ContextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = await spinalAPIMiddleware.load(parseInt(req.params.CategoryId, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.CategoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
                 category.belongsToContext(context)) {
                 if (context.getType().get() === 'SpinalEventGroupContext') {
-                    var listGroupEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEventsGroups(category.getId().get());
+                    const listGroupEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEventsGroups(category.getId().get());
                     for (const child of listGroupEvents) {
                         // @ts-ignore
                         const _child = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(child.id.get());
                         if (_child.getType().get() === 'SpinalEventGroup') {
-                            let info = {
+                            const info = {
                                 dynamicId: _child._server_id,
                                 staticId: _child.getId().get(),
                                 name: _child.getName().get(),

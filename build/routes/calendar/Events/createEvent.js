@@ -95,21 +95,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post("/api/v1/event/create", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var groupe = await spinalAPIMiddleware.load(parseInt(req.body.groupDynamicId, 10), profileId);
+            const groupe = await spinalAPIMiddleware.load(parseInt(req.body.groupDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(groupe);
-            var node = await spinalAPIMiddleware.load(parseInt(req.body.nodeDynamicId, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.body.nodeDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            var category = await spinalAPIMiddleware.load(parseInt(req.body.categoryDynamicId, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.body.categoryDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext) {
                 if (context.getType().get() === spinal_env_viewer_task_service_1.CONTEXT_TYPE) {
-                    let eventInfo = {
+                    const eventInfo = {
                         contextId: context.getId().get(),
                         groupId: groupe.getId().get(),
                         categoryId: category.getId().get(),
@@ -123,7 +123,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         creationDate: (moment(Date.now(), "DD MM YYYY HH:mm:ss", true)).toISOString(),
                         repeatEnd: (moment(req.body.repeatEnd, "DD MM YYYY HH:mm:ss", true)).toISOString()
                     };
-                    let user = { username: "string", userId: 0 };
+                    const user = { username: "string", userId: 0 };
                     let result = await spinal_env_viewer_task_service_1.SpinalEventService.createEvent(context.getId().get(), groupe.getId().get(), node.getId().get(), eventInfo, user);
                     if (!Array.isArray(result))
                         result = [result];

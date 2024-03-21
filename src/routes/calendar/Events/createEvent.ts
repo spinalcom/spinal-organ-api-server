@@ -101,22 +101,22 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.post("/api/v1/event/create", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId);
+      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
-      var groupe: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.body.groupDynamicId, 10), profileId);
+      const groupe: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.body.groupDynamicId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(groupe)
-      var node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.body.nodeDynamicId, 10), profileId);
+      const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.body.nodeDynamicId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(node)
-      var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.body.categoryDynamicId, 10), profileId);
+      const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.body.categoryDynamicId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(category)
 
       if (context instanceof SpinalContext) {
         if (context.getType().get() === CONTEXT_TYPE) {
-          let eventInfo = {
+          const eventInfo = {
             contextId: context.getId().get(),
             groupId: groupe.getId().get(),
             categoryId: category.getId().get(),
@@ -130,7 +130,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
             creationDate: (moment(Date.now(), "DD MM YYYY HH:mm:ss", true)).toISOString(),
             repeatEnd: (moment(req.body.repeatEnd, "DD MM YYYY HH:mm:ss", true)).toISOString()
           }
-          let user = { username: "string", userId: 0 }
+          const user = { username: "string", userId: 0 }
 
           let result = await SpinalEventService.createEvent(context.getId().get(), groupe.getId().get(), node.getId().get(), eventInfo, user)
           if (!Array.isArray(result)) result = [result];

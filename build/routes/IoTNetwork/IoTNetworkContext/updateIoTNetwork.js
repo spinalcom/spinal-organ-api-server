@@ -63,7 +63,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.put("/api/v1/IoTNetworkContext/:id/update", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             if (IoTNetwork.getType().get() === "Network") {
                 IoTNetwork.info.name.set(req.body.newNameIoTNetwork);
             }

@@ -66,7 +66,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *         description: Bad request
     */
     app.get("/api/v1/endPointsGroup/:contextId/category/:categoryId/group_list", async (req, res, next) => {
-        let nodes = [];
+        const nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);

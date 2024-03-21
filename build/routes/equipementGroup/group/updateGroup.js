@@ -82,18 +82,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.put("/api/v1/equipementsGroup/:contextId/category/:categoryId/group/:groupId/update", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            var group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
+            const group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(group);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && category.belongsToContext(context) && group.belongsToContext(context)) {
                 if (context.getType().get() === "BIMObjectGroupContext") {
-                    var dataObject = {
+                    const dataObject = {
                         name: req.body.newNameGroup,
                         color: req.body.newNameColor
                     };

@@ -8,17 +8,17 @@ async function getEventListInfo(
     dynamicId: number
 ) {
   await spinalAPIMiddleware.getGraph();
-  var nodes = [];
-  var node = await spinalAPIMiddleware.load(dynamicId,profileId);
+  const nodes = [];
+  const node = await spinalAPIMiddleware.load(dynamicId,profileId);
   //@ts-ignore
   SpinalGraphService._addNode(node);
-  var listEvents = await SpinalEventService.getEvents(node.getId().get());
+  const listEvents = await SpinalEventService.getEvents(node.getId().get());
 
   for (const child of listEvents) {
     // @ts-ignore
     const _child = SpinalGraphService.getRealNode(child.id.get());
     if (_child.getType().get() === 'SpinalEvent') {
-      let info = {
+      const info = {
         dynamicId: _child._server_id,
         staticId: _child.getId().get(),
         name: _child.getName().get(),

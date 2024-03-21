@@ -62,7 +62,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             const { http, hubUri } = getHost(spinalAPIMiddleware.config);
             const encoding = req.query.encoding || 'binary';
             await down(node, http, hubUri, res, encoding);
@@ -79,16 +79,16 @@ function down(file, http, hubUri, res, encoding) {
             // const p = `${__dirname}/${path.name.get()}`;
             // const f = fs.createWriteStream(p);
             http.get(`${hubUri}/sceen/_?u=${argPath._server_id}`, function (response) {
-                var type = mime.lookup(file?.name?.get()) || 'application/octet-stream';
+                const type = mime.lookup(file?.name?.get()) || 'application/octet-stream';
                 if (encoding === 'base64') {
                     // Change response type for base64
-                    let chunks = [];
+                    const chunks = [];
                     response.on('data', (chunk) => {
                         chunks.push(chunk);
                     });
                     response.on('end', () => {
-                        let binary = Buffer.concat(chunks);
-                        let base64 = binary.toString('base64');
+                        const binary = Buffer.concat(chunks);
+                        const base64 = binary.toString('base64');
                         res.set('Content-Type', 'text/plain');
                         res.send(base64);
                         resolve();

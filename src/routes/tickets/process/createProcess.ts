@@ -71,11 +71,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       await spinalAPIMiddleware.getGraph();
 
       const profileId = getProfileId(req);
-      var workflow: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const workflow: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(workflow)
 
-      var allProcess = await serviceTicketPersonalized.getAllProcess(workflow.getId().get());
+      const allProcess = await serviceTicketPersonalized.getAllProcess(workflow.getId().get());
       for (let index = 0; index < allProcess.length; index++) {
         const realNode = SpinalGraphService.getRealNode(allProcess[index].id.get())
         if (realNode.getName().get() === req.body.nameProcess) {

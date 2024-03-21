@@ -28,16 +28,16 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
 const BMS_ENDPOINT_RELATIONS = ["hasEndPoint", spinal_model_bmsnetwork_1.SpinalBmsDevice.relationName, spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName, spinal_model_bmsnetwork_1.SpinalBmsEndpointGroup.relationName];
 async function getEndpointsInfo(spinalAPIMiddleware, profilId, dynamicId) {
-    let nodes = [];
+    const nodes = [];
     spinalAPIMiddleware.getGraph();
-    let node = await spinalAPIMiddleware.load(dynamicId, profilId);
+    const node = await spinalAPIMiddleware.load(dynamicId, profilId);
     // @ts-ignore
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
     const endpoints = await spinal_env_viewer_graph_service_1.SpinalGraphService.findNodesByType(node.getId().get(), BMS_ENDPOINT_RELATIONS, spinal_model_bmsnetwork_1.SpinalBmsEndpoint.nodeTypeName);
     for (const endpoint of endpoints) {
-        var element = await endpoint.element.load();
-        var currentValue = element.currentValue.get();
-        let info = {
+        const element = await endpoint.element.load();
+        const currentValue = element.currentValue.get();
+        const info = {
             dynamicId: endpoint._server_id,
             staticId: endpoint.getId().get(),
             name: endpoint.getName().get(),

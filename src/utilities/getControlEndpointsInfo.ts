@@ -5,16 +5,16 @@ import { SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
 
 
 async function getControlEndpointsInfo(spinalAPIMiddleware: ISpinalAPIMiddleware,profilId:string,dynamicId: number) {
-    let room = await spinalAPIMiddleware.load(dynamicId,profilId);
+    const room = await spinalAPIMiddleware.load(dynamicId,profilId);
     // @ts-ignore
     SpinalGraphService._addNode(room);
-    var profils = await SpinalGraphService.getChildren(room.getId().get(), [spinalControlPointService.ROOM_TO_CONTROL_GROUP])
-    var promises = profils.map(async (profile) => {
-      var result = await SpinalGraphService.getChildren(profile.id.get(), [SpinalBmsEndpoint.relationName])
-      var endpoints = await result.map(async (endpoint) => {
-        var realNode = SpinalGraphService.getRealNode(endpoint.id.get())
-        var element = await endpoint.element.load()
-        var currentValue = element.currentValue.get();
+    const profils = await SpinalGraphService.getChildren(room.getId().get(), [spinalControlPointService.ROOM_TO_CONTROL_GROUP])
+    const promises = profils.map(async (profile) => {
+      const result = await SpinalGraphService.getChildren(profile.id.get(), [SpinalBmsEndpoint.relationName])
+      const endpoints = await result.map(async (endpoint) => {
+        const realNode = SpinalGraphService.getRealNode(endpoint.id.get())
+        const element = await endpoint.element.load()
+        const currentValue = element.currentValue.get();
         return {
           dynamicId: realNode._server_id,
           staticId: endpoint.id.get(),

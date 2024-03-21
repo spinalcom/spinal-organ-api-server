@@ -64,9 +64,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/endPointsGroup/:id/tree", async (req, res, next) => {
     const profileId = getProfileId(req);
-    var contexts: ContextTree;
+    let contexts: ContextTree;
     try {
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
       if (context.getType().get() === "BmsEndpointGroupContext") {

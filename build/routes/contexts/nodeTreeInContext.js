@@ -67,8 +67,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         let tree;
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.idContext, 10), profileId);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.idNode, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.idContext, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.idNode, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
             // @ts-ignore

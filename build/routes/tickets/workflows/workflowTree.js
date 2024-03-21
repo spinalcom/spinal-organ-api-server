@@ -57,10 +57,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     *         description: Bad request
     */
     app.get("/api/v1/workflow/:id/tree", async (req, res, next) => {
-        var workflows;
+        let workflows;
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             if (workflow instanceof spinal_env_viewer_graph_service_1.SpinalContext) {
                 workflows = {
                     dynamicId: workflow._server_id,

@@ -7,11 +7,11 @@ const Constants_1 = require("spinal-service-ticket/dist/Constants");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
     await spinalAPIMiddleware.getGraph();
-    var _ticket = await spinalAPIMiddleware.load(ticketId, profileId);
+    const _ticket = await spinalAPIMiddleware.load(ticketId, profileId);
     //@ts-ignore
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(_ticket);
     //Step
-    var _step = await _ticket
+    const _step = await _ticket
         .getParents('SpinalSystemServiceTicketHasTicket')
         .then((steps) => {
         for (const step of steps) {
@@ -20,7 +20,7 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
             }
         }
     });
-    var _process = await _step
+    const _process = await _step
         .getParents('SpinalSystemServiceTicketHasStep')
         .then((processes) => {
         for (const process of processes) {
@@ -36,12 +36,12 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
         spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(stp);
     }
     //Context
-    var contextRealNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(_ticket.getContextIds()[0]);
+    const contextRealNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(_ticket.getContextIds()[0]);
     // Notes
-    var notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(_ticket);
-    var _notes = [];
+    const notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(_ticket);
+    const _notes = [];
     for (const note of notes) {
-        let infoNote = {
+        const infoNote = {
             userName: note.element.username === undefined ? '' : note.element.username.get(),
             date: note.element.date.get(),
             type: note.element.type.get(),
@@ -50,12 +50,12 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
         _notes.push(infoNote);
     }
     // Files
-    var _files = [];
-    var fileNode = (await _ticket.getChildren('hasFiles'))[0];
+    const _files = [];
+    const fileNode = (await _ticket.getChildren('hasFiles'))[0];
     if (fileNode) {
-        var filesfromElement = await fileNode.element.load();
+        const filesfromElement = await fileNode.element.load();
         for (let index = 0; index < filesfromElement.length; index++) {
-            let infoFiles = {
+            const infoFiles = {
                 dynamicId: filesfromElement[index]._server_id,
                 Name: filesfromElement[index].name.get(),
             };
@@ -64,7 +64,7 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
     }
     // Logs
     async function formatEvent(log) {
-        var texte = '';
+        let texte = '';
         if (log.event == Constants_1.LOGS_EVENTS.creation) {
             texte = 'created';
         }
@@ -85,10 +85,10 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
         }
         return texte;
     }
-    var logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(_ticket.getId().get());
-    var _logs = [];
+    const logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(_ticket.getId().get());
+    const _logs = [];
     for (const log of logs) {
-        let infoLogs = {
+        const infoLogs = {
             userName: log.user.name,
             date: log.creationDate,
             event: await formatEvent(log),
@@ -97,16 +97,16 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
         _logs.push(infoLogs);
     }
     // element Selected
-    var elementSelected;
+    let elementSelected;
     const parentsTicket = await _ticket.getParents('SpinalSystemServiceTicketHasTicket');
     for (const parent of parentsTicket) {
-        if (parent.getType().get() !== 'SpinalSystemServiceTicketTypeStep') {
+        if (['SpinalSystemServiceTicketTypeStep', 'analyticOutputs'].includes(parent.getType().get())) {
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(parent);
             elementSelected = parent;
         }
     }
-    var info = {
+    const info = {
         dynamicId: _ticket._server_id,
         staticId: _ticket.getId().get(),
         name: _ticket.getName().get(),

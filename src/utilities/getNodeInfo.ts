@@ -32,10 +32,10 @@ async function getNodeInfo(
   profileId: string,
   dynamicId: number,
 ): Promise<Node | undefined> {
-    var node: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
-    var childrens_list = childrensNode(node);
-    var parents_list = await parentsNode(node)
-    var info: Node = {
+    const node: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
+    const childrens_list = childrensNode(node);
+    const parents_list = await parentsNode(node)
+    const info: Node = {
         dynamicId: node._server_id,
         staticId: node.getId().get(),
         name: node.getName().get(),

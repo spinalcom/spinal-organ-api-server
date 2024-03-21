@@ -59,19 +59,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Bad request
      */
     app.get("/api/v1/eventContext/:id/category_list", async (req, res, next) => {
-        let nodes = [];
+        const nodes = [];
         await spinalAPIMiddleware.getGraph();
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var listCategoryEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEventsCategories(context.getId().get());
+            const listCategoryEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEventsCategories(context.getId().get());
             for (const child of listCategoryEvents) {
                 // @ts-ignore
                 const _child = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(child.id.get());
                 if (_child.getType().get() === 'groupingCategory') {
-                    let info = {
+                    const info = {
                         dynamicId: _child._server_id,
                         staticId: _child.getId().get(),
                         name: _child.getName().get(),

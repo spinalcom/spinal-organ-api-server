@@ -81,21 +81,21 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
-      var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+      const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(category)
 
 
       if (context instanceof SpinalContext && category.belongsToContext(context)) {
         if (context.getType().get() === "AttributeConfigurationGroupContext") {
-          var dataObject = {
+          const dataObject = {
             name: req.body.newNameCategory,
             icon: req.body.newNameIcon
           }
-          var categoryUpdated = await groupManagerService.updateCategory(category.getId().get(), dataObject)
+          const categoryUpdated = await groupManagerService.updateCategory(category.getId().get(), dataObject)
           var info = {
             dynamicId: categoryUpdated._server_id,
             staticId: categoryUpdated.getId().get(),

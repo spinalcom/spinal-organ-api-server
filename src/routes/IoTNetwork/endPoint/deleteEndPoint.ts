@@ -57,7 +57,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.delete("/api/v1/endpoint/:id/delete", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      let endpoint = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const endpoint = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(endpoint);
       if (endpoint.getType().get() === "BmsEndpoint") {

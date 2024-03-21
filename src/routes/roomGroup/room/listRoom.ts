@@ -89,16 +89,16 @@ module.exports = function (
     async (req, res, next) => {
       try {
         const profileId = getProfileId(req);
-        var _roomList = [];
-        var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+        const _roomList = [];
+        const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(context);
 
-        var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+        const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(category);
 
-        var group: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
+        const group: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(group);
 
@@ -110,7 +110,7 @@ module.exports = function (
           if (context.getType().get() === 'geographicRoomGroupContext') {
             const roomList = await group.getChildren('groupHasgeographicRoom');
             for (const room of roomList) {
-              var info = {
+              const info = {
                 dynamicId: room._server_id,
                 staticId: room.getId().get(),
                 name: room.getName().get(),

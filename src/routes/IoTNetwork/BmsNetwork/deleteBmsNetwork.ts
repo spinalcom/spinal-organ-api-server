@@ -57,7 +57,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.delete("/api/v1/Network/:id/delete", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      let Network = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const Network = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(Network);
       if (Network.getType().get() === "BmsNetwork") {

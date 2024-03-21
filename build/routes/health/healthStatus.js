@@ -52,7 +52,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const twoMinutesAgo = Date.now() - (2 * 60 * 1000); // calculate timestamp for 2 minutes ago
             return (timestamp >= twoMinutesAgo && timestamp <= Date.now()); // check if timestamp is within 2 minutes
         }
-        let organs = [];
+        const organs = [];
         try {
             spinalAPIMiddleware.conn.load("/etc/Organs/Monitoring", async (directory) => {
                 if (!directory)
@@ -67,7 +67,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         else {
                             state = "OFF";
                         }
-                        let infoOrganHealth = {
+                        const infoOrganHealth = {
                             name: fileLoaded.genericOrganData?.name?.get(),
                             bootTimestamp: fileLoaded.genericOrganData?.bootTimestamp?.get(),
                             lastHealthTime: fileLoaded.genericOrganData?.lastHealthTime?.get(),
@@ -82,7 +82,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 spinalAPIMiddleware.conn.load_or_make_dir("/etc", async (directory) => {
                     for (const file of directory) {
                         if (file._info.model_type.get() === "model_status") {
-                            var fileLoaded = await file.load();
+                            const fileLoaded = await file.load();
                             bootTimestamp = fileLoaded.boot_timestamp.get();
                         }
                     }

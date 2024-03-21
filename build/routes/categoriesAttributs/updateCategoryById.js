@@ -71,10 +71,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.put("/api/v1/node/:nodeId/categoryById/:categoryId/update", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            let node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
-            let category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             const result = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation._categoryExist(node, category.getName().get());
-            var newCatgoryName = req.body.categoryName;
+            const newCatgoryName = req.body.categoryName;
             if (result === undefined) {
                 res.status(400).send("category not found in node");
             }

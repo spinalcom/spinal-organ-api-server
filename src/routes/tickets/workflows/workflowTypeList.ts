@@ -62,8 +62,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      var SpinalContextId = workflow.getId().get();
+      const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const SpinalContextId = workflow.getId().get();
       if (workflow.getType().get() === "SpinalSystemServiceTicket") {
         var type_list = await SpinalGraphService.browseAndClassifyByTypeInContext(SpinalContextId, SpinalContextId);
       }

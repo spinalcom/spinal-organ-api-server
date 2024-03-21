@@ -77,23 +77,23 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    */
 
   app.post('/api/v1/command/room/:id/light', async (req, res, next) => {
-    var info;
+    let info;
     try {
       const profileId = getProfileId(req);
-      var room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(room)
 
-      var controlPoints = await room.getChildren('hasControlPoints');
+      const controlPoints = await room.getChildren('hasControlPoints');
       for (const controlPoint of controlPoints) {
         if (controlPoint.getName().get() === "Command") {
-          var bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
+          const bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
           for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
             if (bmsEndPoint.getName().get() === "COMMAND_LIGHT") {
               //@ts-ignore
               SpinalGraphService._addNode(bmsEndPoint);
               const model = SpinalGraphService.getInfo(bmsEndPoint.getId().get());
-              var element = await bmsEndPoint.element.load()
+              const element = await bmsEndPoint.element.load()
 
               await updateControlEndpointWithAnalytic(model, req.body.lightCurrentValue, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
               // var element = (await bmsEndPoint.element.load()).get();

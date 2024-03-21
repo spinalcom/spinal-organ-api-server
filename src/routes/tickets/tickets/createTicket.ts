@@ -115,14 +115,14 @@ module.exports = function (
     try {
       const profileId = getProfileId(req);
       let ticketCreated;
-      let ticketInfo = {
+      const ticketInfo = {
         name: req.body.name,
         priority: req.body.priority,
         description: req.body.description,
         declarer_id: req.body.declarer_id,
       };
       await spinalAPIMiddleware.getGraph();
-      let arrayofServerId = [
+      const arrayofServerId = [
         parseInt(req.body.workflow, 10),
         parseInt(req.body.process, 10),
       ];
@@ -133,10 +133,10 @@ module.exports = function (
       //@ts-ignore
       SpinalGraphService._addNode(node);
       if (workflowById === undefined && processById === undefined) {
-        var allContexts = serviceTicketPersonalized.getContexts();
+        const allContexts = serviceTicketPersonalized.getContexts();
         for (const context of allContexts) {
           if (context.name === req.body.workflow) {
-            let result = SpinalGraphService.getRealNode(context.id);
+            const result = SpinalGraphService.getRealNode(context.id);
             //@ts-ignore
             SpinalGraphService._addNode(result);
             var workflowByName = result;
@@ -144,12 +144,12 @@ module.exports = function (
         }
 
         if (workflowByName) {
-          var allProcess = await serviceTicketPersonalized.getAllProcess(
+          const allProcess = await serviceTicketPersonalized.getAllProcess(
             workflowByName.getId().get()
           );
           for (const process of allProcess) {
             if (process.name.get() === req.body.process) {
-              let result = SpinalGraphService.getRealNode(process.id.get());
+              const result = SpinalGraphService.getRealNode(process.id.get());
               //@ts-ignore
               SpinalGraphService._addNode(result);
               var processByName = result;
@@ -190,7 +190,7 @@ module.exports = function (
         }
       }
 
-      var ticketList = await serviceTicketPersonalized.getTicketsFromNode(
+      const ticketList = await serviceTicketPersonalized.getTicketsFromNode(
         node.getId().get()
       );
       for (let index = 0; index < ticketList.length; index++) {
@@ -219,7 +219,7 @@ module.exports = function (
 
         for (const image of req.body.images) {
           // @ts-ignore
-          var user = {
+          const user = {
             username: realNodeTicket.info?.declarer_id?.get() || 'user',
             userId: 0,
           };

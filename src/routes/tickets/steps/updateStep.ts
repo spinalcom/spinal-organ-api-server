@@ -87,15 +87,15 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     try {
       await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);
-      let workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-      var process: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
-      var step: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.stepId, 10), profileId);
+      const workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+      const process: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
+      const step: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.stepId, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(process);
       // @ts-ignore
       SpinalGraphService._addNode(step);
 
-      var allSteps = await SpinalGraphService.getChildren(process.getId().get(), ["SpinalSystemServiceTicketHasStep"])
+      const allSteps = await SpinalGraphService.getChildren(process.getId().get(), ["SpinalSystemServiceTicketHasStep"])
       for (let index = 0; index < allSteps.length; index++) {
         const realNode = SpinalGraphService.getRealNode(allSteps[index].id.get())
         if (realNode.getName().get() === req.body.newNameStep || req.body.newNameStep === "string") {

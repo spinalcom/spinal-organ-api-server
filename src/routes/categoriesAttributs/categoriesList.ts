@@ -63,14 +63,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   */
 
   app.get("/api/v1/node/:id/categoriesList", async (req, res, next) => {
-    let nodes = [];
+    const nodes = [];
 
     try {
       const profileId = getProfileId(req);
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      var childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
+      const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
       for (const child of childrens) {
-        let info: CategoriesAttribute = {
+        const info: CategoriesAttribute = {
           dynamicId: child._server_id,
           staticId: child.getId().get(),
           name: child.getName().get(),

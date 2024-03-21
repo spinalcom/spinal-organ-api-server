@@ -68,7 +68,7 @@ async function getEquipmentStaticDetailsInfo(
   profileId: string,
   equipementId: number
 ) {
-  var equipment: SpinalNode<any> = await spinalAPIMiddleware.load(
+  const equipment: SpinalNode<any> = await spinalAPIMiddleware.load(
     equipementId,
     profileId
   );
@@ -87,15 +87,15 @@ async function getEquipmentStaticDetailsInfo(
       getEquipmentGroupParent(equipment),
     ]);
 
-    var revitCategory: string = '';
-    var revitFamily: string = '';
-    var revitType: string = '';
-    var categories_bimObjects = await equipment.getChildren(
+    let revitCategory = '';
+    const revitFamily = '';
+    const revitType = '';
+    const categories_bimObjects = await equipment.getChildren(
       NODE_TO_CATEGORY_RELATION
     );
     for (const categorie of categories_bimObjects) {
       if (categorie.getName().get() === 'default') {
-        var attributs_bimObjects = (await categorie.element.load()).get();
+        const attributs_bimObjects = (await categorie.element.load()).get();
         for (const child of attributs_bimObjects) {
           if (child.label === 'revit_category') {
             revitCategory = child.value;
@@ -104,7 +104,7 @@ async function getEquipmentStaticDetailsInfo(
         }
       }
     }
-    var info = {
+    const info = {
       dynamicId: equipment._server_id,
       staticId: equipment.getId().get(),
       name: equipment.getName().get(),
@@ -135,7 +135,7 @@ async function getRoomStaticDetailsInfo(
   profileId: string,
   roomId: number,
 ) {
-  var room: SpinalNode<any> = await spinalAPIMiddleware.load(roomId,profileId);
+  const room: SpinalNode<any> = await spinalAPIMiddleware.load(roomId,profileId);
   
   //@ts-ignore
   SpinalGraphService._addNode(room);
@@ -154,7 +154,7 @@ async function getRoomStaticDetailsInfo(
       getRoomParent(room),
     ]);
 
-    var info = {
+    const info = {
       dynamicId: room._server_id,
       staticId: room.getId().get(),
       name: room.getName().get(),
@@ -173,14 +173,14 @@ async function getRoomStaticDetailsInfo(
 
 async function getRoomParent(room: SpinalNode<any>): Promise<INodeInfo[]> {
   //console.log("room",room);
-  let parents = await room.getParents( [
+  const parents = await room.getParents( [
     'hasGeographicRoom',
     'groupHasgeographicRoom',
   ]);
-  var groupParents: INodeInfo[] = [];
+  const groupParents: INodeInfo[] = [];
   for (const parent of parents) {
     if (!(parent.info.type.get() === 'RoomContext')) {
-      let info = {
+      const info = {
         dynamicId: parent._server_id,
         staticId: parent.info.id.get(),
         name: parent.info.name.get(),
@@ -193,16 +193,16 @@ async function getRoomParent(room: SpinalNode<any>): Promise<INodeInfo[]> {
 }
 
 async function getEquipmentGroupParent(node: SpinalNode<any>): Promise<INodeInfo[]> {
-  let parents = await SpinalGraphService.getParents(node.getId().get(), [
+  const parents = await SpinalGraphService.getParents(node.getId().get(), [
     'hasBimObject',
     'groupHasBIMObject',
   ]);
 
-  var groupParents: INodeInfo[] = [];
+  const groupParents: INodeInfo[] = [];
   for (const parent of parents) {
     if (!(parent.type.get() === 'RoomContext')) {
-      let realNode = SpinalGraphService.getRealNode(parent.id.get());
-      let info = {
+      const realNode = SpinalGraphService.getRealNode(parent.id.get());
+      const info = {
         dynamicId: realNode._server_id,
         staticId: parent.id.get(),
         name: parent.name.get(),
@@ -216,9 +216,9 @@ async function getEquipmentGroupParent(node: SpinalNode<any>): Promise<INodeInfo
 
 async function getAttributes(room: SpinalNode<any>): Promise<IAttr[]> {
   try {
-    let categories = await room.getChildren(NODE_TO_CATEGORY_RELATION);
+    const categories = await room.getChildren(NODE_TO_CATEGORY_RELATION);
     const promises = categories.map(async (child): Promise<IAttr> => {
-      let attributs = await child.element.load();
+      const attributs = await child.element.load();
       return {
         dynamicId: child._server_id,
         staticId: child.getId().get(),
@@ -255,7 +255,7 @@ async function getEndpoints(node: SpinalNode<any>): Promise<SpinalNode<any>[]> {
 async function getEndpointsInfo(node: SpinalNode<any>) {
   const endpoints = await getEndpoints(node);
   const endpointsInfo = await endpoints.map(async (el) => {
-    var element = await el.element.load();
+    const element = await el.element.load();
     return {
       dynamicId: el._server_id,
       staticId: el.getId().get(),
@@ -271,16 +271,16 @@ async function getEndpointsInfo(node: SpinalNode<any>) {
 async function getNodeControlEndpoints(
   node: SpinalNode<any>
 ): Promise<INodeControlEndpoint[]> {
-  var profils = await node.getChildren( [
+  const profils = await node.getChildren( [
     spinalControlPointService.ROOM_TO_CONTROL_GROUP,
   ]);
-  var promises = profils.map(async (profile) => {
-    var result = await profile.getChildren([
+  const promises = profils.map(async (profile) => {
+    const result = await profile.getChildren([
       SpinalBmsEndpoint.relationName,
     ]);
-    var endpoints = await result.map(async (endpoint) => {
+    const endpoints = await result.map(async (endpoint) => {
       
-      var element = await endpoint.element.load();
+      const element = await endpoint.element.load();
       let category: string;
       if (
         element.type.get() === 'Temperature' ||
@@ -319,19 +319,19 @@ async function getRoomBimObject(
   room: SpinalNode<any>
 ): Promise<IEquipmentInfo[]> {
   // const equipements: IEquipmentInfo[] = [];
-  var bimObjects = await room.getChildren('hasBimObject');
-  var revitCategory: string = '';
-  var revitFamily: string = '';
-  var revitType: string = '';
+  const bimObjects = await room.getChildren('hasBimObject');
+  let revitCategory = '';
+  const revitFamily = '';
+  const revitType = '';
 
   const promises = bimObjects.map(async (child): Promise<IEquipmentInfo> => {
     // attributs BIMObject
-    var categories_bimObjects = await child.getChildren(
+    const categories_bimObjects = await child.getChildren(
       NODE_TO_CATEGORY_RELATION
     );
     for (const categorie of categories_bimObjects) {
       if (categorie.getName().get() === 'default') {
-        var attributs_bimObjects = (await categorie.element.load()).get();
+        const attributs_bimObjects = (await categorie.element.load()).get();
         for (const child of attributs_bimObjects) {
           if (child.label === 'revit_category') {
             revitCategory = child.value;

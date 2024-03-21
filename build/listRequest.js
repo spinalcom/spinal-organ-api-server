@@ -28,7 +28,7 @@ const path = require("path");
 // import arrayOfRequests from "./absfiles"
 const arrayOfRequests = require("../finalList");
 // List all files in a directory in Node.js recursively in a synchronous fashion
-var walkSync = function (dir, filelist) {
+const walkSync = function (dir, filelist) {
     var path = path || require('path');
     var fs = fs || require('fs'), files = fs.readdirSync(dir);
     filelist = filelist || [];
@@ -79,9 +79,9 @@ function getIndexCat(filePath) {
 absfiles.sort((a, b) => {
     return getIndexCat(a) - getIndexCat(b);
 });
-var doNotMatch = [];
-var MatchList = [];
-for (var i = 0; i < absfiles.length; i++) {
+const doNotMatch = [];
+let MatchList = [];
+for (let i = 0; i < absfiles.length; i++) {
     if (arrayOfRequests.indexOf(absfiles[i]) == -1) {
         doNotMatch.push(absfiles[i]);
     }

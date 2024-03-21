@@ -84,17 +84,17 @@ module.exports = function (
       try {
         const profileId = getProfileId(req);
 
-        var aux = false;
-        let node: SpinalNode<any> = await spinalAPIMiddleware.load(
+        let aux = false;
+        const node: SpinalNode<any> = await spinalAPIMiddleware.load(
           parseInt(req.params.IdNode, 10), profileId
         );
-        let category: SpinalNode<any> = await spinalAPIMiddleware.load(
+        const category: SpinalNode<any> = await spinalAPIMiddleware.load(
           parseInt(req.params.IdCategory, 10), profileId
         );
-        let childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
+        const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
         for (const children of childrens) {
           if (children.getId().get() === category.getId().get()) {
-            let attributes = await category.getElement();
+            const attributes = await category.getElement();
             for (let index = 0; index < attributes.length; index++) {
               const element = attributes[index];
               const elementLabel = element.label.get();

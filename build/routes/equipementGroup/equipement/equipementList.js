@@ -74,14 +74,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get('/api/v1/equipementsGroup/:contextId/category/:categoryId/group/:groupId/equipementList', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var _equipementList = [];
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            const _equipementList = [];
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            var group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
+            const group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(group);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
@@ -90,7 +90,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 if (context.getType().get() === 'BIMObjectGroupContext') {
                     const equipementList = await group.getChildren('groupHasBIMObject');
                     for (const equipement of equipementList) {
-                        var info = {
+                        const info = {
                             dynamicId: equipement._server_id,
                             staticId: equipement.getId().get(),
                             name: equipement.getName().get(),

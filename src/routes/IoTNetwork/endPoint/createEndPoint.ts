@@ -75,20 +75,20 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var device = await spinalAPIMiddleware.load(parseInt(req.body.deviceDynamicId), profileId)
+      const device = await spinalAPIMiddleware.load(parseInt(req.body.deviceDynamicId), profileId)
       //@ts-ignore
       SpinalGraphService._addNode(device);
 
-      var contextId = await device.getContextIds();
-      var contextNetwork = SpinalGraphService.getRealNode(contextId[0]);
-      var obj = {
+      const contextId = await device.getContextIds();
+      const contextNetwork = SpinalGraphService.getRealNode(contextId[0]);
+      const obj = {
         name: req.body.name,
         type: req.body.type,
         children: [],
         nodeTypeName: 'BmsEndpoint',
         Unit: req.body.Unit,
       };
-      let configService: ConfigService = {
+      const configService: ConfigService = {
         contextName: contextNetwork.getName().get(),
         contextType: "Network",
         networkName: "NetworkVirtual",

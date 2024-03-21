@@ -66,10 +66,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
             if (req.params.nodeId) {
             }
-            var node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(req.params.nodeId);
+            let node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(req.params.nodeId);
             if (workflow.getType().get() === "SpinalSystemServiceTicket" && typeof node === "undefined") {
                 node = await (0, findOneInContext_1.findOneInContext)(workflow, workflow, (n) => n.getId().get() === req.params.nodeId);
                 if (typeof node === "undefined") {

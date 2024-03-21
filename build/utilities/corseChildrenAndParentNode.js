@@ -25,12 +25,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parentsNode = exports.childrensNode = void 0;
 function childrensNode(node) {
-    let childs = node.children;
-    let res = [];
+    const childs = node.children;
+    const res = [];
     // childrens relation course
     for (const [relationTypeName, relationTypeMap] of childs) {
         for (const [relationName, relation] of relationTypeMap) {
-            let child = {
+            const child = {
                 dynamicId: relation._server_id,
                 staticId: relation.getId().get(),
                 name: relation.getName().get(),
@@ -43,8 +43,8 @@ function childrensNode(node) {
 }
 exports.childrensNode = childrensNode;
 async function parentsNode(node) {
-    let parents = node.parents;
-    let auxtab = [];
+    const parents = node.parents;
+    const auxtab = [];
     let res = [];
     for (const [, ptrList] of parents) {
         for (let i = 0; i < ptrList.length; i++) {

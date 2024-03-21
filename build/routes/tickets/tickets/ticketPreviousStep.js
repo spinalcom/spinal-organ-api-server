@@ -68,17 +68,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post("/api/v1/ticket/:ticketId/previous_step", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var workflow = await spinalAPIMiddleware.load(parseInt(req.body.workflowDynamicId, 10), profileId);
+            const workflow = await spinalAPIMiddleware.load(parseInt(req.body.workflowDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(workflow);
-            var process = await spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10), profileId);
+            const process = await spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(process);
-            var ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
+            const ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(ticket);
             await spinal_service_ticket_1.serviceTicketPersonalized.moveTicketToPreviousStep(workflow.getId().get(), process.getId().get(), ticket.getId().get());
-            var step = await ticket.getParents("SpinalSystemServiceTicketHasTicket").then((steps) => {
+            const step = await ticket.getParents("SpinalSystemServiceTicketHasTicket").then((steps) => {
                 for (const step of steps) {
                     if (step.getType().get() === "SpinalSystemServiceTicketTypeStep") {
                         return step;

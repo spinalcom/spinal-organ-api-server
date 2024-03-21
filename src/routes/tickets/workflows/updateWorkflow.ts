@@ -73,9 +73,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
+      const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
       const graph = await spinalAPIMiddleware.getProfileGraph(profileId)
-      var childrens = await graph.getChildren("hasContext");
+      const childrens = await graph.getChildren("hasContext");
 
       for (const child of childrens) {
         if (child.getName().get() === req.body.newNameWorkflow) {

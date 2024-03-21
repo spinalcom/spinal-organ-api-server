@@ -67,7 +67,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post('/api/v1/node/:id/upload_file', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             // @ts-ignore
@@ -80,9 +80,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             else {
                 //Use the name of the input field (i.e. "file") to retrieve the uploaded file
                 // @ts-ignore
-                let file = req.files.file;
+                const file = req.files.file;
                 //Use the mv() method to place the file in upload directory (i.e. "uploads")
-                var data = {
+                const data = {
                     name: file.name,
                     buffer: file.data,
                 };

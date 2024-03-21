@@ -26,15 +26,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var __asyncValues = (this && __asyncValues) || function (o) {
     if (!Symbol.asyncIterator)
         throw new TypeError("Symbol.asyncIterator is not defined.");
-    var m = o[Symbol.asyncIterator], i;
-    var __values;
+    let m = o[Symbol.asyncIterator], i;
+    let __values;
     return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
     function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
     function settle(resolve, reject, d, v) { Promise.resolve(v).then(function (v) { resolve({ value: v, done: d }); }, reject); }
 };
 async function asyncIteratorToArray(iterator) {
-    var e_1, _a;
-    let array = [];
+    let e_1, _a;
+    const array = [];
     try {
         for (var iterator_1 = __asyncValues(iterator), iterator_1_1; iterator_1_1 = await iterator_1.next(), !iterator_1_1.done;) {
             const item = iterator_1_1.value;

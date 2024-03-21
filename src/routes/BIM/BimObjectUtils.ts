@@ -92,9 +92,9 @@ module.exports = class BimObjectUtils {
   ): Promise<IBimObjectsItem[]> {
     const result: IBimObjectsItem[] = [];
     for (const node of bimObjects) {
-      var childrens_list = this.childrensNode(node);
+      const childrens_list = this.childrensNode(node);
       // eslint-disable-next-line no-await-in-loop
-      var parents_list = await this.parentsNode(node);
+      const parents_list = await this.parentsNode(node);
       const data = {
         dynamicId: node._server_id,
         staticId: node.getId().get(),
@@ -172,12 +172,12 @@ module.exports = class BimObjectUtils {
   }
 
   childrensNode(node: SpinalNode): IRelationListItem[] {
-    let childs = node.children;
-    let res: IRelationListItem[] = [];
+    const childs = node.children;
+    const res: IRelationListItem[] = [];
     // childrens relation course
     for (const [, relationTypeMap] of childs) {
       for (const [, relation] of relationTypeMap) {
-        let child = {
+        const child = {
           dynamicId: relation._server_id,
           staticId: relation.getId().get(),
           name: relation.getName().get(),
@@ -190,8 +190,8 @@ module.exports = class BimObjectUtils {
   }
 
   async parentsNode(node: SpinalNode): Promise<IRelationListItem[]> {
-    let parents = node.parents;
-    let auxtab = [];
+    const parents = node.parents;
+    const auxtab = [];
     let res: IRelationListItem[] = [];
     for (const [, ptrList] of parents) {
       for (let i = 0; i < ptrList.length; i++) {

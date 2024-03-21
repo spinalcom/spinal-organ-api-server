@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getCategoryNamesInfo = exports.getCategoryNameInfo = void 0;
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 async function getCategoryNameInfo(spinalAPIMiddleware, profileId, dynamicId, categoryName) {
-    let node = await spinalAPIMiddleware.load(dynamicId, profileId);
+    const node = await spinalAPIMiddleware.load(dynamicId, profileId);
     const result = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation._categoryExist(node, categoryName);
     if (result === undefined) {
         throw new Error('category not found in node');
@@ -19,7 +19,7 @@ async function getCategoryNameInfo(spinalAPIMiddleware, profileId, dynamicId, ca
 }
 exports.getCategoryNameInfo = getCategoryNameInfo;
 async function getCategoryNamesInfo(spinalAPIMiddleware, profileId, dynamicId, categoryNames) {
-    let node = await spinalAPIMiddleware.load(dynamicId, profileId);
+    const node = await spinalAPIMiddleware.load(dynamicId, profileId);
     const result = [];
     for (const categoryName of categoryNames) {
         const categoryNode = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation._categoryExist(node, categoryName);

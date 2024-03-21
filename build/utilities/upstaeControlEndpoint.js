@@ -10,7 +10,7 @@ const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
     * @returns Promise
     */
 async function updateControlEndpointWithAnalytic(model, valueToPush, dataType, type) {
-    var networkService = new spinal_model_bmsnetwork_1.NetworkService();
+    const networkService = new spinal_model_bmsnetwork_1.NetworkService();
     if (valueToPush != undefined) {
         const input = {
             id: "",

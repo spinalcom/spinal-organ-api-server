@@ -82,14 +82,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            let workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-            var process = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
-            var step = await spinalAPIMiddleware.load(parseInt(req.params.stepId, 10), profileId);
+            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+            const process = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
+            const step = await spinalAPIMiddleware.load(parseInt(req.params.stepId, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(process);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(step);
-            var allSteps = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(process.getId().get(), ["SpinalSystemServiceTicketHasStep"]);
+            const allSteps = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(process.getId().get(), ["SpinalSystemServiceTicketHasStep"]);
             for (let index = 0; index < allSteps.length; index++) {
                 const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(allSteps[index].id.get());
                 if (realNode.getName().get() === req.body.newNameStep || req.body.newNameStep === "string") {

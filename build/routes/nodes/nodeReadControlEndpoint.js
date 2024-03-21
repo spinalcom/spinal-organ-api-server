@@ -77,14 +77,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 if (nodetypes.includes(_node.getType().get())) {
                     for (const key of node.keys) {
                         if (controlPointTypes.includes(key)) {
-                            let controlPoints = await _node.getChildren('hasControlPoints');
+                            const controlPoints = await _node.getChildren('hasControlPoints');
                             for (const controlPoint of controlPoints) {
                                 if (controlPoint.getName().get() === "Command") {
-                                    let bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint');
+                                    const bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint');
                                     for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
                                         if (bmsEndPoint.getName().get() === key) {
-                                            let element = (await bmsEndPoint.element.load()).get();
-                                            let info = {
+                                            const element = (await bmsEndPoint.element.load()).get();
+                                            const info = {
                                                 dynamicId: _node._server_id,
                                                 staticId: _node.getId().get(),
                                                 name: _node.getName().get(),

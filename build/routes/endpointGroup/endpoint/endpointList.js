@@ -72,14 +72,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get('/api/v1/endPointsGroup/:contextId/category/:categoryId/group/:groupId/endpointList', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var _endpointList = [];
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            const _endpointList = [];
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            var group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
+            const group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(group);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
@@ -88,7 +88,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 if (context.getType().get() === 'BmsEndpointGroupContext') {
                     const endpointList = await group.getChildren('groupHasBmsEndpoint');
                     for (const endpoint of endpointList) {
-                        var info = {
+                        const info = {
                             dynamicId: endpoint._server_id,
                             staticId: endpoint.getId().get(),
                             name: endpoint.getName().get(),

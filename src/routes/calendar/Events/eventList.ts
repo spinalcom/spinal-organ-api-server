@@ -87,24 +87,24 @@ module.exports = function (
   app.get(
     '/api/v1/eventContext/:ContextId/eventCategory/:CategoryId/eventGroup/:GroupId/event_list',
     async (req, res, next) => {
-      let eventarray = [];
+      const eventarray = [];
       try {
         const profileId = getProfileId(req);
     
-        var context: SpinalNode<any> = await spinalAPIMiddleware.load(
+        const context: SpinalNode<any> = await spinalAPIMiddleware.load(
           parseInt(req.params.ContextId, 10),profileId
         );
         //@ts-ignore
         SpinalGraphService._addNode(context);
 
-        var category: SpinalNode<any> = await spinalAPIMiddleware.load(
+        const category: SpinalNode<any> = await spinalAPIMiddleware.load(
           parseInt(req.params.CategoryId, 10),profileId
         );
         //@ts-ignore
         SpinalGraphService._addNode(category);
 
 
-        var group: SpinalNode<any> = await spinalAPIMiddleware.load(
+        const group: SpinalNode<any> = await spinalAPIMiddleware.load(
           parseInt(req.params.GroupId, 10),profileId
         );
         //@ts-ignore
@@ -115,14 +115,14 @@ module.exports = function (
           category.belongsToContext(context)
         ) {
           if (context.getType().get() === 'SpinalEventGroupContext') {
-            var listGroupEvents = await SpinalEventService.getEventsGroups(
+            const listGroupEvents = await SpinalEventService.getEventsGroups(
               category.getId().get()
             );
             for (const child of listGroupEvents) {
               if (child.id.get() === group.getId().get()) {
                 const eventList = await group.getChildren('groupHasSpinalEvent')
                 for (const event of eventList) {
-                  var objEvent: Event = {
+                  const objEvent: Event = {
                     dynamicId: event._server_id,
                     staticId: event.getId().get(),
                     name: event.getName().get(),

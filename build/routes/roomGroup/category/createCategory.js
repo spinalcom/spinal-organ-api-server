@@ -68,7 +68,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post("/api/v1/roomsGroup/:id/create_category", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
             if (context.getType().get() === "geographicRoomGroupContext") {

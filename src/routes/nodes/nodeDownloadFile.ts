@@ -70,7 +70,7 @@ module.exports = function (
     try {
       await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);
-      var node = await spinalAPIMiddleware.load(
+      const node = await spinalAPIMiddleware.load(
         parseInt(req.params.id, 10),
         profileId
       );
@@ -92,18 +92,18 @@ function down(file, http, hubUri, res, encoding): Promise<void> {
       http.get(
         `${hubUri}/sceen/_?u=${argPath._server_id}`,
         function (response) {
-          var type =
+          const type =
             mime.lookup(file?.name?.get()) || 'application/octet-stream';
 
           if (encoding === 'base64') {
             // Change response type for base64
-            let chunks = [];
+            const chunks = [];
             response.on('data', (chunk) => {
               chunks.push(chunk);
             });
             response.on('end', () => {
-              let binary = Buffer.concat(chunks);
-              let base64 = binary.toString('base64');
+              const binary = Buffer.concat(chunks);
+              const base64 = binary.toString('base64');
               res.set('Content-Type', 'text/plain');
               res.send(base64);
               resolve();

@@ -71,11 +71,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const graph = await spinalAPIMiddleware.getGraph();
       await SpinalGraphService.setGraph(graph);
 
-      let context = await spinalNomenclatureService.createOrGetContext(req.body.nomenclatureContextName)
+      const context = await spinalNomenclatureService.createOrGetContext(req.body.nomenclatureContextName)
 
       userGraph.addContext(context);
 
-      var info = {
+      const info = {
         dynamicId: context._server_id,
         staticId: context.getId().get(),
         name: context.getName().get(),

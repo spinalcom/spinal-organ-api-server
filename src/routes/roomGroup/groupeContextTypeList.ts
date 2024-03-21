@@ -52,11 +52,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/groupContext/type_list", async (req, res, next) => {
 
-    let types = [];
+    const types = [];
     try {
       const profilId = getProfileId(req);
       const graph = await spinalAPIMiddleware.getProfileGraph(profilId);
-      var groupContexts = await groupManagerService.getGroupContexts(undefined, graph);
+      const groupContexts = await groupManagerService.getGroupContexts(undefined, graph);
       for (const groupContext of groupContexts) {
         types.push(groupContext.type);
       }

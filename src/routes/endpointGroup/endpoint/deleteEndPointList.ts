@@ -121,15 +121,15 @@ module.exports = function (
       try {
         const profileId = getProfileId(req);
         const _endpointList = req.body;
-        var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+        const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(context);
 
-        var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+        const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(category);
 
-        var group: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
+        const group: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
         //@ts-ignore
         SpinalGraphService._addNode(group);
 
@@ -141,7 +141,7 @@ module.exports = function (
           if (context.getType().get() === 'BmsEndpointGroupContext') {
             if (_endpointList.length > 0) {
               for (let index = 0; index < _endpointList.length; index++) {
-                let realNode = await spinalAPIMiddleware.load(
+                const realNode = await spinalAPIMiddleware.load(
                   _endpointList[index]
                 );
                 //@ts-ignore

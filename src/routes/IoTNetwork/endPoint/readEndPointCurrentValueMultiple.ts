@@ -85,10 +85,10 @@ app.post("/api/v1/endpoint/read_multiple", async (req, res, next) => {
       // Map each id to a promise
       const promises = ids.map(async id => {
           try {
-              var node = await spinalAPIMiddleware.load(id,profileId);
+              const node = await spinalAPIMiddleware.load(id,profileId);
               // @ts-ignore
               SpinalGraphService._addNode(node);
-              var element = await node.element.load();
+              const element = await node.element.load();
               return { dynamicId: id, currentValue: element.currentValue.get() };
           } catch (error) {
               console.error(`Error with id ${id}: ${error.message || error}`);

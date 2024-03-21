@@ -74,8 +74,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var context = await spinalAPIMiddleware.load(parseInt(req.params.idContext, 10), profileId);
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.idNode, 10), profileId);
+      const context = await spinalAPIMiddleware.load(parseInt(req.params.idContext, 10), profileId);
+      const node = await spinalAPIMiddleware.load(parseInt(req.params.idNode, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(context);
       // @ts-ignore

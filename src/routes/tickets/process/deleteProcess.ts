@@ -63,8 +63,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.delete("/api/v1/workflow/:workflowId/process/:processId/delete_process", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      let workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-      var process: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
+      const workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+      const process: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(process);
 

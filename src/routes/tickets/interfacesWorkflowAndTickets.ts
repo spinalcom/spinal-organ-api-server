@@ -86,7 +86,7 @@ export interface WorkflowTree {
   name: string,
   type: string,
   children: WorkflowTree[]
-};
+}
 
 
 /**
@@ -119,7 +119,7 @@ export interface Step {
   color: string,
   order: number,
   processId: string
-};
+}
 
 /**
  * @swagger
@@ -191,7 +191,7 @@ export interface TicketDetails {
   annotation_list: [],
   file_list: [],
   log_list: []
-};
+}
 
 
 /**

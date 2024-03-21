@@ -68,20 +68,20 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      let room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(room);
 
       if (room.getType().get() === "geographicRoom") {
 
-        var profils = await SpinalGraphService.getChildren(room.getId().get(), [spinalControlPointService.ROOM_TO_CONTROL_GROUP])
-        var promises = profils.map(async (profile) => {
+        const profils = await SpinalGraphService.getChildren(room.getId().get(), [spinalControlPointService.ROOM_TO_CONTROL_GROUP])
+        const promises = profils.map(async (profile) => {
 
-          var result = await SpinalGraphService.getChildren(profile.id.get(), [SpinalBmsEndpoint.relationName])
-          var endpoints = await result.map(async (endpoint) => {
-            var realNode = SpinalGraphService.getRealNode(endpoint.id.get())
-            var element = await endpoint.element.load()
-            var currentValue = element.currentValue.get();
+          const result = await SpinalGraphService.getChildren(profile.id.get(), [SpinalBmsEndpoint.relationName])
+          const endpoints = await result.map(async (endpoint) => {
+            const realNode = SpinalGraphService.getRealNode(endpoint.id.get())
+            const element = await endpoint.element.load()
+            const currentValue = element.currentValue.get();
             return {
               dynamicId: realNode._server_id,
               staticId: endpoint.id.get(),

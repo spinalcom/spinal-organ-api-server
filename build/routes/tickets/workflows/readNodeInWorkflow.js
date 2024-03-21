@@ -65,8 +65,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/workflow/:workflowId/node/:nodeId/read", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
+            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             if (workflow.getType().get() === "SpinalSystemServiceTicket" && typeof node !== "undefined") {

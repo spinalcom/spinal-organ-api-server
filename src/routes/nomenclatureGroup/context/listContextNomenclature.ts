@@ -58,16 +58,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/nomenclatureGroup/list", async (req, res, next) => {
 
-    let nodes = [];
+    const nodes = [];
     try {
-      let profileId = getProfileId(req);
+      const profileId = getProfileId(req);
       const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
-      var groupContexts = await spinalNomenclatureService.getContexts(undefined, graph);
+      const groupContexts = await spinalNomenclatureService.getContexts(undefined, graph);
 
       for (let index = 0; index < groupContexts.length; index++) {
-        var realNode = SpinalGraphService.getRealNode(groupContexts[index].info.id.get())
+        const realNode = SpinalGraphService.getRealNode(groupContexts[index].info.id.get())
         if (realNode.getType().get() === "AttributeConfigurationGroupContext" && realNode.getName().get() === "NomenclatureConfiguration") {
-          let info: Context = {
+          const info: Context = {
             dynamicId: realNode._server_id,
             staticId: realNode.getId().get(),
             name: realNode.getName().get(),

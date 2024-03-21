@@ -51,7 +51,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: internal error
      */
     app.get('/api/v1/BIM/BIMFileContext/list', async (req, res) => {
-        let nodes = [];
+        const nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
@@ -72,7 +72,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                                 aecPath: currentVersion.aecPath?.get(),
                             });
                         }
-                        let info = {
+                        const info = {
                             dynamicId: children._server_id,
                             staticId: children.getId().get(),
                             name: children.getName().get(),

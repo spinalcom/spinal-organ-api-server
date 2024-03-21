@@ -112,16 +112,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            var tree = await spinal_env_viewer_task_service_1.SpinalEventService.createOrgetDefaultTreeStructure();
-            var context = tree.context;
-            var category = tree.category;
-            var group = tree.group;
+            const tree = await spinal_env_viewer_task_service_1.SpinalEventService.createOrgetDefaultTreeStructure();
+            const context = tree.context;
+            const category = tree.category;
+            const group = tree.group;
             if (node.getType().get() === spinal_service_ticket_1.TIKET_TYPE) {
                 if (context.type.get() === "SpinalEventGroupContext") {
-                    let eventInfo = {
+                    const eventInfo = {
                         contextId: context.id.get(),
                         groupId: group.id.get(),
                         categoryId: category.id.get(),
@@ -135,13 +135,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         creationDate: moment(new Date().toISOString()).toString(),
                         repeatEnd: moment(req.body.repeatEnd, 'DD MM YYYY HH:mm:ss', true).toString(),
                     };
-                    let user = {
+                    const user = {
                         username: req.body.user.userName,
                         email: req.body.user.email,
                         gsm: req.body.user.gsm,
                     };
-                    var result = await spinal_env_viewer_task_service_1.SpinalEventService.createEvent(context.id.get(), group.id.get(), node.getId().get(), eventInfo, user);
-                    var ticketCreated = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(result.id.get());
+                    const result = await spinal_env_viewer_task_service_1.SpinalEventService.createEvent(context.id.get(), group.id.get(), node.getId().get(), eventInfo, user);
+                    const ticketCreated = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(result.id.get());
                     console.log(ticketCreated._server_id);
                     var info = {
                         dynamicId: ticketCreated._server_id,

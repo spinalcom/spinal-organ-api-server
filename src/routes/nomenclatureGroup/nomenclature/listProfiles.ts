@@ -69,7 +69,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
 
@@ -80,12 +80,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         var profile_tab = []
         for (const profile of listProfiles) {
 
-          let _profile = <any>profile
-          var categories_tab = [];
+          const _profile = <any>profile
+          const categories_tab = [];
           for (const category of _profile.categories) {
-            var attr_tab = [];
+            const attr_tab = [];
             for (const attr of category.attributes) {
-              let info_attr = {
+              const info_attr = {
                 name: attr.name,
                 standard_name: attr.standard_name,
                 type: attr.type,
@@ -95,7 +95,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
               };
               attr_tab.push(info_attr)
             }
-            let info_category = {
+            const info_category = {
               id: category.id,
               name: category.name,
               standard_name: category.standard_name,
@@ -107,7 +107,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           const groupProfile = await realNode.getParents("groupHasAttributeConfiguration")
           const categoryProfile = await groupProfile[0].getParents("hasGroup")
 
-          let info_profile = {
+          const info_profile = {
             dynamicId: realNode._server_id,
             staticId: realNode.getId().get(),
             name: _profile.name,

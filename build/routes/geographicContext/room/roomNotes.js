@@ -61,14 +61,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get('/api/v1/room/:id/notes', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
             if (room.getType().get() === "geographicRoom") {
                 var _notes = [];
-                var notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(room);
+                const notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(room);
                 for (const note of notes) {
-                    let infoNote = {
+                    const infoNote = {
                         date: parseInt(note.element.date.get()),
                         type: note.element.type.get(),
                         message: note.element.message.get(),

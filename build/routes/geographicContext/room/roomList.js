@@ -59,17 +59,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *         description: Bad request
     */
     app.get("/api/v1/floor/:id/room_list", async (req, res, next) => {
-        let nodes = [];
+        const nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(floor);
             const { spec } = req.query;
-            var rooms = await floor.getChildren("hasGeographicRoom");
+            const rooms = await floor.getChildren("hasGeographicRoom");
             for (const room of rooms) {
                 var info;
-                var categories = await room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+                const categories = await room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
                 if (spec === "archipel") {
                     for (const category of categories) {
                         if (category.getName().get() === "default") {
@@ -95,10 +95,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     }
                 }
                 else {
-                    var categoriesTab = [];
+                    const categoriesTab = [];
                     for (const category of categories) {
                         var attributs = (await category.element.load()).get();
-                        var catInfo = {
+                        const catInfo = {
                             dynamicId: category._server_id,
                             staticId: category.getId().get(),
                             name: category.getName().get(),

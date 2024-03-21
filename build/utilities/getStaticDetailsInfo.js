@@ -12,7 +12,7 @@ const ENDPOINT_RELATIONS = [
     'hasEndPoint',
 ];
 async function getEquipmentStaticDetailsInfo(spinalAPIMiddleware, profileId, equipementId) {
-    var equipment = await spinalAPIMiddleware.load(equipementId, profileId);
+    const equipment = await spinalAPIMiddleware.load(equipementId, profileId);
     //@ts-ignore
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(equipment);
     if (equipment.getType().get() === 'BIMObject') {
@@ -22,13 +22,13 @@ async function getEquipmentStaticDetailsInfo(spinalAPIMiddleware, profileId, equ
             getAttributes(equipment),
             getEquipmentGroupParent(equipment),
         ]);
-        var revitCategory = '';
-        var revitFamily = '';
-        var revitType = '';
-        var categories_bimObjects = await equipment.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+        let revitCategory = '';
+        const revitFamily = '';
+        const revitType = '';
+        const categories_bimObjects = await equipment.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
         for (const categorie of categories_bimObjects) {
             if (categorie.getName().get() === 'default') {
-                var attributs_bimObjects = (await categorie.element.load()).get();
+                const attributs_bimObjects = (await categorie.element.load()).get();
                 for (const child of attributs_bimObjects) {
                     if (child.label === 'revit_category') {
                         revitCategory = child.value;
@@ -37,7 +37,7 @@ async function getEquipmentStaticDetailsInfo(spinalAPIMiddleware, profileId, equ
                 }
             }
         }
-        var info = {
+        const info = {
             dynamicId: equipment._server_id,
             staticId: equipment.getId().get(),
             name: equipment.getName().get(),
@@ -64,7 +64,7 @@ async function getEquipmentStaticDetailsInfo(spinalAPIMiddleware, profileId, equ
 }
 exports.getEquipmentStaticDetailsInfo = getEquipmentStaticDetailsInfo;
 async function getRoomStaticDetailsInfo(spinalAPIMiddleware, profileId, roomId) {
-    var room = await spinalAPIMiddleware.load(roomId, profileId);
+    const room = await spinalAPIMiddleware.load(roomId, profileId);
     //@ts-ignore
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
     if (room.getType().get() === 'geographicRoom') {
@@ -75,7 +75,7 @@ async function getRoomStaticDetailsInfo(spinalAPIMiddleware, profileId, roomId) 
             getAttributes(room),
             getRoomParent(room),
         ]);
-        var info = {
+        const info = {
             dynamicId: room._server_id,
             staticId: room.getId().get(),
             name: room.getName().get(),
@@ -95,14 +95,14 @@ async function getRoomStaticDetailsInfo(spinalAPIMiddleware, profileId, roomId) 
 exports.getRoomStaticDetailsInfo = getRoomStaticDetailsInfo;
 async function getRoomParent(room) {
     //console.log("room",room);
-    let parents = await room.getParents([
+    const parents = await room.getParents([
         'hasGeographicRoom',
         'groupHasgeographicRoom',
     ]);
-    var groupParents = [];
+    const groupParents = [];
     for (const parent of parents) {
         if (!(parent.info.type.get() === 'RoomContext')) {
-            let info = {
+            const info = {
                 dynamicId: parent._server_id,
                 staticId: parent.info.id.get(),
                 name: parent.info.name.get(),
@@ -114,15 +114,15 @@ async function getRoomParent(room) {
     return groupParents;
 }
 async function getEquipmentGroupParent(node) {
-    let parents = await spinal_env_viewer_graph_service_1.SpinalGraphService.getParents(node.getId().get(), [
+    const parents = await spinal_env_viewer_graph_service_1.SpinalGraphService.getParents(node.getId().get(), [
         'hasBimObject',
         'groupHasBIMObject',
     ]);
-    var groupParents = [];
+    const groupParents = [];
     for (const parent of parents) {
         if (!(parent.type.get() === 'RoomContext')) {
-            let realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(parent.id.get());
-            let info = {
+            const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(parent.id.get());
+            const info = {
                 dynamicId: realNode._server_id,
                 staticId: parent.id.get(),
                 name: parent.name.get(),
@@ -135,9 +135,9 @@ async function getEquipmentGroupParent(node) {
 }
 async function getAttributes(room) {
     try {
-        let categories = await room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+        const categories = await room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
         const promises = categories.map(async (child) => {
-            let attributs = await child.element.load();
+            const attributs = await child.element.load();
             return {
                 dynamicId: child._server_id,
                 staticId: child.getId().get(),
@@ -169,7 +169,7 @@ async function getEndpoints(node) {
 async function getEndpointsInfo(node) {
     const endpoints = await getEndpoints(node);
     const endpointsInfo = await endpoints.map(async (el) => {
-        var element = await el.element.load();
+        const element = await el.element.load();
         return {
             dynamicId: el._server_id,
             staticId: el.getId().get(),
@@ -181,15 +181,15 @@ async function getEndpointsInfo(node) {
     return Promise.all(endpointsInfo);
 }
 async function getNodeControlEndpoints(node) {
-    var profils = await node.getChildren([
+    const profils = await node.getChildren([
         spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP,
     ]);
-    var promises = profils.map(async (profile) => {
-        var result = await profile.getChildren([
+    const promises = profils.map(async (profile) => {
+        const result = await profile.getChildren([
             spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName,
         ]);
-        var endpoints = await result.map(async (endpoint) => {
-            var element = await endpoint.element.load();
+        const endpoints = await result.map(async (endpoint) => {
+            const element = await endpoint.element.load();
             let category;
             if (element.type.get() === 'Temperature' ||
                 element.type.get() === 'Hygrometry' ||
@@ -225,16 +225,16 @@ async function getNodeControlEndpoints(node) {
 }
 async function getRoomBimObject(room) {
     // const equipements: IEquipmentInfo[] = [];
-    var bimObjects = await room.getChildren('hasBimObject');
-    var revitCategory = '';
-    var revitFamily = '';
-    var revitType = '';
+    const bimObjects = await room.getChildren('hasBimObject');
+    let revitCategory = '';
+    const revitFamily = '';
+    const revitType = '';
     const promises = bimObjects.map(async (child) => {
         // attributs BIMObject
-        var categories_bimObjects = await child.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+        const categories_bimObjects = await child.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
         for (const categorie of categories_bimObjects) {
             if (categorie.getName().get() === 'default') {
-                var attributs_bimObjects = (await categorie.element.load()).get();
+                const attributs_bimObjects = (await categorie.element.load()).get();
                 for (const child of attributs_bimObjects) {
                     if (child.label === 'revit_category') {
                         revitCategory = child.value;

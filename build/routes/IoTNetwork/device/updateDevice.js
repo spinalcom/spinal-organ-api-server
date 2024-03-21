@@ -64,7 +64,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.put("/api/v1/device/:id/update", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var device = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const device = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(device);
             if (device.getType().get() === "BmsDevice") {

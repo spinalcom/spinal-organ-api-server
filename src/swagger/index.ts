@@ -31,8 +31,8 @@ import { swaggerOption } from './swaggerOption';
 const redoc = require('redoc-express');
 
 
-let swaggerDocs = swaggerJSDoc(swaggerOption);
-let swaggerUiOpts = {
+const swaggerDocs = swaggerJSDoc(swaggerOption);
+const swaggerUiOpts = {
     explorer: true,
     openapi: '3.0.1',
     produces: ['application/json'],

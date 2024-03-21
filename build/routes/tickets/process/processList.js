@@ -59,17 +59,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Bad request
      */
     app.get("/api/v1/workflow/:id/processList", async (req, res, next) => {
-        let nodes = [];
+        const nodes = [];
         try {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(workflow);
-            var allProcess = await spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflow.getId().get());
+            const allProcess = await spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflow.getId().get());
             for (let index = 0; index < allProcess.length; index++) {
                 const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(allProcess[index].id.get());
-                var info = {
+                const info = {
                     dynamicId: realNode._server_id,
                     staticId: realNode.getId().get(),
                     name: realNode.getName().get(),

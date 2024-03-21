@@ -73,27 +73,27 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Bad request
      */
     app.get('/api/v1/eventContext/:ContextId/eventCategory/:CategoryId/eventGroup/:GroupId/event_list', async (req, res, next) => {
-        let eventarray = [];
+        const eventarray = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.ContextId, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.ContextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = await spinalAPIMiddleware.load(parseInt(req.params.CategoryId, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.CategoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            var group = await spinalAPIMiddleware.load(parseInt(req.params.GroupId, 10), profileId);
+            const group = await spinalAPIMiddleware.load(parseInt(req.params.GroupId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(group);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
                 category.belongsToContext(context)) {
                 if (context.getType().get() === 'SpinalEventGroupContext') {
-                    var listGroupEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEventsGroups(category.getId().get());
+                    const listGroupEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEventsGroups(category.getId().get());
                     for (const child of listGroupEvents) {
                         if (child.id.get() === group.getId().get()) {
                             const eventList = await group.getChildren('groupHasSpinalEvent');
                             for (const event of eventList) {
-                                var objEvent = {
+                                const objEvent = {
                                     dynamicId: event._server_id,
                                     staticId: event.getId().get(),
                                     name: event.getName().get(),

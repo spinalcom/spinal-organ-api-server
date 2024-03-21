@@ -35,7 +35,7 @@ import {runSocketServer, ISpinalIOMiddleware} from 'spinal-organ-api-pubsub';
 function initApiServer(
   app: Application,
   spinalAPIMiddleware: ISpinalAPIMiddleware,
-  log_body: boolean = false
+  log_body = false
 ) {
   app.use(fileUpload({createParentPath: true}));
 
@@ -57,7 +57,7 @@ export async function runServerRest(
   app: Application,
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   spinalIOMiddleware: ISpinalIOMiddleware,
-  log_body: boolean = false
+  log_body = false
 ) {
   initApiServer(app, spinalAPIMiddleware, log_body);
   const io = await runSocketServer(server, spinalIOMiddleware);

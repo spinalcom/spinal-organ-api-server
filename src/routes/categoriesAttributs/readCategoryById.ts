@@ -73,9 +73,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     let info: CategoriesAttribute;
     try {
       const profileId = getProfileId(req);
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId)
-      var childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION)
-      var category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId)
+      const node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId)
+      const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION)
+      const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId)
 
       for (let index = 0; index < childrens.length; index++) {
         if (childrens[index] === category) {

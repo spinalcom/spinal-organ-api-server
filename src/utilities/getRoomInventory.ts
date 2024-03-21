@@ -19,7 +19,7 @@ async function getRoomInventory(
     
     // tous les objets de la pièce
     const bimObjects = await room.getChildren("hasBimObject");
-    let inventories = [];
+    const inventories = [];
 
     for (const bimObject of bimObjects) {
         const equipmentGroups = await bimObject.getParents("groupHasBIMObject");

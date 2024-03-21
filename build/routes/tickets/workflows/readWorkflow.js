@@ -57,7 +57,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/workflow/:id/read", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             if (workflow.getType().get() === "SpinalSystemServiceTicket") {
                 var info = {
                     dynamicId: workflow._server_id,

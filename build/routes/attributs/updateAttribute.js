@@ -63,12 +63,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             var nodes = [];
-            let node = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
-            let category = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
-            let childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
+            const childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
             for (const children of childrens) {
                 if (children.getId().get() === category.getId().get()) {
-                    let attributes = await category.getElement();
+                    const attributes = await category.getElement();
                     for (let index = 0; index < attributes.length; index++) {
                         const element = attributes[index];
                         if (element.label.get() === req.params.attributName) {
@@ -82,8 +82,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 }
             }
             for (const child of childrens) {
-                let attributs = await child.element.load();
-                let info = {
+                const attributs = await child.element.load();
+                const info = {
                     dynamicId: child._server_id,
                     staticId: child.getId().get(),
                     name: child.getName().get(),

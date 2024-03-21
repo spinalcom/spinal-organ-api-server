@@ -57,14 +57,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/groupContext/list", async (req, res, next) => {
 
-    let nodes = [];
+    const nodes = [];
     try {
       const profilId = getProfileId(req);
       const graph = await spinalAPIMiddleware.getProfileGraph(profilId);
-      var groupContexts = await groupManagerService.getGroupContexts(undefined, graph);
+      const groupContexts = await groupManagerService.getGroupContexts(undefined, graph);
       for (let index = 0; index < groupContexts.length; index++) {
-        var realNode = SpinalGraphService.getRealNode(groupContexts[index].id)
-        let info: Context = {
+        const realNode = SpinalGraphService.getRealNode(groupContexts[index].id)
+        const info: Context = {
           dynamicId: realNode._server_id,
           staticId: realNode.getId().get(),
           name: realNode.getName().get(),
@@ -74,8 +74,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       }
     } catch (error) {
       if (error.code && error.message) return res.status(error.code).send(error.message);
-
-      res.status(400).send("list of group contexts is not loaded");
+      return res.status(400).send("list of group contexts is not loaded");
     }
 
     res.send(nodes);

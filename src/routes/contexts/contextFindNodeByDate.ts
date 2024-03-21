@@ -82,26 +82,26 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var context: SpinalContext<any> = await spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId)
+      const context: SpinalContext<any> = await spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId)
       // @ts-ignore
       SpinalGraphService._addNode(context);
 
-      var beginDateTimeZone = moment(req.body.beginDate, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], true);
-      var endDateTimeZone = moment(req.body.endDate, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], true);
+      const beginDateTimeZone = moment(req.body.beginDate, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], true);
+      const endDateTimeZone = moment(req.body.endDate, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], true);
 
-      var beginDate = beginDateTimeZone.utc();
-      var endDate = endDateTimeZone.utc()
+      const beginDate = beginDateTimeZone.utc();
+      const endDate = endDateTimeZone.utc()
       var tab = [];
 
 
 
       await SpinalGraphService.findInContext(context.getId().get(), context.getId().get(), (node) => {
         if (node.info.directModificationDate) {
-          var nodeDate = moment(node.info.directModificationDate.get())
+          const nodeDate = moment(node.info.directModificationDate.get())
           const test = moment(nodeDate).isBetween(beginDate, endDate);
 
           if (test == true) {
-            var info = {
+            const info = {
               dynamicId: node._server_id,
               staticId: node.getId().get(),
               name: node.getName().get(),

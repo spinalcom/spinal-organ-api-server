@@ -98,7 +98,7 @@ export interface ContextTree {
   type: string,
   context?: string,
   children: ContextTree[]
-};
+}
 
 
 /**

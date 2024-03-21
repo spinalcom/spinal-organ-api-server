@@ -71,12 +71,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post("/api/v1/eventContext/:id/create_category", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
             const gategory = await spinal_env_viewer_task_service_1.SpinalEventService.createEventCategory(context.getId().get(), req.body.categoryName, req.body.icon);
             if (gategory !== undefined) {
-                var objCategory = {
+                const objCategory = {
                     staticId: gategory.id.get(),
                     name: gategory.name.get(),
                     type: gategory.type.get(),

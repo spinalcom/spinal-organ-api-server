@@ -74,14 +74,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get('/api/v1/roomsGroup/:contextId/category/:categoryId/group/:groupId/roomList', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var _roomList = [];
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            const _roomList = [];
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            var group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
+            const group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(group);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
@@ -90,7 +90,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 if (context.getType().get() === 'geographicRoomGroupContext') {
                     const roomList = await group.getChildren('groupHasgeographicRoom');
                     for (const room of roomList) {
-                        var info = {
+                        const info = {
                             dynamicId: room._server_id,
                             staticId: room.getId().get(),
                             name: room.getName().get(),

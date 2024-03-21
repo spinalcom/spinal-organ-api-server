@@ -4,7 +4,7 @@ exports.recTreeDepth = exports.recTree = void 0;
 async function recTree(node, context = node) {
     const childrenIds = await node.getChildrenInContext(context);
     if (childrenIds.length > 0) {
-        var promises = childrenIds.map(async (realnode) => {
+        const promises = childrenIds.map(async (realnode) => {
             const name = realnode.getName();
             const type = realnode.getType();
             return {
@@ -27,7 +27,7 @@ exports.recTree = recTree;
 async function recTreeDetails(node, context = node) {
     const childrenIds = await node.getChildrenInContext(context);
     if (childrenIds.length > 0) {
-        var promises = childrenIds.map(async (realnode) => {
+        const promises = childrenIds.map(async (realnode) => {
             const name = realnode.getName();
             const type = realnode.getType();
             if (type.get() === "geographicFloor") {
@@ -50,10 +50,10 @@ async function recTreeDetails(node, context = node) {
 async function recTreeDepth(node, context = node, depth) {
     const childrenIds = await node.getChildrenInContext(context);
     if (childrenIds.length > 0 && depth > 0) {
-        var promises = childrenIds.map(async (realnode) => {
+        const promises = childrenIds.map(async (realnode) => {
             const name = realnode.getName();
             const type = realnode.getType();
-            var info = {
+            const info = {
                 dynamicId: realnode._server_id,
                 staticId: realnode.getId().get(),
                 name: name ? name.get() : undefined,

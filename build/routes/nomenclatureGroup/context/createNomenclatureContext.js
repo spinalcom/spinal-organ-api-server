@@ -62,9 +62,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 res.status(406).send(`No graph found for ${profileId}`);
             const graph = await spinalAPIMiddleware.getGraph();
             await spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
-            let context = await spinal_env_viewer_plugin_nomenclature_service_1.spinalNomenclatureService.createOrGetContext(req.body.nomenclatureContextName);
+            const context = await spinal_env_viewer_plugin_nomenclature_service_1.spinalNomenclatureService.createOrGetContext(req.body.nomenclatureContextName);
             userGraph.addContext(context);
-            var info = {
+            const info = {
                 dynamicId: context._server_id,
                 staticId: context.getId().get(),
                 name: context.getName().get(),

@@ -74,7 +74,7 @@ module.exports = function (
     try {
       const profileId = getProfileId(req);
 
-      var equipement = await spinalAPIMiddleware.load(
+      const equipement = await spinalAPIMiddleware.load(
         parseInt(req.params.id, 10), profileId
       );
       //@ts-ignore
@@ -82,11 +82,11 @@ module.exports = function (
       if (equipement.getType().get() === 'BIMObject') {
         // Files
         var _files = [];
-        var fileNode = (await equipement.getChildren('hasFiles'))[0];
+        const fileNode = (await equipement.getChildren('hasFiles'))[0];
         if (fileNode) {
-          var filesfromElement = await fileNode.element.load();
+          const filesfromElement = await fileNode.element.load();
           for (let index = 0; index < filesfromElement.length; index++) {
-            let infoFiles = {
+            const infoFiles = {
               dynamicId: filesfromElement[index]._server_id,
               Name: filesfromElement[index].name.get(),
             };

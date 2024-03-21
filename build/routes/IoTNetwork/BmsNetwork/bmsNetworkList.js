@@ -49,21 +49,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Bad request
      */
     app.get("/api/v1/Network/list", async (req, res, next) => {
-        let nodes = [];
+        const nodes = [];
         let contextNetwork;
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
-            var childrens = await graph.getChildren("hasContext");
+            const childrens = await graph.getChildren("hasContext");
             for (const child of childrens) {
                 if (child.getType().get() === "Network") {
                     contextNetwork = child;
                     break;
                 }
             }
-            var networks = await contextNetwork.getChildrenInContext(contextNetwork);
+            const networks = await contextNetwork.getChildrenInContext(contextNetwork);
             for (const network of networks) {
-                let info = {
+                const info = {
                     dynamicId: network._server_id,
                     staticId: network.getId().get(),
                     name: network.getName().get(),

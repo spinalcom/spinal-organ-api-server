@@ -68,8 +68,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      let node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId)
-      let category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId)
+      const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId)
+      const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId)
       const result = await serviceDocumentation._categoryExist(node, category.getName().get());
       if (result === undefined) {
         res.status(400).send("category not found in node")

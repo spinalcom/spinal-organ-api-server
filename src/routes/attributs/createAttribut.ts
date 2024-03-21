@@ -89,19 +89,19 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     try {
       const profileId = getProfileId(req);
 
-      let node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
-      var test = false
+      const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
+      let test = false
       //@ts-ignore
       SpinalGraphService._addNode(node)
-      let category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
+      const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(category)
-      let attributeLabel = req.body.attributeLabel;
-      let attributeValue = req.body.attributeValue;
-      let attributeType = req.body.attributeType;
-      let attributeUnit = req.body.attributeUnit;
+      const attributeLabel = req.body.attributeLabel;
+      const attributeValue = req.body.attributeValue;
+      const attributeType = req.body.attributeType;
+      const attributeUnit = req.body.attributeUnit;
 
-      let childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
+      const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
 
       for (const children of childrens) {
         if (children.getId().get() === category.getId().get()) {

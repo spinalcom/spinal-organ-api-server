@@ -28,12 +28,12 @@ import { Relation } from '../routes/nodes/interfacesNodes'
 
 
 function childrensNode(node: SpinalNode<any>): Relation[] {
-  let childs = node.children;
-  let res = []
+  const childs = node.children;
+  const res = []
   // childrens relation course
   for (const [relationTypeName, relationTypeMap] of childs) {
     for (const [relationName, relation] of relationTypeMap) {
-      let child = {
+      const child = {
         dynamicId: relation._server_id,
         staticId: relation.getId().get(),
         name: relation.getName().get(),
@@ -48,8 +48,8 @@ function childrensNode(node: SpinalNode<any>): Relation[] {
 
 
 async function parentsNode(node: SpinalNode<any>): Promise<Relation[]> {
-  let parents = node.parents;
-  let auxtab = [];
+  const parents = node.parents;
+  const auxtab = [];
   let res = []
   for (const [, ptrList] of parents) {
     for (let i = 0; i < ptrList.length; i++) {

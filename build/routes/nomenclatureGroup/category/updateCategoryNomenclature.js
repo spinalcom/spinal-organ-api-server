@@ -75,19 +75,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.put("/api/v1/nomenclatureGroup/:contextId/category/:categoryId/update", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && category.belongsToContext(context)) {
                 if (context.getType().get() === "AttributeConfigurationGroupContext") {
-                    var dataObject = {
+                    const dataObject = {
                         name: req.body.newNameCategory,
                         icon: req.body.newNameIcon
                     };
-                    var categoryUpdated = await spinal_env_viewer_plugin_group_manager_service_1.default.updateCategory(category.getId().get(), dataObject);
+                    const categoryUpdated = await spinal_env_viewer_plugin_group_manager_service_1.default.updateCategory(category.getId().get(), dataObject);
                     var info = {
                         dynamicId: categoryUpdated._server_id,
                         staticId: categoryUpdated.getId().get(),

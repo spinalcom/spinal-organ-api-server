@@ -58,7 +58,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      */
     app.post("/api/v1/IoTNetworkContext/create", async (req, res, next) => {
         try {
-            let configService = {
+            const configService = {
                 contextName: req.body.contextName,
                 contextType: "Network",
                 networkName: req.body.networkName,

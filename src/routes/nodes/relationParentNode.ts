@@ -71,14 +71,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var parent;
+      let parent;
       var info: Node;
-      var relation = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const relation = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
 
       if (relation instanceof SpinalRelationLstPtr || relation instanceof SpinalRelationPtrLst || relation instanceof SpinalRelationRef) {
         parent = await relation.getParent();
-        var children_node = childrensNode(parent);
-        var parent_node = await parentsNode(parent);
+        const children_node = childrensNode(parent);
+        const parent_node = await parentsNode(parent);
         info = {
           dynamicId: parent._server_id,
           staticId: parent.getId().get(),

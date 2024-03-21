@@ -65,11 +65,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.put("/api/v1/node/:id/update_note", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            var notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(node);
-            var user = { username: "string", userId: 0 };
+            const notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(node);
+            const user = { username: "string", userId: 0 };
             res.json();
             // await serviceDocumentation.editNote(element, req.body.note)
         }

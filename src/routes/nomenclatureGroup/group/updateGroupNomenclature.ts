@@ -88,23 +88,23 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
-      var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+      const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(category)
-      var group: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
+      const group: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(group)
 
       if (context instanceof SpinalContext && category.belongsToContext(context) && group.belongsToContext(context)) {
         if (context.getType().get() === "AttributeConfigurationGroupContext") {
-          var dataObject = {
+          const dataObject = {
             name: req.body.newNameGroup,
             color: req.body.newNameColor
           }
-          var groupUpdated = await groupManagerService.updateGroup(group.getId().get(), dataObject)
+          const groupUpdated = await groupManagerService.updateGroup(group.getId().get(), dataObject)
           var info = {
             dynamicId: groupUpdated._server_id,
             staticId: groupUpdated.getId().get(),

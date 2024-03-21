@@ -76,19 +76,19 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var workflow = await spinalAPIMiddleware.load(parseInt(req.body.workflowDynamicId, 10), profileId);
+      const workflow = await spinalAPIMiddleware.load(parseInt(req.body.workflowDynamicId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(workflow)
-      var process = await spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10), profileId);
+      const process = await spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(process)
-      var ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
+      const ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(ticket)
 
       await serviceTicketPersonalized.moveTicketToPreviousStep(workflow.getId().get(), process.getId().get(), ticket.getId().get())
 
-      var step = await ticket.getParents("SpinalSystemServiceTicketHasTicket").then((steps) => {
+      const step = await ticket.getParents("SpinalSystemServiceTicketHasTicket").then((steps) => {
         for (const step of steps) {
           if (step.getType().get() === "SpinalSystemServiceTicketTypeStep") {
             return step

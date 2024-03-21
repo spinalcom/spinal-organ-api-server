@@ -85,13 +85,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const _equipementList = req.body;
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            var group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
+            const group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(group);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
@@ -100,7 +100,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 if (context.getType().get() === 'BIMObjectGroupContext') {
                     if (_equipementList.length > 0) {
                         for (let index = 0; index < _equipementList.length; index++) {
-                            let realNode = await spinalAPIMiddleware.load(_equipementList[index]);
+                            const realNode = await spinalAPIMiddleware.load(_equipementList[index]);
                             //@ts-ignore
                             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(realNode);
                             if (realNode.getType().get() === 'BIMObject') {

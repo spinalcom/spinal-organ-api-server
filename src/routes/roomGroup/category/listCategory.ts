@@ -65,20 +65,20 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/roomsGroup/:id/category_list", async (req, res, next) => {
 
-    let nodes = [];
+    const nodes = [];
     try {
       const profileId = getProfileId(req);
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
 
       if (context.getType().get() === "geographicRoomGroupContext") {
-        var listCategories = await groupManagerService.getCategories(context.getId().get())
+        const listCategories = await groupManagerService.getCategories(context.getId().get())
 
         for (const category of listCategories) {
           // @ts-ignore
           const realNode = SpinalGraphService.getRealNode(category.id.get())
-          let info = {
+          const info = {
             dynamicId: realNode._server_id,
             staticId: realNode.getId().get(),
             name: realNode.getName().get(),
@@ -90,7 +90,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         }
 
       } else {
-        res.status(400).send("node is not type of geographicRoomGroupContext ");
+        return res.status(400).send("node is not type of geographicRoomGroupContext ");
       }
 
 

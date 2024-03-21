@@ -73,22 +73,22 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/nomenclatureGroup/:contextId/category/:categoryId/group_list", async (req, res, next) => {
 
-    let nodes = [];
+    const nodes = [];
     try {
       const profileId = getProfileId(req);
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
-      var category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+      const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(category)
       if (context instanceof SpinalContext && category.belongsToContext(context)) {
         if (context.getType().get() === "AttributeConfigurationGroupContext") {
-          var listGroups = await groupManagerService.getGroups(category.getId().get())
+          const listGroups = await groupManagerService.getGroups(category.getId().get())
           for (const group of listGroups) {
             // @ts-ignore
             const realNode = SpinalGraphService.getRealNode(group.id.get())
-            let info = {
+            const info = {
               dynamicId: realNode._server_id,
               staticId: realNode.getId().get(),
               name: realNode.getName().get(),

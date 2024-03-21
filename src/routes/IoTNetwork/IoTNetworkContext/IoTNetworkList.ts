@@ -56,15 +56,15 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/IoTNetworkContext/list", async (req, res, next) => {
 
-    let nodes = [];
+    const nodes = [];
     try {
       const profileId = getProfileId(req);
       const graph = await spinalAPIMiddleware.getProfileGraph(profileId)
-      var childrens = await graph.getChildren("hasContext");
+      const childrens = await graph.getChildren("hasContext");
 
       for (const child of childrens) {
         if (child.getType().get() === "Network") {
-          let info: IoTNetwork = {
+          const info: IoTNetwork = {
             dynamicId: child._server_id,
             staticId: child.getId().get(),
             name: child.getName().get(),

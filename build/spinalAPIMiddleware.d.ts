@@ -19,6 +19,6 @@ declare class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
     load<T extends spinal.Model>(server_id: number): Promise<T>;
     loadPtr<T extends spinal.Model>(ptr: spinal.File<T> | spinal.Ptr<T> | spinal.Pbr<T>): Promise<T>;
     runSocketServer(server: Server, spinalIOMiddleware?: SpinalIOMiddleware): Promise<SocketServer>;
-    _waitConnection(): Promise<Boolean>;
+    _waitConnection(): Promise<boolean>;
 }
 export default SpinalAPIMiddleware;

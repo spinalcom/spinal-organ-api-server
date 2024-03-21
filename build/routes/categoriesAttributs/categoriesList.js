@@ -35,13 +35,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   *         description: Bad request
     */
     app.get("/api/v1/node/:id/categoriesList", async (req, res, next) => {
-        let nodes = [];
+        const nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            var childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
             for (const child of childrens) {
-                let info = {
+                const info = {
                     dynamicId: child._server_id,
                     staticId: child.getId().get(),
                     name: child.getName().get(),

@@ -11,7 +11,7 @@ async function getRoomDetailsInfo(
   dynamicId: number
 ) {
     let area = 0;
-    let _bimObjects = [];
+    const _bimObjects = [];
     const room: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
     const t: { bimFileId: string, bimFileName: string, dbids: number[] }[] = [];
     let bimFileId: string;

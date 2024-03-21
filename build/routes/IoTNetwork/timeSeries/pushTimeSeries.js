@@ -66,10 +66,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post("/api/v1/endpoint/:id/timeSeries/push", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            var timeseries = await (0, spinalTimeSeries_1.default)().getOrCreateTimeSeries(node.getId().get());
+            const timeseries = await (0, spinalTimeSeries_1.default)().getOrCreateTimeSeries(node.getId().get());
             await timeseries.push(req.body.newValue);
         }
         catch (error) {

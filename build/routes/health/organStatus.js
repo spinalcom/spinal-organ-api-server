@@ -49,22 +49,22 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      */
     app.get('/api/v1/organStatus', async (req, res, next) => {
         function isWithinTimeLimit(timeStamp) {
-            var timeLimit = Date.now() - 5 * 60 * 1000;
+            const timeLimit = Date.now() - 5 * 60 * 1000;
             return timeStamp >= timeLimit && timeStamp <= Date.now();
         }
-        let organDown = [];
+        const organDown = [];
         try {
             spinalAPIMiddleware.conn.load('/etc/Organs/Monitoring', async (directory) => {
                 if (!directory)
                     return;
                 for (const file of directory) {
-                    var fileLoaded = await file.load();
+                    const fileLoaded = await file.load();
                     if (file._info.model_type.get() === 'ConfigFile') {
                         console.log("testing file ", fileLoaded.genericOrganData.name.get());
                         if (!fileLoaded.genericOrganData)
                             continue;
                         if (!isWithinTimeLimit(fileLoaded.genericOrganData.lastHealthTime.get())) {
-                            let infoOrganHealth = {
+                            const infoOrganHealth = {
                                 name: fileLoaded.genericOrganData?.name?.get(),
                                 bootTimestamp: fileLoaded.genericOrganData?.bootTimestamp?.get(),
                                 lastHealthTime: fileLoaded.genericOrganData?.lastHealthTime?.get(),
@@ -78,12 +78,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             });
             spinalAPIMiddleware.conn.load_or_make_dir('/etc/Organs', async (directory) => {
                 for (const file of directory) {
-                    var fileLoaded = await file.load();
+                    const fileLoaded = await file.load();
                     if (file._info.model_type.get() === 'ConfigFile') {
                         if (!fileLoaded.genericOrganData)
                             continue;
                         if (!isWithinTimeLimit(fileLoaded.genericOrganData.lastHealthTime.get())) {
-                            let infoOrganHealth = {
+                            const infoOrganHealth = {
                                 name: fileLoaded.genericOrganData?.name?.get(),
                                 bootTimestamp: fileLoaded.genericOrganData?.bootTimestamp?.get(),
                                 lastHealthTime: fileLoaded.genericOrganData?.lastHealthTime?.get(),

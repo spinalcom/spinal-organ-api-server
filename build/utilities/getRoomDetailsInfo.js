@@ -5,7 +5,7 @@ const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 async function getRoomDetailsInfo(spinalAPIMiddleware, profileId, dynamicId) {
     let area = 0;
-    let _bimObjects = [];
+    const _bimObjects = [];
     const room = await spinalAPIMiddleware.load(dynamicId, profileId);
     const t = [];
     let bimFileId;

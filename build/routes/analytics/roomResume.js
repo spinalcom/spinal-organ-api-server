@@ -71,20 +71,80 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
-            var ticketList = [];
-            var ticketListSatandard = [];
-            if (room.getType().get() === 'geographicRoom') {
-                ///////////////////////////////////////////////////////////////////////////////////
-                ////////////////////////////////// Room //////////////////////////////////////////
-                ////////////////////////////////////////////////////////////////////////////////////////
-                var ticketListRoom = await spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(room.getId().get());
-                for (let index = 0; index < ticketListRoom.length; index++) {
-                    var realNodeTicket = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(ticketListRoom[index].id);
+            const ticketList = [];
+            const ticketListSatandard = [];
+            if (!(room.getType().get() === 'geographicRoom')) {
+                return res.status(400).send('node is not of type geographic room');
+            }
+            ///////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////// Room //////////////////////////////////////////
+            ////////////////////////////////////////////////////////////////////////////////////////
+            const ticketListRoom = await spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(room.getId().get());
+            for (let index = 0; index < ticketListRoom.length; index++) {
+                const realNodeTicket = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(ticketListRoom[index].id);
+                //Step
+                const _step = await realNodeTicket
+                    .getParents('SpinalSystemServiceTicketHasTicket')
+                    .then((steps) => {
+                    for (const step of steps) {
+                        if (step.getType().get() === 'SpinalSystemServiceTicketTypeStep') {
+                            return step;
+                        }
+                    }
+                });
+                //Log Ticket Room
+                const _logs = [];
+                const logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(realNodeTicket.getId().get());
+                for (const log of logs) {
+                    const lastActionDate = log.creationDate;
+                    _logs.push(lastActionDate);
+                }
+                //Context
+                const contextRealNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(realNodeTicket.getContextIds()[0]);
+                const infoTicket = {
+                    dynamicId: realNodeTicket._server_id,
+                    staticId: realNodeTicket.getId().get(),
+                    name: realNodeTicket.getName().get(),
+                    type: realNodeTicket.getType().get(),
+                    priority: realNodeTicket.info.priority.get(),
+                    description: realNodeTicket.info.description === undefined
+                        ? ''
+                        : realNodeTicket.info.description.get(),
+                    step: _step.getName().get(),
+                    creationDate: realNodeTicket.info.creationDate.get(),
+                    lastActionDate: _logs[_logs.length - 1],
+                    workflowName: contextRealNode.getName().get(),
+                };
+                const infoTicketStandard = {
+                    dynamicId: realNodeTicket._server_id,
+                    name: realNodeTicket.getName().get(),
+                    step: _step.getName().get(),
+                    workflowName: contextRealNode.getName().get(),
+                };
+                ticketList.push(infoTicket);
+                ticketListSatandard.push(infoTicketStandard);
+            }
+            ///////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////// Equipement //////////////////////////////////////////
+            ////////////////////////////////////////////////////////////////////////////////////////
+            // Equipement List
+            const equipementList = [];
+            const equipements = await room.getChildren('hasBimObject');
+            let _ticketListEquipemnt = [];
+            let _ticketListEquipemntStandard = [];
+            for (const equipement of equipements) {
+                _ticketListEquipemnt = [];
+                _ticketListEquipemntStandard = [];
+                //@ts-ignore
+                spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(equipement);
+                const ticketListEquipemnt = await spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(equipement.getId().get());
+                for (const ticketEquipemnt of ticketListEquipemnt) {
+                    const realNodeEquipementTicket = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(ticketEquipemnt.id);
                     //Step
-                    var _step = await realNodeTicket
+                    const _stepTicketEquipement = await realNodeEquipementTicket
                         .getParents('SpinalSystemServiceTicketHasTicket')
                         .then((steps) => {
                         for (const step of steps) {
@@ -94,192 +154,129 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         }
                     });
                     //Log Ticket Room
-                    var _logs = [];
-                    var logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(realNodeTicket.getId().get());
+                    const _logsTicketEquipement = [];
+                    const logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(realNodeEquipementTicket.getId().get());
                     for (const log of logs) {
-                        let lastActionDate = log.creationDate;
-                        _logs.push(lastActionDate);
+                        const lastActionDate = log.creationDate;
+                        _logsTicketEquipement.push(lastActionDate);
                     }
                     //Context
-                    var contextRealNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(realNodeTicket.getContextIds()[0]);
-                    var infoTicket = {
-                        dynamicId: realNodeTicket._server_id,
-                        staticId: realNodeTicket.getId().get(),
-                        name: realNodeTicket.getName().get(),
-                        type: realNodeTicket.getType().get(),
-                        priority: realNodeTicket.info.priority.get(),
-                        description: realNodeTicket.info.description === undefined
+                    const contextRealNodeEquipementTicket = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(realNodeEquipementTicket.getContextIds()[0]);
+                    const infoTicketEquipement = {
+                        dynamicId: realNodeEquipementTicket._server_id,
+                        staticId: realNodeEquipementTicket.getId().get(),
+                        name: realNodeEquipementTicket.getName().get(),
+                        type: realNodeEquipementTicket.getName().get(),
+                        priority: realNodeEquipementTicket.info.priority.get(),
+                        description: realNodeEquipementTicket.info.description === undefined
                             ? ''
-                            : realNodeTicket.info.description.get(),
-                        step: _step.getName().get(),
-                        creationDate: realNodeTicket.info.creationDate.get(),
-                        lastActionDate: _logs[_logs.length - 1],
-                        workflowName: contextRealNode.getName().get(),
+                            : realNodeEquipementTicket.info.description.get(),
+                        step: _stepTicketEquipement.getName().get(),
+                        creationDate: realNodeEquipementTicket.info.creationDate.get(),
+                        lastActionDate: _logsTicketEquipement[_logsTicketEquipement.length - 1],
+                        workflowName: contextRealNodeEquipementTicket.getName().get(),
                     };
-                    var infoTicketStandard = {
-                        dynamicId: realNodeTicket._server_id,
-                        name: realNodeTicket.getName().get(),
-                        step: _step.getName().get(),
-                        workflowName: contextRealNode.getName().get(),
+                    const infoTicketEquipementStandard = {
+                        dynamicId: realNodeEquipementTicket._server_id,
+                        name: realNodeEquipementTicket.getName().get(),
+                        step: _stepTicketEquipement.getName().get(),
+                        workflowName: contextRealNodeEquipementTicket.getName().get(),
                     };
-                    ticketList.push(infoTicket);
-                    ticketListSatandard.push(infoTicketStandard);
+                    _ticketListEquipemnt.push(infoTicketEquipement);
+                    _ticketListEquipemntStandard.push(infoTicketEquipementStandard);
                 }
-                ///////////////////////////////////////////////////////////////////////////////////
-                ////////////////////////////////// Equipement //////////////////////////////////////////
-                ////////////////////////////////////////////////////////////////////////////////////////
-                // Equipement List
-                var equipementList = [];
-                var equipements = await room.getChildren('hasBimObject');
-                for (const equipement of equipements) {
-                    var _ticketListEquipemnt = [];
-                    var _ticketListEquipemntStandard = [];
-                    //@ts-ignore
-                    spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(equipement);
-                    var ticketListEquipemnt = await spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(equipement.getId().get());
-                    for (const ticketEquipemnt of ticketListEquipemnt) {
-                        var realNodeEquipementTicket = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(ticketEquipemnt.id);
-                        //Step
-                        var _stepTicketEquipement = await realNodeEquipementTicket
-                            .getParents('SpinalSystemServiceTicketHasTicket')
-                            .then((steps) => {
-                            for (const step of steps) {
-                                if (step.getType().get() ===
-                                    'SpinalSystemServiceTicketTypeStep') {
-                                    return step;
-                                }
-                            }
-                        });
-                        //Log Ticket Room
-                        var _logsEquipement;
-                        var _logsTicketEquipement = [];
-                        var logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(realNodeEquipementTicket.getId().get());
-                        for (const log of logs) {
-                            let lastActionDate = log.creationDate;
-                            _logsTicketEquipement.push(lastActionDate);
-                        }
-                        //Context
-                        var contextRealNodeEquipementTicket = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(realNodeEquipementTicket.getContextIds()[0]);
-                        var infoTicketEquipement = {
-                            dynamicId: realNodeEquipementTicket._server_id,
-                            staticId: realNodeEquipementTicket.getId().get(),
-                            name: realNodeEquipementTicket.getName().get(),
-                            type: realNodeEquipementTicket.getName().get(),
-                            priority: realNodeEquipementTicket.info.priority.get(),
-                            description: realNodeEquipementTicket.info.description === undefined
-                                ? ''
-                                : realNodeEquipementTicket.info.description.get(),
-                            step: _stepTicketEquipement.getName().get(),
-                            creationDate: realNodeEquipementTicket.info.creationDate.get(),
-                            lastActionDate: _logsTicketEquipement[_logsTicketEquipement.length - 1],
-                            workflowName: contextRealNodeEquipementTicket.getName().get(),
-                        };
-                        var infoTicketEquipementStandard = {
-                            dynamicId: realNodeEquipementTicket._server_id,
-                            name: realNodeEquipementTicket.getName().get(),
-                            step: _stepTicketEquipement.getName().get(),
-                            workflowName: contextRealNodeEquipementTicket.getName().get(),
-                        };
-                        _ticketListEquipemnt.push(infoTicketEquipement);
-                        _ticketListEquipemntStandard.push(infoTicketEquipementStandard);
-                    }
-                    var infoEquipement;
-                    if (req.params.option === 'detail') {
-                        infoEquipement = {
-                            dynamicId: equipement._server_id,
-                            staticId: equipement.getId().get(),
-                            name: equipement.getName().get(),
-                            type: equipement.getType().get(),
-                            equipementTicketList: _ticketListEquipemnt,
-                        };
-                    }
-                    else if (req.params.option === 'standard') {
-                        infoEquipement = {
-                            dynamicId: equipement._server_id,
-                            staticId: equipement.getId().get(),
-                            name: equipement.getName().get(),
-                            type: equipement.getType().get(),
-                            equipementTicketList: _ticketListEquipemntStandard,
-                        };
-                    }
-                    if (_ticketListEquipemnt.length !== 0) {
-                        equipementList.push(infoEquipement);
-                    }
+                let infoEquipement;
+                if (req.params.option === 'detail') {
+                    infoEquipement = {
+                        dynamicId: equipement._server_id,
+                        staticId: equipement.getId().get(),
+                        name: equipement.getName().get(),
+                        type: equipement.getType().get(),
+                        equipementTicketList: _ticketListEquipemnt,
+                    };
                 }
-                ///////////////////////////////////////////////////////////////////////////////////
-                ////////////////////////////////// Alarm //////////////////////////////////////////
-                ////////////////////////////////////////////////////////////////////////////////////////
-                var profils = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(room.getId().get(), [spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP]);
-                var promises = profils.map(async (profile) => {
-                    var result = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(profile.id.get(), [spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName]);
-                    var endpoints = await result.map(async (endpoint) => {
-                        var realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(endpoint.id.get());
-                        var element = await endpoint.element.load();
-                        var currentValue = element.currentValue.get();
-                        return {
-                            dynamicId: realNode._server_id,
-                            staticId: endpoint.id.get(),
-                            name: element.name.get(),
-                            type: element.type.get(),
-                            currentValue: currentValue,
-                        };
-                    });
+                else if (req.params.option === 'standard') {
+                    infoEquipement = {
+                        dynamicId: equipement._server_id,
+                        staticId: equipement.getId().get(),
+                        name: equipement.getName().get(),
+                        type: equipement.getType().get(),
+                        equipementTicketList: _ticketListEquipemntStandard,
+                    };
+                }
+                if (_ticketListEquipemnt.length !== 0) {
+                    equipementList.push(infoEquipement);
+                }
+            }
+            ///////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////// Alarm //////////////////////////////////////////
+            ////////////////////////////////////////////////////////////////////////////////////////
+            const profils = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(room.getId().get(), [spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP]);
+            const promises = profils.map(async (profile) => {
+                const result = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(profile.id.get(), [spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName]);
+                const endpoints = await result.map(async (endpoint) => {
+                    const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(endpoint.id.get());
+                    const element = await endpoint.element.load();
+                    const currentValue = element.currentValue.get();
                     return {
-                        profileName: profile.name.get(),
-                        endpoints: await Promise.all(endpoints),
+                        dynamicId: realNode._server_id,
+                        staticId: endpoint.id.get(),
+                        name: element.name.get(),
+                        type: element.type.get(),
+                        currentValue: currentValue,
                     };
                 });
-                var allNodes = await Promise.all(promises);
-                var _alarmList = [];
-                for (const node of allNodes) {
-                    for (const endpoint of node.endpoints) {
-                        if (endpoint.type === 'Alarm') {
-                            _alarmList.push(endpoint);
-                        }
+                return {
+                    profileName: profile.name.get(),
+                    endpoints: await Promise.all(endpoints),
+                };
+            });
+            const allNodes = await Promise.all(promises);
+            const _alarmList = [];
+            for (const node of allNodes) {
+                for (const endpoint of node.endpoints) {
+                    if (endpoint.type === 'Alarm') {
+                        _alarmList.push(endpoint);
                     }
                 }
-                ///////////////////////////////////////////////////////////////////////////////////
-                ////////////////////////////////// Calcul //////////////////////////////////////////
-                ////////////////////////////////////////////////////////////////////////////////////////
-                var info;
-                var Occasionally = 0;
-                var Normal = 0;
-                var Urgent = 0;
-                var allTicket = [];
-                for (const objectroom of ticketList) {
-                    allTicket.push(objectroom);
-                    if (objectroom.priority === 0 || objectroom.priority === '0')
-                        Occasionally++;
-                    else if (objectroom.priority === 1 || objectroom.priority === '1')
-                        Normal++;
-                    else if (objectroom.priority === 2 || objectroom.priority === '2')
-                        Urgent++;
-                }
-                for (const objectEquipement of _ticketListEquipemnt) {
-                    allTicket.push(objectEquipement);
-                    if (objectEquipement.priority === 0 ||
-                        objectEquipement.priority === '0')
-                        Occasionally++;
-                    else if (objectEquipement.priority === 1 ||
-                        objectEquipement.priority === '1')
-                        Normal++;
-                    else if (objectEquipement.priority === 2 ||
-                        objectEquipement.priority === '2')
-                        Urgent++;
-                }
-                ////////////////////////////////// Mark //////////////////////////////////////////
-                var mark = 20;
-                var sum = 0;
-                for (let index = 0; index < allTicket.length; index++) {
-                    sum = sum + index * allTicket[index].priority;
-                }
-                mark = mark - (sum + _alarmList.length);
             }
-            else {
-                res.status(400).send('node is not of type geographic room');
+            ///////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////// Calcul //////////////////////////////////////////
+            ////////////////////////////////////////////////////////////////////////////////////////
+            let Occasionally = 0;
+            let Normal = 0;
+            let Urgent = 0;
+            const allTicket = [];
+            for (const objectroom of ticketList) {
+                allTicket.push(objectroom);
+                if (objectroom.priority === 0 || objectroom.priority === '0')
+                    Occasionally++;
+                else if (objectroom.priority === 1 || objectroom.priority === '1')
+                    Normal++;
+                else if (objectroom.priority === 2 || objectroom.priority === '2')
+                    Urgent++;
             }
+            for (const objectEquipement of _ticketListEquipemnt) {
+                allTicket.push(objectEquipement);
+                if (objectEquipement.priority === 0 ||
+                    objectEquipement.priority === '0')
+                    Occasionally++;
+                else if (objectEquipement.priority === 1 ||
+                    objectEquipement.priority === '1')
+                    Normal++;
+                else if (objectEquipement.priority === 2 ||
+                    objectEquipement.priority === '2')
+                    Urgent++;
+            }
+            ////////////////////////////////// Mark //////////////////////////////////////////
+            let mark = 20;
+            let sum = 0;
+            for (let index = 0; index < allTicket.length; index++) {
+                sum = sum + index * allTicket[index].priority;
+            }
+            mark = mark - (sum + _alarmList.length);
             if (req.params.option === 'detail') {
-                info = {
+                return res.json({
                     dynamicId: room._server_id,
                     staticId: room.getId().get(),
                     name: room.getName().get(),
@@ -288,10 +285,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     roomTicketList: ticketList,
                     equipementList: equipementList,
                     alarmList: _alarmList,
-                };
+                });
             }
             else if (req.params.option === 'summary') {
-                info = {
+                return res.json({
                     dynamicId: room._server_id,
                     staticId: room.getId().get(),
                     name: room.getName().get(),
@@ -303,10 +300,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         'Priority 2': Urgent,
                     },
                     amountAlarm: _alarmList.length,
-                };
+                });
             }
             else if (req.params.option === 'standard') {
-                info = {
+                return res.json({
                     dynamicId: room._server_id,
                     staticId: room.getId().get(),
                     name: room.getName().get(),
@@ -315,7 +312,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     roomTicketList: ticketListSatandard,
                     equipementList: equipementList,
                     alarmList: _alarmList,
-                };
+                });
             }
         }
         catch (error) {
@@ -323,7 +320,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send({ message: error.message });
             res.status(400).send('ko');
         }
-        res.json(info);
     });
 };
 //# sourceMappingURL=roomResume.js.map

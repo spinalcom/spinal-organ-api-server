@@ -70,17 +70,17 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/context/:contextId/node/:nodeId/nodeTypeList", async (req, res, next) => {
 
-    var type_list;
+    let type_list;
     try {
       const profileId = getProfileId(req);
-      var contextNode = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+      const contextNode = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(contextNode);
-      var SpinalContextNodeId = contextNode.getId().get();
-      var node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
+      const SpinalContextNodeId = contextNode.getId().get();
+      const node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(node);
-      var SpinalNodeId = node.getId().get();
+      const SpinalNodeId = node.getId().get();
 
       if (contextNode instanceof SpinalContext && node.belongsToContext(contextNode)) {
         type_list = await SpinalGraphService.browseAndClassifyByTypeInContext(SpinalNodeId, SpinalContextNodeId);

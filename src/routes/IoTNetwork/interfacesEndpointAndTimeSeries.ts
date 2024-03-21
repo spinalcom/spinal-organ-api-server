@@ -90,7 +90,7 @@ export interface IoTNetworkTree {
   name: string,
   type: string,
   children: IoTNetworkTree[]
-};
+}
 
 
 

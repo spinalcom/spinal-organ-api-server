@@ -61,7 +61,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
       const graph = await spinalAPIMiddleware.getGraph();
 
-      var childrens = await graph.getChildren("hasContext");
+      const childrens = await graph.getChildren("hasContext");
 
       for (const child of childrens) {
         if (child.getName().get() === req.body.nameWorkflow) {

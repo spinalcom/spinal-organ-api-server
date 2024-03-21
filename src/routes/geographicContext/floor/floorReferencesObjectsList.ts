@@ -83,14 +83,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     try {
       const profileId = getProfileId(req);
 
-      var floor: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const floor: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(floor)
-      let referenceObjets = await floor.getChildren("hasReferenceObject");
-      var _objects = []
-      var bimFileId: string;
+      const referenceObjets = await floor.getChildren("hasReferenceObject");
+      const _objects = []
+      let bimFileId: string;
       for (let index = 0; index < referenceObjets.length; index++) {
-        var infoReferencesObject = {
+        const infoReferencesObject = {
           dynamicId: referenceObjets[index]._server_id,
           staticId: referenceObjets[index].getId().get(),
           name: referenceObjets[index].getName().get(),

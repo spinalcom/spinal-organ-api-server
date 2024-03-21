@@ -57,18 +57,18 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get('/api/v1/eventContext/list', async (req, res, next) => {
     try {
-      let nodes = [];
+      const nodes = [];
       const profileId = getProfileId(req);
       const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
 
       const contexts = userGraph ? await userGraph.getChildren("hasContext") : []
-      var listContextEvents = contexts.filter(context => context.getType().get() === CONTEXT_TYPE);
+      const listContextEvents = contexts.filter(context => context.getType().get() === CONTEXT_TYPE);
 
       for (const _child of listContextEvents) {
         // @ts-ignore
         // const _child = SpinalGraphService.getRealNode(child.id.get())
         if (_child.getType().get() === CONTEXT_TYPE) {
-          let info: ContextEvent = {
+          const info: ContextEvent = {
             dynamicId: _child._server_id,
             staticId: _child.getId().get(),
             name: _child.getName().get(),

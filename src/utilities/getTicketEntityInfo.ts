@@ -8,15 +8,15 @@ async function getTicketEntityInfo(
   profileId:string,
   ticketId: number
 ) {
-  var _ticket = await spinalAPIMiddleware.load(ticketId,profileId);
+  const _ticket = await spinalAPIMiddleware.load(ticketId,profileId);
   //@ts-ignore
   SpinalGraphService._addNode(_ticket);
 
-  var elementSelected = await spinalAPIMiddleware.loadPtr(
+  const elementSelected = await spinalAPIMiddleware.loadPtr(
     _ticket.info.elementSelected
   );
 
-  var info = {
+  const info = {
     dynamicId: elementSelected._server_id,
     staticId: elementSelected.getId().get(),
     name: elementSelected.getName().get(),

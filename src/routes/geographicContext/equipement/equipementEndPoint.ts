@@ -65,21 +65,21 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/equipement/:id/endpoint_list", async (req, res, next) => {
 
-    let nodes = [];
+    const nodes = [];
     try {
       const profileId = getProfileId(req);
 
-      let equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(equipement);
       if (equipement.getType().get() === "BIMObject") {
 
-        var endpoints = await equipement.getChildren(["hasEndPoint", SpinalBmsEndpoint.relationName]);
+        const endpoints = await equipement.getChildren(["hasEndPoint", SpinalBmsEndpoint.relationName]);
 
         for (const endpoint of endpoints) {
-          var element = await endpoint.element.load()
-          var currentValue = element.currentValue.get();
-          let info: EndPointRoom = {
+          const element = await endpoint.element.load()
+          const currentValue = element.currentValue.get();
+          const info: EndPointRoom = {
             dynamicId: endpoint._server_id,
             staticId: endpoint.getId().get(),
             name: endpoint.getName().get(),

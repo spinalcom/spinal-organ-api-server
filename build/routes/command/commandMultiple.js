@@ -75,7 +75,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post('/api/v1/node/command', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var arrayList = [];
+            const arrayList = [];
             const nodetypes = ["geographicRoom", "BIMObject", "BIMObjectGroup", "geographicRoomGroup", "geographicFloor"];
             const controlPointTypes = ["COMMAND_BLIND", "COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE"];
             const nodes = req.body.propertyReference;
@@ -84,10 +84,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 if (nodetypes.includes(_node.getType().get())) {
                     for (const command of node.keys) {
                         if (controlPointTypes.includes(command.key)) {
-                            let controlPoints = await _node.getChildren('hasControlPoints');
+                            const controlPoints = await _node.getChildren('hasControlPoints');
                             for (const controlPoint of controlPoints) {
                                 if (controlPoint.getName().get() === "Command") {
-                                    let bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint');
+                                    const bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint');
                                     for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
                                         if (bmsEndPoint.getName().get() === command.key) {
                                             await (0, upstaeControlEndpoint_1.updateControlEndpointWithAnalytic)(bmsEndPoint, command.value, spinal_model_bmsnetwork_1.InputDataEndpointDataType.Real, spinal_model_bmsnetwork_1.InputDataEndpointType.Other);

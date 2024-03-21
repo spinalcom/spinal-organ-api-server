@@ -71,20 +71,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post("/api/v1/find_node_in_context_by_date", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var beginDateTimeZone = moment(req.body.beginDate, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], true);
-            var endDateTimeZone = moment(req.body.endDate, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], true);
-            var beginDate = beginDateTimeZone.utc();
-            var endDate = endDateTimeZone.utc();
+            const beginDateTimeZone = moment(req.body.beginDate, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], true);
+            const endDateTimeZone = moment(req.body.endDate, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], true);
+            const beginDate = beginDateTimeZone.utc();
+            const endDate = endDateTimeZone.utc();
             var tab = [];
             await spinal_env_viewer_graph_service_1.SpinalGraphService.findInContext(context.getId().get(), context.getId().get(), (node) => {
                 if (node.info.directModificationDate) {
-                    var nodeDate = moment(node.info.directModificationDate.get());
+                    const nodeDate = moment(node.info.directModificationDate.get());
                     const test = moment(nodeDate).isBetween(beginDate, endDate);
                     if (test == true) {
-                        var info = {
+                        const info = {
                             dynamicId: node._server_id,
                             staticId: node.getId().get(),
                             name: node.getName().get(),

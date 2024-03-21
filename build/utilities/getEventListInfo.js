@@ -5,16 +5,16 @@ const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 async function getEventListInfo(spinalAPIMiddleware, profileId, dynamicId) {
     await spinalAPIMiddleware.getGraph();
-    var nodes = [];
-    var node = await spinalAPIMiddleware.load(dynamicId, profileId);
+    const nodes = [];
+    const node = await spinalAPIMiddleware.load(dynamicId, profileId);
     //@ts-ignore
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-    var listEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId().get());
+    const listEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEvents(node.getId().get());
     for (const child of listEvents) {
         // @ts-ignore
         const _child = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(child.id.get());
         if (_child.getType().get() === 'SpinalEvent') {
-            let info = {
+            const info = {
                 dynamicId: _child._server_id,
                 staticId: _child.getId().get(),
                 name: _child.getName().get(),

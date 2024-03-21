@@ -5,7 +5,7 @@ import { ISpinalAPIMiddleware } from '../interfaces';
 
 
 async function getEquipmentListInfo(spinalAPIMiddleware :ISpinalAPIMiddleware,profileId:string, roomId: number): Promise<Equipement[]> {
-    let nodes: Equipement[] = [];
+    const nodes: Equipement[] = [];
     const room: SpinalNode<any> = await spinalAPIMiddleware.load(roomId,profileId);
 
     //@ts-ignore

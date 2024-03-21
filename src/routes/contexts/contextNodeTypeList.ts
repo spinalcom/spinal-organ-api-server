@@ -63,8 +63,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      var SpinalContextId = context.getId().get();
+      const context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const SpinalContextId = context.getId().get();
       var type_list = await SpinalGraphService.browseAndClassifyByTypeInContext(SpinalContextId, SpinalContextId);
     } catch (error) {
 

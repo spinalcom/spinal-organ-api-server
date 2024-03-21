@@ -63,10 +63,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post("/api/v1/Network/create", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.body.IoTNetworkContext_DynamicId), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.body.IoTNetworkContext_DynamicId), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            let configService = {
+            const configService = {
                 contextName: context.getName().get(),
                 contextType: "IoTNetwork",
                 networkName: req.body.NetworkName,

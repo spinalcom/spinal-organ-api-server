@@ -82,24 +82,24 @@ module.exports = function (
    */
 
   app.post('/api/v1/command/room/:id/temp', async (req, res, next) => {
-    var info = {};
+    let info = {};
     try {
       const profileId = getProfileId(req);
 
-      var room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(room)
 
-      var controlPoints = await room.getChildren('hasControlPoints');
+      const controlPoints = await room.getChildren('hasControlPoints');
       for (const controlPoint of controlPoints) {
         if (controlPoint.getName().get() === "Command") {
-          var bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
+          const bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
           for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
             if (bmsEndPoint.getName().get() === "COMMAND_TEMPERATURE") {
               //@ts-ignore
               SpinalGraphService._addNode(bmsEndPoint);
               const model = SpinalGraphService.getInfo(bmsEndPoint.getId().get());
-              var element = await bmsEndPoint.element.load()
+              const element = await bmsEndPoint.element.load()
               await updateControlEndpointWithAnalytic(model, req.body.tempCurrentValue, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
 
               // element.currentValue.set(req.body.tempCurrentValue)

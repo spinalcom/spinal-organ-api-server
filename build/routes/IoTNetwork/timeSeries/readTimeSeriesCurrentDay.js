@@ -30,20 +30,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/endpoint/:id/timeSeries/readCurrentDay", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             const date = new Date(Date.now());
             const lastHour = date.getHours();
             const timeSeriesIntervalDate = (0, spinalTimeSeries_1.default)().getDateFromLastHours(lastHour);
-            var datas = await (0, spinalTimeSeries_1.default)().getData(node.getId().get(), timeSeriesIntervalDate);
+            const datas = await (0, spinalTimeSeries_1.default)().getData(node.getId().get(), timeSeriesIntervalDate);
+            return res.json(datas);
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
             return res.status(400).send(error.message);
         }
-        res.json(datas);
     });
 };
 //# sourceMappingURL=readTimeSeriesCurrentDay.js.map

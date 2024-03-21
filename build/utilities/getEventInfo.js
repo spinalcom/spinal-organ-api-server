@@ -3,13 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getEventInfo = void 0;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 async function getEventInfo(spinalAPIMiddleware, profileId, dynamicId) {
-    var event = await spinalAPIMiddleware.load(dynamicId, profileId);
+    const event = await spinalAPIMiddleware.load(dynamicId, profileId);
     //@ts-ignore
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(event);
     if (!(event.getType().get() === 'SpinalEvent')) {
         throw new Error('node is not of type SpinalEvent');
     }
-    var info = {
+    const info = {
         dynamicId: event._server_id,
         staticId: event.getId().get(),
         name: event.getName().get(),

@@ -69,17 +69,17 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.get("/api/v1/relation/:id/children_node", async (req, res, next) => {
 
     try {
-      var nodes;
+      let nodes;
       var node_list = [];
       const profileId = getProfileId(req);
-      var relation = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const relation = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
 
       if (relation instanceof SpinalRelationLstPtr || relation instanceof SpinalRelationPtrLst || relation instanceof SpinalRelationRef) {
         nodes = await relation.getChildren();
         for (let index = 0; index < nodes.length; index++) {
-          var children_node = childrensNode(nodes[index]);
-          var parent_node = await parentsNode(nodes[index]);
-          var info: Node = {
+          const children_node = childrensNode(nodes[index]);
+          const parent_node = await parentsNode(nodes[index]);
+          const info: Node = {
             dynamicId: nodes[index]._server_id,
             staticId: nodes[index].getId().get(),
             name: nodes[index].getName().get(),

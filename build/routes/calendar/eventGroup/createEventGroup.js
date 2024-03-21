@@ -78,17 +78,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post("/api/v1/eventContext/:ContextId/eventCategory/:CategoryId/create_group", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.ContextId, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.ContextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            var category = await spinalAPIMiddleware.load(parseInt(req.params.CategoryId, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.CategoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && category.belongsToContext(context)) {
                 if (context.getType().get() === "SpinalEventGroupContext") {
                     const group = await spinal_env_viewer_task_service_1.SpinalEventService.createEventGroup(context.getId().get(), category.getId().get(), req.body.groupName, req.body.color);
                     if (group !== undefined) {
-                        var objgroup = {
+                        const objgroup = {
                             staticId: group.id.get(),
                             name: group.name.get(),
                             type: group.type.get(),

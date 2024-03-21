@@ -49,7 +49,7 @@ function Requests(logger) {
         return spinalAPIMiddleware;
     }
     function initApiServer(spinalAPIMiddleware) {
-        let api = (0, api_server_1.default)(logger, spinalAPIMiddleware);
+        const api = (0, api_server_1.default)(logger, spinalAPIMiddleware);
         // TODO add swagger specs here for external documentation and for the organ to ask for it
         (0, swagger_1.initSwagger)(api);
         // serve logo.png file
@@ -63,7 +63,7 @@ function Requests(logger) {
         run: async function () {
             const spinalAPIMiddleware = await initSpinalHub();
             const api = initApiServer(spinalAPIMiddleware);
-            let port = config_1.default.api.port;
+            const port = config_1.default.api.port;
             const server = api.listen(port, () => {
                 spinal_lib_organ_monitoring_1.default.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME, process.env.ORGAN_TYPE, process.env.SPINALHUB_IP, parseInt(process.env.REQUESTS_PORT));
                 console.log(`\nApi server is listening at 0.0.0.0:${port}`);

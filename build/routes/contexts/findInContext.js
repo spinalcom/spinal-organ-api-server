@@ -75,12 +75,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post('/api/v1/find_node_in_context', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var info;
+            let info;
             await spinalAPIMiddleware.getGraph();
             const tab = req.body.array;
             const paramContext = req.body.context;
             var result = [];
-            var context = await verifyContext(paramContext);
+            let context = await verifyContext(paramContext);
             /**********************context************************/
             async function verifyContext(paramContext) {
                 if (typeof spinal_core_connectorjs_type_1.FileSystem._objects[paramContext] !== 'undefined') {
@@ -98,16 +98,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
             /***************** ***optionSearchNodes**************/
             if (req.body.optionSearchNodes === 'dynamicId') {
-                let nodes = [];
+                const nodes = [];
                 for (let index = 0; index < tab.length; index++) {
-                    let node = await spinalAPIMiddleware.load(parseInt(tab[index], 10), profileId);
+                    const node = await spinalAPIMiddleware.load(parseInt(tab[index], 10), profileId);
                     nodes.push(node);
                 }
                 for (const _node of nodes) {
                     if (_node.belongsToContext(context)) {
                         if (req.body.optionResult === 'ticket') {
                             //Step
-                            let _step = await _node
+                            const _step = await _node
                                 .getParents('SpinalSystemServiceTicketHasTicket')
                                 .then((steps) => {
                                 for (const step of steps) {
@@ -117,7 +117,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                                     }
                                 }
                             });
-                            let _process = await _step
+                            const _process = await _step
                                 .getParents('SpinalSystemServiceTicketHasStep')
                                 .then((processes) => {
                                 for (const process of processes) {
@@ -198,7 +198,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 }
             }
             else if (req.body.optionSearchNodes === 'staticId') {
-                let nodes = [];
+                const nodes = [];
                 for (let index = 0; index < tab.length; index++) {
                     let node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(tab[index]);
                     if (typeof node === 'undefined') {
@@ -212,7 +212,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             _node.belongsToContext(context)) {
                             if (req.body.optionResult === 'ticket') {
                                 //Step
-                                let _step = await _node
+                                const _step = await _node
                                     .getParents('SpinalSystemServiceTicketHasTicket')
                                     .then((steps) => {
                                     for (const step of steps) {
@@ -222,7 +222,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                                         }
                                     }
                                 });
-                                let _process = await _step
+                                const _process = await _step
                                     .getParents('SpinalSystemServiceTicketHasStep')
                                     .then((processes) => {
                                     for (const process of processes) {
@@ -305,7 +305,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
             else if (req.body.optionSearchNodes === 'name') {
                 if (context) {
-                    let res = await spinal_env_viewer_graph_service_1.SpinalGraphService.findInContext(context.getId().get(), context.getId().get());
+                    const res = await spinal_env_viewer_graph_service_1.SpinalGraphService.findInContext(context.getId().get(), context.getId().get());
                     for (const _node of res) {
                         for (const _name of tab) {
                             if (_node.name.get() === _name) {
@@ -315,7 +315,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                                 }
                                 if (req.body.optionResult === 'ticket') {
                                     //Step
-                                    let _step = await node
+                                    const _step = await node
                                         .getParents('SpinalSystemServiceTicketHasTicket')
                                         .then((steps) => {
                                         for (const step of steps) {
@@ -325,7 +325,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                                             }
                                         }
                                     });
-                                    let _process = await _step
+                                    const _process = await _step
                                         .getParents('SpinalSystemServiceTicketHasStep')
                                         .then((processes) => {
                                         for (const process of processes) {

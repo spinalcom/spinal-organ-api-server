@@ -87,7 +87,7 @@ module.exports = function (
       // //@ts-ignore
       // SpinalGraphService._addNode(workflow)
       const profileId = getProfileId(req);
-      var ticket: SpinalNode<any> = await spinalAPIMiddleware.load(
+      const ticket: SpinalNode<any> = await spinalAPIMiddleware.load(
         parseInt(req.params.ticketId, 10), profileId
       );
       //@ts-ignore
@@ -101,8 +101,8 @@ module.exports = function (
         });
       } else {
         //@ts-ignore
-        let file = req.files.file;
-        var data = {
+        const file = req.files.file;
+        const data = {
           name: file.name,
           buffer: file.data,
         };

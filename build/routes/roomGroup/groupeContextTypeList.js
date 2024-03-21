@@ -48,11 +48,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *         description: Bad request
     */
     app.get("/api/v1/groupContext/type_list", async (req, res, next) => {
-        let types = [];
+        const types = [];
         try {
             const profilId = (0, requestUtilities_1.getProfileId)(req);
             const graph = await spinalAPIMiddleware.getProfileGraph(profilId);
-            var groupContexts = await spinal_env_viewer_plugin_group_manager_service_1.default.getGroupContexts(undefined, graph);
+            const groupContexts = await spinal_env_viewer_plugin_group_manager_service_1.default.getGroupContexts(undefined, graph);
             for (const groupContext of groupContexts) {
                 types.push(groupContext.type);
             }

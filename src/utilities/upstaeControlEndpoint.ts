@@ -33,7 +33,7 @@ import { NetworkService, InputDataEndpoint, InputDataEndpointDataType, InputData
     */
 export async function updateControlEndpointWithAnalytic(model, valueToPush: any, dataType: any, type: any): Promise<void> {
 
-  var networkService = new NetworkService()
+  const networkService = new NetworkService()
   if (valueToPush != undefined) {
     const input: InputDataEndpoint = {
       id: "",

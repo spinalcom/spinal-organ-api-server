@@ -73,12 +73,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.get(
     '/api/v1/workflow/:workflowId/process/:processId/stepList',
     async (req, res, next) => {
-      let nodes = [];
+      const nodes = [];
       try {
         const profileId = getProfileId(req);
 
-        var workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-        var process: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
+        const workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
+        const process: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
         // @ts-ignore
         SpinalGraphService._addNode(workflow);
 
@@ -88,11 +88,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
         if (workflow instanceof SpinalContext && process.belongsToContext(workflow)) {
           if (workflow.getType().get() === "SpinalSystemServiceTicket") {
-            var allSteps = await SpinalGraphService.getChildren(process.getId().get(), ["SpinalSystemServiceTicketHasStep"])
+            const allSteps = await SpinalGraphService.getChildren(process.getId().get(), ["SpinalSystemServiceTicketHasStep"])
 
             for (let index = 0; index < allSteps.length; index++) {
               const realNode = SpinalGraphService.getRealNode(allSteps[index].id.get())
-              var info: Step = {
+              const info: Step = {
                 dynamicId: realNode._server_id,
                 staticId: realNode.getId().get(),
                 name: realNode.getName().get(),

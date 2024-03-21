@@ -58,8 +58,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/context/:id/nodeTypeList", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            var SpinalContextId = context.getId().get();
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const SpinalContextId = context.getId().get();
             var type_list = await spinal_env_viewer_graph_service_1.SpinalGraphService.browseAndClassifyByTypeInContext(SpinalContextId, SpinalContextId);
         }
         catch (error) {

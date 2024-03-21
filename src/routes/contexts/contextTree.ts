@@ -61,11 +61,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  */
 
   app.get("/api/v1/context/:id/tree", async (req, res, next) => {
-    var contexts: ContextTree;
+    let contexts: ContextTree;
 
     try {
       const profileId = getProfileId(req);
-      var context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       if (context instanceof SpinalContext) {
         contexts = {
           dynamicId: context._server_id,

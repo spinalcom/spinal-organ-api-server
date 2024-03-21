@@ -59,18 +59,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *         description: Bad request
    */
     app.get("/api/v1/room/:id/endpoint_list", async (req, res, next) => {
-        let nodes = [];
+        const nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            let room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
             if (room.getType().get() === "geographicRoom") {
-                var endpoints = await room.getChildren(["hasEndPoint", spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName]);
+                const endpoints = await room.getChildren(["hasEndPoint", spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName]);
                 for (const endpoint of endpoints) {
-                    var element = await endpoint.element.load();
-                    var currentValue = element.currentValue.get();
-                    let info = {
+                    const element = await endpoint.element.load();
+                    const currentValue = element.currentValue.get();
+                    const info = {
                         dynamicId: endpoint._server_id,
                         staticId: endpoint.getId().get(),
                         name: endpoint.getName().get(),

@@ -62,16 +62,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             var nodes = [];
-            var equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(equipement);
             if (equipement.getType().get() === "BIMObject") {
-                var listEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEvents(equipement.getId().get());
+                const listEvents = await spinal_env_viewer_task_service_1.SpinalEventService.getEvents(equipement.getId().get());
                 for (const child of listEvents) {
                     // @ts-ignore
                     const _child = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(child.id.get());
                     if (_child.getType().get() === "SpinalEvent") {
-                        let info = {
+                        const info = {
                             dynamicId: _child._server_id,
                             staticId: _child.getId()?.get(),
                             name: _child.getName()?.get(),

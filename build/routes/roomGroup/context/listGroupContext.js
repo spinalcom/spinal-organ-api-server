@@ -52,15 +52,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Bad request
      */
     app.get("/api/v1/roomsGroup/list", async (req, res, next) => {
-        let nodes = [];
+        const nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
-            var groupContexts = await spinal_env_viewer_plugin_group_manager_service_1.default.getGroupContexts(constants_1.ROOM_TYPE, graph);
+            const groupContexts = await spinal_env_viewer_plugin_group_manager_service_1.default.getGroupContexts(constants_1.ROOM_TYPE, graph);
             for (let index = 0; index < groupContexts.length; index++) {
-                var realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(groupContexts[index].id);
+                const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(groupContexts[index].id);
                 if (realNode.getType().get() === 'geographicRoomGroupContext') {
-                    let info = {
+                    const info = {
                         dynamicId: realNode._server_id,
                         staticId: realNode.getId().get(),
                         name: realNode.getName().get(),

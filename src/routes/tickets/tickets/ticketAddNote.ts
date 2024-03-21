@@ -73,10 +73,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.post("/api/v1/ticket/:ticketId/add_note", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var ticket: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
+      const ticket: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(ticket)
-      var user = { username: "admin", userId: 168 }
+      const user = { username: "admin", userId: 168 }
 
       const note = await serviceDocumentation.addNote(ticket, user, req.body.note)
       const elementNote = await note.element.load()

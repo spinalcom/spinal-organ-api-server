@@ -115,19 +115,19 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     try {
       await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);
-      var node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(node)
 
-      var tree = await SpinalEventService.createOrgetDefaultTreeStructure();
-      var context: any = tree.context
-      var category: any = tree.category
-      var group: any = tree.group
+      const tree = await SpinalEventService.createOrgetDefaultTreeStructure();
+      const context: any = tree.context
+      const category: any = tree.category
+      const group: any = tree.group
 
 
       if (node.getType().get() === TICKET_TYPE) {
         if (context.type.get() === "SpinalEventGroupContext") {
-          let eventInfo = {
+          const eventInfo = {
             contextId: context.id.get(),
             groupId: group.id.get(),
             categoryId: category.id.get(),
@@ -153,20 +153,20 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
               true
             ).toString(),
           };
-          let user = {
+          const user = {
             username: req.body.user.userName,
             email: req.body.user.email,
             gsm: req.body.user.gsm,
           };
 
-          var result: any = await SpinalEventService.createEvent(
+          const result: any = await SpinalEventService.createEvent(
             context.id.get(),
             group.id.get(),
             node.getId().get(),
             eventInfo,
             user
           );
-          var ticketCreated = SpinalGraphService.getRealNode(result.id.get());
+          const ticketCreated = SpinalGraphService.getRealNode(result.id.get());
           console.log(ticketCreated._server_id);
 
           var info = {

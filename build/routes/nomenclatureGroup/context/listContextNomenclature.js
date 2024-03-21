@@ -51,15 +51,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *         description: Bad request
     */
     app.get("/api/v1/nomenclatureGroup/list", async (req, res, next) => {
-        let nodes = [];
+        const nodes = [];
         try {
-            let profileId = (0, requestUtilities_1.getProfileId)(req);
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
-            var groupContexts = await spinal_env_viewer_plugin_nomenclature_service_1.spinalNomenclatureService.getContexts(undefined, graph);
+            const groupContexts = await spinal_env_viewer_plugin_nomenclature_service_1.spinalNomenclatureService.getContexts(undefined, graph);
             for (let index = 0; index < groupContexts.length; index++) {
-                var realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(groupContexts[index].info.id.get());
+                const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(groupContexts[index].info.id.get());
                 if (realNode.getType().get() === "AttributeConfigurationGroupContext" && realNode.getName().get() === "NomenclatureConfiguration") {
-                    let info = {
+                    const info = {
                         dynamicId: realNode._server_id,
                         staticId: realNode.getId().get(),
                         name: realNode.getName().get(),

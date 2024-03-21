@@ -43,13 +43,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.delete('/api/v1/node/:IdNode/category/:IdCategory/attribut/:attributName/delete', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var aux = false;
-            let node = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
-            let category = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
-            let childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+            let aux = false;
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
+            const childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
             for (const children of childrens) {
                 if (children.getId().get() === category.getId().get()) {
-                    let attributes = await category.getElement();
+                    const attributes = await category.getElement();
                     for (let index = 0; index < attributes.length; index++) {
                         const element = attributes[index];
                         const elementLabel = element.label.get();

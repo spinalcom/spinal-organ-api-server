@@ -21,7 +21,11 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import { SpinalContext, SpinalNode, SpinalGraphService, } from 'spinal-env-viewer-graph-service';
+import {
+  SpinalContext,
+  SpinalNode,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
 import * as express from 'express';
 
 // import { Room } from '../interfacesGeoContext'
@@ -31,7 +35,11 @@ import { SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 import { getProfileId } from '../../utilities/requestUtilities';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/analytics/room/{id}/status/{option}:
@@ -69,32 +77,40 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *       400:
    *         description: Bad request
    */
-  app.get('/api/v1/analytics/room/:id/status/:option', async (req, res, next) => {
-    try {
-      await spinalAPIMiddleware.getGraph();
-      const profileId = getProfileId(req);
-      var room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(room);
-      var ticketList = [];
-      var ticketListSatandard = [];
+  app.get(
+    '/api/v1/analytics/room/:id/status/:option',
+    async (req, res, next) => {
+      try {
+        await spinalAPIMiddleware.getGraph();
+        const profileId = getProfileId(req);
+        const room = await spinalAPIMiddleware.load(
+          parseInt(req.params.id, 10),
+          profileId
+        );
+        //@ts-ignore
+        SpinalGraphService._addNode(room);
+        const ticketList = [];
+        const ticketListSatandard = [];
 
-      if (room.getType().get() === 'geographicRoom') {
+        if (!(room.getType().get() === 'geographicRoom')) {
+          return res.status(400).send('node is not of type geographic room');
+        }
+
         ///////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////// Room //////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////////
 
-        var ticketListRoom =
+        const ticketListRoom =
           await serviceTicketPersonalized.getTicketsFromNode(
             room.getId().get()
           );
         for (let index = 0; index < ticketListRoom.length; index++) {
-          var realNodeTicket = SpinalGraphService.getRealNode(
+          const realNodeTicket = SpinalGraphService.getRealNode(
             ticketListRoom[index].id
           );
 
           //Step
-          var _step = await realNodeTicket
+          const _step = await realNodeTicket
             .getParents('SpinalSystemServiceTicketHasTicket')
             .then((steps) => {
               for (const step of steps) {
@@ -107,21 +123,21 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
             });
 
           //Log Ticket Room
-          var _logs = [];
-          var logs = await serviceTicketPersonalized.getLogs(
+          const _logs = [];
+          const logs = await serviceTicketPersonalized.getLogs(
             realNodeTicket.getId().get()
           );
           for (const log of logs) {
-            let lastActionDate = log.creationDate;
+            const lastActionDate = log.creationDate;
             _logs.push(lastActionDate);
           }
 
           //Context
-          var contextRealNode = SpinalGraphService.getRealNode(
+          const contextRealNode = SpinalGraphService.getRealNode(
             realNodeTicket.getContextIds()[0]
           );
 
-          var infoTicket = {
+          const infoTicket = {
             dynamicId: realNodeTicket._server_id,
             staticId: realNodeTicket.getId().get(),
             name: realNodeTicket.getName().get(),
@@ -136,7 +152,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
             lastActionDate: _logs[_logs.length - 1],
             workflowName: contextRealNode.getName().get(),
           };
-          var infoTicketStandard = {
+          const infoTicketStandard = {
             dynamicId: realNodeTicket._server_id,
             name: realNodeTicket.getName().get(),
             step: _step.getName().get(),
@@ -152,31 +168,32 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
         // Equipement List
 
-        var equipementList = [];
-        var equipements = await room.getChildren('hasBimObject');
+        const equipementList = [];
+        const equipements = await room.getChildren('hasBimObject');
+        let _ticketListEquipemnt = [];
+        let _ticketListEquipemntStandard = [];
         for (const equipement of equipements) {
-          var _ticketListEquipemnt = [];
-          var _ticketListEquipemntStandard = [];
+          _ticketListEquipemnt = [];
+          _ticketListEquipemntStandard = [];
           //@ts-ignore
           SpinalGraphService._addNode(equipement);
-          var ticketListEquipemnt =
+          const ticketListEquipemnt =
             await serviceTicketPersonalized.getTicketsFromNode(
               equipement.getId().get()
             );
 
           for (const ticketEquipemnt of ticketListEquipemnt) {
-            var realNodeEquipementTicket = SpinalGraphService.getRealNode(
+            const realNodeEquipementTicket = SpinalGraphService.getRealNode(
               ticketEquipemnt.id
             );
 
             //Step
-            var _stepTicketEquipement = await realNodeEquipementTicket
+            const _stepTicketEquipement = await realNodeEquipementTicket
               .getParents('SpinalSystemServiceTicketHasTicket')
               .then((steps) => {
                 for (const step of steps) {
                   if (
-                    step.getType().get() ===
-                    'SpinalSystemServiceTicketTypeStep'
+                    step.getType().get() === 'SpinalSystemServiceTicketTypeStep'
                   ) {
                     return step;
                   }
@@ -184,23 +201,22 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
               });
 
             //Log Ticket Room
-            var _logsEquipement;
-            var _logsTicketEquipement = [];
-            var logs = await serviceTicketPersonalized.getLogs(
+            const _logsTicketEquipement = [];
+            const logs = await serviceTicketPersonalized.getLogs(
               realNodeEquipementTicket.getId().get()
             );
             for (const log of logs) {
-              let lastActionDate = log.creationDate;
+              const lastActionDate = log.creationDate;
               _logsTicketEquipement.push(lastActionDate);
             }
 
             //Context
-            var contextRealNodeEquipementTicket =
+            const contextRealNodeEquipementTicket =
               SpinalGraphService.getRealNode(
                 realNodeEquipementTicket.getContextIds()[0]
               );
 
-            var infoTicketEquipement = {
+            const infoTicketEquipement = {
               dynamicId: realNodeEquipementTicket._server_id,
               staticId: realNodeEquipementTicket.getId().get(),
               name: realNodeEquipementTicket.getName().get(),
@@ -216,7 +232,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
                 _logsTicketEquipement[_logsTicketEquipement.length - 1],
               workflowName: contextRealNodeEquipementTicket.getName().get(),
             };
-            var infoTicketEquipementStandard = {
+            const infoTicketEquipementStandard = {
               dynamicId: realNodeEquipementTicket._server_id,
               name: realNodeEquipementTicket.getName().get(),
               step: _stepTicketEquipement.getName().get(),
@@ -225,7 +241,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
             _ticketListEquipemnt.push(infoTicketEquipement);
             _ticketListEquipemntStandard.push(infoTicketEquipementStandard);
           }
-          var infoEquipement;
+          let infoEquipement;
           if (req.params.option === 'detail') {
             infoEquipement = {
               dynamicId: equipement._server_id,
@@ -252,19 +268,19 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         ////////////////////////////////// Alarm //////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////////
 
-        var profils = await SpinalGraphService.getChildren(
+        const profils = await SpinalGraphService.getChildren(
           room.getId().get(),
           [spinalControlPointService.ROOM_TO_CONTROL_GROUP]
         );
-        var promises = profils.map(async (profile) => {
-          var result = await SpinalGraphService.getChildren(
+        const promises = profils.map(async (profile) => {
+          const result = await SpinalGraphService.getChildren(
             profile.id.get(),
             [SpinalBmsEndpoint.relationName]
           );
-          var endpoints = await result.map(async (endpoint) => {
-            var realNode = SpinalGraphService.getRealNode(endpoint.id.get());
-            var element = await endpoint.element.load();
-            var currentValue = element.currentValue.get();
+          const endpoints = await result.map(async (endpoint) => {
+            const realNode = SpinalGraphService.getRealNode(endpoint.id.get());
+            const element = await endpoint.element.load();
+            const currentValue = element.currentValue.get();
             return {
               dynamicId: realNode._server_id,
               staticId: endpoint.id.get(),
@@ -279,8 +295,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           };
         });
 
-        var allNodes = await Promise.all(promises);
-        var _alarmList = [];
+        const allNodes = await Promise.all(promises);
+        const _alarmList = [];
         for (const node of allNodes) {
           for (const endpoint of node.endpoints) {
             if (endpoint.type === 'Alarm') {
@@ -292,11 +308,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         ///////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////// Calcul //////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////////
-        var info;
-        var Occasionally = 0;
-        var Normal = 0;
-        var Urgent = 0;
-        var allTicket = [];
+        let Occasionally = 0;
+        let Normal = 0;
+        let Urgent = 0;
+        const allTicket = [];
 
         for (const objectroom of ticketList) {
           allTicket.push(objectroom);
@@ -327,58 +342,55 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         }
 
         ////////////////////////////////// Mark //////////////////////////////////////////
-        var mark = 20;
-        var sum = 0;
+        let mark = 20;
+        let sum = 0;
         for (let index = 0; index < allTicket.length; index++) {
           sum = sum + index * allTicket[index].priority;
         }
         mark = mark - (sum + _alarmList.length);
-      } else {
-        res.status(400).send('node is not of type geographic room');
-      }
 
-      if (req.params.option === 'detail') {
-        info = {
-          dynamicId: room._server_id,
-          staticId: room.getId().get(),
-          name: room.getName().get(),
-          type: room.getType().get(),
-          mark: mark,
-          roomTicketList: ticketList,
-          equipementList: equipementList,
-          alarmList: _alarmList,
-        };
-      } else if (req.params.option === 'summary') {
-        info = {
-          dynamicId: room._server_id,
-          staticId: room.getId().get(),
-          name: room.getName().get(),
-          type: room.getType().get(),
-          mark: mark,
-          amountTicket: {
-            'Priority 0': Occasionally,
-            'Priority 1': Normal,
-            'Priority 2': Urgent,
-          },
-          amountAlarm: _alarmList.length,
-        };
-      } else if (req.params.option === 'standard') {
-        info = {
-          dynamicId: room._server_id,
-          staticId: room.getId().get(),
-          name: room.getName().get(),
-          type: room.getType().get(),
-          mark: mark,
-          roomTicketList: ticketListSatandard,
-          equipementList: equipementList,
-          alarmList: _alarmList,
-        };
+        if (req.params.option === 'detail') {
+          return res.json({
+            dynamicId: room._server_id,
+            staticId: room.getId().get(),
+            name: room.getName().get(),
+            type: room.getType().get(),
+            mark: mark,
+            roomTicketList: ticketList,
+            equipementList: equipementList,
+            alarmList: _alarmList,
+          });
+        } else if (req.params.option === 'summary') {
+          return res.json({
+            dynamicId: room._server_id,
+            staticId: room.getId().get(),
+            name: room.getName().get(),
+            type: room.getType().get(),
+            mark: mark,
+            amountTicket: {
+              'Priority 0': Occasionally,
+              'Priority 1': Normal,
+              'Priority 2': Urgent,
+            },
+            amountAlarm: _alarmList.length,
+          });
+        } else if (req.params.option === 'standard') {
+          return res.json( {
+            dynamicId: room._server_id,
+            staticId: room.getId().get(),
+            name: room.getName().get(),
+            type: room.getType().get(),
+            mark: mark,
+            roomTicketList: ticketListSatandard,
+            equipementList: equipementList,
+            alarmList: _alarmList,
+          });
+        }
+      } catch (error) {
+        if (error.code)
+          return res.status(error.code).send({ message: error.message });
+        res.status(400).send('ko');
       }
-    } catch (error) {
-      if (error.code) return res.status(error.code).send({ message: error.message });
-      res.status(400).send('ko');
     }
-    res.json(info);
-  }
   );
 };

@@ -169,7 +169,7 @@ class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
     });
   }
 
-  _waitConnection(): Promise<Boolean> {
+  _waitConnection(): Promise<boolean> {
     const deferred = Q.defer();
     const _waitConnectionLoop = (defer) => {
       const graph = this.getGraph().then((g) => {

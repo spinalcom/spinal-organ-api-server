@@ -72,8 +72,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
-      var categoryName = req.body.categoryName
+      const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
+      const categoryName = req.body.categoryName
       serviceDocumentation.addCategoryAttribute(node, categoryName);
     } catch (error) {
 

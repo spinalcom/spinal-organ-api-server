@@ -49,13 +49,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *         description: Bad request
    */
     app.get("/api/v1/geographicContext/space", async (req, res, next) => {
-        var contexts;
+        let contexts;
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
             const temp_contexts = await userGraph.getChildren("hasContext");
-            let geographicContexts = temp_contexts.filter(el => el.getType().get() === "geographicContext");
-            let geographicContext = geographicContexts[0];
+            const geographicContexts = temp_contexts.filter(el => el.getType().get() === "geographicContext");
+            const geographicContext = geographicContexts[0];
             if (geographicContext instanceof spinal_env_viewer_graph_service_1.SpinalContext) {
                 contexts = {
                     dynamicId: geographicContext._server_id,

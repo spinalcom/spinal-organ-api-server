@@ -61,21 +61,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Bad request
      */
     app.get('/api/v1/equipement/:id/ticket_list', async (req, res, next) => {
-        let nodes = [];
+        const nodes = [];
         try {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(equipement);
             if (equipement.getType().get() === 'BIMObject') {
-                var ticketList = await spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(equipement.getId().get());
+                const ticketList = await spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(equipement.getId().get());
                 for (let index = 0; index < ticketList.length; index++) {
-                    var realNodeTicket = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(ticketList[index].id);
+                    const realNodeTicket = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(ticketList[index].id);
                     //context && workflow
                     const workflow = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(realNodeTicket.getContextIds()[0]);
                     //Step
-                    var _step = await realNodeTicket
+                    const _step = await realNodeTicket
                         .getParents('SpinalSystemServiceTicketHasTicket')
                         .then((steps) => {
                         for (const step of steps) {
@@ -84,7 +84,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             }
                         }
                     });
-                    var _process = await _step
+                    const _process = await _step
                         .getParents('SpinalSystemServiceTicketHasStep')
                         .then((processes) => {
                         for (const process of processes) {
@@ -94,10 +94,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         }
                     });
                     // Notes
-                    var notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(realNodeTicket);
-                    var _notes = [];
+                    const notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(realNodeTicket);
+                    const _notes = [];
                     for (const note of notes) {
-                        let infoNote = {
+                        const infoNote = {
                             userName: note.element.username.get(),
                             date: note.element.date.get(),
                             type: note.element.type.get(),
@@ -106,12 +106,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         _notes.push(infoNote);
                     }
                     // Files
-                    var _files = [];
-                    var fileNode = (await realNodeTicket.getChildren('hasFiles'))[0];
+                    const _files = [];
+                    const fileNode = (await realNodeTicket.getChildren('hasFiles'))[0];
                     if (fileNode) {
-                        var filesfromElement = await fileNode.element.load();
+                        const filesfromElement = await fileNode.element.load();
                         for (let index = 0; index < filesfromElement.length; index++) {
-                            let infoFiles = {
+                            const infoFiles = {
                                 dynamicId: filesfromElement[index]._server_id,
                                 Name: filesfromElement[index].name.get(),
                             };
@@ -120,7 +120,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     }
                     // Logs
                     async function formatEvent(log) {
-                        var texte = '';
+                        let texte = '';
                         if (log.event == Constants_1.LOGS_EVENTS.creation) {
                             texte = 'created';
                         }
@@ -145,10 +145,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         }
                         return texte;
                     }
-                    var logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(realNodeTicket.getId().get());
-                    var _logs = [];
+                    const logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(realNodeTicket.getId().get());
+                    const _logs = [];
                     for (const log of logs) {
-                        let infoLogs = {
+                        const infoLogs = {
                             userName: log.user.name,
                             date: log.creationDate,
                             event: await formatEvent(log),
@@ -156,7 +156,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         };
                         _logs.push(infoLogs);
                     }
-                    var info = {
+                    const info = {
                         dynamicId: realNodeTicket._server_id,
                         staticId: realNodeTicket.getId().get(),
                         name: realNodeTicket.getName().get(),

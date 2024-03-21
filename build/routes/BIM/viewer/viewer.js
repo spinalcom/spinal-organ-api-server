@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-var proxy = require('express-http-proxy');
+const proxy = require('express-http-proxy');
 const morgan = require("morgan");
 function createUrl(urlStr, port) {
     urlStr = urlStr.startsWith('http') ? urlStr : `http://${urlStr}`;
@@ -32,7 +32,7 @@ function createUrl(urlStr, port) {
     return url;
 }
 module.exports = function (logger, app, spinalAPIMiddleware) {
-    let hubUrl = createUrl(spinalAPIMiddleware.config.spinalConnector.host, spinalAPIMiddleware.config.spinalConnector.port);
+    const hubUrl = createUrl(spinalAPIMiddleware.config.spinalConnector.host, spinalAPIMiddleware.config.spinalConnector.port);
     const proxyHub = proxy(hubUrl.origin, {
         limit: '1tb',
         proxyReqPathResolver: function (req) {

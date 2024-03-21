@@ -59,18 +59,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Bad request
      */
     app.get("/api/v1/endPointsGroup/:id/category_list", async (req, res, next) => {
-        let nodes = [];
+        const nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
             if (context.getType().get() === "BmsEndpointGroupContext") {
-                var listCategories = await spinal_env_viewer_plugin_group_manager_service_1.default.getCategories(context.getId().get());
+                const listCategories = await spinal_env_viewer_plugin_group_manager_service_1.default.getCategories(context.getId().get());
                 for (const category of listCategories) {
                     // @ts-ignore
                     const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(category.id.get());
-                    let info = {
+                    const info = {
                         dynamicId: realNode._server_id,
                         staticId: realNode.getId().get(),
                         name: realNode.getName().get(),

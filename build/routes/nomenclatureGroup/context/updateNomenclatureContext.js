@@ -65,11 +65,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.put("/api/v1/nomenclatureGroup/:id/update", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var groupContext = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const groupContext = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(groupContext);
             if (groupContext.getType().get() === "AttributeConfigurationGroupContext") {
-                var contextUpdated = await spinal_env_viewer_plugin_nomenclature_service_1.spinalNomenclatureService.updateContext(groupContext.getId().get(), req.body.newNomenclatureContextName);
+                const contextUpdated = await spinal_env_viewer_plugin_nomenclature_service_1.spinalNomenclatureService.updateContext(groupContext.getId().get(), req.body.newNomenclatureContextName);
                 var info = {
                     dynamicId: contextUpdated._server_id,
                     staticId: contextUpdated.getId().get(),

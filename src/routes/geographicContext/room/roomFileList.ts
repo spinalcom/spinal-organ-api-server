@@ -73,17 +73,17 @@ module.exports = function (
   app.get('/api/v1/room/:id/file_list', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(room);
       if (room.getType().get() === 'geographicRoom') {
         // Files
         var _files = [];
-        var fileNode = (await room.getChildren('hasFiles'))[0];
+        const fileNode = (await room.getChildren('hasFiles'))[0];
         if (fileNode) {
-          var filesfromElement = await fileNode.element.load();
+          const filesfromElement = await fileNode.element.load();
           for (let index = 0; index < filesfromElement.length; index++) {
-            let infoFiles = {
+            const infoFiles = {
               dynamicId: filesfromElement[index]._server_id,
               Name: filesfromElement[index].name.get(),
             };

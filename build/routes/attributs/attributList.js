@@ -31,11 +31,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/node/:id/attributsList", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            let node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            let childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
             const prom = childrens.map(async (child) => {
-                let attributs = await child.element.load();
-                let info = {
+                const attributs = await child.element.load();
+                const info = {
                     dynamicId: child._server_id,
                     staticId: child.getId().get(),
                     name: child.getName().get(),

@@ -60,16 +60,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get('/api/v1/node/:id/file_list', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             // Files
             var _files = [];
-            var fileNode = (await node.getChildren('hasFiles'))[0];
+            const fileNode = (await node.getChildren('hasFiles'))[0];
             if (fileNode) {
-                var filesfromElement = await fileNode.element.load();
+                const filesfromElement = await fileNode.element.load();
                 for (let index = 0; index < filesfromElement.length; index++) {
-                    let infoFiles = {
+                    const infoFiles = {
                         dynamicId: filesfromElement[index]._server_id,
                         Name: filesfromElement[index].name.get(),
                     };

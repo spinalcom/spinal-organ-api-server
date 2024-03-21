@@ -49,22 +49,22 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      */
     app.get("/api/v1/building/read", async (req, res, next) => {
         try {
-            var address;
-            var sommes = 0;
+            let address;
+            let sommes = 0;
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
             const contexts = await graph.getChildren("hasContext");
             // var geographicContexts = await SpinalGraphService.getContextWithType("geographicContext");
-            var geographicContexts = contexts.filter(el => el.getType().get() === "geographicContext");
-            var building = await geographicContexts[0].getChildren("hasGeographicBuilding");
-            var floors = await building[0].getChildren("hasGeographicFloor");
+            const geographicContexts = contexts.filter(el => el.getType().get() === "geographicContext");
+            const building = await geographicContexts[0].getChildren("hasGeographicBuilding");
+            const floors = await building[0].getChildren("hasGeographicFloor");
             for (let index = 0; index < floors.length; index++) {
-                var rooms = await floors[index].getChildren("hasGeographicRoom");
+                const rooms = await floors[index].getChildren("hasGeographicRoom");
                 for (const room of rooms) {
-                    let categories = await room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+                    const categories = await room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
                     for (const child of categories) {
                         if (child.getName().get() === "Spatial") {
-                            let attributs = await child.element.load();
+                            const attributs = await child.element.load();
                             for (const attribut of attributs.get()) {
                                 if (attribut.label === "area") {
                                     sommes = sommes + attribut.value;
@@ -74,10 +74,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     }
                 }
             }
-            let categories = await building[0].getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+            const categories = await building[0].getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
             for (const child of categories) {
                 if (child.getName().get() === "Spinal Building Information") {
-                    let attributs = await child.element.load();
+                    const attributs = await child.element.load();
                     for (const attribut of attributs.get()) {
                         if (attribut.label === "Adresse") {
                             address = attribut.value;

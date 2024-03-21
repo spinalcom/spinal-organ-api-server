@@ -67,18 +67,18 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/command/floor/:id/roomList_command_enable", async (req, res, next) => {
 
-    let nodes = [];
+    const nodes = [];
     try {
       const profileId = getProfileId(req);
 
-      var floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(floor)
 
-      var rooms = await floor.getChildren("hasGeographicRoom")
+      const rooms = await floor.getChildren("hasGeographicRoom")
       for (const room of rooms) {
         var info;
-        var controlPoints = await room.getChildren('hasControlPoints');
+        const controlPoints = await room.getChildren('hasControlPoints');
         for (const controlPoint of controlPoints) {
           if (controlPoint.getName().get() === "Command") {
             info = {

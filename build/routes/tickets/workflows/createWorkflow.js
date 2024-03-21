@@ -58,7 +58,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
             const graph = await spinalAPIMiddleware.getGraph();
-            var childrens = await graph.getChildren("hasContext");
+            const childrens = await graph.getChildren("hasContext");
             for (const child of childrens) {
                 if (child.getName().get() === req.body.nameWorkflow) {
                     return res.status(400).send('the name context already exists');

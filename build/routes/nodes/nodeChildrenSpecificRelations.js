@@ -73,7 +73,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!Array.isArray(relations)) {
                 return res.status(400).send("Invalid relations format; an array is expected");
             }
-            var childrenInfo = await (0, getChildrenNodesInfo_1.getChildrenNodesInfo)(spinalAPIMiddleware, profileId, nodeId, relations);
+            const childrenInfo = await (0, getChildrenNodesInfo_1.getChildrenNodesInfo)(spinalAPIMiddleware, profileId, nodeId, relations);
             res.json(childrenInfo);
         }
         catch (error) {

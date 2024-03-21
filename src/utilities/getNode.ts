@@ -28,7 +28,7 @@ import { ISpinalAPIMiddleware } from 'src/interfaces';
 async function getNode(spinalAPIMiddleware: ISpinalAPIMiddleware, dynamicId: string, staticId: string, profileId: string): Promise<SpinalNode | undefined> {
   if (dynamicId) {
     try {
-      var node: SpinalNode<any> = await spinalAPIMiddleware.load(
+      const node: SpinalNode<any> = await spinalAPIMiddleware.load(
         parseInt(dynamicId, 10), profileId
       );
       return node

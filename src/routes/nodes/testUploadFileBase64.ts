@@ -68,11 +68,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: sp
 
 
       const fs = require('fs');
-      var base64 = req.body.imageString;
-      var data = base64.replace(/^data:image\/\w+;base64,/, "");
-      var ReadableData = require('stream').Readable
+      const base64 = req.body.imageString;
+      const data = base64.replace(/^data:image\/\w+;base64,/, "");
+      const ReadableData = require('stream').Readable
       const imageBufferData = Buffer.from(data, 'base64')
-      var streamObj = new ReadableData()
+      const streamObj = new ReadableData()
       streamObj.push(imageBufferData)
       streamObj.push(null)
       streamObj.pipe(fs.createWriteStream('testImage1.jpg'));

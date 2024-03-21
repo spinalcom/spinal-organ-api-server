@@ -54,14 +54,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  */
 
   app.get("/api/v1/geographicContext/space", async (req, res, next) => {
-    var contexts: ContextTree;
+    let contexts: ContextTree;
     try {
       const profileId = getProfileId(req);
       const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
       const temp_contexts = await userGraph.getChildren("hasContext");
 
-      let geographicContexts = temp_contexts.filter(el => el.getType().get() === "geographicContext");
-      let geographicContext = geographicContexts[0];
+      const geographicContexts = temp_contexts.filter(el => el.getType().get() === "geographicContext");
+      const geographicContext = geographicContexts[0];
       if (geographicContext instanceof SpinalContext) {
         contexts = {
           dynamicId: geographicContext._server_id,

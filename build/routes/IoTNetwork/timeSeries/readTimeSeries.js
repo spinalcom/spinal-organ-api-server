@@ -31,7 +31,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/endpoint/:id/timeSeries/read/:begin/:end", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             if ((0, dateFunctions_1.verifDate)(req.params.begin) === 1 || (0, dateFunctions_1.verifDate)(req.params.end) === 1) {
@@ -42,7 +42,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     start: (0, dateFunctions_1.verifDate)(req.params.begin),
                     end: (0, dateFunctions_1.verifDate)(req.params.end)
                 };
-                var datas = await (0, spinalTimeSeries_1.default)().getData(node.getId().get(), timeSeriesIntervalDate);
+                const datas = await (0, spinalTimeSeries_1.default)().getData(node.getId().get(), timeSeriesIntervalDate);
+                return res.json(datas);
             }
         }
         catch (error) {
@@ -50,7 +51,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             return res.status(400).send(error.message);
         }
-        res.json(datas);
     });
 };
 //# sourceMappingURL=readTimeSeries.js.map

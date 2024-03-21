@@ -71,11 +71,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         let info;
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             SpinalGraphService._addNode(node);
-            var timeseries = await (0, spinalTimeSeries_1.default)().getOrCreateTimeSeries(node.getId().get());
+            const timeseries = await (0, spinalTimeSeries_1.default)().getOrCreateTimeSeries(node.getId().get());
             await timeseries.push(req.body.newValue);
-            var element = await node.element.load();
+            const element = await node.element.load();
             element.currentValue.set(req.body.newValue);
             node.info.directModificationDate.set(Date.now());
             info = { NewValue: element.currentValue.get() };

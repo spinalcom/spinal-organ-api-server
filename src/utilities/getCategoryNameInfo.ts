@@ -9,7 +9,7 @@ async function getCategoryNameInfo(
   dynamicId: number,
   categoryName: string
 ) {
-  let node: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
+  const node: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
   const result = await serviceDocumentation._categoryExist(node, categoryName);
   if (result === undefined) {
     throw new Error('category not found in node');
@@ -29,7 +29,7 @@ async function getCategoryNamesInfo(
   dynamicId: number,
   categoryNames: string[]
 ) {
-  let node: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
+  const node: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
   const result = [];
   for (const categoryName of categoryNames) {
     const categoryNode = await serviceDocumentation._categoryExist(

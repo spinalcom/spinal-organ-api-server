@@ -38,13 +38,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/relation/:id/parent_node", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var parent;
+            let parent;
             var info;
-            var relation = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const relation = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             if (relation instanceof spinal_model_graph_1.SpinalRelationLstPtr || relation instanceof spinal_model_graph_1.SpinalRelationPtrLst || relation instanceof spinal_model_graph_1.SpinalRelationRef) {
                 parent = await relation.getParent();
-                var children_node = (0, corseChildrenAndParentNode_1.childrensNode)(parent);
-                var parent_node = await (0, corseChildrenAndParentNode_1.parentsNode)(parent);
+                const children_node = (0, corseChildrenAndParentNode_1.childrensNode)(parent);
+                const parent_node = await (0, corseChildrenAndParentNode_1.parentsNode)(parent);
                 info = {
                     dynamicId: parent._server_id,
                     staticId: parent.getId().get(),

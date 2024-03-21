@@ -74,11 +74,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
       if (context.getType().get() === "AttributeConfigurationGroupContext") {
-        var category = await spinalNomenclatureService.createCategory(req.body.categoryName, req.body.iconName, context.getId().get())
+        const category = await spinalNomenclatureService.createCategory(req.body.categoryName, req.body.iconName, context.getId().get())
         var info = {
           dynamicId: category._server_id,
           staticId: category.getId().get(),

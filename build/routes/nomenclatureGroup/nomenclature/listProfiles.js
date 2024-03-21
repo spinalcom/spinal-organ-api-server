@@ -61,7 +61,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/nomenclatureGroup/:contextId/profile_list", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
             if (context.getType().get() === "AttributeConfigurationGroupContext") {
@@ -69,12 +69,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 listProfiles = Array.isArray(listProfiles) ? listProfiles : [listProfiles];
                 var profile_tab = [];
                 for (const profile of listProfiles) {
-                    let _profile = profile;
-                    var categories_tab = [];
+                    const _profile = profile;
+                    const categories_tab = [];
                     for (const category of _profile.categories) {
-                        var attr_tab = [];
+                        const attr_tab = [];
                         for (const attr of category.attributes) {
-                            let info_attr = {
+                            const info_attr = {
                                 name: attr.name,
                                 standard_name: attr.standard_name,
                                 type: attr.type,
@@ -84,7 +84,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             };
                             attr_tab.push(info_attr);
                         }
-                        let info_category = {
+                        const info_category = {
                             id: category.id,
                             name: category.name,
                             standard_name: category.standard_name,
@@ -95,7 +95,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(_profile.id);
                     const groupProfile = await realNode.getParents("groupHasAttributeConfiguration");
                     const categoryProfile = await groupProfile[0].getParents("hasGroup");
-                    let info_profile = {
+                    const info_profile = {
                         dynamicId: realNode._server_id,
                         staticId: realNode.getId().get(),
                         name: _profile.name,

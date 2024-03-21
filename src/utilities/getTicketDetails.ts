@@ -13,11 +13,11 @@ async function getTicketDetails(
   ticketId: number
 ) {
   await spinalAPIMiddleware.getGraph();
-  var _ticket: SpinalNode<any> = await spinalAPIMiddleware.load(ticketId,profileId);
+  const _ticket: SpinalNode<any> = await spinalAPIMiddleware.load(ticketId,profileId);
   //@ts-ignore
   SpinalGraphService._addNode(_ticket);
   //Step
-  var _step = await _ticket
+  const _step = await _ticket
     .getParents('SpinalSystemServiceTicketHasTicket')
     .then((steps) => {
       for (const step of steps) {
@@ -26,7 +26,7 @@ async function getTicketDetails(
         }
       }
     });
-  var _process = await _step
+  const _process = await _step
     .getParents('SpinalSystemServiceTicketHasStep')
     .then((processes) => {
       for (const process of processes) {
@@ -45,15 +45,15 @@ async function getTicketDetails(
   }
 
   //Context
-  var contextRealNode = SpinalGraphService.getRealNode(
+  const contextRealNode = SpinalGraphService.getRealNode(
     _ticket.getContextIds()[0]
   );
 
   // Notes
-  var notes = await serviceDocumentation.getNotes(_ticket);
-  var _notes = [];
+  const notes = await serviceDocumentation.getNotes(_ticket);
+  const _notes = [];
   for (const note of notes) {
-    let infoNote = {
+    const infoNote = {
       userName:
         note.element.username === undefined ? '' : note.element.username.get(),
       date: note.element.date.get(),
@@ -64,12 +64,12 @@ async function getTicketDetails(
   }
 
   // Files
-  var _files = [];
-  var fileNode = (await _ticket.getChildren('hasFiles'))[0];
+  const _files = [];
+  const fileNode = (await _ticket.getChildren('hasFiles'))[0];
   if (fileNode) {
-    var filesfromElement = await fileNode.element.load();
+    const filesfromElement = await fileNode.element.load();
     for (let index = 0; index < filesfromElement.length; index++) {
-      let infoFiles = {
+      const infoFiles = {
         dynamicId: filesfromElement[index]._server_id,
         Name: filesfromElement[index].name.get(),
       };
@@ -79,7 +79,7 @@ async function getTicketDetails(
 
   // Logs
   async function formatEvent(log) {
-    var texte = '';
+    let texte = '';
     if (log.event == LOGS_EVENTS.creation) {
       texte = 'created';
     } else if (log.event == LOGS_EVENTS.archived) {
@@ -99,11 +99,11 @@ async function getTicketDetails(
     return texte;
   }
 
-  var logs = await serviceTicketPersonalized.getLogs(_ticket.getId().get());
+  const logs = await serviceTicketPersonalized.getLogs(_ticket.getId().get());
 
-  var _logs = [];
+  const _logs = [];
   for (const log of logs) {
-    let infoLogs = {
+    const infoLogs = {
       userName: log.user.name,
       date: log.creationDate,
       event: await formatEvent(log),
@@ -113,18 +113,18 @@ async function getTicketDetails(
   }
 
   // element Selected
-  var elementSelected: SpinalNode<any>;
+  let elementSelected: SpinalNode<any>;
   const parentsTicket = await _ticket.getParents(
     'SpinalSystemServiceTicketHasTicket'
   );
   for (const parent of parentsTicket) {
-    if (parent.getType().get() !== 'SpinalSystemServiceTicketTypeStep') {
+    if(['SpinalSystemServiceTicketTypeStep', 'analyticOutputs'].includes(parent.getType().get())) {
       //@ts-ignore
       SpinalGraphService._addNode(parent);
       elementSelected = parent;
     }
   }
-  var info = {
+  const info = {
     dynamicId: _ticket._server_id,
     staticId: _ticket.getId().get(),
     name: _ticket.getName().get(),

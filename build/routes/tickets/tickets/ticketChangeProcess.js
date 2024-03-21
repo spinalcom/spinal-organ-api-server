@@ -65,10 +65,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.put("/api/v1/ticket/:ticketId/change_process", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var process = await spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10), profileId);
+            const process = await spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(process);
-            var ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
+            const ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(ticket);
             await spinal_service_ticket_1.serviceTicketPersonalized.changeTicketProcess(ticket.getId().get(), process.getId().get());

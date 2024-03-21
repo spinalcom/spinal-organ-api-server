@@ -67,16 +67,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const profileId = getProfileId(req);
 
       var nodes = [];
-      var equipement: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const equipement: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(equipement)
       if (equipement.getType().get() === "BIMObject") {
-        var listEvents = await SpinalEventService.getEvents(equipement.getId().get())
+        const listEvents = await SpinalEventService.getEvents(equipement.getId().get())
         for (const child of listEvents) {
           // @ts-ignore
           const _child = SpinalGraphService.getRealNode(child.id.get())
           if (_child.getType().get() === "SpinalEvent") {
-            let info = {
+            const info = {
               dynamicId: _child._server_id,
               staticId: _child.getId()?.get(),
               name: _child.getName()?.get(),

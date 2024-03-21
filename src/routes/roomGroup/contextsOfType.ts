@@ -62,16 +62,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/groupContext/contextsOfType/:type", async (req, res, next) => {
 
-    let nodes = [];
+    const nodes = [];
     try {
 
       const profileId = getProfileId(req);
       const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
-      var groupContexts = await groupManagerService.getGroupContexts(req.params.type, graph);
+      const groupContexts = await groupManagerService.getGroupContexts(req.params.type, graph);
 
       for (let index = 0; index < groupContexts.length; index++) {
         const realNode = SpinalGraphService.getRealNode(groupContexts[index].id)
-        let info = {
+        const info = {
           dynamicId: realNode._server_id,
           staticId: realNode.getId().get(),
           name: realNode.getName().get(),

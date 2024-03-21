@@ -79,10 +79,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             // Map each id to a promise
             const promises = ids.map(async (id) => {
                 try {
-                    var node = await spinalAPIMiddleware.load(id, profileId);
+                    const node = await spinalAPIMiddleware.load(id, profileId);
                     // @ts-ignore
                     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-                    var element = await node.element.load();
+                    const element = await node.element.load();
                     return { dynamicId: id, currentValue: element.currentValue.get() };
                 }
                 catch (error) {

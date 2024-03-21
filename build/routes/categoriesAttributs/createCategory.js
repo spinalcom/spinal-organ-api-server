@@ -64,8 +64,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post("/api/v1/node/:id/category/create", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            var categoryName = req.body.categoryName;
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const categoryName = req.body.categoryName;
             spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addCategoryAttribute(node, categoryName);
         }
         catch (error) {

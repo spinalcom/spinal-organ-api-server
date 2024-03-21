@@ -81,34 +81,34 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     try {
       const profileId = getProfileId(req);
       var nodes = [];
-      var room: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const room: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(room)
       if (room.getType().get() === "geographicRoom") {
         if (req.body.period === "all") {
-          let listEvents = await SpinalEventService.getEvents(room.getId().get())
+          const listEvents = await SpinalEventService.getEvents(room.getId().get())
           ListEvents(listEvents);
 
         } else if (req.body.period === "today") {
 
-          var start = new Date();
+          const start = new Date();
           start.setHours(2, 0, 0, 0);
-          var end = new Date();
+          const end = new Date();
           end.setHours(25, 59, 59, 999);
 
-          let listEvents = await SpinalEventService.getEvents(room.getId().get(), start, end);
+          const listEvents = await SpinalEventService.getEvents(room.getId().get(), start, end);
           ListEvents(listEvents);
         }
 
         else if (req.body.period === undefined || req.body.period === "week") {
-          var curr = new Date; // get current date
-          var first = (curr.getDate() - curr.getDay()) + 1; // First day is the day of the month - the day of the week
-          var last = first + 6; // last day is the first day + 6
-          var firstday = new Date(curr.setDate(first));
+          const curr = new Date; // get current date
+          const first = (curr.getDate() - curr.getDay()) + 1; // First day is the day of the month - the day of the week
+          const last = first + 6; // last day is the first day + 6
+          const firstday = new Date(curr.setDate(first));
           firstday.setHours(2, 0, 0, 0).toString();
-          var lastday = new Date(curr.setDate(last));
+          const lastday = new Date(curr.setDate(last));
           lastday.setHours(25, 59, 59, 999).toString();
-          let listEvents = await SpinalEventService.getEvents(room.getId().get(), firstday, lastday);
+          const listEvents = await SpinalEventService.getEvents(room.getId().get(), firstday, lastday);
           ListEvents(listEvents);
         }
 
@@ -118,7 +118,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           } else {
             const start = sendDate(req.body.startDate)
             const end = sendDate(req.body.endDate)
-            let listEvents = await SpinalEventService.getEvents(room.getId().get(), start.toDate(), end.toDate());
+            const listEvents = await SpinalEventService.getEvents(room.getId().get(), start.toDate(), end.toDate());
             ListEvents(listEvents);
           }
         }
@@ -133,7 +133,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           if (_child.getType().get() === "SpinalEvent") {
             console.log(_child);
 
-            let info = {
+            const info = {
               dynamicId: _child._server_id,
               staticId: _child.getId()?.get(),
               name: _child.getName()?.get(),

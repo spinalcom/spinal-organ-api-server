@@ -93,18 +93,18 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.put("/api/v1/event/:eventId/update", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId);
+      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
 
-      var event: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.eventId, 10), profileId);
+      const event: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.eventId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(event)
 
 
       if (context instanceof SpinalContext && event.belongsToContext(context)) {
         if (context.getType().get() === "SpinalEventGroupContext") {
-          let newEventInfo = {
+          const newEventInfo = {
             name: req.body.name,
             nodeId: event.info.nodeId,
             repeat: req.body.repeat,

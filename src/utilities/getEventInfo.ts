@@ -10,14 +10,14 @@ async function getEventInfo(
   profileId:string,
   dynamicId: number
 ) {
-  var event: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
+  const event: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
   //@ts-ignore
   SpinalGraphService._addNode(event);
   if (!(event.getType().get() === 'SpinalEvent')) {
     throw new Error('node is not of type SpinalEvent');
   }
 
-  var info: Event = {
+  const info: Event = {
     dynamicId: event._server_id,
     staticId: event.getId().get(),
     name: event.getName().get(),

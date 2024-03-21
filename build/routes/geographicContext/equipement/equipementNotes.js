@@ -61,14 +61,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get('/api/v1/equipement/:id/note_list', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(equipement);
             if (equipement.getType().get() === "BIMObject") {
                 var _notes = [];
-                var notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(equipement);
+                const notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(equipement);
                 for (const note of notes) {
-                    let infoNote = {
+                    const infoNote = {
                         date: parseInt(note.element.date.get()),
                         type: note.element.type.get(),
                         message: note.element.message.get()

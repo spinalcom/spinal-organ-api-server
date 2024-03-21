@@ -85,19 +85,19 @@ module.exports = function (
     '/api/v1/groupContext/:contextId/category/:categoryId/group/:groupId/read',
     async (req, res, next) => {
       try {
-        var context: SpinalNode<any> = await spinalAPIMiddleware.load(
+        const context: SpinalNode<any> = await spinalAPIMiddleware.load(
           parseInt(req.params.contextId, 10)
         );
         //@ts-ignore
         SpinalGraphService._addNode(context);
 
-        var category: SpinalNode<any> = await spinalAPIMiddleware.load(
+        const category: SpinalNode<any> = await spinalAPIMiddleware.load(
           parseInt(req.params.categoryId, 10)
         );
         //@ts-ignore
         SpinalGraphService._addNode(category);
 
-        var group: SpinalNode<any> = await spinalAPIMiddleware.load(
+        const group: SpinalNode<any> = await spinalAPIMiddleware.load(
           parseInt(req.params.groupId, 10)
         );
         //@ts-ignore

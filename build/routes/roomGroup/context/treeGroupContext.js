@@ -57,10 +57,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *         description: Bad request
    */
     app.get("/api/v1/roomsGroup/:id/tree", async (req, res, next) => {
-        var contexts;
+        let contexts;
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
             if (context.getType().get() === "geographicRoomGroupContext") {

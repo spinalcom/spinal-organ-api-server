@@ -57,7 +57,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.delete("/api/v1/IoTNetworkContext/:id/delete", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      let IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const IoTNetwork = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       if (IoTNetwork.getType().get() === "Network") {
         IoTNetwork.removeFromGraph();
       }

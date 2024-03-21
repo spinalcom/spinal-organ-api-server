@@ -64,7 +64,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         let info;
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            let node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
             const result = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation._categoryExist(node, req.params.categoryName);
             if (result === undefined) {
                 res.status(400).send("category not found in node");

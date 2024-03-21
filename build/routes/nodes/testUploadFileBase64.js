@@ -58,11 +58,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post("/api/v1/node/convert_base_64", async (req, res, next) => {
         try {
             const fs = require('fs');
-            var base64 = req.body.imageString;
-            var data = base64.replace(/^data:image\/\w+;base64,/, "");
-            var ReadableData = require('stream').Readable;
+            const base64 = req.body.imageString;
+            const data = base64.replace(/^data:image\/\w+;base64,/, "");
+            const ReadableData = require('stream').Readable;
             const imageBufferData = Buffer.from(data, 'base64');
-            var streamObj = new ReadableData();
+            const streamObj = new ReadableData();
             streamObj.push(imageBufferData);
             streamObj.push(null);
             streamObj.pipe(fs.createWriteStream('testImage1.jpg'));

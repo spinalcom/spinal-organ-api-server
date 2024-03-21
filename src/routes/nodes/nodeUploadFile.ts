@@ -82,7 +82,7 @@ module.exports = function (
   app.post('/api/v1/node/:id/upload_file', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var node: SpinalNode<any> = await spinalAPIMiddleware.load(
+      const node: SpinalNode<any> = await spinalAPIMiddleware.load(
         parseInt(req.params.id, 10), profileId
       );
       //@ts-ignore
@@ -97,9 +97,9 @@ module.exports = function (
       } else {
         //Use the name of the input field (i.e. "file") to retrieve the uploaded file
         // @ts-ignore
-        let file = req.files.file;
+        const file = req.files.file;
         //Use the mv() method to place the file in upload directory (i.e. "uploads")
-        var data = {
+        const data = {
           name: file.name,
           buffer: file.data,
         };

@@ -3,11 +3,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getTicketEntityInfo = void 0;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 async function getTicketEntityInfo(spinalAPIMiddleware, profileId, ticketId) {
-    var _ticket = await spinalAPIMiddleware.load(ticketId, profileId);
+    const _ticket = await spinalAPIMiddleware.load(ticketId, profileId);
     //@ts-ignore
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(_ticket);
-    var elementSelected = await spinalAPIMiddleware.loadPtr(_ticket.info.elementSelected);
-    var info = {
+    const elementSelected = await spinalAPIMiddleware.loadPtr(_ticket.info.elementSelected);
+    const info = {
         dynamicId: elementSelected._server_id,
         staticId: elementSelected.getId().get(),
         name: elementSelected.getName().get(),

@@ -71,8 +71,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.get("/api/v1/IoTNetworkContext/:IoTNetworkId/node/:nodeId/find", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var IoTNetwork: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IoTNetworkId, 10), profileId);
-      var node = SpinalGraphService.getRealNode(req.params.nodeId);
+      const IoTNetwork: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IoTNetworkId, 10), profileId);
+      let node = SpinalGraphService.getRealNode(req.params.nodeId);
 
 
       if (IoTNetwork.getType().get() === "Network" && typeof node === "undefined") {

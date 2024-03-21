@@ -47,26 +47,26 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Bad request
      */
     app.get("/api/v1/context/:contextId/node/:nodeId/nodesOfType/:type", async (req, res, next) => {
-        let nodes = [];
+        const nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var contextNode = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
-            var node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
-            var SpinalContextNodeId = contextNode.getId().get();
+            const contextNode = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
+            const SpinalContextNodeId = contextNode.getId().get();
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(contextNode);
-            var SpinalNodeId = node.getId().get();
+            const SpinalNodeId = node.getId().get();
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            var type_list = await spinal_env_viewer_graph_service_1.SpinalGraphService.browseAndClassifyByTypeInContext(SpinalNodeId, SpinalContextNodeId);
+            const type_list = await spinal_env_viewer_graph_service_1.SpinalGraphService.browseAndClassifyByTypeInContext(SpinalNodeId, SpinalContextNodeId);
             if (req.params.type in type_list.data) {
-                let model_list = type_list.data[req.params.type];
+                const model_list = type_list.data[req.params.type];
                 if (contextNode instanceof spinal_env_viewer_graph_service_1.SpinalContext && node.belongsToContext(contextNode)) {
                     for (let index = 0; index < model_list.length; index++) {
                         // hacky way use realnode when fiexd
                         const realNode = model_list[index]._parents[0];
                         // dynamicId: SpinalGraphService.getRealNode(model_list[index].id.get())._server_id,
-                        let info = {
+                        const info = {
                             dynamicId: realNode._server_id,
                             staticId: model_list[index].id.get(),
                             name: model_list[index].name.get(),

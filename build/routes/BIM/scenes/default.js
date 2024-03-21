@@ -70,7 +70,7 @@ module.exports = function (logger, app) {
                         sc.options = [];
                         for (let idx = 0; idx < scene.info.options.length; idx++) {
                             const option = scene.info.options[idx];
-                            let urn = option.urn
+                            const urn = option.urn
                                 .get()
                                 .replace(/http:\/\/.*viewerForgeFiles\//, '');
                             const opt = { urn };

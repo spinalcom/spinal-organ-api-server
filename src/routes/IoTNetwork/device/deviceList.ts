@@ -67,16 +67,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/Network/:id/device_list", async (req, res, next) => {
 
-    let nodes = [];
+    const nodes = [];
     try {
       const profileId = getProfileId(req);
-      let network = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const network = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(network);
-      var devices = await network.getChildren("hasBmsDevice");
+      const devices = await network.getChildren("hasBmsDevice");
 
       for (const device of devices) {
-        let info: IoTNetwork = {
+        const info: IoTNetwork = {
           dynamicId: device._server_id,
           staticId: device.getId().get(),
           name: device.getName().get(),

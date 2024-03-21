@@ -30,8 +30,8 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerJSDoc = require("swagger-jsdoc");
 const swaggerOption_1 = require("./swaggerOption");
 const redoc = require('redoc-express');
-let swaggerDocs = swaggerJSDoc(swaggerOption_1.swaggerOption);
-let swaggerUiOpts = {
+const swaggerDocs = swaggerJSDoc(swaggerOption_1.swaggerOption);
+const swaggerUiOpts = {
     explorer: true,
     openapi: '3.0.1',
     produces: ['application/json'],

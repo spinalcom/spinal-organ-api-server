@@ -82,18 +82,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post("/api/v1/node/:IdNode/category/:IdCategory/attribut/create", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            let node = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
-            var test = false;
+            const node = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
+            let test = false;
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            let category = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            let attributeLabel = req.body.attributeLabel;
-            let attributeValue = req.body.attributeValue;
-            let attributeType = req.body.attributeType;
-            let attributeUnit = req.body.attributeUnit;
-            let childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+            const attributeLabel = req.body.attributeLabel;
+            const attributeValue = req.body.attributeValue;
+            const attributeType = req.body.attributeType;
+            const attributeUnit = req.body.attributeUnit;
+            const childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
             for (const children of childrens) {
                 if (children.getId().get() === category.getId().get()) {
                     test = true;

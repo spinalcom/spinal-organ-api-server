@@ -73,23 +73,23 @@ module.exports = function (
    *         description: Bad request
    */
   app.get('/api/v1/equipement/:id/ticket_list', async (req, res, next) => {
-    let nodes = [];
+    const nodes = [];
     try {
       await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);
-      var equipement = await spinalAPIMiddleware.load(
+      const equipement = await spinalAPIMiddleware.load(
         parseInt(req.params.id, 10), profileId
       );
       //@ts-ignore
       SpinalGraphService._addNode(equipement);
 
       if (equipement.getType().get() === 'BIMObject') {
-        var ticketList = await serviceTicketPersonalized.getTicketsFromNode(
+        const ticketList = await serviceTicketPersonalized.getTicketsFromNode(
           equipement.getId().get()
         );
 
         for (let index = 0; index < ticketList.length; index++) {
-          var realNodeTicket = SpinalGraphService.getRealNode(
+          const realNodeTicket = SpinalGraphService.getRealNode(
             ticketList[index].id
           );
           //context && workflow
@@ -98,7 +98,7 @@ module.exports = function (
           );
 
           //Step
-          var _step = await realNodeTicket
+          const _step = await realNodeTicket
             .getParents('SpinalSystemServiceTicketHasTicket')
             .then((steps) => {
               for (const step of steps) {
@@ -110,7 +110,7 @@ module.exports = function (
               }
             });
 
-          var _process = await _step
+          const _process = await _step
             .getParents('SpinalSystemServiceTicketHasStep')
             .then((processes) => {
               for (const process of processes) {
@@ -121,10 +121,10 @@ module.exports = function (
             });
 
           // Notes
-          var notes = await serviceDocumentation.getNotes(realNodeTicket);
-          var _notes = [];
+          const notes = await serviceDocumentation.getNotes(realNodeTicket);
+          const _notes = [];
           for (const note of notes) {
-            let infoNote = {
+            const infoNote = {
               userName: note.element.username.get(),
               date: note.element.date.get(),
               type: note.element.type.get(),
@@ -134,12 +134,12 @@ module.exports = function (
           }
 
           // Files
-          var _files = [];
-          var fileNode = (await realNodeTicket.getChildren('hasFiles'))[0];
+          const _files = [];
+          const fileNode = (await realNodeTicket.getChildren('hasFiles'))[0];
           if (fileNode) {
-            var filesfromElement = await fileNode.element.load();
+            const filesfromElement = await fileNode.element.load();
             for (let index = 0; index < filesfromElement.length; index++) {
-              let infoFiles = {
+              const infoFiles = {
                 dynamicId: filesfromElement[index]._server_id,
                 Name: filesfromElement[index].name.get(),
               };
@@ -149,7 +149,7 @@ module.exports = function (
 
           // Logs
           async function formatEvent(log) {
-            var texte = '';
+            let texte = '';
             if (log.event == LOGS_EVENTS.creation) {
               texte = 'created';
             } else if (log.event == LOGS_EVENTS.archived) {
@@ -174,13 +174,13 @@ module.exports = function (
             return texte;
           }
 
-          var logs = await serviceTicketPersonalized.getLogs(
+          const logs = await serviceTicketPersonalized.getLogs(
             realNodeTicket.getId().get()
           );
 
-          var _logs = [];
+          const _logs = [];
           for (const log of logs) {
-            let infoLogs = {
+            const infoLogs = {
               userName: log.user.name,
               date: log.creationDate,
               event: await formatEvent(log),
@@ -189,7 +189,7 @@ module.exports = function (
             _logs.push(infoLogs);
           }
 
-          var info = {
+          const info = {
             dynamicId: realNodeTicket._server_id,
             staticId: realNodeTicket.getId().get(),
             name: realNodeTicket.getName().get(),

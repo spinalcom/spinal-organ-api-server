@@ -65,14 +65,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     try {
       const profileId = getProfileId(req);
 
-      var equipement: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const equipement: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(equipement)
       if (equipement.getType().get() === "BIMObject") {
         var _notes = []
-        var notes = await serviceDocumentation.getNotes(equipement)
+        const notes = await serviceDocumentation.getNotes(equipement)
         for (const note of notes) {
-          let infoNote: Note = {
+          const infoNote: Note = {
             date: parseInt(note.element.date.get()),
             type: note.element.type.get(),
             message: note.element.message.get()
