@@ -22,7 +22,6 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { getAttributeListInfo } from '../../utilities/getAttributeListInfo'
 import { ISpinalAPIMiddleware } from '../../interfaces';
@@ -30,7 +29,7 @@ import { getProfileId } from "../../utilities/requestUtilities";
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
 /**
  * @swagger

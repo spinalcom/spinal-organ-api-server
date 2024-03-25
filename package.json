@@ -9,7 +9,7 @@
     "test": "NODE_ENV=test mocha --check-leaks -r ts-node/register -r tsconfig-paths/register \"test/**/*.spec.ts\""
   },
   "license": "UNLICENSED",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "build/lib/index.js",
   "dependencies": {
     "body-parser": "^1.19.0",
@@ -46,7 +46,7 @@
     "spinal-lib-organ-monitoring": "git+https://github.com/spinalcom/spinal-lib-organ-monitoring.git",
     "spinal-model-graph": "git+https://github.com/spinalcom/spinal-model-graph.git",
     "spinal-model-timeseries": "git+https://github.com/spinalcom/spinal-model-timeseries.git",
-    "spinal-organ-api-pubsub": "git+https://github.com/spinalcom/spinal-organ-api-pubsub.git#bos_config",
+    "spinal-organ-api-pubsub": "git+https://github.com/spinalcom/spinal-organ-api-pubsub.git",
     "spinal-organ-network_sample": "git+https://github.com/spinalcom/spinal-organ-network_sample.git",
     "spinal-service-ticket": "git+https://github.com/spinalcom/spinal-service-ticket.git",
     "spinal-service-user": "git+https://github.com/spinalcom/spinal-service-user.git",

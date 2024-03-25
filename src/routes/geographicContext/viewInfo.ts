@@ -21,7 +21,7 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import SpinalAPIMiddleware from '../../spinalAPIMiddleware';
+// import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import {
   SpinalNode,

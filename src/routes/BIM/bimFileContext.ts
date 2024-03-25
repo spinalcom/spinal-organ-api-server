@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import spinalAPIMiddleware from '../../spinalAPIMiddleware';
+// import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { Context, BIMFileContext, BIMFileContextItems, } from '../contexts/interfacesContexts';
 import { ISpinalAPIMiddleware } from '../../interfaces';

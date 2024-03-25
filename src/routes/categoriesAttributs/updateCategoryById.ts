@@ -23,7 +23,7 @@
  */
 
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import spinalAPIMiddleware from '../../spinalAPIMiddleware';
+// import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { CategoriesAttribute } from './interfacesCategoriesAttribute'
 import { getProfileId } from '../../utilities/requestUtilities';

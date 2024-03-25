@@ -24,19 +24,16 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isNodeId = exports.getFolderPath = exports.sceneGetItems = exports.getScenes = void 0;
-const spinalAPIMiddleware_1 = require("../../../spinalAPIMiddleware");
 const SCENE_CONTEXT_NAME = 'Scenes';
 const SCENE_RELATIONS = ['hasScene'];
 const SCENE_PART_RELATIONS = ['hasParts'];
-async function getScenes() {
-    const spinalAPIMiddleware = spinalAPIMiddleware_1.default.getInstance();
+async function getScenes(spinalAPIMiddleware) {
     const graph = await spinalAPIMiddleware.getGraph();
     const scenesContext = await graph.getContext(SCENE_CONTEXT_NAME);
     return scenesContext.getChildren(SCENE_RELATIONS);
 }
 exports.getScenes = getScenes;
-async function sceneGetItems(sceneNode) {
-    const spinalAPIMiddleware = spinalAPIMiddleware_1.default.getInstance();
+async function sceneGetItems(sceneNode, spinalAPIMiddleware) {
     const res = [];
     const parts = await sceneNode.getChildren(SCENE_PART_RELATIONS);
     const sceneId = sceneNode.getId().get();

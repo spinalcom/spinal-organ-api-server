@@ -24,7 +24,7 @@
  */
 
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service'
-import spinalAPIMiddleware from '../../spinalAPIMiddleware';
+// import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import { getProfileId } from '../../utilities/requestUtilities';
