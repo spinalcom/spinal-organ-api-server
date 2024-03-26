@@ -65,14 +65,22 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 res.status(406).send(`No graph found for ${profileId}`);
             const graph = await spinalAPIMiddleware.getGraph();
             await spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
-            const context = await spinal_env_viewer_plugin_group_manager_service_1.default.createGroupContext(req.body.contextName, req.body.childrenType);
-            userGraph.addContext(context);
-            res.status(200).json({
-                name: context.getName().get(),
-                staticId: context.getId().get(),
-                dynamicId: context._server_id,
-                type: context.getType().get()
-            });
+            const node = await spinal_env_viewer_plugin_group_manager_service_1.default.createGroupContext(req.body.contextName, req.body.childrenType);
+            userGraph.addContext(node);
+            let serverId = node._server_id;
+            let count = 5;
+            while (serverId === undefined && count >= 0) {
+                await new Promise((resolve) => setTimeout(resolve, 100));
+                serverId = node._server_id;
+                count--;
+            }
+            const info = {
+                dynamicId: serverId || -1,
+                staticId: node.getId().get(),
+                name: node.getName().get(),
+                type: node.getType().get(),
+            };
+            res.status(200).json(info);
         }
         catch (error) {
             if (error.code && error.message)

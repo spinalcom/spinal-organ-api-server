@@ -72,16 +72,25 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const graph = await spinalAPIMiddleware.getGraph();
       await SpinalGraphService.setGraph(graph);
 
-      const context = await groupManagerService.createGroupContext(req.body.contextName, req.body.childrenType);
+      const node = await groupManagerService.createGroupContext(req.body.contextName, req.body.childrenType);
 
-      userGraph.addContext(context);
+      userGraph.addContext(node);
 
-      res.status(200).json({
-        name: context.getName().get(),
-        staticId: context.getId().get(),
-        dynamicId: context._server_id,
-        type: context.getType().get()
-      });
+      let serverId = node._server_id;
+        let count = 5;
+        while (serverId === undefined && count >= 0) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          serverId = node._server_id;
+          count--;
+        }
+        const info = {
+          dynamicId: serverId || -1,
+          staticId: node.getId().get(),
+          name: node.getName().get(),
+          type: node.getType().get(),
+        };
+
+      res.status(200).json(info);
     } catch (error) {
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send(error.message)
