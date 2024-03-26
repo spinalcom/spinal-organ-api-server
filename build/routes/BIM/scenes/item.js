@@ -57,14 +57,14 @@ module.exports = function (logger, app) {
      *       500:
      *         description: internal error
      */
-    app.get('/api/v1/BIM/scene/:id', async (req, res) => {
+    app.get('/api/v1/BIM/scene/:id', async (req, res, spinalAPIMiddleware) => {
         try {
             const id = req.params.id;
-            const scenes = await sceneUtils.getScenes();
+            const scenes = await sceneUtils.getScenes(spinalAPIMiddleware);
             for (const scene of scenes) {
                 if (sceneUtils.isNodeId(scene, id)) {
                     // eslint-disable-next-line no-await-in-loop
-                    const scenesItems = await sceneUtils.sceneGetItems(scene);
+                    const scenesItems = await sceneUtils.sceneGetItems(scene, spinalAPIMiddleware);
                     const sc = {
                         dynamicId: scene._server_id,
                         staticId: scene.getId().get(),

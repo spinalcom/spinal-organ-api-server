@@ -83,12 +83,12 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./categoriesAttributs/readCategoryByNameMultiple')(logger, app, spinalAPIMiddleware);
     require('./categoriesAttributs/readCategoriesByNameMultiple')(logger, app, spinalAPIMiddleware);
     // scenes routes
-    require('./BIM/scenes/list')(logger, app);
-    require('./BIM/scenes/default')(logger, app);
-    require('./BIM/scenes/item')(logger, app);
+    require('./BIM/scenes/list')(logger, app, spinalAPIMiddleware);
+    require('./BIM/scenes/default')(logger, app, spinalAPIMiddleware);
+    require('./BIM/scenes/item')(logger, app, spinalAPIMiddleware);
     require('./BIM/bimFileContext')(logger, app, spinalAPIMiddleware);
     require('./BIM/viewer/viewer')(logger, app, spinalAPIMiddleware);
-    require('./BIM/getBimObjectsInfo')(logger, app);
+    require('./BIM/getBimObjectsInfo')(logger, app, spinalAPIMiddleware);
     // tickets routes
     require('./tickets/workflows/createWorkflow')(logger, app, spinalAPIMiddleware);
     require('./tickets/workflows/deleteWorkflow')(logger, app, spinalAPIMiddleware);

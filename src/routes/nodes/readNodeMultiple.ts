@@ -22,16 +22,17 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { getNodeInfo } from '../../utilities/getNodeInfo';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { Node } from './interfacesNodes';
 import { SpinalNode } from 'spinal-model-graph';
+import { ISpinalAPIMiddleware } from '../../interfaces';
+
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger

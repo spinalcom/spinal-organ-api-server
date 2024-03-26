@@ -1,3 +1,4 @@
+"use strict";
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
  *
@@ -21,8 +22,9 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
 const BimObjectUtils = require('./BimObjectUtils');
-module.exports = function (logger, app) {
+module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
      * /api/v1/BIM/getBimObjectsInfo:
@@ -68,7 +70,7 @@ module.exports = function (logger, app) {
      */
     app.post('/api/v1/BIM/getBimObjectsInfo', async (req, res) => {
         try {
-            const bimObjectUtils = BimObjectUtils.getInstance();
+            const bimObjectUtils = BimObjectUtils.getInstance(spinalAPIMiddleware);
             // data : { bimFileId: string, dbids: number[] }[]
             const data = req.body;
             if (!Array.isArray(data))

@@ -1,1 +1,1 @@
-declare const BimObjectUtils: any;
+export {};

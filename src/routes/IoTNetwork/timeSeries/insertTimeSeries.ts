@@ -24,7 +24,7 @@
 
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import spinalServiceTimeSeries from '../spinalTimeSeries'
-import SpinalAPIMiddleware from '../../../spinalAPIMiddleware';
+// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
 import * as moment from 'moment'
 import { getProfileId } from '../../../utilities/requestUtilities';

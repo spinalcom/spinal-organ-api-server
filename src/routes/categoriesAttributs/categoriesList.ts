@@ -21,7 +21,7 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import spinalAPIMiddleware from '../../spinalAPIMiddleware';
+// import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import { NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service/dist/Models/constants";
 import { CategoriesAttribute } from './interfacesCategoriesAttribute'

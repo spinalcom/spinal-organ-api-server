@@ -23,8 +23,9 @@
  */
 
 import { SpinalContext, SpinalNode } from 'spinal-model-graph';
+import { ISpinalAPIMiddleware } from 'src/interfaces';
 
-import SpinalAPIMiddleware from '../../spinalAPIMiddleware';
+// // import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 const BIM_FILE_CONTEXT_NAME = 'BimFileContext';
 const BIM_FILE_CONTEXT_RELATION = 'hasBimFile';
 const BIM_FILE_RELATION = 'hasBimContext';
@@ -34,8 +35,12 @@ module.exports = class BimObjectUtils {
   context: Promise<SpinalContext> = null;
 
   static instance: BimObjectUtils = undefined;
+  static spinalAPIMiddleware: ISpinalAPIMiddleware
+
   constructor() { }
-  static getInstance() {
+  static getInstance(spinalAPIMiddleware: ISpinalAPIMiddleware) {
+    this.spinalAPIMiddleware = spinalAPIMiddleware;
+    
     return typeof BimObjectUtils.instance !== 'undefined'
       ? BimObjectUtils.instance
       : (BimObjectUtils.instance = new BimObjectUtils());
@@ -44,8 +49,8 @@ module.exports = class BimObjectUtils {
   getContext() {
     if (this.context) return this.context;
     this.context = new Promise(async (resolve) => {
-      const spinalAPIMiddleware = SpinalAPIMiddleware.getInstance();
-      const graph = await spinalAPIMiddleware.getGraph();
+
+      const graph = await BimObjectUtils.spinalAPIMiddleware.getGraph();
       resolve(graph.getContext(BIM_FILE_CONTEXT_NAME));
     });
     return this.context;

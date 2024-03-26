@@ -23,23 +23,21 @@
  */
 
 import { SpinalNode } from 'spinal-model-graph';
-import SpinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import { IScenesItemsItem } from './interfaces';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 const SCENE_CONTEXT_NAME = 'Scenes';
 const SCENE_RELATIONS = ['hasScene'];
 const SCENE_PART_RELATIONS = ['hasParts'];
 
-async function getScenes(): Promise<SpinalNode<any>[]> {
-  const spinalAPIMiddleware = SpinalAPIMiddleware.getInstance();
+async function getScenes(spinalAPIMiddleware: ISpinalAPIMiddleware): Promise<SpinalNode<any>[]> {
   const graph = await spinalAPIMiddleware.getGraph();
   const scenesContext = await graph.getContext(SCENE_CONTEXT_NAME);
   return scenesContext.getChildren(SCENE_RELATIONS);
 }
 
 async function sceneGetItems(
-  sceneNode: SpinalNode<any>
+  sceneNode: SpinalNode<any>, spinalAPIMiddleware: ISpinalAPIMiddleware
 ): Promise<IScenesItemsItem[]> {
-  const spinalAPIMiddleware = SpinalAPIMiddleware.getInstance();
   const res = [];
   const parts = await sceneNode.getChildren(SCENE_PART_RELATIONS);
   const sceneId = sceneNode.getId().get();
