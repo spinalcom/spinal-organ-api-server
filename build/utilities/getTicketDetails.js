@@ -100,7 +100,7 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
     let elementSelected;
     const parentsTicket = await _ticket.getParents('SpinalSystemServiceTicketHasTicket');
     for (const parent of parentsTicket) {
-        if (['SpinalSystemServiceTicketTypeStep', 'analyticOutputs'].includes(parent.getType().get())) {
+        if (!['SpinalSystemServiceTicketTypeStep', 'analyticOutputs'].includes(parent.getType().get())) {
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(parent);
             elementSelected = parent;

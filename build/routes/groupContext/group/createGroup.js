@@ -28,51 +28,51 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/groupeContext/{contextId}/category/{categoryId}/create_group:
-   *   post:
-   *     security:
-   *       - bearerAuth:
-   *         - read
-   *     description: create group
-   *     summary: create group
-   *     tags:
-   *       - Group Context
-   *     parameters:
-   *      - in: path
-   *        name: contextId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: categoryId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     requestBody:
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - groupName
-   *               - colorName
-   *             properties:
-   *                groupName:
-   *                 type: string
-   *                colorName:
-   *                 type: string
-   *     responses:
-   *       200:
-   *         description: Create Successfully
-   *       400:
-   *         description: Bad request
-  */
-    app.post("/api/v1/groupeContext/:contextId/category/:categoryId/create_group", async (req, res, next) => {
+     * @swagger
+     * /api/v1/groupeContext/{contextId}/category/{categoryId}/create_group:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - read
+     *     description: create group
+     *     summary: create group
+     *     tags:
+     *       - Group Context
+     *     parameters:
+     *      - in: path
+     *        name: contextId
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *      - in: path
+     *        name: categoryId
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - groupName
+     *               - colorName
+     *             properties:
+     *                groupName:
+     *                 type: string
+     *                colorName:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: Create Successfully
+     *       400:
+     *         description: Bad request
+     */
+    app.post('/api/v1/groupeContext/:contextId/category/:categoryId/create_group', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
@@ -81,17 +81,32 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && category.belongsToContext(context)) {
-                spinal_env_viewer_plugin_group_manager_service_1.default.addGroup(context.getId().get(), category.getId().get(), req.body.groupName, req.body.colorName);
+            if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
+                category.belongsToContext(context)) {
+                const node = await spinal_env_viewer_plugin_group_manager_service_1.default.addGroup(context.getId().get(), category.getId().get(), req.body.groupName, req.body.colorName);
+                let serverId = node._server_id;
+                let count = 5;
+                while (serverId === undefined && count >= 0) {
+                    await new Promise((resolve) => setTimeout(resolve, 100));
+                    serverId = node._server_id;
+                    count--;
+                }
+                const info = {
+                    dynamicId: serverId || -1,
+                    staticId: node.getId().get(),
+                    name: node.getName().get(),
+                    type: node.getType().get(),
+                };
+                return res.json(info);
             }
             else {
-                res.status(400).send("category not found in context");
+                return res.status(400).send('category not found in context');
             }
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send(error.message);
+            return res.status(400).send(error.message);
         }
         res.json();
     });

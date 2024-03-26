@@ -24,80 +24,117 @@
 
 import SpinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
+import groupManagerService from 'spinal-env-viewer-plugin-group-manager-service';
+import {
+  SpinalContext,
+  SpinalNode,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
- * @swagger
- * /api/v1/groupeContext/{contextId}/category/{categoryId}/create_group:
- *   post:
- *     security:
- *       - bearerAuth:
- *         - read
- *     description: create group
- *     summary: create group
- *     tags:
- *       - Group Context
- *     parameters:
- *      - in: path
- *        name: contextId
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *      - in: path
- *        name: categoryId
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - groupName
- *               - colorName
- *             properties:
- *                groupName:
- *                 type: string
- *                colorName:
- *                 type: string
- *     responses:
- *       200:
- *         description: Create Successfully
- *       400:
- *         description: Bad request
-*/
+   * @swagger
+   * /api/v1/groupeContext/{contextId}/category/{categoryId}/create_group:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - read
+   *     description: create group
+   *     summary: create group
+   *     tags:
+   *       - Group Context
+   *     parameters:
+   *      - in: path
+   *        name: contextId
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *      - in: path
+   *        name: categoryId
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - groupName
+   *               - colorName
+   *             properties:
+   *                groupName:
+   *                 type: string
+   *                colorName:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Create Successfully
+   *       400:
+   *         description: Bad request
+   */
 
-  app.post("/api/v1/groupeContext/:contextId/category/:categoryId/create_group", async (req, res, next) => {
+  app.post(
+    '/api/v1/groupeContext/:contextId/category/:categoryId/create_group',
+    async (req, res, next) => {
+      try {
+        const profileId = getProfileId(req);
+        const context: SpinalNode<any> = await spinalAPIMiddleware.load(
+          parseInt(req.params.contextId, 10),
+          profileId
+        );
+        //@ts-ignore
+        SpinalGraphService._addNode(context);
+        const category: SpinalNode<any> = await spinalAPIMiddleware.load(
+          parseInt(req.params.categoryId, 10),
+          profileId
+        );
+        //@ts-ignore
+        SpinalGraphService._addNode(category);
 
-    try {
-      const profileId = getProfileId(req);
-      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(context)
-      const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(category)
+        if (
+          context instanceof SpinalContext &&
+          category.belongsToContext(context)
+        ) {
+          const node = await groupManagerService.addGroup(
+            context.getId().get(),
+            category.getId().get(),
+            req.body.groupName,
+            req.body.colorName
+          );
+          let serverId = node._server_id;
+          let count = 5;
+          while (serverId === undefined && count >= 0) {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            serverId = node._server_id;
+            count--;
+          }
+          const info = {
+            dynamicId: serverId || -1,
+            staticId: node.getId().get(),
+            name: node.getName().get(),
+            type: node.getType().get(),
+          };
+          return res.json(info);
+        } else {
+          return res.status(400).send('category not found in context');
+        }
+      } catch (error) {
+        if (error.code && error.message)
+          return res.status(error.code).send(error.message);
 
-      if (context instanceof SpinalContext && category.belongsToContext(context)) {
-        groupManagerService.addGroup(context.getId().get(), category.getId().get(), req.body.groupName, req.body.colorName)
-      } else {
-        res.status(400).send("category not found in context");
+        return res.status(400).send(error.message);
       }
-
-    } catch (error) {
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-
-      res.status(400).send(error.message)
+      res.json();
     }
-    res.json();
-  })
-
-}
+  );
+};
