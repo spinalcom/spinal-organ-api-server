@@ -26,7 +26,7 @@ import * as sceneUtils from './sceneUtils';
 import { IScenesbody, IOptionsItem } from './interfaces';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app) {
+module.exports = function (logger, app,  spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/BIM/scene/default:
@@ -50,7 +50,7 @@ module.exports = function (logger, app) {
    *       500:
    *         description: internal error
    */
-  app.get('/api/v1/BIM/scene/default', async (req, res, spinalAPIMiddleware: ISpinalAPIMiddleware) => {
+  app.get('/api/v1/BIM/scene/default', async (req, res, next) => {
     try {
       const scenes = await sceneUtils.getScenes(spinalAPIMiddleware);
       for (const scene of scenes) {

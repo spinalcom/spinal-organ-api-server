@@ -24,7 +24,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const sceneUtils = require("./sceneUtils");
-module.exports = function (logger, app) {
+module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
      * /api/v1/BIM/scene/default:
@@ -48,7 +48,7 @@ module.exports = function (logger, app) {
      *       500:
      *         description: internal error
      */
-    app.get('/api/v1/BIM/scene/default', async (req, res, spinalAPIMiddleware) => {
+    app.get('/api/v1/BIM/scene/default', async (req, res, next) => {
         try {
             const scenes = await sceneUtils.getScenes(spinalAPIMiddleware);
             for (const scene of scenes) {
