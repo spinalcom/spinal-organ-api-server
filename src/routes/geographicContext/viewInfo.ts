@@ -218,6 +218,68 @@ module.exports = function (
     }
   }
 
+/**
+ * @swagger
+ * /api/v1/geographicContext/viewInfo:
+ *   post:
+ *     security:
+ *       - bearerAuth:
+ *         - read
+ *     description: Fetches view information based on the geographical context for specified IDs and options
+ *     summary: Fetch view information for geographical context
+ *     tags:
+ *       - Geographic Context
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - dynamicId
+ *             properties:
+ *               dynamicId:
+ *                 type: integer
+ *                 format: int64
+ *                 description: Unique identifier for the node
+ *               floorRef:
+ *                 type: boolean
+ *                 description: Flag to include floor reference, defaults to false
+ *               roomRef:
+ *                 type: boolean
+ *                 description: Flag to include room reference, defaults to true
+ *               equipements:
+ *                 type: boolean
+ *                 description: Flag to include equipment details, defaults to false
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved view information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   dynamicId:
+ *                     type: integer
+ *                     format: int64
+ *                     description: Server ID of the node
+ *                   data:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         bimFileId:
+ *                           type: string
+ *                           description: Identifier for the BIM file
+ *                         dbIds:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                           description: Database IDs associated with the node
+ *       400:
+ *         description: Bad request, typically missing required 'dynamicId'
+ */
   app.post(
     '/api/v1/geographicContext/viewInfo',
     async (req: ViweInfoReq, res: ViweInfoRes): Promise<any> => {

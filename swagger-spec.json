@@ -381,6 +381,91 @@
           }
         }
       },
+      "AttributeUpdate": {
+        "type": "object",
+        "required": [
+          "attributeLabel",
+          "attributeNewValue"
+        ],
+        "properties": {
+          "attributeLabel": {
+            "type": "string",
+            "description": "The label of the attribute to update."
+          },
+          "attributeNewValue": {
+            "description": "The new value for the attribute, which can be a string, number, or boolean.",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          }
+        }
+      },
+      "CategoryAttributeUpdate": {
+        "type": "object",
+        "required": [
+          "categoryName",
+          "attributes"
+        ],
+        "properties": {
+          "categoryName": {
+            "type": "string",
+            "description": "Name of the category to which the attributes belong."
+          },
+          "attributes": {
+            "type": "array",
+            "description": "List of attribute updates within the category.",
+            "items": {
+              "$ref": "#/components/schemas/AttributeUpdate"
+            }
+          }
+        }
+      },
+      "NodeAttributeUpdate": {
+        "type": "object",
+        "required": [
+          "dynamicId",
+          "categories"
+        ],
+        "properties": {
+          "dynamicId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the node, typically used as a dynamic reference."
+          },
+          "categories": {
+            "type": "array",
+            "description": "Array of categories with attributes to update for the node.",
+            "items": {
+              "$ref": "#/components/schemas/CategoryAttributeUpdate"
+            }
+          }
+        }
+      },
+      "AttributeUpdateResponse": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the node."
+          },
+          "categories": {
+            "type": "array",
+            "description": "Array of categories with attributes that were updated for the node.",
+            "items": {
+              "$ref": "#/components/schemas/CategoryAttributeUpdate"
+            }
+          }
+        }
+      },
       "Building": {
         "type": "object",
         "properties": {
@@ -14629,6 +14714,42 @@
         }
       }
     },
+    "/api/v1/node/attribute/update_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "description": "update multiple attributes for multiple nodes",
+        "summary": "update multiple attributes for multiple nodes",
+        "tags": [
+          "Node Attributs"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/NodeAttributeUpdate"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Create Successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/equipment/{id}/read_static_details": {
       "get": {
         "security": [
@@ -15395,6 +15516,97 @@
           },
           "400": {
             "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/geographicContext/viewInfo": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "description": "Fetches view information based on the geographical context for specified IDs and options",
+        "summary": "Fetch view information for geographical context",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "dynamicId"
+                ],
+                "properties": {
+                  "dynamicId": {
+                    "type": "integer",
+                    "format": "int64",
+                    "description": "Unique identifier for the node"
+                  },
+                  "floorRef": {
+                    "type": "boolean",
+                    "description": "Flag to include floor reference, defaults to false"
+                  },
+                  "roomRef": {
+                    "type": "boolean",
+                    "description": "Flag to include room reference, defaults to true"
+                  },
+                  "equipements": {
+                    "type": "boolean",
+                    "description": "Flag to include equipment details, defaults to false"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved view information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "dynamicId": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Server ID of the node"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "bimFileId": {
+                              "type": "string",
+                              "description": "Identifier for the BIM file"
+                            },
+                            "dbIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "description": "Database IDs associated with the node"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request, typically missing required 'dynamicId'"
           }
         }
       }

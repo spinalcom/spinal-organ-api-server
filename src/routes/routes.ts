@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
  *
@@ -84,6 +85,7 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   //attributs routes
   require('./attributs/attributList')(logger, app, spinalAPIMiddleware);
   require('./attributs/attributListMultiple')(logger, app, spinalAPIMiddleware);
+  require('./attributs/updateAttributeMultiple')(logger, app, spinalAPIMiddleware);
   require('./attributs/createAttribut')(logger, app, spinalAPIMiddleware);
   require('./attributs/updateAttribute')(logger, app, spinalAPIMiddleware);
   require('./attributs/deleteAttribute')(logger, app, spinalAPIMiddleware);
