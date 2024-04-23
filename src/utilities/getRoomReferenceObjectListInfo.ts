@@ -23,7 +23,7 @@ async function getRoomReferenceObjectsListInfo(spinalAPIMiddleware : ISpinalAPIM
         staticId: referenceObject.getId().get(),
         name: referenceObject.getName().get(),
         type: referenceObject.getType().get(),
-        version: referenceObject.info.version.get(),
+        version: referenceObject.info.version?.get(),
         externalId: referenceObject.info.externalId.get(),
         dbid: referenceObject.info.dbid.get(),
       };

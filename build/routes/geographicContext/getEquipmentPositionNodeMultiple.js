@@ -25,6 +25,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 const getPosition_1 = require("../../utilities/getPosition");
+const getSpatialContext_1 = require("../../utilities/getSpatialContext");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -75,8 +76,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!Array.isArray(ids)) {
                 return res.status(400).send('Expected an array of IDs.');
             }
+            const spatialContextId = (await (0, getSpatialContext_1.getSpatialContext)(spinalAPIMiddleware, profileId)).getId().get();
             // Map each id to a promise
-            const promises = ids.map((id) => (0, getPosition_1.getEquipmentPosition)(spinalAPIMiddleware, profileId, id));
+            const promises = ids.map((id) => (0, getPosition_1.getEquipmentPosition)(spinalAPIMiddleware, profileId, spatialContextId, id));
             const settledResults = await Promise.allSettled(promises);
             const finalResults = settledResults.map((result, index) => {
                 if (result.status === 'fulfilled') {

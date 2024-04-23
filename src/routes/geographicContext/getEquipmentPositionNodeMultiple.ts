@@ -26,7 +26,7 @@ import * as express from 'express';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 import { getEquipmentPosition } from '../../utilities/getPosition';
-
+import { getSpatialContext } from '../../utilities/getSpatialContext';
 module.exports = function (
   logger,
   app: express.Express,
@@ -84,10 +84,10 @@ module.exports = function (
         if (!Array.isArray(ids)) {
           return res.status(400).send('Expected an array of IDs.');
         }
-
+        const spatialContextId = (await getSpatialContext(spinalAPIMiddleware,profileId)).getId().get();
         // Map each id to a promise
         const promises = ids.map((id) =>
-          getEquipmentPosition(spinalAPIMiddleware, profileId, id)
+          getEquipmentPosition(spinalAPIMiddleware, profileId, spatialContextId, id)
         );
 
         const settledResults = await Promise.allSettled(promises);

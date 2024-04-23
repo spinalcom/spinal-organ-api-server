@@ -26,7 +26,7 @@ import * as express from 'express';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 import { getRoomPosition } from '../../utilities/getPosition';
-
+import { getSpatialContext } from '../../utilities/getSpatialContext';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
@@ -75,6 +75,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 app.post("/api/v1/room/get_position_multiple", async (req, res, next) => {
     try {
         const profileId = getProfileId(req);
+        const spatialContextId = (await getSpatialContext(spinalAPIMiddleware,profileId)).getId().get();
         const ids = req.body;
   
         if (!Array.isArray(ids)) {
@@ -82,7 +83,7 @@ app.post("/api/v1/room/get_position_multiple", async (req, res, next) => {
         }
   
         // Map each id to a promise
-        const promises = ids.map(id => getRoomPosition(spinalAPIMiddleware,profileId, id));
+        const promises = ids.map(id => getRoomPosition(spinalAPIMiddleware,profileId,spatialContextId, id));
   
         const settledResults = await Promise.allSettled(promises);
   

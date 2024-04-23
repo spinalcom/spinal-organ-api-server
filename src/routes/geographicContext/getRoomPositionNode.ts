@@ -26,6 +26,7 @@ import * as express from 'express';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 import { getRoomPosition } from '../../utilities/getPosition';
+import { getSpatialContext } from '../../utilities/getSpatialContext';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
@@ -61,7 +62,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 app.get("/api/v1/room/:id/get_position", async (req, res, next) => {
   try {
     const profileId = getProfileId(req);
-    const position = await getRoomPosition(spinalAPIMiddleware,profileId, parseInt(req.params.id, 10));
+    const spatialContextId = (await getSpatialContext(spinalAPIMiddleware,profileId)).getId().get();
+    const position = await getRoomPosition(spinalAPIMiddleware,profileId,spatialContextId, parseInt(req.params.id, 10));
     res.json(position);
   } catch (error) {
     if (error.code && error.message) return res.status(error.code).send(error.message);

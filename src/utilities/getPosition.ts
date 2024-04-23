@@ -4,6 +4,7 @@ import { SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 export async function getEquipmentPosition(
     spinalAPIMiddleware: ISpinalAPIMiddleware,
     profileId: string,
+    spatialContextId:string,
     dynamicId: number
 ) {
     const equipment: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
@@ -15,16 +16,16 @@ export async function getEquipmentPosition(
   }
 
   const room = (await equipment.getParents("hasBimObject"))
-    .find(parent => parent.getType().get() === "geographicRoom");
-
+    .find(parent => parent.getType().get() === "geographicRoom" && parent.getContextIds().includes(spatialContextId));
+  
   const floor = (await room.getParents("hasGeographicRoom"))
-    .find(parent => parent.getType().get() === "geographicFloor");
+    .find(parent => parent.getType().get() === "geographicFloor" && parent.getContextIds().includes(spatialContextId));
 
   const building = (await floor.getParents("hasGeographicFloor"))
-    .find(parent => parent.getType().get() === "geographicBuilding");
+    .find(parent => parent.getType().get() === "geographicBuilding" && parent.getContextIds().includes(spatialContextId));
 
   const context = (await building.getParents("hasGeographicBuilding"))
-    .find(parent => parent.getType().get() === "geographicContext");
+    .find(parent => parent.getType().get() === "geographicContext" && parent.getId().get() === spatialContextId);
 
   return {
     dynamicId: equipment._server_id,
@@ -60,7 +61,7 @@ export async function getEquipmentPosition(
   };
 }
 
-export async function getRoomPosition(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId:string, dynamicId: number){
+export async function getRoomPosition(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId:string,spatialContextId:string, dynamicId: number){
     const room: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
     //@ts-ignore
     SpinalGraphService._addNode(room);
@@ -71,13 +72,13 @@ export async function getRoomPosition(spinalAPIMiddleware: ISpinalAPIMiddleware,
   
   
     const floor = (await room.getParents("hasGeographicRoom"))
-      .find(parent => parent.getType().get() === "geographicFloor");
+      .find(parent => parent.getType().get() === "geographicFloor" && parent.getContextIds().includes(spatialContextId));
   
     const building = (await floor.getParents("hasGeographicFloor"))
-      .find(parent => parent.getType().get() === "geographicBuilding");
+      .find(parent => parent.getType().get() === "geographicBuilding" && parent.getContextIds().includes(spatialContextId));
 
     const context = (await building.getParents("hasGeographicBuilding"))
-      .find(parent => parent.getType().get() === "geographicContext");
+      .find(parent => parent.getType().get() === "geographicContext" && parent.getId().get() === spatialContextId);
   
   
     return {

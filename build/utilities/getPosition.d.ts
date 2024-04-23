@@ -1,5 +1,5 @@
 import { ISpinalAPIMiddleware } from '../interfaces';
-export declare function getEquipmentPosition(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, dynamicId: number): Promise<{
+export declare function getEquipmentPosition(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, spatialContextId: string, dynamicId: number): Promise<{
     dynamicId: number;
     staticId: string;
     name: string;
@@ -31,7 +31,7 @@ export declare function getEquipmentPosition(spinalAPIMiddleware: ISpinalAPIMidd
         };
     };
 }>;
-export declare function getRoomPosition(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, dynamicId: number): Promise<{
+export declare function getRoomPosition(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, spatialContextId: string, dynamicId: number): Promise<{
     dynamicId: number;
     staticId: string;
     name: string;

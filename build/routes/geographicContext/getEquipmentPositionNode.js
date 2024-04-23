@@ -2,12 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 const getPosition_1 = require("../../utilities/getPosition");
+const getSpatialContext_1 = require("../../utilities/getSpatialContext");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     // Deprecated typo error
     app.get("/api/v1/equipement/:id/get_postion", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const position = await (0, getPosition_1.getEquipmentPosition)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+            const spatialContextId = (await (0, getSpatialContext_1.getSpatialContext)(spinalAPIMiddleware, profileId)).getId().get();
+            const position = await (0, getPosition_1.getEquipmentPosition)(spinalAPIMiddleware, profileId, spatialContextId, parseInt(req.params.id, 10));
             res.json(position);
         }
         catch (error) {
@@ -48,7 +50,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/equipment/:id/get_position", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const position = await (0, getPosition_1.getEquipmentPosition)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+            const spatialContextId = (await (0, getSpatialContext_1.getSpatialContext)(spinalAPIMiddleware, profileId)).getId().get();
+            const position = await (0, getPosition_1.getEquipmentPosition)(spinalAPIMiddleware, profileId, spatialContextId, parseInt(req.params.id, 10));
             res.json(position);
         }
         catch (error) {

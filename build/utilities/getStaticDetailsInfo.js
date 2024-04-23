@@ -43,7 +43,7 @@ async function getEquipmentStaticDetailsInfo(spinalAPIMiddleware, profileId, equ
             name: equipment.getName().get(),
             type: equipment.getType().get(),
             bimFileId: equipment.info.bimFileId.get(),
-            version: equipment.info.version.get(),
+            version: equipment.info.version?.get(),
             externalId: equipment.info.externalId.get(),
             dbid: equipment.info.dbid.get(),
             default_attributs: {
