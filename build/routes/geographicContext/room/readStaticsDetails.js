@@ -58,14 +58,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/room/:id/read_static_details", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var info = await (0, getStaticDetailsInfo_1.getRoomStaticDetailsInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+            const info = await (0, getStaticDetailsInfo_1.getRoomStaticDetailsInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+            return res.json(info);
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
             res.status(500).send(error.message);
         }
-        res.json(info);
     });
 };
 //# sourceMappingURL=readStaticsDetails.js.map

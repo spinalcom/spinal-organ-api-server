@@ -111,8 +111,8 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
         staticId: _ticket.getId().get(),
         name: _ticket.getName().get(),
         type: _ticket.getType().get(),
-        priority: _ticket.info.priority.get(),
-        creationDate: _ticket.info.creationDate.get(),
+        priority: _ticket.info.priority?.get(),
+        creationDate: _ticket.info.creationDate?.get(),
         description: _ticket.info.description == undefined
             ? ''
             : _ticket.info.description.get(),

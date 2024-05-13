@@ -58,14 +58,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get('/api/v1/ticket/:ticketId/read_details', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var details = await (0, getTicketDetails_1.getTicketDetails)(spinalAPIMiddleware, profileId, parseInt(req.params.ticketId, 10));
+            const details = await (0, getTicketDetails_1.getTicketDetails)(spinalAPIMiddleware, profileId, parseInt(req.params.ticketId, 10));
+            return res.json(details);
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
             res.status(400).send('ko');
         }
-        res.json(details);
     });
 };
 //# sourceMappingURL=readTicket.js.map

@@ -64,16 +64,16 @@ module.exports = function (
   app.get('/api/v1/ticket/:ticketId/read_details', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var details = await getTicketDetails(
+      const details = await getTicketDetails(
         spinalAPIMiddleware,
         profileId,
         parseInt(req.params.ticketId, 10)
       );
+      return res.json(details);
     } catch (error) {
 
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send('ko');
     }
-    res.json(details);
   });
 };

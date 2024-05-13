@@ -63,15 +63,15 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.get("/api/v1/room/:id/read_static_details", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var info = await getRoomStaticDetailsInfo(
+      const info = await getRoomStaticDetailsInfo(
         spinalAPIMiddleware,
         profileId,
-        parseInt(req.params.id,10),
+        parseInt(req.params.id,10)
       );
+      return res.json(info);
     } catch (error) {
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }
-    res.json(info);
   });
 };
