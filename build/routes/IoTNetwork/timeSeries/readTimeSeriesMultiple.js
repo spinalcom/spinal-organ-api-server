@@ -60,6 +60,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *        required: true
      *        schema:
      *          type: string
+     *      - in: query
+     *        name: valueAtBegin
+     *        description: If true, the last known timeserie before the begin date will be included. Default is 'false'.
+     *        required: false
+     *        schema:
+     *          type: string
+     *          enum: [false, true]
      *     responses:
      *       200:
      *         description: Success - All time series data fetched
@@ -97,8 +104,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 start: (0, dateFunctions_1.verifDate)(req.params.begin),
                 end: (0, dateFunctions_1.verifDate)(req.params.end),
             };
+            const includeLastBeforeStart = req.query.valueAtBegin == "true" ? true : false;
             // Map each id to a promise
-            const promises = ids.map((id) => (0, getTimeSeriesData_1.getTimeSeriesData)(spinalAPIMiddleware, profileId, id, timeSeriesIntervalDate));
+            const promises = ids.map((id) => (0, getTimeSeriesData_1.getTimeSeriesData)(spinalAPIMiddleware, profileId, id, timeSeriesIntervalDate, includeLastBeforeStart));
             const settledResults = await Promise.allSettled(promises);
             const finalResults = settledResults.map((result, index) => {
                 if (result.status === 'fulfilled') {

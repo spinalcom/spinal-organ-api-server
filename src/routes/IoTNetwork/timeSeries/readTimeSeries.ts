@@ -22,15 +22,12 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service'
+import { SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service'
 import spinalServiceTimeSeries from '../spinalTimeSeries'
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
-import { CurrentValue } from '../interfacesEndpointAndTimeSeries'
-import asyncIteratorToArray from '../../../utilities/asyncToArray'
 import { verifDate } from "../../../utilities/dateFunctions";
 
 import * as express from 'express';
-import * as moment from 'moment'
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 
@@ -66,6 +63,13 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  *        required: true
  *        schema:
  *          type: string
+ *      - in: query
+ *        name: valueAtBegin
+ *        description: If true, the last known timeserie before the begin date will be included. Default is 'false'.
+ *        required: false
+ *        schema:
+ *          type: string
+ *          enum: [false, true]
  *     responses:
  *       200:
  *         description: Success
@@ -93,7 +97,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           start: verifDate(req.params.begin),
           end: verifDate(req.params.end)
         }
-        const datas = await spinalServiceTimeSeries().getData(node.getId().get(), timeSeriesIntervalDate)
+        const includeLastBeforeStart = req.query.valueAtBegin == "true" ? true : false;
+        const datas = await spinalServiceTimeSeries().getData(node.getId().get(), timeSeriesIntervalDate, includeLastBeforeStart)
         return res.json(datas);
       }
 

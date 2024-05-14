@@ -5855,6 +5855,19 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "valueAtBegin",
+            "description": "If true, the last known timeserie before the begin date will be included. Default is 'false'.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                false,
+                true
+              ]
+            }
           }
         ],
         "responses": {
@@ -16065,6 +16078,19 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "valueAtBegin",
+            "description": "If true, the last known timeserie before the begin date will be included. Default is 'false'.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                false,
+                true
+              ]
             }
           }
         ],

@@ -25,6 +25,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinalTimeSeries_1 = require("../spinalTimeSeries");
+// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 const dateFunctions_1 = require("../../../utilities/dateFunctions");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
@@ -42,7 +43,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     start: (0, dateFunctions_1.verifDate)(req.params.begin),
                     end: (0, dateFunctions_1.verifDate)(req.params.end)
                 };
-                const datas = await (0, spinalTimeSeries_1.default)().getData(node.getId().get(), timeSeriesIntervalDate);
+                const includeLastBeforeStart = req.query.valueAtBegin == "true" ? true : false;
+                const datas = await (0, spinalTimeSeries_1.default)().getData(node.getId().get(), timeSeriesIntervalDate, includeLastBeforeStart);
                 return res.json(datas);
             }
         }

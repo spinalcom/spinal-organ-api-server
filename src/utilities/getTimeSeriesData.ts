@@ -8,14 +8,15 @@ async function getTimeSeriesData(
     spinalAPIMiddleware: ISpinalAPIMiddleware,
     profileId:string,
     dynamicId: number,
-    timeSeriesIntervalDate: TimeSeriesIntervalDate
+    timeSeriesIntervalDate: TimeSeriesIntervalDate,
+    includeLastBeforeStart = false
   ) {
 
       const node: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
       // @ts-ignore
       SpinalGraphService._addNode(node);
   
-      const datas = await spinalServiceTimeSeries().getData(node.getId().get(), timeSeriesIntervalDate);
+      const datas = await spinalServiceTimeSeries().getData(node.getId().get(), timeSeriesIntervalDate,includeLastBeforeStart);
       return datas;
 
   }
