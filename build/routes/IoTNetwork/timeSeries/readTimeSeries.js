@@ -36,7 +36,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             if ((0, dateFunctions_1.verifDate)(req.params.begin) === 1 || (0, dateFunctions_1.verifDate)(req.params.end) === 1) {
-                throw "invalid date";
+                throw "Invalid date make sure the date format is DD-MM-YYYY HH:mm:ss";
             }
             else {
                 const timeSeriesIntervalDate = {
@@ -51,7 +51,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            return res.status(400).send(error.message);
+            else if (error.message)
+                return res.status(400).send(error.message);
+            else {
+                return res.status(400).send(error);
+            }
         }
     });
 };
