@@ -68,19 +68,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const groupContext: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(groupContext)
-      var info = {
+      const info = {
         dynamicId: groupContext._server_id,
         staticId: groupContext.getId().get(),
         name: groupContext.getName().get(),
         type: groupContext.getType().get()
       }
-
-
+      return res.json(info);
     } catch (error) {
-
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }
-    res.json(info);
   });
 }

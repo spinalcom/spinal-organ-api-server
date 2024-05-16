@@ -72,9 +72,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const graph = await spinalAPIMiddleware.getGraph();
       await SpinalGraphService.setGraph(graph);
 
-      const node = await groupManagerService.createGroupContext(req.body.contextName, req.body.childrenType);
+      const node = await groupManagerService.createGroupContext(req.body.contextName, req.body.childrenType,userGraph);
 
-      userGraph.addContext(node);
 
       let serverId = node._server_id;
         let count = 5;

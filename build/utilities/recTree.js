@@ -12,6 +12,7 @@ async function recTree(node, context = node) {
                 staticId: realnode.getId().get(),
                 name: name ? name.get() : undefined,
                 type: type ? type.get() : undefined,
+                color: realnode.info.color?.get(),
                 bimFileId: realnode.info.bimFileId ? realnode.info.bimFileId.get() : undefined,
                 dbid: realnode.info.dbid ? realnode.info.dbid.get() : undefined,
                 children: await recTree(realnode, context)

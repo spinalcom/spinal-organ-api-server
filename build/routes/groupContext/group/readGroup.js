@@ -82,12 +82,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(group);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && category.belongsToContext(context) && group.belongsToContext(context)) {
-                var info = {
+                const info = {
                     dynamicId: group._server_id,
                     staticId: group.getId().get(),
                     name: group.getName().get(),
-                    type: group.getType().get()
+                    type: group.getType().get(),
+                    color: group.info.color.get()
                 };
+                return res.json(info);
             }
             else {
                 res.status(400).send("category or group not found in context");
@@ -98,7 +100,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             res.status(500).send(error.message);
         }
-        res.json(info);
     });
 };
 //# sourceMappingURL=readGroup.js.map

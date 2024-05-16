@@ -93,21 +93,22 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       SpinalGraphService._addNode(group)
 
       if (context instanceof SpinalContext && category.belongsToContext(context) && group.belongsToContext(context)) {
-        var info = {
+        const info = {
           dynamicId: group._server_id,
           staticId: group.getId().get(),
           name: group.getName().get(),
-          type: group.getType().get()
+          type: group.getType().get(),
+          color: group.info.color.get()
         }
+        return res.json(info)
       } else {
         res.status(400).send("category or group not found in context");
       }
 
     } catch (error) {
-
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }
-    res.json(info);
+    
   });
 }

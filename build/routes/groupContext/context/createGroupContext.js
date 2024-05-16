@@ -65,8 +65,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 res.status(406).send(`No graph found for ${profileId}`);
             const graph = await spinalAPIMiddleware.getGraph();
             await spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
-            const node = await spinal_env_viewer_plugin_group_manager_service_1.default.createGroupContext(req.body.contextName, req.body.childrenType);
-            userGraph.addContext(node);
+            const node = await spinal_env_viewer_plugin_group_manager_service_1.default.createGroupContext(req.body.contextName, req.body.childrenType, userGraph);
             let serverId = node._server_id;
             let count = 5;
             while (serverId === undefined && count >= 0) {
