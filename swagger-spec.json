@@ -798,6 +798,35 @@
           }
         }
       },
+      "StaticDetailsFloor": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "attributeList": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Attributs"
+            }
+          },
+          "controlEndpoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ControlEndpointProfileAndEndpoints"
+            }
+          }
+        }
+      },
       "StaticDetailsRoom": {
         "type": "object",
         "properties": {
@@ -813,36 +842,16 @@
           "type": {
             "type": "string"
           },
-          "bimFileId": {
-            "type": "string"
-          },
-          "version": {
-            "type": "number"
-          },
-          "externalId": {
-            "type": "string"
-          },
-          "dbid": {
-            "type": "string"
-          },
-          "attributs": {
+          "attributeList": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Attributs"
             }
           },
-          "controlEndpoint": {
-            "type": "object",
-            "properties": {
-              "profileName": {
-                "type": "string"
-              },
-              "endpoints": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ControlEndpoint"
-                }
-              }
+          "controlEndpoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ControlEndpointProfileAndEndpoints"
             }
           },
           "bimObjects": {
@@ -898,6 +907,20 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Room"
+            }
+          }
+        }
+      },
+      "ControlEndpointProfileAndEndpoints": {
+        "type": "object",
+        "properties": {
+          "profileName": {
+            "type": "string"
+          },
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ControlEndpoint"
             }
           }
         }
@@ -14864,6 +14887,49 @@
                       }
                     ]
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/floor/{id}/read_static_details": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "read static details of a floor",
+        "summary": "Gets static details of a floor",
+        "tags": [
+          "Geographic Context"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaticDetailsFloor"
                 }
               }
             }

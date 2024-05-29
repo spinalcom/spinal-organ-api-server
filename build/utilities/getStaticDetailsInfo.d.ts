@@ -61,6 +61,21 @@ declare function getEquipmentStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMi
     }[];
     groupParents: INodeInfo[];
 }>;
+declare function getFloorStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, floorId: number): Promise<{
+    dynamicId: number;
+    staticId: string;
+    name: string;
+    type: string;
+    attributeList: IAttr[];
+    controlEndpoints: INodeControlEndpoint[];
+    endpoints: {
+        dynamicId: number;
+        staticId: string;
+        name: string;
+        type: string;
+        value: any;
+    }[];
+}>;
 declare function getRoomStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, roomId: number): Promise<{
     dynamicId: number;
     staticId: string;
@@ -80,3 +95,4 @@ declare function getRoomStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddlew
 }>;
 export { getEquipmentStaticDetailsInfo };
 export { getRoomStaticDetailsInfo };
+export { getFloorStaticDetailsInfo };

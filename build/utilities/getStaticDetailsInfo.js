@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRoomStaticDetailsInfo = exports.getEquipmentStaticDetailsInfo = void 0;
+exports.getFloorStaticDetailsInfo = exports.getRoomStaticDetailsInfo = exports.getEquipmentStaticDetailsInfo = void 0;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
 const spinal_env_viewer_plugin_control_endpoint_service_1 = require("spinal-env-viewer-plugin-control-endpoint-service");
@@ -63,6 +63,32 @@ async function getEquipmentStaticDetailsInfo(spinalAPIMiddleware, profileId, equ
     }
 }
 exports.getEquipmentStaticDetailsInfo = getEquipmentStaticDetailsInfo;
+async function getFloorStaticDetailsInfo(spinalAPIMiddleware, profileId, floorId) {
+    const floor = await spinalAPIMiddleware.load(floorId, profileId);
+    //@ts-ignore
+    spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(floor);
+    if (floor.getType().get() === 'geographicFloor') {
+        const [allNodesControlesEndpoints, allEndpoints, CategorieAttributsList,] = await Promise.all([
+            getNodeControlEndpoints(floor),
+            getEndpointsInfo(floor),
+            getAttributes(floor),
+        ]);
+        const info = {
+            dynamicId: floor._server_id,
+            staticId: floor.getId().get(),
+            name: floor.getName().get(),
+            type: floor.getType().get(),
+            attributeList: CategorieAttributsList,
+            controlEndpoints: allNodesControlesEndpoints,
+            endpoints: allEndpoints
+        };
+        return info;
+    }
+    else {
+        throw 'node is not of type geographic floor';
+    }
+}
+exports.getFloorStaticDetailsInfo = getFloorStaticDetailsInfo;
 async function getRoomStaticDetailsInfo(spinalAPIMiddleware, profileId, roomId) {
     const room = await spinalAPIMiddleware.load(roomId, profileId);
     //@ts-ignore

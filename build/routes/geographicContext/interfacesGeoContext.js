@@ -79,6 +79,30 @@ Object.defineProperty(exports, "__esModule", { value: true });
 * @swagger
 * components:
 *   schemas:
+*     StaticDetailsFloor:
+*       type: "object"
+*       properties:
+*         dynamicId:
+*           type: "integer"
+*         staticId:
+*           type: "string"
+*         name:
+*           type: "string"
+*         type:
+*           type: "string"
+*         attributeList:
+*           type: "array"
+*           items:
+*                $ref: "#/components/schemas/Attributs"
+*         controlEndpoints:
+*           type: "array"
+*           items:
+*               $ref: "#/components/schemas/ControlEndpointProfileAndEndpoints"
+ */
+/**
+* @swagger
+* components:
+*   schemas:
 *     StaticDetailsRoom:
 *       type: "object"
 *       properties:
@@ -90,27 +114,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 *           type: "string"
 *         type:
 *           type: "string"
-*         bimFileId:
-*           type: "string"
-*         version:
-*           type: "number"
-*         externalId:
-*           type: "string"
-*         dbid:
-*           type: "string"
-*         attributs:
+*         attributeList:
 *           type: "array"
 *           items:
 *                $ref: "#/components/schemas/Attributs"
-*         controlEndpoint:
-*           type: "object"
-*           properties:
-*             profileName:
-*               type: "string"
-*             endpoints:
-*               type: array
-*               items:
-*                    $ref: "#/components/schemas/ControlEndpoint"
+*         controlEndpoints:
+*           type: "array"
+*           items:
+*               $ref: "#/components/schemas/ControlEndpointProfileAndEndpoints"
 *         bimObjects:
 *           type: "array"
 *           items:
@@ -138,7 +149,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 *         attributs:
 *           type: "array"
 *           items:
-*                $ref: "#/components/schemas/Attributs"
+*             $ref: "#/components/schemas/Attributs"
 *         controlEndpoint:
 *           type: "object"
 *           properties:
@@ -147,12 +158,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 *             endpoints:
 *               type: array
 *               items:
-*                    $ref: "#/components/schemas/Room"
+*                 $ref: "#/components/schemas/Room"
 *         groupParents:
 *           type: "array"
 *           items:
-*                $ref: "#/components/schemas/Room"
+*             $ref: "#/components/schemas/Room"
  */
+/**
+* @swagger
+* components:
+*  schemas:
+*    ControlEndpointProfileAndEndpoints:
+*      type: object
+*      properties:
+*        profileName:
+*          type: string
+*        endpoints:
+*          type: array
+*          items:
+*            $ref: "#/components/schemas/ControlEndpoint"
+*/
 /**
 * @swagger
 * components:

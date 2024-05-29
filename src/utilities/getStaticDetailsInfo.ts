@@ -130,6 +130,42 @@ async function getEquipmentStaticDetailsInfo(
   }
 }
 
+async function getFloorStaticDetailsInfo(
+  spinalAPIMiddleware: ISpinalAPIMiddleware,
+  profileId: string,
+  floorId: number,
+) {
+  const floor: SpinalNode<any> = await spinalAPIMiddleware.load(floorId,profileId);
+  
+  //@ts-ignore
+  SpinalGraphService._addNode(floor);
+  if (floor.getType().get() === 'geographicFloor') {
+    const [
+      allNodesControlesEndpoints,
+      allEndpoints,
+      CategorieAttributsList,
+
+    ] = await Promise.all([
+      getNodeControlEndpoints(floor),
+      getEndpointsInfo(floor),
+      getAttributes(floor),
+    ]);
+
+    const info = {
+      dynamicId: floor._server_id,
+      staticId: floor.getId().get(),
+      name: floor.getName().get(),
+      type: floor.getType().get(),
+      attributeList: CategorieAttributsList,
+      controlEndpoints: allNodesControlesEndpoints,
+      endpoints: allEndpoints
+    };
+    return info;
+  } else {
+    throw 'node is not of type geographic floor';
+  }
+}
+
 async function getRoomStaticDetailsInfo(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string,
@@ -361,4 +397,5 @@ async function getRoomBimObject(
 
 export { getEquipmentStaticDetailsInfo };
 export { getRoomStaticDetailsInfo };
+export { getFloorStaticDetailsInfo };
 

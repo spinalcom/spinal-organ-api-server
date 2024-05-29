@@ -187,6 +187,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./geographicContext/room/roomFileList')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/room/readStaticsDetails')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/room/readStaticsDetailsMultiple')(logger, app, spinalAPIMiddleware);
+    require('./geographicContext/floor/readStaticDetails')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/equipement/readEquipement')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/equipement/readEquipmentStaticDetails')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/equipement/readEquipmentStaticDetailsMultiple')(logger, app, spinalAPIMiddleware);
