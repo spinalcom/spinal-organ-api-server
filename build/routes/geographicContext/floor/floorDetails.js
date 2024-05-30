@@ -90,10 +90,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     }
                 }
             }
-            var info = {
+            const info = {
                 area: sommes,
                 _bimObjects: _bimObjects
             };
+            res.json(info);
         }
         catch (error) {
             console.error(error);
@@ -101,7 +102,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             res.status(400).send("list of floor is not loaded");
         }
-        res.send(info);
     });
 };
 //# sourceMappingURL=floorDetails.js.map

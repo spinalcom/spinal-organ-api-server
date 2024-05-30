@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const constants_1 = require("spinal-env-viewer-context-geographic-service/build/constants");
 const visitNodesWithTypeRelation_1 = require("../../utilities/visitNodesWithTypeRelation");
+const requestUtilities_1 = require("../../utilities/requestUtilities");
 const all_GeoType = constants_1.GEOGRAPHIC_TYPES_ORDER.concat(constants_1.CONTEXT_TYPE);
 var EError;
 (function (EError) {
@@ -23,10 +24,10 @@ function errorHandler(res, error) {
     res.status(e.code).send(e.message);
 }
 module.exports = function (logger, app, spinalAPIMiddleware) {
-    async function getRootNodes(dynIds, res) {
+    async function getRootNodes(dynIds, res, profileId) {
         const ids = Array.isArray(dynIds) ? dynIds : [dynIds];
         const proms = ids.map((dynId) => {
-            return { dynId, prom: spinalAPIMiddleware.load(dynId) };
+            return { dynId, prom: spinalAPIMiddleware.load(dynId, profileId) };
         });
         const result = [];
         for (const prom of proms) {
@@ -150,6 +151,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      */
     app.post('/api/v1/geographicContext/viewInfo', async (req, res) => {
         const body = req.body;
+        const profilId = (0, requestUtilities_1.getProfileId)(req);
         const options = {
             dynamicId: body.dynamicId,
             floorRef: body.floorRef || false,
@@ -160,7 +162,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             return errorHandler(res, EError.BAD_REQ_NO_DYN_ID);
         }
         // getRootNode
-        const nodes = await getRootNodes(options.dynamicId, res);
+        const nodes = await getRootNodes(options.dynamicId, res, profilId);
         // getRelationListFromOption
         const relations = getRelationListFromOption(options);
         // visitChildren

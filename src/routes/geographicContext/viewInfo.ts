@@ -52,6 +52,7 @@ import {
   visitNodesWithTypeRelation,
 } from '../../utilities/visitNodesWithTypeRelation';
 import { ISpinalAPIMiddleware } from '../../interfaces';
+import { getProfileId } from '../../utilities/requestUtilities';
 
 const all_GeoType: string[] = GEOGRAPHIC_TYPES_ORDER.concat(CONTEXT_TYPE);
 /**
@@ -147,11 +148,12 @@ module.exports = function (
 ) {
   async function getRootNodes(
     dynIds: number | number[],
-    res: ViweInfoRes
+    res: ViweInfoRes,
+    profileId: string
   ): Promise<SpinalNode[]> {
     const ids = Array.isArray(dynIds) ? dynIds : [dynIds];
     const proms = ids.map((dynId) => {
-      return { dynId, prom: spinalAPIMiddleware.load(dynId) };
+      return { dynId, prom: spinalAPIMiddleware.load(dynId,profileId) };
     });
     const result: SpinalNode[] = [];
     for (const prom of proms) {
@@ -284,6 +286,7 @@ module.exports = function (
     '/api/v1/geographicContext/viewInfo',
     async (req: ViweInfoReq, res: ViweInfoRes): Promise<any> => {
       const body = req.body;
+      const profilId = getProfileId(req);
       const options: Required<IViewInfoBody> = {
         dynamicId: body.dynamicId,
         floorRef: body.floorRef || false,
@@ -295,7 +298,7 @@ module.exports = function (
         return errorHandler(res, EError.BAD_REQ_NO_DYN_ID);
       }
       // getRootNode
-      const nodes = await getRootNodes(options.dynamicId, res);
+      const nodes = await getRootNodes(options.dynamicId, res, profilId);
       // getRelationListFromOption
       const relations = getRelationListFromOption(options);
       // visitChildren

@@ -106,17 +106,15 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           }
         }
       }
-      var info = {
+      const info = {
         area: sommes,
         _bimObjects: _bimObjects
       };
+      res.json(info);
     } catch (error) {
       console.error(error);
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("list of floor is not loaded");
     }
-
-    res.send(info);
-
   });
 };
