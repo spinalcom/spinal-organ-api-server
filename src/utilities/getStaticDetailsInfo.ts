@@ -156,8 +156,8 @@ async function getFloorStaticDetailsInfo(
       staticId: floor.getId().get(),
       name: floor.getName().get(),
       type: floor.getType().get(),
-      attributeList: CategorieAttributsList,
-      controlEndpoints: allNodesControlesEndpoints,
+      attributList: CategorieAttributsList,
+      controlEndpoint: allNodesControlesEndpoints,
       endpoints: allEndpoints
     };
     return info;
@@ -338,6 +338,7 @@ async function getNodeControlEndpoints(
         dynamicId: endpoint._server_id,
         staticId: endpoint.info.id.get(),
         name: element.name.get(),
+        unit: element.unit?.get(),
         value: element.currentValue?.get(),
         category: category,
       };

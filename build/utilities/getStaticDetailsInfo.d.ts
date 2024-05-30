@@ -66,8 +66,8 @@ declare function getFloorStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddle
     staticId: string;
     name: string;
     type: string;
-    attributeList: IAttr[];
-    controlEndpoints: INodeControlEndpoint[];
+    attributList: IAttr[];
+    controlEndpoint: INodeControlEndpoint[];
     endpoints: {
         dynamicId: number;
         staticId: string;
