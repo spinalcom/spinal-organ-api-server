@@ -51,14 +51,14 @@ module.exports = function (logger, app, spinalAPIMiddleware: ISpinalAPIMiddlewar
    *                   oneOf:
    *                     - type: string
    *                     - type: integer
-   *                 bimObjects:
+   *                 dbids:
    *                   description: dbIds in the viewer
    *                   type: array
    *                   items:
    *                     type: integer
    *             required:
    *               - bimFileId
-   *               - bimObjects
+   *               - dbids
    *     responses:
    *       200:
    *         description: Array of BimObjectsInfo
