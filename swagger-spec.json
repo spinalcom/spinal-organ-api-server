@@ -12595,7 +12595,7 @@
                         }
                       ]
                     },
-                    "bimObjects": {
+                    "dbids": {
                       "description": "dbIds in the viewer",
                       "type": "array",
                       "items": {
@@ -12606,7 +12606,7 @@
                 },
                 "required": [
                   "bimFileId",
-                  "bimObjects"
+                  "dbids"
                 ]
               }
             }
