@@ -378,11 +378,11 @@ export interface Note {
 *           type: "string"
 *         type:
 *           type: "string"
-*         attributeList:
+*         attributsList:
 *           type: "array"
 *           items:
 *                $ref: "#/components/schemas/Attributs"
-*         controlEndpoints:
+*         controlEndpoint:
 *           type: "array"
 *           items:
 *               $ref: "#/components/schemas/ControlEndpointProfileAndEndpoints"

@@ -156,7 +156,7 @@ async function getFloorStaticDetailsInfo(
       staticId: floor.getId().get(),
       name: floor.getName().get(),
       type: floor.getType().get(),
-      attributList: CategorieAttributsList,
+      attributsList: CategorieAttributsList,
       controlEndpoint: allNodesControlesEndpoints,
       endpoints: allEndpoints
     };
