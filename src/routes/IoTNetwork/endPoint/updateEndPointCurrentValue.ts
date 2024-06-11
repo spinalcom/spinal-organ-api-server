@@ -22,77 +22,217 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import { SpinalNode } from 'spinal-env-viewer-graph-service'
-import spinalServiceTimeSeries from '../spinalTimeSeries'
+import {
+  SpinalContext,
+  SpinalGraphService,
+  SpinalNodeRef,
+} from 'spinal-env-viewer-graph-service';
+import { SpinalNode } from 'spinal-env-viewer-graph-service';
+import spinalServiceTimeSeries from '../spinalTimeSeries';
 import * as express from 'express';
-import { CurrentValue } from '../interfacesEndpointAndTimeSeries'
+import { CurrentValue } from '../interfacesEndpointAndTimeSeries';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
+import {
+  spinalControlPointService,
+  ControlEndpointDataType,
+} from 'spinal-env-viewer-plugin-control-endpoint-service';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+const TIMESERIES_DATA_TYPES = [
+  ControlEndpointDataType.Float,
+  ControlEndpointDataType.Integer,
+  ControlEndpointDataType.Integer16,
+  ControlEndpointDataType.Long,
+  ControlEndpointDataType.Double,
+  ControlEndpointDataType.Real,
+  ControlEndpointDataType.Unsigned,
+  ControlEndpointDataType.Unsigned8,
+  ControlEndpointDataType.Unsigned16,
+  ControlEndpointDataType.Unsigned32,
+  ControlEndpointDataType.DateTime,
+];
 
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
-* @swagger
- * /api/v1/endpoint/{id}/update:
- *   put:
- *     security: 
- *       - bearerAuth: 
- *         - read
- *     description: update the current value of endpoint 
- *     summary: update the current value of endpoint
- *     tags:
- *       - IoTNetwork & Time Series
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - newValue
- *             properties:
- *                newValue:
- *                 type: number
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *                $ref: '#/components/schemas/NewValue'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/endpoint/{id}/update:
+   *   put:
+   *     security:
+   *       - bearerAuth:
+   *         - read
+   *     description: update the current value of endpoint
+   *     summary: update the current value of endpoint
+   *     tags:
+   *       - IoTNetwork & Time Series
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - newValue
+   *             properties:
+   *                newValue:
+   *                 type: number
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/NewValue'
+   *       400:
+   *         description: Bad request
+   */
 
-  const { NODE_TO_CATEGORY_RELATION } = require('spinal-env-viewer-plugin-documentation-service/dist/Models/constants')
-  const { SpinalGraphService } = require('spinal-env-viewer-graph-service')
-  app.put("/api/v1/endpoint/:id/update", async (req, res, next) => {
+  app.put('/api/v1/endpoint/:id/update', async (req, res, next) => {
     let info;
     try {
       const profileId = getProfileId(req);
-      const node : SpinalNode = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
+      const node: SpinalNode = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10),
+        profileId
+      );
       SpinalGraphService._addNode(node);
-     
-      const timeseries = await spinalServiceTimeSeries().getOrCreateTimeSeries(node.getId().get())
-      await timeseries.push(req.body.newValue);
-      const element = await node.element.load();
-      element.currentValue.set(req.body.newValue)
-      node.info.directModificationDate.set(Date.now());
-      info = { NewValue: element.currentValue.get() };
-    } catch (error) {
+      const newValue = req.body.newValue;
+      const nodeInfo = await node.element.load();
+      const dataType = nodeInfo.dataType?.get();
+      const isCp = nodeInfo.saveTimeSeries ? true : false;
+      if (!dataType)
+        throw {
+          code: 400,
+          message:
+            'The node has no dataType ( The node is probably not a BmsEndpoint )',
+        };
+      console.log('The node is a control point :', isCp);
 
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send(error.message)
+      if (dataType === 'Boolean' && typeof newValue !== 'boolean') {
+        throw { code: 400, message: 'The new value should be a boolean' };
+      }
+      if (dataType === 'Enum' && typeof newValue !== 'string') {
+        throw { code: 400, message: 'The new value should be a string' };
+      }
+
+      if (isCp && dataType === 'Enum') {
+        const authorizedValues = await getAuthorizedValuesByProfile(
+          node,
+          newValue
+        );
+        if (
+          authorizedValues.length > 0 &&
+          !authorizedValues.includes(newValue)
+        ) {
+          throw {
+            code: 400,
+            message:
+              'The new value is not authorized. Authorized values : ' +
+              authorizedValues.join(' | '),
+          };
+        }
+      }
+      if (
+        typeof newValue === 'number' &&
+        TIMESERIES_DATA_TYPES.includes(dataType)
+      ) {
+        if ((isCp && nodeInfo.saveTimeSeries.get()) || !isCp) {
+          const timeseries =
+            await spinalServiceTimeSeries().getOrCreateTimeSeries(
+              node.getId().get()
+            );
+          await timeseries.push(req.body.newValue);
+        }
+      }
+
+      nodeInfo.currentValue.set(req.body.newValue);
+      node.info.directModificationDate.set(Date.now());
+      info = { NewValue: nodeInfo.currentValue.get() };
+    } catch (error) {
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
+      res.status(400).send(error.message);
     }
 
     res.json(info);
-  })
+  });
+};
+
+async function getProfileReferenceId(
+  node: SpinalNode<any>
+): Promise<string | null> {
+  const parents = await node.getParents(['hasBmsEndpoint']);
+  for (const parent of parents) {
+    const referenceId = parent.info.referenceId?.get();
+    if (referenceId) return referenceId;
+  }
+  return null;
+}
+
+/**
+ *  Find the profile among multiple contexts
+ * @param contexts
+ * @param profileReferenceId
+ * @returns
+ */
+async function findControlPointProfile(
+  contexts: SpinalNodeRef[],
+  profileReferenceId: string
+): Promise<SpinalNodeRef | null> {
+  for (const ctxt of contexts) {
+    const profilesResult = await SpinalGraphService.findInContext(
+      ctxt.id.get(),
+      ctxt.id.get(),
+      (node) => {
+        SpinalGraphService._addNode(node);
+        return node.getId().get() === profileReferenceId;
+      }
+    );
+    if (profilesResult.length > 0) return profilesResult[0];
+  }
+  return null;
+}
+
+async function getAuthorizedValuesByProfile(
+  node: SpinalNode<any>,
+  newValue: string
+): Promise<string[]> {
+  const authorizedValues = [];
+  const profileReferenceId = await getProfileReferenceId(node);
+  if (!profileReferenceId)
+    throw { code: 400, message: 'The node has no profile reference id' };
+  const controlPointContexts = await spinalControlPointService.getContexts();
+  const profileNode = await findControlPointProfile(
+    controlPointContexts,
+    profileReferenceId
+  );
+  if (!profileNode) {
+    throw {
+      code: 400,
+      message:
+        "Couldn't retrieve the profile after examining all control point contexts",
+    };
+  }
+  const realNode = SpinalGraphService.getRealNode(profileNode.id.get());
+  const elements = await realNode.element.load();
+  for (const element of elements) {
+    if (element.name?.get() == node.getName().get()) {
+      const configs = element.config.enumeration;
+      for (const config of configs) {
+        authorizedValues.push(config.name.get());
+      }
+    }
+  }
+
+  return authorizedValues;
 }
