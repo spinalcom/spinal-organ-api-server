@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getFloorStaticDetailsInfo = exports.getRoomStaticDetailsInfo = exports.getEquipmentStaticDetailsInfo = void 0;
+exports.getBuildingStaticDetailsInfo = exports.getFloorStaticDetailsInfo = exports.getRoomStaticDetailsInfo = exports.getEquipmentStaticDetailsInfo = void 0;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
 const spinal_env_viewer_plugin_control_endpoint_service_1 = require("spinal-env-viewer-plugin-control-endpoint-service");
@@ -11,6 +11,32 @@ const ENDPOINT_RELATIONS = [
     'hasBmsEndpointGroup',
     'hasEndPoint',
 ];
+async function getBuildingStaticDetailsInfo(spinalAPIMiddleware, profileId, buildingId) {
+    const building = await spinalAPIMiddleware.load(buildingId, profileId);
+    //@ts-ignore
+    spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(building);
+    if (building.getType().get() === 'geographicBuilding') {
+        const [allNodesControlesEndpoints, allEndpoints, CategorieAttributsList,] = await Promise.all([
+            getNodeControlEndpoints(building),
+            getEndpointsInfo(building),
+            getAttributes(building),
+        ]);
+        const info = {
+            dynamicId: building._server_id,
+            staticId: building.getId().get(),
+            name: building.getName().get(),
+            type: building.getType().get(),
+            attributsList: CategorieAttributsList,
+            controlEndpoint: allNodesControlesEndpoints,
+            endpoints: allEndpoints
+        };
+        return info;
+    }
+    else {
+        throw 'node is not of type geographic floor';
+    }
+}
+exports.getBuildingStaticDetailsInfo = getBuildingStaticDetailsInfo;
 async function getEquipmentStaticDetailsInfo(spinalAPIMiddleware, profileId, equipementId) {
     const equipment = await spinalAPIMiddleware.load(equipementId, profileId);
     //@ts-ignore
@@ -42,10 +68,10 @@ async function getEquipmentStaticDetailsInfo(spinalAPIMiddleware, profileId, equ
             staticId: equipment.getId().get(),
             name: equipment.getName().get(),
             type: equipment.getType().get(),
-            bimFileId: equipment.info.bimFileId.get(),
+            bimFileId: equipment.info.bimFileId?.get(),
             version: equipment.info.version?.get(),
-            externalId: equipment.info.externalId.get(),
-            dbid: equipment.info.dbid.get(),
+            externalId: equipment.info.externalId?.get(),
+            dbid: equipment.info.dbid?.get(),
             default_attributs: {
                 revitCategory: revitCategory,
                 revitFamily: revitFamily,
@@ -275,10 +301,10 @@ async function getRoomBimObject(room) {
             staticId: child.getId().get(),
             name: child.getName().get(),
             type: child.getType().get(),
-            bimFileId: child.info.bimFileId.get(),
-            version: child.info.version.get(),
-            externalId: child.info.externalId.get(),
-            dbid: child.info.dbid.get(),
+            bimFileId: child.info.bimFileId?.get(),
+            version: child.info.version?.get(),
+            externalId: child.info.externalId?.get(),
+            dbid: child.info.dbid?.get(),
             default_attributs: {
                 revitCategory: revitCategory,
                 revitFamily: revitFamily,

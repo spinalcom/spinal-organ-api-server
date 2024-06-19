@@ -98,6 +98,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 *           type: "array"
 *           items:
 *               $ref: "#/components/schemas/ControlEndpointProfileAndEndpoints"
+*         endpoints:
+*           type: "array"
+*           items:
+*               $ref: "#/components/schemas/EndPointRoom"
+*         tickets:
+*           type: "array"
+*           items:
+*               $ref: "#/components/schemas/Ticket"
  */
 /**
 * @swagger

@@ -62,7 +62,41 @@ const ENDPOINT_RELATIONS = [
 ];
 
 
+async function getBuildingStaticDetailsInfo(
+  spinalAPIMiddleware: ISpinalAPIMiddleware,
+  profileId: string,
+  buildingId: number,
+) {
+  const building: SpinalNode<any> = await spinalAPIMiddleware.load(buildingId,profileId);
+  
+  //@ts-ignore
+  SpinalGraphService._addNode(building);
+  if (building.getType().get() === 'geographicBuilding') {
+    const [
+      allNodesControlesEndpoints,
+      allEndpoints,
+      CategorieAttributsList,
 
+    ] = await Promise.all([
+      getNodeControlEndpoints(building),
+      getEndpointsInfo(building),
+      getAttributes(building),
+    ]);
+
+    const info = {
+      dynamicId: building._server_id,
+      staticId: building.getId().get(),
+      name: building.getName().get(),
+      type: building.getType().get(),
+      attributsList: CategorieAttributsList,
+      controlEndpoint: allNodesControlesEndpoints,
+      endpoints: allEndpoints
+    };
+    return info;
+  } else {
+    throw 'node is not of type geographic floor';
+  }
+}
 async function getEquipmentStaticDetailsInfo(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string,
@@ -109,10 +143,10 @@ async function getEquipmentStaticDetailsInfo(
       staticId: equipment.getId().get(),
       name: equipment.getName().get(),
       type: equipment.getType().get(),
-      bimFileId: equipment.info.bimFileId.get(),
+      bimFileId: equipment.info.bimFileId?.get(),
       version: equipment.info.version?.get(),
-      externalId: equipment.info.externalId.get(),
-      dbid: equipment.info.dbid.get(),
+      externalId: equipment.info.externalId?.get(),
+      dbid: equipment.info.dbid?.get(),
       default_attributs: {
         revitCategory: revitCategory,
         revitFamily: revitFamily,
@@ -382,10 +416,10 @@ async function getRoomBimObject(
       staticId: child.getId().get(),
       name: child.getName().get(),
       type: child.getType().get(),
-      bimFileId: child.info.bimFileId.get(),
-      version: child.info.version.get(),
-      externalId: child.info.externalId.get(),
-      dbid: child.info.dbid.get(),
+      bimFileId: child.info.bimFileId?.get(),
+      version: child.info.version?.get(),
+      externalId: child.info.externalId?.get(),
+      dbid: child.info.dbid?.get(),
       default_attributs: {
         revitCategory: revitCategory,
         revitFamily: revitFamily,
@@ -399,4 +433,5 @@ async function getRoomBimObject(
 export { getEquipmentStaticDetailsInfo };
 export { getRoomStaticDetailsInfo };
 export { getFloorStaticDetailsInfo };
+export { getBuildingStaticDetailsInfo };
 

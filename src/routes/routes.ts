@@ -542,6 +542,11 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
+  require('./geographicContext/building/readStaticDetails')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./geographicContext/equipement/readEquipement')(
     logger,
     app,

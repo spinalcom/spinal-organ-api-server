@@ -824,6 +824,18 @@
             "items": {
               "$ref": "#/components/schemas/ControlEndpointProfileAndEndpoints"
             }
+          },
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EndPointRoom"
+            }
+          },
+          "tickets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Ticket"
+            }
           }
         }
       },
@@ -14779,6 +14791,49 @@
         "responses": {
           "200": {
             "description": "Create Successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/building/{id}/read_static_details": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "read static details of a building",
+        "summary": "Gets static details of a building",
+        "tags": [
+          "Geographic Context"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaticDetailsFloor"
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request"

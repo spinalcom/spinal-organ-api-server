@@ -36,6 +36,21 @@ interface INodeInfo {
     name: string;
     type: string;
 }
+declare function getBuildingStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, buildingId: number): Promise<{
+    dynamicId: number;
+    staticId: string;
+    name: string;
+    type: string;
+    attributsList: IAttr[];
+    controlEndpoint: INodeControlEndpoint[];
+    endpoints: {
+        dynamicId: number;
+        staticId: string;
+        name: string;
+        type: string;
+        value: any;
+    }[];
+}>;
 declare function getEquipmentStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, equipementId: number): Promise<{
     dynamicId: number;
     staticId: string;
@@ -96,3 +111,4 @@ declare function getRoomStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddlew
 export { getEquipmentStaticDetailsInfo };
 export { getRoomStaticDetailsInfo };
 export { getFloorStaticDetailsInfo };
+export { getBuildingStaticDetailsInfo };
