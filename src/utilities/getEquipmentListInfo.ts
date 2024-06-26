@@ -23,7 +23,7 @@ async function getEquipmentListInfo(spinalAPIMiddleware :ISpinalAPIMiddleware,pr
             name: child.getName().get(),
             type: child.getType().get(),
             bimFileId: child.info.bimFileId.get(),
-            version: child.info.version.get(),
+            version: child.info.version?.get(),
             externalId: child.info.externalId.get(),
             dbid: child.info.dbid.get(),
         };
