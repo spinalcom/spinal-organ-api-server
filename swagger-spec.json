@@ -12946,7 +12946,7 @@
       "post": {
         "security": [
           {
-            "bearerAuth": [
+            "OauthSecurity": [
               "readOnly"
             ]
           }
@@ -12964,12 +12964,18 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "context": {
+                    "type": "string"
+                  },
                   "propertyReference": {
                     "type": "array",
                     "items": {
                       "type": "object",
                       "properties": {
                         "dynamicId": {
+                          "type": "string"
+                        },
+                        "staticId": {
                           "type": "string"
                         },
                         "keys": {

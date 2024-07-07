@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-// import spinalAPIMiddleware from '../../spinalAPIMiddleware';
+import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
 import {
   SpinalContext,
@@ -31,20 +31,20 @@ import {
 } from 'spinal-env-viewer-graph-service';
 import { updateControlEndpointWithAnalytic } from './../../utilities/upstaeControlEndpoint'
 import { NetworkService, InputDataEndpoint, InputDataEndpointDataType, InputDataEndpointType } from "spinal-model-bmsnetwork"
-import { getProfileId } from '../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../interfaces';
+import { findOneInContext } from '../../utilities/findOneInContext';
+import { spinalCore, FileSystem } from 'spinal-core-connectorjs_type';
 
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: ISpinalAPIMiddleware
+  spinalAPIMiddleware: spinalAPIMiddleware
 ) {
   /**
    * @swagger
    * /api/v1/node/command:
    *   post:
    *     security:
-   *       - bearerAuth:
+   *       - OauthSecurity:
    *         - readOnly
    *     description: Set command value
    *     summary: Set command value
@@ -58,12 +58,16 @@ module.exports = function (
    *           schema:
    *             type: object
    *             properties:
+   *               context:
+   *                 type: string
    *               propertyReference:
    *                 type: array
    *                 items:
    *                   type: object
    *                   properties:
    *                     dynamicId:
+   *                       type: string
+   *                     staticId:
    *                       type: string
    *                     keys:
    *                       type: array
@@ -87,20 +91,61 @@ module.exports = function (
 
   app.post('/api/v1/node/command', async (req, res, next) => {
     try {
-      const profileId = getProfileId(req);
-      const arrayList = [];
+      const paramContext = req.body.context;
+      let context: SpinalContext<any>;
+      async function verifyContext(paramContext: string) {
+        if (typeof FileSystem._objects[paramContext] !== 'undefined') {
+          return (context = await spinalAPIMiddleware.load(
+            parseInt(paramContext, 10)
+          ));
+        } else if (SpinalGraphService.getRealNode(paramContext)) {
+          return (context = SpinalGraphService.getRealNode(paramContext));
+        } else if (SpinalGraphService.getContext(paramContext)) {
+          return (context = SpinalGraphService.getContext(paramContext));
+        } else {
+          res.status(400).send('context not exist');
+        }
+      }
+      let _node: SpinalNode<any>
       const nodetypes = ["geographicRoom", "BIMObject", "BIMObjectGroup", "geographicRoomGroup", "geographicFloor"];
-      const controlPointTypes = ["COMMAND_BLIND","COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE"];
+      //const controlPointTypes = ["COMMAND_BLIND", "COMMAND_LIGHT", "COMMAND_TEMP"];
+      const controlPointTypes = ["COMMAND_BLIND", "COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE"];
       const nodes = req.body.propertyReference;
       for (const node of nodes) {
-        const _node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10), profileId);
+        if (node.dynamicId.length !== 0) {
+          _node = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10));
+        } else if (node.staticId.length !== 0) {
+          console.log("node.staticId", node.staticId);
+
+          if (paramContext === undefined) {
+            res.status(400).send('context not exist');
+          }
+          context = await verifyContext(paramContext);
+          _node = SpinalGraphService.getRealNode(
+            node.staticId
+          );
+          console.log("context", context.getName().get());
+
+          if (typeof _node === 'undefined') {
+            _node = await findOneInContext(
+              context,
+              context,
+              (n) => n.getId().get() === node.staticId
+            );
+          }
+          if (_node) {
+            if (!_node.belongsToContext(context)) {
+              res.status(400).send('this node does not belong to this context');
+            }
+          }
+        }
         if (nodetypes.includes(_node.getType().get())) {
           for (const command of node.keys) {
             if (controlPointTypes.includes(command.key)) {
-              const controlPoints = await _node.getChildren('hasControlPoints');
+              let controlPoints = await _node.getChildren('hasControlPoints');
               for (const controlPoint of controlPoints) {
                 if (controlPoint.getName().get() === "Command") {
-                  const bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
+                  let bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
                   for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
                     if (bmsEndPoint.getName().get() === command.key) {
                       await updateControlEndpointWithAnalytic(bmsEndPoint, command.value, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
@@ -118,10 +163,14 @@ module.exports = function (
         }
       }
     } catch (error) {
-      if (error.code && error.message) return res.status(error.code).send(error.message)
+      console.error(error);
       res.status(400).send("one of node is not loaded");
     }
 
     res.send("Endpoint updated");
   });
 };
+
+
+
+
