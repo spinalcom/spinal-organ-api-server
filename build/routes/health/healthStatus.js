@@ -49,7 +49,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      */
     app.get('/api/v1/healthStatus', async (req, res, next) => {
         function isWithinTwoMinutes(timestamp) {
-            const twoMinutesAgo = Date.now() - (2 * 60 * 1000); // calculate timestamp for 2 minutes ago
+            const twoMinutesAgo = Date.now() - (5 * 60 * 1000); // calculate timestamp for 2 minutes ago
             return (timestamp >= twoMinutesAgo && timestamp <= Date.now()); // check if timestamp is within 2 minutes
         }
         const organs = [];

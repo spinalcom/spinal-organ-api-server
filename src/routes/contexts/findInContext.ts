@@ -37,6 +37,9 @@ import { findOneInContext } from '../../utilities/findOneInContext';
 import { spinalCore, FileSystem } from 'spinal-core-connectorjs_type';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
+import { getTicketDetails } from '../../utilities/getTicketDetails';
+import { NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service/dist/Models/constants";
+
 
 module.exports = function (
   logger,
@@ -278,6 +281,22 @@ async function getTicketInfo(
         }
       }
     });
+
+    const categories = await _node.getChildren(NODE_TO_CATEGORY_RELATION);
+    const promise_infoCategories = categories.map(
+    async (categorie): Promise<any> => {
+      const attributes = await categorie.element.load();
+      const infoCategories: any = {
+        dynamicId: categorie._server_id,
+        staticId: categorie.getId().get(),
+        name: categorie.getName().get(),
+        type: categorie.getType().get(),
+        attributs: attributes.get(),
+      };
+      return infoCategories;
+    }
+  );
+  const _infoCategories = await Promise.all(promise_infoCategories);
   let elementSelected;
   try {
     if (_node.info.elementSelected !== undefined)
@@ -333,5 +352,6 @@ async function getTicketInfo(
     },
     workflowId: context._server_id,
     workflowName: context.getName().get(),
+    categories: _infoCategories
   };
 }

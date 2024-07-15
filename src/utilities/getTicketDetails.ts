@@ -2,6 +2,7 @@ import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-ser
 import { serviceTicketPersonalized } from 'spinal-service-ticket';
 import { LOGS_EVENTS } from 'spinal-service-ticket/dist/Constants';
 import { ISpinalAPIMiddleware } from '../interfaces';
+import { NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service/dist/Models/constants";
 import {
   SpinalNode,
   SpinalGraphService,
@@ -13,7 +14,10 @@ async function getTicketDetails(
   ticketId: number
 ) {
   await spinalAPIMiddleware.getGraph();
-  const _ticket: SpinalNode<any> = await spinalAPIMiddleware.load(ticketId,profileId);
+  const _ticket: SpinalNode<any> = await spinalAPIMiddleware.load(
+    ticketId,
+    profileId
+  );
   //@ts-ignore
   SpinalGraphService._addNode(_ticket);
   //Step
@@ -118,7 +122,11 @@ async function getTicketDetails(
     'SpinalSystemServiceTicketHasTicket'
   );
   for (const parent of parentsTicket) {
-    if(!['SpinalSystemServiceTicketTypeStep','analyticOutputs'].includes(parent.getType().get())) {
+    if (
+      !['SpinalSystemServiceTicketTypeStep', 'analyticOutputs'].includes(
+        parent.getType().get()
+      )
+    ) {
       //@ts-ignore
       SpinalGraphService._addNode(parent);
       elementSelected = parent;

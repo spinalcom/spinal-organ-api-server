@@ -27,6 +27,7 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const findOneInContext_1 = require("../../utilities/findOneInContext");
 const spinal_core_connectorjs_type_1 = require("spinal-core-connectorjs_type");
 const requestUtilities_1 = require("../../utilities/requestUtilities");
+const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -227,6 +228,19 @@ async function getTicketInfo(context, _node, spinalAPIMiddleware) {
             }
         }
     });
+    const categories = await _node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+    const promise_infoCategories = categories.map(async (categorie) => {
+        const attributes = await categorie.element.load();
+        const infoCategories = {
+            dynamicId: categorie._server_id,
+            staticId: categorie.getId().get(),
+            name: categorie.getName().get(),
+            type: categorie.getType().get(),
+            attributs: attributes.get(),
+        };
+        return infoCategories;
+    });
+    const _infoCategories = await Promise.all(promise_infoCategories);
     let elementSelected;
     try {
         if (_node.info.elementSelected !== undefined)
@@ -275,6 +289,7 @@ async function getTicketInfo(context, _node, spinalAPIMiddleware) {
         },
         workflowId: context._server_id,
         workflowName: context.getName().get(),
+        categories: _infoCategories
     };
 }
 //# sourceMappingURL=findInContext.js.map
