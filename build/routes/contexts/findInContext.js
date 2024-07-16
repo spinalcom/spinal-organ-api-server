@@ -76,114 +76,31 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post('/api/v1/find_node_in_context', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            let info;
             await spinalAPIMiddleware.getGraph();
             const tab = req.body.array;
             const paramContext = req.body.context;
-            const result = [];
+            const ticketResult = req.body.optionResult === 'ticket';
             const context = await verifyContext(paramContext, spinalAPIMiddleware, profileId);
-            /***************** ***optionSearchNodes**************/
-            if (req.body.optionSearchNodes === 'dynamicId') {
-                const nodes = [];
-                for (let index = 0; index < tab.length; index++) {
-                    const node = await spinalAPIMiddleware.load(parseInt(tab[index], 10), profileId);
-                    if (!node)
-                        throw {
-                            code: 400,
-                            message: `Node ${tab[index]} could not be found`,
-                        };
-                    nodes.push(node);
+            const promises = tab.map((searchValue) => getNodeInformation(context, req.body.optionSearchNodes, searchValue, ticketResult, spinalAPIMiddleware, profileId));
+            const settledResults = await Promise.allSettled(promises);
+            const finalResults = settledResults.map((result, index) => {
+                if (result.status === 'fulfilled') {
+                    return result.value;
                 }
-                for (const _node of nodes) {
-                    if (!_node.belongsToContext(context))
-                        throw {
-                            code: 400,
-                            message: `Node ${_node
-                                .getId()
-                                .get()} does not belong to context ${context.getId().get()}`,
-                        };
-                    if (req.body.optionResult === 'ticket') {
-                        info = await getTicketInfo(context, _node, spinalAPIMiddleware);
-                        result.push(info);
-                    }
-                    else {
-                        info = {
-                            dynamicId: _node._server_id,
-                            staticId: _node.getId().get(),
-                            name: _node.getName().get(),
-                            type: _node.getType().get(),
-                        };
-                        result.push(info);
-                    }
+                else {
+                    console.error(`Error with node id ${tab[index]}: ${result.reason}`);
+                    return {
+                        dynamicId: tab[index],
+                        error: result.reason?.message ||
+                            result.reason ||
+                            'Failed to get Node Details',
+                    };
                 }
-            }
-            if (req.body.optionSearchNodes === 'staticId') {
-                const nodes = [];
-                for (let index = 0; index < tab.length; index++) {
-                    let node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(tab[index]);
-                    if (typeof node === 'undefined') {
-                        node = await (0, findOneInContext_1.findOneInContext)(context, context, (n) => n.getId().get() === tab[index]);
-                    }
-                    if (!node)
-                        throw {
-                            code: 400,
-                            message: `Node ${tab[index]} could not be found`,
-                        };
-                    nodes.push(node);
-                }
-                for (const _node of nodes) {
-                    if (!_node.belongsToContext(context))
-                        throw {
-                            code: 400,
-                            message: `Node ${_node
-                                .getId()
-                                .get()} does not belong to context ${context.getId().get()}`,
-                        };
-                    if (req.body.optionResult === 'ticket') {
-                        info = await getTicketInfo(context, _node, spinalAPIMiddleware);
-                        result.push(info);
-                    }
-                    else {
-                        info = {
-                            dynamicId: _node._server_id,
-                            staticId: _node.getId().get(),
-                            name: _node.getName().get(),
-                            type: _node.getType().get(),
-                        };
-                        result.push(info);
-                    }
-                }
-            }
-            if (req.body.optionSearchNodes === 'name') {
-                if (context) {
-                    const res = await spinal_env_viewer_graph_service_1.SpinalGraphService.findInContext(context.getId().get(), context.getId().get());
-                    for (const _node of res) {
-                        for (const _name of tab) {
-                            if (_node.name.get() === _name) {
-                                let node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(_node.id.get());
-                                if (typeof node === 'undefined') {
-                                    node = await (0, findOneInContext_1.findOneInContext)(context, context, (n) => n.getId().get() === _node.id.get());
-                                }
-                                if (req.body.optionResult === 'ticket') {
-                                    //Step
-                                    info = await getTicketInfo(context, node, spinalAPIMiddleware);
-                                    result.push(info);
-                                }
-                                else {
-                                    info = {
-                                        dynamicId: node._server_id,
-                                        staticId: node.getId().get(),
-                                        name: node.getName().get(),
-                                        type: node.getType().get(),
-                                    };
-                                    result.push(info);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            res.json(result);
+            });
+            const isGotError = settledResults.some((result) => result.status === 'rejected');
+            if (isGotError)
+                return res.status(206).json(finalResults);
+            return res.status(200).json(finalResults);
         }
         catch (error) {
             if (error.code && error.message)
@@ -256,8 +173,8 @@ async function getTicketInfo(context, _node, spinalAPIMiddleware) {
         staticId: _node.getId().get(),
         name: _node.getName().get(),
         type: _node.getType().get(),
-        priority: _node.info.priority.get(),
-        creationDate: _node.info.creationDate.get(),
+        priority: _node.info.priority?.get() || '',
+        creationDate: _node.info.creationDate?.get() || '',
         elementSelected: elementSelected == undefined
             ? 0
             : {
@@ -266,30 +183,76 @@ async function getTicketInfo(context, _node, spinalAPIMiddleware) {
                 name: elementSelected.getName().get(),
                 type: elementSelected.getType().get(),
             },
-        userName: _node.info.user == undefined ? '' : _node.info.user.name.get(),
-        gmaoId: _node.info.gmaoId == undefined ? '' : _node.info.gmaoId.get(),
-        gmaoDateCreation: _node.info.gmaoDateCreation == undefined
+        userName: _node.info.user?.name?.get() || _node.info.user?.username?.get() || '',
+        gmaoId: _node.info.gmaoId?.get() || '',
+        gmaoDateCreation: _node.info.gmaoDateCreation?.get() || '',
+        description: _node.info.description?.get() || '',
+        declarer_id: _node.info.declarer_id?.get() || '',
+        process: _process === undefined
             ? ''
-            : _node.info.gmaoDateCreation.get(),
-        description: _node.info.description == undefined ? '' : _node.info.description.get(),
-        declarer_id: _node.info.declarer_id == undefined ? '' : _node.info.declarer_id.get(),
-        process: {
-            dynamicId: _process._server_id,
-            staticId: _process.getId().get(),
-            name: _process.getName().get(),
-            type: _process.getType().get(),
-        },
-        step: {
-            dynamicId: _step._server_id,
-            staticId: _step.getId().get(),
-            name: _step.getName().get(),
-            type: _step.getType().get(),
-            color: _step.info.color.get(),
-            order: _step.info.order.get(),
-        },
+            : {
+                dynamicId: _process._server_id,
+                staticId: _process.getId().get(),
+                name: _process.getName().get(),
+                type: _process.getType().get(),
+            },
+        step: _step === undefined
+            ? ''
+            : {
+                dynamicId: _step._server_id,
+                staticId: _step.getId().get(),
+                name: _step.getName().get(),
+                type: _step.getType().get(),
+                color: _step.info.color.get(),
+                order: _step.info.order.get(),
+            },
         workflowId: context._server_id,
         workflowName: context.getName().get(),
-        categories: _infoCategories
+        categories: _infoCategories,
     };
+}
+async function getNodeWithSearchOption(context, searchOption, searchValue, spinalAPIMiddleware, profileId) {
+    let node;
+    if (searchOption === 'dynamicId') {
+        node = await spinalAPIMiddleware.load(parseInt(searchValue, 10), profileId);
+    }
+    if (searchOption === 'staticId') {
+        node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(searchValue);
+        if (typeof node === 'undefined') {
+            node = await (0, findOneInContext_1.findOneInContext)(context, context, (n) => n.getId().get() === searchValue);
+        }
+    }
+    if (searchOption === 'name') {
+        node = await (0, findOneInContext_1.findOneInContext)(context, context, (n) => n.getName().get() === searchValue && n.getId().get() !== context.getId().get());
+    }
+    return node;
+}
+async function getNodeInformation(context, searchOption, searchValue, ticketResult = false, spinalAPIMiddleware, profileId) {
+    const node = await getNodeWithSearchOption(context, searchOption, searchValue, spinalAPIMiddleware, profileId);
+    if (!node) {
+        throw {
+            code: 400,
+            message: `Node ${searchValue} could not be found`,
+        };
+    }
+    if (!node.belongsToContext(context)) {
+        throw {
+            code: 400,
+            message: `Node ${node.getId().get()} does not belong to context ${context
+                .getId()
+                .get()}`,
+        };
+    }
+    if (ticketResult) {
+        return await getTicketInfo(context, node, spinalAPIMiddleware);
+    }
+    else {
+        return {
+            dynamicId: node._server_id,
+            staticId: node.getId().get(),
+            name: node.getName().get(),
+            type: node.getType().get(),
+        };
+    }
 }
 //# sourceMappingURL=findInContext.js.map

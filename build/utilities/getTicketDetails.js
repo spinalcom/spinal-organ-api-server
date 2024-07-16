@@ -111,14 +111,10 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
         staticId: _ticket.getId().get(),
         name: _ticket.getName().get(),
         type: _ticket.getType().get(),
-        priority: _ticket.info.priority?.get(),
-        creationDate: _ticket.info.creationDate?.get(),
-        description: _ticket.info.description == undefined
-            ? ''
-            : _ticket.info.description.get(),
-        declarer_id: _ticket.info.declarer_id == undefined
-            ? ''
-            : _ticket.info.declarer_id.get(),
+        priority: _ticket.info.priority?.get() || '',
+        creationDate: _ticket.info.creationDate?.get() || '',
+        description: _ticket.info.description?.get() || '',
+        declarer_id: _ticket.info.declarer_id?.get() || '',
         elementSelected: elementSelected === undefined
             ? ''
             : {
@@ -127,11 +123,9 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
                 name: elementSelected.getName().get(),
                 type: elementSelected.getType().get(),
             },
-        userName: _ticket.info.user == undefined ? '' : _ticket.info.user.name.get(),
-        gmaoId: _ticket.info.gmaoId == undefined ? '' : _ticket.info.gmaoId.get(),
-        gmaoDateCreation: _ticket.info.gmaoDateCreation == undefined
-            ? ''
-            : _ticket.info.gmaoDateCreation.get(),
+        userName: _ticket.info.user?.name?.get() || _ticket.info.user?.username?.get() || '',
+        gmaoId: _ticket.info.gmaoId?.get() || '',
+        gmaoDateCreation: _ticket.info.gmaoDateCreation?.get() || '',
         process: _process === undefined
             ? ''
             : {
