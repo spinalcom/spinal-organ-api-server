@@ -38,7 +38,7 @@ import { _load } from '../../../utilities/loadNode';
 import { LocalFileData } from 'get-file-object-from-local-path';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
-import getNode from '../../../utilities/getNode'
+import getNode from '../../../utilities/getNode';
 
 module.exports = function (
   logger,
@@ -114,7 +114,7 @@ module.exports = function (
   app.post('/api/v1/ticket/create_ticket', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      let ticketCreated;
+
       const ticketInfo = {
         name: req.body.name,
         priority: req.body.priority,
@@ -122,101 +122,93 @@ module.exports = function (
         declarer_id: req.body.declarer_id,
       };
       await spinalAPIMiddleware.getGraph();
-      const arrayofServerId = [
-        parseInt(req.body.workflow, 10),
-        parseInt(req.body.process, 10),
-      ];
-      const [workflowById, processById]: SpinalNode<any>[] = await await _load(arrayofServerId, spinalAPIMiddleware, profileId);
-      const node = await getNode(spinalAPIMiddleware, req.body.nodeDynamicId, req.body.nodeStaticId, profileId);
-      if (!node) return res.status(400).send('invalid nodeDynamicId or nodeStaticId');
+      const workflowNode = await getWorkflowNode(
+        req.body.workflow,
+        spinalAPIMiddleware,
+        profileId
+      );
+      if (!workflowNode)
+        return res
+          .status(400)
+          .send('Could not find the workflow : ' + req.body.workflow);
+      const processNode = await getProcessNode(
+        workflowNode,
+        req.body.process,
+        spinalAPIMiddleware,
+        profileId
+      );
+      if (!processNode)
+        return res
+          .status(400)
+          .send('Could not find the process : ' + req.body.process);
 
+      const node = await getNode(
+        spinalAPIMiddleware,
+        req.body.nodeDynamicId,
+        req.body.nodeStaticId,
+        profileId
+      );
+      if (!node)
+        return res.status(400).send('invalid nodeDynamicId or nodeStaticId');
       //@ts-ignore
       SpinalGraphService._addNode(node);
-      if (workflowById === undefined && processById === undefined) {
-        const allContexts = serviceTicketPersonalized.getContexts();
-        for (const context of allContexts) {
-          if (context.name === req.body.workflow) {
-            const result = SpinalGraphService.getRealNode(context.id);
-            //@ts-ignore
-            SpinalGraphService._addNode(result);
-            var workflowByName = result;
-          }
-        }
+      //@ts-ignore
+      SpinalGraphService._addNode(workflowNode);
+      //@ts-ignore
+      SpinalGraphService._addNode(processNode);
 
-        if (workflowByName) {
-          const allProcess = await serviceTicketPersonalized.getAllProcess(
-            workflowByName.getId().get()
+      if (!processNode.belongsToContext(workflowNode)) {
+        return res
+          .status(400)
+          .send(
+            'The process exists, but is not part of the workflow given : ' +
+              req.body.workflow
           );
-          for (const process of allProcess) {
-            if (process.name.get() === req.body.process) {
-              const result = SpinalGraphService.getRealNode(process.id.get());
-              //@ts-ignore
-              SpinalGraphService._addNode(result);
-              var processByName = result;
-            }
-          }
-        }
-
-        if (processByName.belongsToContext(workflowByName)) {
-          ticketCreated = await serviceTicketPersonalized.addTicket(
-            ticketInfo,
-            processByName.getId().get(),
-            workflowByName.getId().get(),
-            node.getId().get()
-          );
-        } else {
-          return res
-            .status(400)
-            .send('the workflow does not contain this process');
-        }
-      } else {
-        //@ts-ignore
-        SpinalGraphService._addNode(workflowById);
-        //@ts-ignore
-        SpinalGraphService._addNode(processById);
-        if (processById) {
-          if (processById.belongsToContext(workflowById)) {
-            ticketCreated = await serviceTicketPersonalized.addTicket(
-              ticketInfo,
-              processById.getId().get(),
-              workflowById.getId().get(),
-              node.getId().get()
-            );
-          } else {
-            return res
-              .status(400)
-              .send('the workflow does not contain this process');
-          }
-        }
       }
+
+      const ticketCreated = await serviceTicketPersonalized.addTicket(
+        ticketInfo,
+        processNode.getId().get(),
+        workflowNode.getId().get(),
+        node.getId().get()
+      );
 
       const ticketList = await serviceTicketPersonalized.getTicketsFromNode(
         node.getId().get()
       );
-      for (let index = 0; index < ticketList.length; index++) {
-        if (ticketList[index].id === ticketCreated) {
-          var realNodeTicket = SpinalGraphService.getRealNode(
-            ticketList[index].id
+
+      const linkedTicket = ticketList.find(
+        (element) => element.id === ticketCreated
+      );
+
+      if (!linkedTicket) {
+        return res
+          .status(400)
+          .send(
+            `Ticket created, but could not be found to be linked to node : ${node
+              .getName()
+              .get()}`
           );
-          await awaitSync(realNodeTicket);
-          var info = {
-            dynamicId: realNodeTicket._server_id,
-            staticId: realNodeTicket.getId().get(),
-            name: realNodeTicket.getName().get(),
-            type: realNodeTicket.getType().get(),
-            elementSelcted: req.body.nodeDynamicId,
-            priority: realNodeTicket.info.priority.get(),
-            description: realNodeTicket.info?.description.get(),
-            declarer_id: realNodeTicket.info?.declarer_id.get(),
-            creationDate: realNodeTicket.info.creationDate.get(),
-          };
-        }
       }
+      const realNodeTicket = SpinalGraphService.getRealNode(
+        linkedTicket.id
+      );
+      await awaitSync(realNodeTicket);
+      const info = {
+        dynamicId: realNodeTicket._server_id,
+        staticId: realNodeTicket.getId().get(),
+        name: realNodeTicket.getName().get(),
+        type: realNodeTicket.getType().get(),
+        elementSelcted: req.body.nodeDynamicId,
+        priority: realNodeTicket.info?.priority.get(),
+        description: realNodeTicket.info?.description.get(),
+        declarer_id: realNodeTicket.info?.declarer_id.get(),
+        creationDate: realNodeTicket.info?.creationDate.get(),
+      };
 
       if (req.body.images && req.body.images.length > 0) {
         // const objImage = new Lst(req.body.images);
         // realNodeTicket.info.add_attr('images', new Ptr(objImage));
-
         for (const image of req.body.images) {
           // @ts-ignore
           const user = {
@@ -239,29 +231,62 @@ module.exports = function (
           }
         }
       }
-
-      // var images = req.body.images
-      // for (const image of images) {
-      //   const fs = require('fs');
-      //   var base64 = image.value;
-      //   var data = base64.replace(/^data:image\/\w+;base64,/, "");
-      //   var ReadableData = require('stream').Readable
-      //   const imageBufferData = Buffer.from(data, 'base64')
-      //   var streamObj = new ReadableData()
-      //   streamObj.push(imageBufferData)
-      //   streamObj.push(null)
-      //   var pipe = streamObj.pipe(fs.createWriteStream('./' + image.name));
-      //   pipe.on('finish', function () {
-      //     console.log("pipe.ON");
-      //     const fileData = new LocalFileData('./' + image.name)
-      //     console.log("filedata", fileData);
-      //   });
-      // }
+      return res.json(info);
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
       res.status(400).send({ ko: error });
     }
-    return res.json(info);
   });
 };
+
+async function getWorkflowNode(
+  workflowIdOrName: string,
+  spinalAPIMiddleware: ISpinalAPIMiddleware,
+  profileId: string
+) {
+  try {
+    const allContexts = serviceTicketPersonalized.getContexts();
+    for (const context of allContexts) {
+      if (context.name === workflowIdOrName) {
+        const result = SpinalGraphService.getRealNode(context.id);
+        //@ts-ignore
+        SpinalGraphService._addNode(result);
+        return result;
+      }
+    }
+    // at this point we couldn't find the workflow by name
+    // we will try to find it by id
+    const node  : SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(workflowIdOrName, 10), profileId);
+    return node;
+  } catch (error) {
+    return undefined;
+  }
+}
+
+async function getProcessNode(
+  workflow: SpinalNode<any>,
+  processIdOrName: string,
+  spinalAPIMiddleware: ISpinalAPIMiddleware,
+  profileId: string
+): Promise<SpinalNode<any>> {
+  try {
+    const allProcess = await serviceTicketPersonalized.getAllProcess(
+      workflow.getId().get()
+    );
+    for (const process of allProcess) {
+      if (process.name.get() === processIdOrName) {
+        const result = SpinalGraphService.getRealNode(process.id.get());
+        //@ts-ignore
+        SpinalGraphService._addNode(result);
+        return result;
+      }
+    }
+    // at this point we couldn't find the process by name
+    // we will try to find it by id
+    const node  : SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(processIdOrName, 10), profileId);
+    return node; 
+  } catch (error) {
+    return undefined;
+  }
+}

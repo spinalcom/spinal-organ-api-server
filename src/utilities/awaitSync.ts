@@ -23,7 +23,6 @@
  */
 import { FileSystem } from "spinal-core-connectorjs_type";
 export function awaitSync(model: spinal.Model) {
-
   return new Promise<void>((resolve) => {
     const interval = setInterval(() => {
       if (model._server_id && FileSystem._objects[model._server_id] === model) {
