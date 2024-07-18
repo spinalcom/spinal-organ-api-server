@@ -1,23 +1,40 @@
 # spinal-organ-api-server
 
-## Change log 05/02/2024
-Proceeded to a force push on the main branch. 
-If you were working on the main branch, you will need to reset your local branch to the remote branch.
-To do so, you can use the following commands:
+## [Changelog](CHANGELOG.md)
+
+## Installation
+
 ```bash
-git fetch origin
-git checkout main
-git reset --hard origin/main
+git clone https://github.com/spinalcom/spinal-organ-api-server.git
+cd spinal-organ-api-server
+npm i
 ```
 
-If you wish to use the old main branch, you can find it under the name `backup-main`.
+### Requirements 
 
+You must have a .env file at the root of the project with the following variables :
 
-If you have local changes that you want to keep, you can stash them before running the reset command:
 ```bash
-git stash
-``` 
-Then, after the reset, you can apply the stash:
-```bash
-git stash pop
+SPINAL_USER_ID=XXX
+SPINAL_PASSWORD="XXXXXXXXXXX"
+SPINALHUB_IP=XXXXXXXX
+SPINALHUB_PORT=XXXXX
+SPINALHUB_PROTOCOL="XXXX"                     # http or https
+REQUESTS_PORT="3000"                          # Port on which the server will listen
+SPINAL_DTWIN_PATH="xxxxxxxxxxxxxxxxx"         # Path to the digital twin exemple : /__users__/admin/SmartBuilding
+ORGAN_NAME="xxxxxxxxxx"                       # Name of the organ. Used by monitoring platform. If possible make the name obvious which platform/client it belongs to. For exemple : ClientName-Api-Server
+ORGAN_TYPE="api-server"                       # You can keep this as is. Used by monitoring platform to categorize the organs.
 ```
+
+## Running the API Server
+``` bash
+npm run start
+# or with pm2 :
+pm2 start index.js --name spinal-organ-api-server
+# Prefer using a name that uncludes the port of the hub it connects to for exemple : 
+pm2 start index.js --name api-server-10100
+# If you want to have color theme in the logs ( pm2 log [processId] ) you can add the option --color
+pm2 start index.js --name api-server-10100 -- --color
+```
+
+
