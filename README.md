@@ -1,5 +1,8 @@
 # spinal-organ-api-server
 
+Api server that handles most of possible queries to spinalhub.
+
+
 ## [Changelog](CHANGELOG.md)
 
 ## Installation
@@ -36,5 +39,6 @@ pm2 start index.js --name api-server-10100
 # If you want to have color theme in the logs ( pm2 log [processId] ) you can add the option --color
 pm2 start index.js --name api-server-10100 -- --color
 ```
+
 
 
