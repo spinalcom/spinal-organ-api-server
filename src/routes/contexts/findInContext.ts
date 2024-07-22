@@ -118,13 +118,10 @@ module.exports = function (
           return result.value;
         } else {
           console.error(`Error with node id ${tab[index]}: ${result.reason}`);
-          return {
-            dynamicId: tab[index],
-            error:
-              result.reason?.message ||
-              result.reason ||
-              'Failed to get Node Details',
-          };
+          const errorObject = {}
+          errorObject[req.body.optionSearchNodes] = tab[index];
+          errorObject['error'] = result.reason?.message || result.reason || 'Failed to get Node Details';
+          return errorObject;
         }
       });
       const isGotError = settledResults.some(

@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 22/07/2024 -> v1.0.24
+- Fix find_node_in_context. Correctly display dynamicId or staticId based on searchNodeOption
+
 ## 18/07/2024 -> v1.0.24
 - Refacto create_ticket route.
 - Possible known issue on create_ticket : When hub is too busy, the ticket created doesn't get a server_id assigned in a reasonable time. This would result in the api call timeout but the ticket still create.
