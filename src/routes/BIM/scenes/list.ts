@@ -22,11 +22,14 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-const sceneUtils = require('./sceneUtils');
+import {getScenes, sceneGetItems } from './sceneUtils';
 import * as express from 'express';
 import { IScenesItem, ISceneListReturn } from './interfaces';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express) {
+module.exports = function (logger,
+   app: express.Express,
+   spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
    * /api/v1/BIM/scene/list:
@@ -51,11 +54,11 @@ module.exports = function (logger, app: express.Express) {
 
   app.get('/api/v1/BIM/scene/list', async (req, res) => {
     try {
-      const scenes = await sceneUtils.getScenes();
+      const scenes = await getScenes(spinalAPIMiddleware);
       
       const body: ISceneListReturn =  {
         scenes: await Promise.all(scenes.map( async (scene) => {
-          const items = await sceneUtils.sceneGetItems(scene);
+          const items = await sceneGetItems(scene,spinalAPIMiddleware);
           //console.log(items);  
           const sc = {
             dynamicId: scene._server_id,
@@ -69,20 +72,6 @@ module.exports = function (logger, app: express.Express) {
             scenesItems: items
            // bimFiles : itemsInfo
           };
-          // if (typeof scene.info.options !== 'undefined') {
-          //   sc.options = [];
-          //   for (let idx = 0; idx < scene.info.options.length; idx++) {
-          //     const option = scene.info.options[idx];
-          //     const opt: IOptionsItem = {
-          //       urn: option.urn
-          //         .get()
-          //         .replace(/http:\/\/.*viewerForgeFiles\//, ''),
-          //     };
-          //     if (option.loadOption) opt.loadOption = option.loadOption.get();
-          //     if (option.dbIds) opt.dbIds = option.dbIds.get();
-          //     sc.options.push(opt);
-          //   }
-          // }
           return sc;
         })),
       };

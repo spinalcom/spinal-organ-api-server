@@ -94,39 +94,36 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(group);
-            if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext &&
-                category.belongsToContext(context) &&
-                group.belongsToContext(context)) {
-                if (context.getType().get() === 'geographicRoomGroupContext') {
-                    if (_roomList.length > 0) {
-                        for (let index = 0; index < _roomList.length; index++) {
-                            const realNode = await spinalAPIMiddleware.load(_roomList[index]);
-                            //@ts-ignore
-                            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(realNode);
-                            if (realNode.getType().get() === 'geographicRoom') {
-                                spinal_env_viewer_plugin_group_manager_service_1.default.linkElementToGroup(context.getId().get(), group.getId().get(), realNode.getId().get());
-                            }
-                            else {
-                                res
-                                    .status(400)
-                                    .send('one of nodes is not type of geographicRoom');
-                            }
-                        }
-                    }
-                    else {
-                        res.status(400).send(' list of room id is empty ');
-                    }
+            if (!(context instanceof spinal_env_viewer_graph_service_1.SpinalContext)) {
+                return res.status(400).send("The context id provided does not refer to a context");
+            }
+            if (context.getType().get() !== "geographicRoomGroupContext") {
+                return res.status(400).send("The context is not a geographicRoomGroupContext");
+            }
+            if (!(category.belongsToContext(context))) {
+                return res.status(400).send("The category provided does not belong to the context");
+            }
+            if (!(group.belongsToContext(context))) {
+                return res.status(400).send("The group provided does not belong to the context");
+            }
+            const promises = _roomList.map((dynamicId) => linkRoomToGroup(spinalAPIMiddleware, profileId, dynamicId, context.getId().get(), group.getId().get()));
+            const settledResults = await Promise.allSettled(promises);
+            const finalResults = settledResults.map((result, index) => {
+                if (result.status === 'fulfilled') {
+                    return result.value;
                 }
                 else {
-                    res
-                        .status(400)
-                        .send('node is not type of geographicRoomGroupContext ');
+                    console.error(`Error with dynamicId ${_roomList[index]}: ${result.reason}`);
+                    return {
+                        dynamicId: _roomList[index],
+                        error: result.reason?.message || result.reason || "Failed to link to group"
+                    };
                 }
-            }
-            else {
-                res.status(400).send('category or group not found in context');
-            }
-            res.json();
+            });
+            const isGotError = settledResults.some(result => result.status === 'rejected');
+            if (isGotError)
+                return res.status(206).json(finalResults);
+            return res.status(200).json(finalResults);
         }
         catch (error) {
             if (error.code && error.message)
@@ -134,5 +131,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(400).send('ko');
         }
     });
+    async function linkRoomToGroup(spinalAPIMiddleware, profileId, dynamicId, contextId, groupId) {
+        const realNode = await spinalAPIMiddleware.load(dynamicId, profileId);
+        //@ts-ignore
+        spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(realNode);
+        if (realNode.getType().get() !== 'geographicRoom') {
+            throw new Error(`Node with dynamicId ${dynamicId} is not a geographicRoom`);
+        }
+        const linkResult = await spinal_env_viewer_plugin_group_manager_service_1.default.linkElementToGroup(contextId, groupId, realNode.getId().get());
+        return { dynamicId: dynamicId, ...linkResult };
+    }
 };
 //# sourceMappingURL=addRoomList.js.map
