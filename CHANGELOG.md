@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 21/08/2024 -> v1.0.25
+- Fix /group/add_Rooms route - Problem was from group manager service using SpinalGraphService
+- Fix /scene/list
+
 ## 22/07/2024 -> v1.0.24
 - Fix find_node_in_context. Correctly display dynamicId or staticId based on searchNodeOption
 
