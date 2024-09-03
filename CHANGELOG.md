@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 03/09/2029 -> v1.0.25
+- Fix node/read_ticket route. Was missing an await.
+
 ## 21/08/2024 -> v1.0.25
 - Fix /group/add_Rooms route - Problem was from group manager service using SpinalGraphService
 - Fix /scene/list
