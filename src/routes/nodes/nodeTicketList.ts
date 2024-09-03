@@ -63,7 +63,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     try {
       await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);
-      const result = getTicketListInfo(spinalAPIMiddleware, profileId,parseInt(req.params.id, 10));
+      const result = await getTicketListInfo(spinalAPIMiddleware, profileId,parseInt(req.params.id, 10));
       return res.json(result);
     } catch (error) {
       if (error.code && error.message) return res.status(error.code).send(error.message);

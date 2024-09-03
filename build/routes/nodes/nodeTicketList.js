@@ -61,7 +61,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const result = (0, getTicketListInfo_1.getTicketListInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+            const result = await (0, getTicketListInfo_1.getTicketListInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
             return res.json(result);
         }
         catch (error) {
