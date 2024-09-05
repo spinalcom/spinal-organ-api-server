@@ -11,15 +11,12 @@ export async function getEquipmentPosition(
   //@ts-ignore
   SpinalGraphService._addNode(equipment);
 
-
-  console.log(equipment.getType().get());
-
   if (equipment.getType().get() !== "BIMObject") {
     throw new Error("node is not of type BimObject");
   }
 
-  let room;
-  let floor;
+  let room : SpinalNode<any>;
+  let floor : SpinalNode<any>;
 
   room = (await equipment.getParents("hasBimObject"))
     .find(parent => parent.getType().get() === "geographicRoom" && parent.getContextIds().includes(spatialContextId));

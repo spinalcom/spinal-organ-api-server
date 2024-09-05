@@ -6,7 +6,6 @@ async function getEquipmentPosition(spinalAPIMiddleware, profileId, spatialConte
     const equipment = await spinalAPIMiddleware.load(dynamicId, profileId);
     //@ts-ignore
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(equipment);
-    console.log(equipment.getType().get());
     if (equipment.getType().get() !== "BIMObject") {
         throw new Error("node is not of type BimObject");
     }

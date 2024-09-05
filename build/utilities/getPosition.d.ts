@@ -6,28 +6,28 @@ export declare function getEquipmentPosition(spinalAPIMiddleware: ISpinalAPIMidd
     type: string;
     info: {
         context: {
-            dynamicId: any;
-            staticId: any;
-            name: any;
-            type: any;
+            dynamicId: number;
+            staticId: string;
+            name: string;
+            type: string;
         };
         building: {
-            dynamicId: any;
-            staticId: any;
-            name: any;
-            type: any;
+            dynamicId: number;
+            staticId: string;
+            name: string;
+            type: string;
         };
         floor: {
-            dynamicId: any;
-            staticId: any;
-            name: any;
-            type: any;
+            dynamicId: number;
+            staticId: string;
+            name: string;
+            type: string;
         };
         room: {
-            dynamicId: any;
-            staticId: any;
-            name: any;
-            type: any;
+            dynamicId: number;
+            staticId: string;
+            name: string;
+            type: string;
         };
     };
 }>;
