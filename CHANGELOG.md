@@ -1,6 +1,9 @@
 # CHANGELOG
 
-## 03/09/2029 -> v1.0.25
+## 05/09/2024 -> v1.0.25
+- Added reference objects handling in equipement/id/get_position
+
+## 03/09/2024 -> v1.0.25
 - Fix node/read_ticket route. Was missing an await.
 
 ## 21/08/2024 -> v1.0.25

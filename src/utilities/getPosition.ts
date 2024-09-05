@@ -11,16 +11,32 @@ export async function getEquipmentPosition(
   //@ts-ignore
   SpinalGraphService._addNode(equipment);
 
+
+  console.log(equipment.getType().get());
+
   if (equipment.getType().get() !== "BIMObject") {
     throw new Error("node is not of type BimObject");
   }
 
-  const room = (await equipment.getParents("hasBimObject"))
+  let room;
+  let floor;
+
+  room = (await equipment.getParents("hasBimObject"))
     .find(parent => parent.getType().get() === "geographicRoom" && parent.getContextIds().includes(spatialContextId));
   
-  const floor = (await room.getParents("hasGeographicRoom"))
+  if(!room){ // BIM Object might be a reference object of a room
+    room = (await equipment.getParents("hasReferenceObject.ROOM"))
+    .find(parent => parent.getType().get() === "geographicRoom" && parent.getContextIds().includes(spatialContextId));
+  }
+  
+  if(!room){ // BIM Object might be a reference object of a floor
+     floor = (await equipment.getParents("hasReferenceObject"))
     .find(parent => parent.getType().get() === "geographicFloor" && parent.getContextIds().includes(spatialContextId));
-
+  }
+  if(!floor){
+    floor = (await room.getParents("hasGeographicRoom"))
+     .find(parent => parent.getType().get() === "geographicFloor" && parent.getContextIds().includes(spatialContextId));
+  }
   const building = (await floor.getParents("hasGeographicFloor"))
     .find(parent => parent.getType().get() === "geographicBuilding" && parent.getContextIds().includes(spatialContextId));
 
@@ -51,12 +67,12 @@ export async function getEquipmentPosition(
         name: floor.getName().get(),
         type: floor.getType().get()
       },
-      room: {
-        dynamicId: room._server_id,
-        staticId: room.getId().get(),
-        name: room.getName().get(),
-        type: room.getType().get()
-      }
+      room: room ? {
+        dynamicId: room?._server_id,
+        staticId: room?.getId().get(),
+        name: room?.getName().get(),
+        type: room?.getType().get()
+      } : null
     }
   };
 }
