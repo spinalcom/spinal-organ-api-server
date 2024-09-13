@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 13/09/2024 -> v1.0.25
+- Fix building/read. Does not calculate area anymore. This was causing a timeout on big buildings.
+Therefore, the area is now taken from attribute on building.
+- Refacto building/read. Now uses attribute service.
+
 ## 05/09/2024 -> v1.0.25
 - Added reference objects handling in equipement/id/get_position
 

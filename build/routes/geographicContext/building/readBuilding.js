@@ -23,8 +23,8 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -50,61 +50,41 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/building/read", async (req, res, next) => {
         try {
             let address;
-            let sommes = 0;
+            let area;
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
             const contexts = await graph.getChildren("hasContext");
             // var geographicContexts = await SpinalGraphService.getContextWithType("geographicContext");
             const geographicContexts = contexts.filter(el => el.getType().get() === "geographicContext");
-            const building = await geographicContexts[0].getChildren("hasGeographicBuilding");
-            const floors = await building[0].getChildren("hasGeographicFloor");
-            for (let index = 0; index < floors.length; index++) {
-                const rooms = await floors[index].getChildren("hasGeographicRoom");
-                for (const room of rooms) {
-                    const categories = await room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
-                    for (const child of categories) {
-                        if (child.getName().get() === "Spatial") {
-                            const attributs = await child.element.load();
-                            for (const attribut of attributs.get()) {
-                                if (attribut.label === "area") {
-                                    sommes = sommes + attribut.value;
-                                }
-                            }
-                        }
-                    }
+            const buildings = await geographicContexts[0].getChildren("hasGeographicBuilding");
+            const building = buildings[0];
+            const addressAttributes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getAttributesByCategory(building, 'Spinal Building Information');
+            const spatialAttributes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getAttributesByCategory(building, 'Spatial');
+            for (const addressAttribute of addressAttributes) {
+                if (addressAttribute.label.get() === 'Adresse') {
+                    address = addressAttribute.value.get();
                 }
             }
-            const categories = await building[0].getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
-            for (const child of categories) {
-                if (child.getName().get() === "Spinal Building Information") {
-                    const attributs = await child.element.load();
-                    for (const attribut of attributs.get()) {
-                        if (attribut.label === "Adresse") {
-                            address = attribut.value;
-                        }
-                    }
+            for (const spatialAttribute of spatialAttributes) {
+                if (spatialAttribute.label.get() === 'area') {
+                    area = spatialAttribute.value.get();
                 }
             }
-            if (building[0].getType().get() === "geographicBuilding") {
-                var info = {
-                    dynamicId: building[0]._server_id,
-                    staticId: building[0].getId().get(),
-                    name: building[0].getName().get(),
-                    type: building[0].getType().get(),
-                    address: address,
-                    area: sommes
-                };
-            }
-            else {
-                res.status(400).send("node is not of type geographic building");
-            }
+            const info = {
+                dynamicId: building._server_id,
+                staticId: building.getId().get(),
+                name: building.getName().get(),
+                type: building.getType().get(),
+                address: address,
+                area: area
+            };
+            return res.json(info);
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
             res.status(500).send(error.message);
         }
-        res.json(info);
     });
 };
 //# sourceMappingURL=readBuilding.js.map
