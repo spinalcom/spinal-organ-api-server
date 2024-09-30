@@ -5685,8 +5685,8 @@
             ]
           }
         ],
-        "description": "update the current value of endpoint",
-        "summary": "update the current value of endpoint",
+        "description": "Update the current value or control value of the endpoint",
+        "summary": "Update the current value or control value of the endpoint",
         "tags": [
           "IoTNetwork & Time Series"
         ],
@@ -5694,11 +5694,24 @@
           {
             "in": "path",
             "name": "id",
-            "description": "use the dynamic ID",
+            "description": "Use the dynamic ID",
             "required": true,
             "schema": {
               "type": "integer",
               "format": "int64"
+            }
+          },
+          {
+            "in": "query",
+            "name": "updateType",
+            "description": "Choose between updating the current value or control value",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "currentValue",
+                "controlValue"
+              ]
             }
           }
         ],

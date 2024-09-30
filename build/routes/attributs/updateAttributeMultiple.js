@@ -58,7 +58,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 const node = await spinalAPIMiddleware.load(nodeUpdate.dynamicId, profileId);
                 for (const categoryUpdate of nodeUpdate.categories) {
                     for (const attributeUpdate of categoryUpdate.attributes) {
-                        spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addAttributeByCategoryName(node, categoryUpdate.categoryName, attributeUpdate.attributeLabel, attributeUpdate.attributeNewValue);
+                        await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addAttributeByCategoryName(node, categoryUpdate.categoryName, attributeUpdate.attributeLabel, attributeUpdate.attributeNewValue);
                     }
                 }
             }

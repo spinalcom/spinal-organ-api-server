@@ -72,7 +72,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           const node: SpinalNode<any> = await spinalAPIMiddleware.load(nodeUpdate.dynamicId, profileId);
           for(const categoryUpdate of nodeUpdate.categories) {
             for(const attributeUpdate of categoryUpdate.attributes) {
-              serviceDocumentation.addAttributeByCategoryName(
+              await serviceDocumentation.addAttributeByCategoryName(
                 node,
                 categoryUpdate.categoryName,
                 attributeUpdate.attributeLabel,

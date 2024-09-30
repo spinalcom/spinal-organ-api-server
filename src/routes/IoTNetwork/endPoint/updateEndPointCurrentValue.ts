@@ -37,6 +37,7 @@ import {
   spinalControlPointService,
   ControlEndpointDataType,
 } from 'spinal-env-viewer-plugin-control-endpoint-service';
+import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 
 const TIMESERIES_DATA_TYPES = [
   ControlEndpointDataType.Float,
@@ -64,18 +65,25 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - read
-   *     description: update the current value of endpoint
-   *     summary: update the current value of endpoint
+   *     description: Update the current value or control value of the endpoint
+   *     summary: Update the current value or control value of the endpoint
    *     tags:
    *       - IoTNetwork & Time Series
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Use the dynamic ID
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
+   *      - in: query
+   *        name: updateType
+   *        description: Choose between updating the current value or control value
+   *        required: true
+   *        schema:
+   *          type: string
+   *          enum: [currentValue, controlValue]
    *     requestBody:
    *       content:
    *         application/json:
@@ -98,7 +106,6 @@ module.exports = function (
    */
 
   app.put('/api/v1/endpoint/:id/update', async (req, res, next) => {
-    let info;
     try {
       const profileId = getProfileId(req);
       const node: SpinalNode = await spinalAPIMiddleware.load(
@@ -108,65 +115,92 @@ module.exports = function (
       SpinalGraphService._addNode(node);
       const newValue = req.body.newValue;
       const nodeInfo = await node.element.load();
-      const dataType = nodeInfo.dataType?.get();
-      const isCp = nodeInfo.saveTimeSeries ? true : false;
-      if (!dataType)
-        throw {
-          code: 400,
-          message:
-            'The node has no dataType ( The node is probably not a BmsEndpoint )',
-        };
-      console.log('The node is a control point :', isCp);
 
-      if (dataType === 'Boolean' && typeof newValue !== 'boolean') {
-        throw { code: 400, message: 'The new value should be a boolean' };
+      const updateType = req.query.updateType;
+      if(updateType != "controlValue"){ 
+        const result = await updateCurrentValue(node, nodeInfo, newValue);
+        return res.json(result);
       }
-      if (dataType === 'Enum' && typeof newValue !== 'string') {
-        throw { code: 400, message: 'The new value should be a string' };
+      else {
+        const result = await updateControlValue(node, nodeInfo, newValue);
+        return res.json(result);
       }
 
-      if (isCp && dataType === 'Enum') {
-        const authorizedValues = await getAuthorizedValuesByProfile(
-          node,
-          newValue
-        );
-        if (
-          authorizedValues.length > 0 &&
-          !authorizedValues.includes(newValue)
-        ) {
-          throw {
-            code: 400,
-            message:
-              'The new value is not authorized. Authorized values : ' +
-              authorizedValues.join(' | '),
-          };
-        }
-      }
-      if (
-        typeof newValue === 'number' &&
-        TIMESERIES_DATA_TYPES.includes(dataType)
-      ) {
-        if ((isCp && nodeInfo.saveTimeSeries.get()) || !isCp) {
-          const timeseries =
-            await spinalServiceTimeSeries().getOrCreateTimeSeries(
-              node.getId().get()
-            );
-          await timeseries.push(req.body.newValue);
-        }
-      }
-
-      nodeInfo.currentValue.set(req.body.newValue);
-      node.info.directModificationDate.set(Date.now());
-      info = { NewValue: nodeInfo.currentValue.get() };
     } catch (error) {
       if (error.code && error.message)
         return res.status(error.code).send(error.message);
       res.status(400).send(error.message);
     }
-
-    res.json(info);
   });
 };
+
+
+async function updateCurrentValue(node: SpinalNode<any>, nodeInfo, newValue){
+  const dataType = nodeInfo.dataType?.get();
+  const isCp = nodeInfo.saveTimeSeries ? true : false;
+  if (!dataType)
+    throw {
+      code: 400,
+      message:
+        'The node has no dataType ( The node is probably not a BmsEndpoint )',
+    };
+  console.log('The node is a control point :', isCp);
+
+  if (dataType === 'Boolean' && typeof newValue !== 'boolean') {
+    throw { code: 400, message: 'The new value should be a boolean' };
+  }
+  if (dataType === 'Enum' && typeof newValue !== 'string') {
+    throw { code: 400, message: 'The new value should be a string' };
+  }
+
+  if (isCp && dataType === 'Enum') {
+    const authorizedValues = await getAuthorizedValuesByProfile(
+      node,
+      newValue
+    );
+    if (
+      authorizedValues.length > 0 &&
+      !authorizedValues.includes(newValue)
+    ) {
+      throw {
+        code: 400,
+        message:
+          'The new value is not authorized. Authorized values : ' +
+          authorizedValues.join(' | '),
+      };
+    }
+  }
+  if (
+    typeof newValue === 'number' &&
+    TIMESERIES_DATA_TYPES.includes(dataType)
+  ) {
+    if ((isCp && nodeInfo.saveTimeSeries.get()) || !isCp) {
+      const timeseries =
+        await spinalServiceTimeSeries().getOrCreateTimeSeries(
+          node.getId().get()
+        );
+      await timeseries.push(newValue);
+    }
+  }
+
+  nodeInfo.currentValue.set(newValue);
+  node.info.directModificationDate.set(Date.now());
+  return { NewValue: nodeInfo.currentValue.get() };
+}
+
+async function updateControlValue(node: SpinalNode<any>, nodeInfo, newValue){
+  // const attributes = await serviceDocumentation.getAttributesByCategory(node, 'default');
+  // console.log('attributes :', attributes);
+  await serviceDocumentation.updateAttribute(node, 'default', 'controlValue', newValue )
+  // await serviceDocumentation.addAttributeByCategoryName(
+  //   node,
+  //   'default',
+  //   'controlValue',
+  //   newValue
+  // )
+  node.info.directModificationDate.set(Date.now());
+  return { NewValue: newValue };
+}
 
 async function getProfileReferenceId(
   node: SpinalNode<any>
