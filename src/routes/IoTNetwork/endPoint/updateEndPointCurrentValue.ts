@@ -189,9 +189,14 @@ async function updateCurrentValue(node: SpinalNode<any>, nodeInfo, newValue){
 }
 
 async function updateControlValue(node: SpinalNode<any>, nodeInfo, newValue){
-  await serviceDocumentation.updateAttribute(node, 'default', 'controlValue', newValue )
-  node.info.directModificationDate.set(Date.now());
-  return { NewValue: newValue };
+
+  const foundAttribute = await serviceDocumentation.findOneAttributeInCategory(node,'default','controlValue')
+  if(foundAttribute != -1){
+    const attribute = await serviceDocumentation.addAttributeByCategoryName(node, 'default', 'controlValue', newValue)
+    node.info.directModificationDate.set(Date.now());
+    return { NewValue: attribute.value.get() };
+  }
+  else throw Error("The node has no controlValue attribute")
 }
 
 async function getProfileReferenceId(

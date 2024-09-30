@@ -150,9 +150,14 @@ async function updateCurrentValue(node, nodeInfo, newValue) {
     return { NewValue: nodeInfo.currentValue.get() };
 }
 async function updateControlValue(node, nodeInfo, newValue) {
-    await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.updateAttribute(node, 'default', 'controlValue', newValue);
-    node.info.directModificationDate.set(Date.now());
-    return { NewValue: newValue };
+    const foundAttribute = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.findOneAttributeInCategory(node, 'default', 'controlValue');
+    if (foundAttribute != -1) {
+        const attribute = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addAttributeByCategoryName(node, 'default', 'controlValue', newValue);
+        node.info.directModificationDate.set(Date.now());
+        return { NewValue: attribute.value.get() };
+    }
+    else
+        throw Error("The node has no controlValue attribute");
 }
 async function getProfileReferenceId(node) {
     const parents = await node.getParents(['hasBmsEndpoint']);
