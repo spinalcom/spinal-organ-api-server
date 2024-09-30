@@ -150,15 +150,7 @@ async function updateCurrentValue(node, nodeInfo, newValue) {
     return { NewValue: nodeInfo.currentValue.get() };
 }
 async function updateControlValue(node, nodeInfo, newValue) {
-    // const attributes = await serviceDocumentation.getAttributesByCategory(node, 'default');
-    // console.log('attributes :', attributes);
     await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.updateAttribute(node, 'default', 'controlValue', newValue);
-    // await serviceDocumentation.addAttributeByCategoryName(
-    //   node,
-    //   'default',
-    //   'controlValue',
-    //   newValue
-    // )
     node.info.directModificationDate.set(Date.now());
     return { NewValue: newValue };
 }

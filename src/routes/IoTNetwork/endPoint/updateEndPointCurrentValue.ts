@@ -189,15 +189,7 @@ async function updateCurrentValue(node: SpinalNode<any>, nodeInfo, newValue){
 }
 
 async function updateControlValue(node: SpinalNode<any>, nodeInfo, newValue){
-  // const attributes = await serviceDocumentation.getAttributesByCategory(node, 'default');
-  // console.log('attributes :', attributes);
   await serviceDocumentation.updateAttribute(node, 'default', 'controlValue', newValue )
-  // await serviceDocumentation.addAttributeByCategoryName(
-  //   node,
-  //   'default',
-  //   'controlValue',
-  //   newValue
-  // )
   node.info.directModificationDate.set(Date.now());
   return { NewValue: newValue };
 }

@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 30/09/2024 -> v1.0.26
+- Added option in /endpoint/id/update to update control value of bms endpoint.
+
 ## 13/09/2024 -> v1.0.25
 - Fix building/read. Does not calculate area anymore. This was causing a timeout on big buildings.
 Therefore, the area is now taken from attribute on building.
