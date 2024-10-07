@@ -2,7 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getTicketListInfo = void 0;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId) {
+const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+const Constants_1 = require("spinal-service-ticket/dist/Constants");
+async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId, includeAttachedItems = false) {
     const nodes = [];
     await spinalAPIMiddleware.getGraph();
     const node = await spinalAPIMiddleware.load(dynamicId, profileId);
@@ -70,10 +72,81 @@ async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId) {
             workflowId: workflow?._server_id,
             workflowName: workflow?.getName().get(),
         };
+        if (includeAttachedItems) {
+            // Notes
+            const notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(ticket);
+            const _notes = [];
+            for (const note of notes) {
+                const infoNote = {
+                    userName: note.element.username.get(),
+                    date: note.element.date.get(),
+                    type: note.element.type.get(),
+                    message: note.element.message.get(),
+                };
+                _notes.push(infoNote);
+            }
+            // Files
+            const _files = [];
+            const fileNode = (await ticket.getChildren('hasFiles'))[0];
+            if (fileNode) {
+                const filesfromElement = await fileNode.element.load();
+                for (let index = 0; index < filesfromElement.length; index++) {
+                    const infoFiles = {
+                        dynamicId: filesfromElement[index]._server_id,
+                        Name: filesfromElement[index].name.get(),
+                    };
+                    _files.push(infoFiles);
+                }
+            }
+            //  //Logs
+            //  const logs = await serviceTicketPersonalized.getLogs(
+            //   ticket.getId().get()
+            // );
+            // const _logs = [];
+            // for (const log of logs) {
+            //   const infoLogs = {
+            //     userName: log.user.name,
+            //     date: log.creationDate,
+            //     event: await formatEvent(log),
+            //     ticketStaticId: log.ticketId,
+            //   };
+            //   _logs.push(infoLogs);
+            // }
+            info['annotation_list'] = _notes;
+            info['file_list'] = _files;
+            // info['log_list'] = _logs;
+        }
         nodes.push(info);
     }
     return nodes;
 }
 exports.getTicketListInfo = getTicketListInfo;
+// Logs
+async function formatEvent(log) {
+    let texte = '';
+    if (log.event == Constants_1.LOGS_EVENTS.creation) {
+        texte = 'created';
+    }
+    else if (log.event == Constants_1.LOGS_EVENTS.archived) {
+        texte = 'archived';
+    }
+    else if (log.event == Constants_1.LOGS_EVENTS.unarchive) {
+        texte = 'unarchived';
+    }
+    else {
+        const promises = log.steps.map((el) => spinal_env_viewer_graph_service_1.SpinalGraphService.getNodeAsync(el));
+        texte = await Promise.all(promises).then((result) => {
+            //@ts-ignore
+            const step1 = result[0].name.get();
+            //@ts-ignore
+            const step2 = result[1].name.get();
+            const pre = log.event == Constants_1.LOGS_EVENTS.moveToNext ? true : false;
+            return pre
+                ? `Passed from ${step1} to ${step2}`
+                : `Backward from ${step1} to ${step2}`;
+        });
+    }
+    return texte;
+}
 exports.default = getTicketListInfo;
 //# sourceMappingURL=getTicketListInfo.js.map

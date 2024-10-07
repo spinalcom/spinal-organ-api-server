@@ -47,6 +47,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *        schema:
    *          type: integer
    *          format: int64
+   *      - in: query
+   *        name: includeAttachedItems
+   *        description: Include attached items in the response
+   *        required: false
+   *        schema:
+   *          type: boolean
    *     responses:
    *       200:
    *         description: Success
@@ -63,10 +69,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     try {
       await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);
-      const result = await getTicketListInfo(spinalAPIMiddleware, profileId,parseInt(req.params.id, 10));
+      const includeAttachedItems = req.query.includeAttachedItems === 'true';
+      const result = await getTicketListInfo(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10), includeAttachedItems);
       return res.json(result);
     } catch (error) {
       if (error.code && error.message) return res.status(error.code).send(error.message);
+      console.error(error);
       return res.status(400).send('ko');
     }
   });

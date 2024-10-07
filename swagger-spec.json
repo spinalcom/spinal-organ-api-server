@@ -2841,6 +2841,15 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "in": "query",
+            "name": "includeAttachedItems",
+            "description": "Include attached items in the response",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {

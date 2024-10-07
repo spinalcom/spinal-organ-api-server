@@ -45,6 +45,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *        schema:
      *          type: integer
      *          format: int64
+     *      - in: query
+     *        name: includeAttachedItems
+     *        description: Include attached items in the response
+     *        required: false
+     *        schema:
+     *          type: boolean
      *     responses:
      *       200:
      *         description: Success
@@ -61,12 +67,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const result = await (0, getTicketListInfo_1.getTicketListInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+            const includeAttachedItems = req.query.includeAttachedItems === 'true';
+            const result = await (0, getTicketListInfo_1.getTicketListInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10), includeAttachedItems);
             return res.json(result);
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
+            console.error(error);
             return res.status(400).send('ko');
         }
     });

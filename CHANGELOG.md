@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 07/10/2024 -> v1.0.26
+- Added option in /node/:id/ticket_list to include or not attached items information such as notes and files.
+
 ## 30/09/2024 -> v1.0.26
 - Added option in /endpoint/id/update to update control value of bms endpoint.
 
