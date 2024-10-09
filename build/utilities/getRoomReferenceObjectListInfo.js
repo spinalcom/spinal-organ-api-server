@@ -22,6 +22,7 @@ async function getRoomReferenceObjectsListInfo(spinalAPIMiddleware, profileId, d
             version: referenceObject.info.version?.get(),
             externalId: referenceObject.info.externalId.get(),
             dbid: referenceObject.info.dbid.get(),
+            bimFileId: referenceObject.info.bimFileId.get(),
         };
         _objects.push(infoReferencesObject);
     }

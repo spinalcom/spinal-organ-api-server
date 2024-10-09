@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 09/10/2024 -> v1.0.26
+- Added BimFileId for each reference_object in room/id/reference_Objects_list
+
 ## 07/10/2024 -> v1.0.26
 - Added option in /node/:id/ticket_list to include or not attached items information such as notes and files.
 
