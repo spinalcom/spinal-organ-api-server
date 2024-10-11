@@ -4,6 +4,7 @@ exports.getTicketListInfo = void 0;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const Constants_1 = require("spinal-service-ticket/dist/Constants");
+const spinal_service_ticket_1 = require("spinal-service-ticket");
 async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId, includeAttachedItems = false) {
     const nodes = [];
     await spinalAPIMiddleware.getGraph();
@@ -12,6 +13,8 @@ async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId, incl
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
     const ticketList = await node.getChildren('SpinalSystemServiceTicketHasTicket');
     for (const ticket of ticketList) {
+        //@ts-ignore
+        spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(ticket);
         //context && workflow
         const workflow = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(ticket.getContextIds()[0]);
         //Step
@@ -98,23 +101,21 @@ async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId, incl
                     _files.push(infoFiles);
                 }
             }
-            //  //Logs
-            //  const logs = await serviceTicketPersonalized.getLogs(
-            //   ticket.getId().get()
-            // );
-            // const _logs = [];
-            // for (const log of logs) {
-            //   const infoLogs = {
-            //     userName: log.user.name,
-            //     date: log.creationDate,
-            //     event: await formatEvent(log),
-            //     ticketStaticId: log.ticketId,
-            //   };
-            //   _logs.push(infoLogs);
-            // }
+            //Logs
+            const logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(ticket.getId().get());
+            const _logs = [];
+            for (const log of logs) {
+                const infoLogs = {
+                    userName: log.user.name,
+                    date: log.creationDate,
+                    event: await formatEvent(log),
+                    ticketStaticId: log.ticketId,
+                };
+                _logs.push(infoLogs);
+            }
             info['annotation_list'] = _notes;
             info['file_list'] = _files;
-            // info['log_list'] = _logs;
+            info['log_list'] = _logs;
         }
         nodes.push(info);
     }

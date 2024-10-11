@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 11/10/2024 -> v1.0.26
+- Modified room/:id/ticket_list to use the same function as the other ticket_list routes.
+
 ## 09/10/2024 -> v1.0.26
 - Added BimFileId for each reference_object in room/id/reference_Objects_list
 
