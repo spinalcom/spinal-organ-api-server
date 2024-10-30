@@ -108,12 +108,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             else {
                 res.status(400).send('category or group not found in context');
             }
-            res.json(_roomList);
+            return res.json(_roomList);
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send('ko');
+            if (error.message)
+                return res.status(400).send(error.message);
+            console.error(error);
+            return res.status(400).send('ko');
         }
     });
 };

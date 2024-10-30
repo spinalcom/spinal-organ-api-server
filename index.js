@@ -23,6 +23,10 @@
  */
 
 const dotenv = require("dotenv");
+const packageInfo = require("./package.json"); // Import package.json
+console.log('API SERVER VERSION : ',packageInfo.version); // Example: Access the version 
+
+process.env.API_SERVER_VERSION = packageInfo.version; // Set version as an environment variable
 dotenv.config({
     override: true
 });

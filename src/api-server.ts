@@ -25,14 +25,11 @@
 import * as express from 'express';
 import * as fileUpload from 'express-fileupload';
 import * as cors from 'cors';
-import * as _ from 'lodash';
-
 import * as bodyParser from 'body-parser';
 import type SpinalAPIMiddleware from './spinalAPIMiddleware';
 import routes from './routes/routes';
 import morgan = require('morgan');
 import chalk from 'chalk';
-
 
 export const morganMiddleware = morgan(function (tokens, req, res) {
   const method = chalk.hex('#34ace0').bold(tokens.method(req, res));
@@ -84,9 +81,12 @@ export function useLogger(app: express.Application, log_body: boolean | string) 
 
 function APIServer(logger, spinalAPIMiddleware: SpinalAPIMiddleware): express.Express {
   const app = express();
+  app.use((req, res, next) => {
+    res.setHeader('X-API-Version', process.env.API_SERVER_VERSION);
+    next();
+  });
   // enable files upload
   app.use(fileUpload({ createParentPath: true }));
-
   app.use(cors());
   app.disable('x-powered-by');
   app.use(bodyParser.urlencoded({ extended: true }));

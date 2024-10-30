@@ -82,6 +82,10 @@ function useLogger(app, log_body) {
 exports.useLogger = useLogger;
 function APIServer(logger, spinalAPIMiddleware) {
     const app = express();
+    app.use((req, res, next) => {
+        res.setHeader('X-API-Version', process.env.API_SERVER_VERSION);
+        next();
+    });
     // enable files upload
     app.use(fileUpload({ createParentPath: true }));
     app.use(cors());

@@ -61,14 +61,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/node/:id/children", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            var info = await (0, getChildrenNodesInfo_1.getChildrenNodesInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+            const info = await (0, getChildrenNodesInfo_1.getChildrenNodesInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+            return res.json(info);
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send("ko");
+            if (error.message)
+                return res.status(400).send(error.message);
+            console.error(error);
+            return res.status(400).send("ko");
         }
-        res.json(info);
     });
 };
 //# sourceMappingURL=nodeChildren.js.map

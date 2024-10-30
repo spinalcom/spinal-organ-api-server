@@ -2,10 +2,11 @@
   "compilerOptions": {
     "baseUrl": "./",
     "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": false,
     "target": "es2020",
     "module": "commonjs",
     "outDir": "build",
-    "esModuleInterop": false,
     "typeRoots": ["node_modules/@types", "src/types", "jest"],
     "declaration": true,
     "sourceMap": true

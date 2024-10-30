@@ -1,4 +1,9 @@
 # CHANGELOG
+## 30/10/2024 -> v1.0.27
+- node/:id/children fixed Can't set headers after they are sent to the client
+- node/:id/read fixed Can't set headers after they are sent to the client
+- roomsGroup/:contextId/category/:categoryId/group/:groupId/roomList fixed Can't set headers after they are sent to the client
+- findOneInContext utility function changed to use visitChildrenInContext
 
 ## 11/10/2024 -> v1.0.26
 - Modified room/:id/ticket_list to use the same function as the other ticket_list routes.

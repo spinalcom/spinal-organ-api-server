@@ -65,13 +65,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.get("/api/v1/node/:id/read", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      var info : Node = await getNodeInfo(spinalAPIMiddleware,profileId, parseInt(req.params.id, 10));
+      const info : Node = await getNodeInfo(spinalAPIMiddleware,profileId, parseInt(req.params.id, 10));
+      return res.json(info);
     } catch (error) {
-
       if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(500).send(error.message);
+      if (error.message) return res.status(400).send(error.message);
+      console.error(error);
+      return res.status(400).send(error);
     }
-    res.json(info);
   });
 }
 

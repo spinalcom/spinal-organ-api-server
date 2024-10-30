@@ -28,30 +28,35 @@ async function findOneInContext(node, context, predicate) {
     if (typeof predicate !== 'function') {
         throw new Error('The predicate function must be a function');
     }
-    const seen = new Set([node]);
-    let promises = [];
-    let nextGen = [node];
-    let currentGen = [];
-    while (nextGen.length) {
-        currentGen = nextGen;
-        promises = [];
-        nextGen = [];
-        for (const object of currentGen) {
-            if (predicate(object)) {
-                return object;
-            }
-        }
-        promises = currentGen.map((object) => object.getChildrenInContext(context));
-        const childrenArrays = await Promise.all(promises);
-        for (const children of childrenArrays) {
-            for (const child of children) {
-                if (!seen.has(child)) {
-                    nextGen.push(child);
-                    seen.add(child);
-                }
-            }
+    for await (const child of node.visitChildrenInContext(context)) {
+        if (predicate(child)) {
+            return child;
         }
     }
+    // const seen: Set<SpinalNode<any>> = new Set([node]);
+    // let promises: Promise<SpinalNode<any>[]>[] = [];
+    // let nextGen: SpinalNode<any>[] = [node];
+    // let currentGen: SpinalNode<any>[] = [];
+    // while (nextGen.length) {
+    //   currentGen = nextGen;
+    //   promises = [];
+    //   nextGen = [];
+    //   for (const object of currentGen) {
+    //     if (predicate(object)) {
+    //       return object
+    //     }
+    //   }
+    //   promises = currentGen.map((object) => object.getChildrenInContext(context))
+    //   const childrenArrays: SpinalNode<any>[][] = await Promise.all(promises);
+    //   for (const children of childrenArrays) {
+    //     for (const child of children) {
+    //       if (!seen.has(child)) {
+    //         nextGen.push(child);
+    //         seen.add(child);
+    //       }
+    //     }
+    //   }
+    // }
     return undefined;
 }
 exports.findOneInContext = findOneInContext;
