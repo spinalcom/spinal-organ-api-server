@@ -29,23 +29,6 @@ import {getSwaggerDocs, initSwagger} from './swagger';
 import ConfigFile from 'spinal-lib-organ-monitoring';
 import {spinalGraphUtils} from 'spinal-organ-api-pubsub';
 
-
-//////////////////////////////////////////////////
-//     Redefine Filesystem.onConnectionError
-//////////////////////////////////////////////////
-
-
-//@ts-ignore
-FileSystem.onConnectionError = async (error_code: number) => {
-  if (error_code === 0) {
-    await spinalGraphUtils.rebindAllNodes();
-  } else if (error_code === 1 || error_code === 2 || error_code === 3 || error_code === 4) {
-    process.exit(error_code);
-  }
-
-}
-
-
 function Requests(logger) {
   async function initSpinalHub() {
     const spinalAPIMiddleware = SpinalAPIMiddleware.getInstance();

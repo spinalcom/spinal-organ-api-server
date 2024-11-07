@@ -1,4 +1,7 @@
 # CHANGELOG
+## 07/11/2024 -> v1.0.28
+- Removed onConnectionError 
+
 ## 30/10/2024 -> v1.0.27
 - node/:id/children fixed Can't set headers after they are sent to the client
 - node/:id/read fixed Can't set headers after they are sent to the client

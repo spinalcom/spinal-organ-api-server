@@ -28,19 +28,6 @@ const api_server_1 = require("./api-server");
 const spinalAPIMiddleware_1 = require("./spinalAPIMiddleware");
 const swagger_1 = require("./swagger");
 const spinal_lib_organ_monitoring_1 = require("spinal-lib-organ-monitoring");
-const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
-//////////////////////////////////////////////////
-//     Redefine Filesystem.onConnectionError
-//////////////////////////////////////////////////
-//@ts-ignore
-FileSystem.onConnectionError = async (error_code) => {
-    if (error_code === 0) {
-        await spinal_organ_api_pubsub_1.spinalGraphUtils.rebindAllNodes();
-    }
-    else if (error_code === 1 || error_code === 2 || error_code === 3 || error_code === 4) {
-        process.exit(error_code);
-    }
-};
 function Requests(logger) {
     async function initSpinalHub() {
         const spinalAPIMiddleware = spinalAPIMiddleware_1.default.getInstance();
