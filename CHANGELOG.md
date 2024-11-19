@@ -1,4 +1,8 @@
 # CHANGELOG
+
+## 19/11/2024 -> v1.0.29
+- Added https support for BIM/file route
+
 ## 07/11/2024 -> v1.0.28
 - Removed onConnectionError 
 
