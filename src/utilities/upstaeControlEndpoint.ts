@@ -31,7 +31,7 @@ import { NetworkService, InputDataEndpoint, InputDataEndpointDataType, InputData
     * @returns Promise
     */
 export async function updateControlEndpointWithAnalytic(node, valueToPush: any, dataType: any, type: any): Promise<void> {
-  var networkService = new NetworkService()
+  const networkService = new NetworkService()
   if (valueToPush != undefined) {
     const input: InputDataEndpoint = {
       id: "",
@@ -45,7 +45,6 @@ export async function updateControlEndpointWithAnalytic(node, valueToPush: any, 
     };
     const time = new Date();   //Register in TimeSeries
     await networkService.updateEndpoint(node, input, time);
-    console.log(node.info.name.get() + " ==>  is updated ");
   }
   else {
     console.log(valueToPush + " value to push in node : " + node.info.name.get() + " -- ABORTED !");

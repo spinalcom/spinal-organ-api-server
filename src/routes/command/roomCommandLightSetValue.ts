@@ -77,8 +77,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    */
 
   app.post('/api/v1/command/room/:id/light', async (req, res, next) => {
-    let info;
     try {
+      let info;
       const profileId = getProfileId(req);
       const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
@@ -105,18 +105,18 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
                 type: room.getType().get(),
                 currentValue: element.currentValue.get()
               }
+              return res.send(info);
+              
             }
           }
         }
       }
-
-
-
+      return res.status(400).send("COMMAND LIGHT control endpoint not found in room");
     } catch (error) {
       if (error.code && error.message) return res.status(error.code).send(error.message)
       res.status(400).send("list of room is not loaded");
     }
 
-    res.send(info);
+    
   });
 };

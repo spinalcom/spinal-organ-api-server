@@ -82,14 +82,12 @@ module.exports = function (
    */
 
   app.post('/api/v1/command/room/:id/blind', async (req, res, next) => {
-    let info;
     try {
-
+      let info;
       const profileId = getProfileId(req);
       const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(room)
-
       const controlPoints = await room.getChildren('hasControlPoints');
       for (const controlPoint of controlPoints) {
         if (controlPoint.getName().get() === "Command") {
@@ -110,18 +108,17 @@ module.exports = function (
                 type: room.getType().get(),
                 currentValue: element.currentValue.get()
               }
+              return res.send(info);
+              
             }
           }
         }
       }
-
-
-
+      return res.status(400).send("COMMAND BLIND control endpoint not found in room");
     } catch (error) {
       if (error.code && error.message) return res.status(error.code).send(error.message)
       res.status(400).send("one of node is not loaded");
     }
 
-    res.send(info);
   });
 };

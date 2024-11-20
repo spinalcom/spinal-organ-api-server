@@ -33,7 +33,7 @@ const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
     * @returns Promise
     */
 async function updateControlEndpointWithAnalytic(node, valueToPush, dataType, type) {
-    var networkService = new spinal_model_bmsnetwork_1.NetworkService();
+    const networkService = new spinal_model_bmsnetwork_1.NetworkService();
     if (valueToPush != undefined) {
         const input = {
             id: "",
@@ -47,7 +47,6 @@ async function updateControlEndpointWithAnalytic(node, valueToPush, dataType, ty
         };
         const time = new Date(); //Register in TimeSeries
         await networkService.updateEndpoint(node, input, time);
-        console.log(node.info.name.get() + " ==>  is updated ");
     }
     else {
         console.log(valueToPush + " value to push in node : " + node.info.name.get() + " -- ABORTED !");

@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 20/11/2024 -> v1.0.30
+- Fix error in all room command routes
+
 ## 19/11/2024 -> v1.0.29
 - Added https support for BIM/file route
 
