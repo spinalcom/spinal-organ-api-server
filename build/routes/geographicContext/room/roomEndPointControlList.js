@@ -65,29 +65,32 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
-            if (room.getType().get() === "geographicRoom") {
-                const profils = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(room.getId().get(), [spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP]);
-                const promises = profils.map(async (profile) => {
-                    const result = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(profile.id.get(), [spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName]);
-                    const endpoints = await result.map(async (endpoint) => {
-                        const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(endpoint.id.get());
-                        const element = await endpoint.element.load();
-                        const currentValue = element.currentValue.get();
-                        return {
-                            dynamicId: realNode._server_id,
-                            staticId: endpoint.id.get(),
-                            name: element.name.get(),
-                            type: element.type.get(),
-                            currentValue: currentValue
-                        };
-                    });
-                    return { profileName: profile.name.get(), endpoints: await Promise.all(endpoints) };
+            if (!(room.getType().get() === "geographicRoom")) {
+                res.status(400).send("node is not of type geographicRoom");
+            }
+            const profils = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(room.getId().get(), [spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP]);
+            const promises = profils.map(async (profile) => {
+                const result = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(profile.id.get(), [spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName]);
+                const endpoints = await result.map(async (endpoint) => {
+                    const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(endpoint.id.get());
+                    const element = await endpoint.element.load();
+                    const currentValue = element.currentValue.get();
+                    const unit = element.unit?.get();
+                    const saveTimeSeries = element.saveTimeSeries?.get();
+                    return {
+                        dynamicId: realNode._server_id,
+                        staticId: endpoint.id.get(),
+                        name: element.name.get(),
+                        type: element.type.get(),
+                        currentValue: currentValue,
+                        unit: unit,
+                        saveTimeSeries: saveTimeSeries
+                    };
                 });
-                var allNodes = await Promise.all(promises);
-            }
-            else {
-                res.status(400).send("node is not of type geographic room");
-            }
+                return { profileName: profile.name.get(), endpoints: await Promise.all(endpoints) };
+            });
+            const allNodes = await Promise.all(promises);
+            res.send(allNodes);
         }
         catch (error) {
             console.error(error);
@@ -95,7 +98,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             res.status(400).send("list of endpoints is not loaded");
         }
-        res.send(allNodes);
     });
 };
 //# sourceMappingURL=roomEndPointControlList.js.map

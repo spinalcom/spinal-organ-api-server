@@ -33,10 +33,23 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Returns an array of node objects with parent and children relation
+     *     description: Returns an array of node objects with optional parent and children relations
      *     summary: Gets Multiple Nodes
      *     tags:
      *       - Nodes
+     *     parameters:
+     *       - in: query
+     *         name: includeChildrenRelations
+     *         schema:
+     *           type: boolean
+     *         required: false
+     *         description: Whether to include children relations
+     *       - in: query
+     *         name: includeParentRelations
+     *         schema:
+     *           type: boolean
+     *         required: false
+     *         description: Whether to include parent relations
      *     requestBody:
      *       required: true
      *       content:
@@ -70,13 +83,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      */
     app.post('/api/v1/node/read_multiple', async (req, res, next) => {
         try {
+            const includeChildrenRelations = req.query.includeChildrenRelations !== 'false';
+            const includeParentRelations = req.query.includeParentRelations !== 'false';
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const ids = req.body;
             if (!Array.isArray(ids)) {
                 return res.status(400).send('Expected an array of IDs.');
             }
             // Map each id to a promise
-            const promises = ids.map((id) => (0, getNodeInfo_1.getNodeInfo)(spinalAPIMiddleware, profileId, id));
+            const promises = ids.map((id) => (0, getNodeInfo_1.getNodeInfo)(spinalAPIMiddleware, profileId, id, includeChildrenRelations, includeParentRelations));
             const settledResults = await Promise.allSettled(promises);
             const finalResults = settledResults.map((result, index) => {
                 if (result.status === 'fulfilled') {

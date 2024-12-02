@@ -24,17 +24,28 @@
 
 import type { SpinalNode } from 'spinal-model-graph';
 import { ISpinalAPIMiddleware } from '../interfaces';
-import { Node } from '../routes/nodes/interfacesNodes'
+import { Node, Relation } from '../routes/nodes/interfacesNodes'
 import { childrensNode, parentsNode } from './corseChildrenAndParentNode'
-
 async function getNodeInfo(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string,
   dynamicId: number,
+  includeChildrenRelations ?: boolean,
+  includeParentRelations ?: boolean
 ): Promise<Node | undefined> {
     const node: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
-    const childrens_list = childrensNode(node);
-    const parents_list = await parentsNode(node)
+
+    let childrens_list : Relation[] = [];
+    let parents_list : Relation[] = [];
+
+    if (includeChildrenRelations) {
+      childrens_list = childrensNode(node);
+    }
+
+    if (includeParentRelations) {
+      parents_list = await parentsNode(node);
+    }
+
     const info: Node = {
         dynamicId: node._server_id,
         staticId: node.getId().get(),

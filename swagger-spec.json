@@ -14432,10 +14432,30 @@
             ]
           }
         ],
-        "description": "Returns an array of node objects with parent and children relation",
+        "description": "Returns an array of node objects with optional parent and children relations",
         "summary": "Gets Multiple Nodes",
         "tags": [
           "Nodes"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "includeChildrenRelations",
+            "schema": {
+              "type": "boolean"
+            },
+            "required": false,
+            "description": "Whether to include children relations"
+          },
+          {
+            "in": "query",
+            "name": "includeParentRelations",
+            "schema": {
+              "type": "boolean"
+            },
+            "required": false,
+            "description": "Whether to include parent relations"
+          }
         ],
         "requestBody": {
           "required": true,

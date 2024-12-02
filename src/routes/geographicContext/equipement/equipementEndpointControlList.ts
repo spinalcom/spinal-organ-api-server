@@ -68,42 +68,40 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-
       const equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       // @ts-ignore
       SpinalGraphService._addNode(equipement);
-
-      if (equipement.getType().get() === "BIMObject") {
-
-        const profils = await SpinalGraphService.getChildren(equipement.getId().get(), [spinalControlPointService.ROOM_TO_CONTROL_GROUP])
-        const promises = profils.map(async (profile) => {
-
-          const result = await SpinalGraphService.getChildren(profile.id.get(), [SpinalBmsEndpoint.relationName])
-          const endpoints = await result.map(async (endpoint) => {
-            const realNode = SpinalGraphService.getRealNode(endpoint.id.get())
-            const element = await endpoint.element.load()
-            const currentValue = element.currentValue.get();
-            return {
-              dynamicId: realNode._server_id,
-              staticId: endpoint.id.get(),
-              name: element.name.get(),
-              type: element.type.get(),
-              currentValue: currentValue
-            };
-          })
-          return { profileName: profile.name.get(), endpoints: await Promise.all(endpoints) }
-        })
-
-        var allNodes = await Promise.all(promises)
-      } else {
+      if(!(equipement.getType().get() === "BIMObject")){
         res.status(400).send("node is not of type BIMObject");
       }
+      const profils = await SpinalGraphService.getChildren(equipement.getId().get(), [spinalControlPointService.ROOM_TO_CONTROL_GROUP])
+      const promises = profils.map(async (profile) => {
+      const result = await SpinalGraphService.getChildren(profile.id.get(), [SpinalBmsEndpoint.relationName])
+      const endpoints = await result.map(async (endpoint) => {
+        const realNode = SpinalGraphService.getRealNode(endpoint.id.get())
+        const element = await endpoint.element.load()
+        const currentValue = element.currentValue.get();
+        const unit = element.unit?.get();
+        const saveTimeSeries = element.saveTimeSeries?.get();
+        return {
+          dynamicId: realNode._server_id,
+          staticId: endpoint.id.get(),
+          name: element.name.get(),
+          type: element.type.get(),
+          currentValue: currentValue,
+          unit: unit ,
+          saveTimeSeries: saveTimeSeries
+        };
+      })
+      return { profileName: profile.name.get(), endpoints: await Promise.all(endpoints) }
+    })
 
+      const allNodes = await Promise.all(promises)
+      res.send(allNodes);
     } catch (error) {
       console.error(error);
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(400).send("list of endpoints is not loaded");
     }
-    res.send(allNodes);
   });
 }

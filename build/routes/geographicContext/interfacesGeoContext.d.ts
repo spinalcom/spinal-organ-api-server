@@ -241,6 +241,7 @@ export interface EndPointRoom {
     name: string;
     type: string;
     currentValue: number;
+    unit: string;
 }
 /**
 * @swagger

@@ -41,10 +41,23 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns an array of node objects with parent and children relation
+   *     description: Returns an array of node objects with optional parent and children relations
    *     summary: Gets Multiple Nodes
    *     tags:
    *       - Nodes
+   *     parameters:
+   *       - in: query
+   *         name: includeChildrenRelations
+   *         schema:
+   *           type: boolean
+   *         required: false
+   *         description: Whether to include children relations
+   *       - in: query
+   *         name: includeParentRelations
+   *         schema:
+   *           type: boolean
+   *         required: false
+   *         description: Whether to include parent relations
    *     requestBody:
    *       required: true
    *       content:
@@ -79,6 +92,9 @@ module.exports = function (
 
   app.post('/api/v1/node/read_multiple', async (req, res, next) => {
     try {
+      const includeChildrenRelations = req.query.includeChildrenRelations !== 'false';
+      const includeParentRelations = req.query.includeParentRelations !== 'false';
+
       const profileId = getProfileId(req);
       const ids: number[] = req.body;
 
@@ -88,7 +104,7 @@ module.exports = function (
 
       // Map each id to a promise
       const promises = ids.map((id) =>
-        getNodeInfo(spinalAPIMiddleware, profileId, id)
+        getNodeInfo(spinalAPIMiddleware, profileId, id,includeChildrenRelations,includeParentRelations)
       );
 
       const settledResults = await Promise.allSettled(promises);

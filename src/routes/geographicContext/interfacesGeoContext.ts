@@ -283,7 +283,9 @@ export interface EndPointRoom {
   staticId: string,
   name: string,
   type: string,
-  currentValue: number
+  currentValue: number,
+  unit: string
+
 }
 
 

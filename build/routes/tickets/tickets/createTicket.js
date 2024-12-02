@@ -132,6 +132,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     req.body.workflow);
             }
             const ticketCreated = await spinal_service_ticket_1.serviceTicketPersonalized.addTicket(ticketInfo, processNode.getId().get(), workflowNode.getId().get(), node.getId().get());
+            // clear modèles vides : 
+            const lst = await node.children.PtrLst.SpinalSystemServiceTicketHasTicket.children.load();
+            const toRemove = [];
+            for (const x of lst) {
+                if (x.info == undefined) {
+                    toRemove.push(x);
+                }
+            }
+            for (const emptyModel of toRemove) {
+                lst.remove(emptyModel);
+            }
+            // fin clear modèles vides
             const ticketList = await spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(node.getId().get());
             const linkedTicket = ticketList.find((element) => element.id === ticketCreated);
             if (!linkedTicket) {

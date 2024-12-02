@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 02/12/2024 -> v1.0.31
+- Added unit in routes equipement/endpoint_list , equipement/control_endpoint_list, room/endpoint_list, room/control_endpoint_list
+- Added cleaning of empty models in create_ticket route
+
+## 26/11/2024 -> v1.0.31
+- Added optional query parameters to inlcude or not children relations and parent relations in node read multiple
+...
+
 ## 20/11/2024 -> v1.0.30
 - Fix error in all room command routes
 

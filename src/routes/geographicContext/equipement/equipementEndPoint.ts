@@ -79,12 +79,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         for (const endpoint of endpoints) {
           const element = await endpoint.element.load()
           const currentValue = element.currentValue.get();
+          const unit = element.unit.get(); 
           const info: EndPointRoom = {
             dynamicId: endpoint._server_id,
             staticId: endpoint.getId().get(),
             name: endpoint.getName().get(),
             type: endpoint.getType().get(),
-            currentValue: currentValue
+            currentValue: currentValue,
+            unit: unit
           };
           nodes.push(info);
         }

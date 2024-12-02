@@ -173,6 +173,19 @@ module.exports = function (
         node.getId().get()
       );
 
+      // clear modèles vides : 
+      const lst = await node.children.PtrLst.SpinalSystemServiceTicketHasTicket.children.load()
+      const toRemove = []
+      for(const x of lst){
+        if(x.info == undefined){
+          toRemove.push(x)
+        }
+      }
+      for(const emptyModel of toRemove){
+        lst.remove(emptyModel)
+      }
+      // fin clear modèles vides
+
       const ticketList = await serviceTicketPersonalized.getTicketsFromNode(
         node.getId().get()
       );
