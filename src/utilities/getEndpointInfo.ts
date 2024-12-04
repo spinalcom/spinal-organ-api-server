@@ -26,6 +26,7 @@ import type { SpinalNode } from 'spinal-model-graph';
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { ISpinalAPIMiddleware } from '../interfaces';
 import { EndPointNode } from '../routes/nodes/interfacesNodes'
+import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import { SpinalBmsEndpoint, SpinalBmsDevice, SpinalBmsEndpointGroup } from "spinal-model-bmsnetwork";
 const BMS_ENDPOINT_RELATIONS = ["hasEndPoint", SpinalBmsDevice.relationName, SpinalBmsEndpoint.relationName, SpinalBmsEndpointGroup.relationName];
 
@@ -43,12 +44,24 @@ async function getEndpointsInfo(
       for (const endpoint of endpoints) {
         const element = await endpoint.element.load();
         const currentValue = element.currentValue.get();
+        const unit = element.unit?.get();
+        let saveTimeSeries = element.saveTimeSeries?.get();
+        if(!saveTimeSeries){
+          // look for it through documentation
+          const allAttributes = await serviceDocumentation.getAllAttributes(endpoint);
+          saveTimeSeries = allAttributes.find((attr) => attr.label.get() === 'timeSeries maxDay') !== undefined;
+        }
+
+
+
         const info: EndPointNode = {
           dynamicId: endpoint._server_id,
           staticId: endpoint.getId().get(),
           name: endpoint.getName().get(),
           type: endpoint.getType().get(),
           currentValue: currentValue,
+          unit: unit,
+          saveTimeSeries: saveTimeSeries
         };
         nodes.push(info);
     }

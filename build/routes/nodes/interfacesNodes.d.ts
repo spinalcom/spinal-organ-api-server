@@ -110,6 +110,8 @@ export interface EndPointNode {
     name: string;
     type: string;
     currentValue: number;
+    unit?: string;
+    saveTimeSeries?: boolean;
 }
 /**
 * @swagger

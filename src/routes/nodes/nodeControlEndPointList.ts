@@ -81,24 +81,27 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           const realNode = SpinalGraphService.getRealNode(endpoint.id.get())
           const element = await endpoint.element.load()
           const currentValue = element.currentValue.get();
+          const unit = element.unit?.get();
+          const saveTimeSeries = element.saveTimeSeries?.get();
           return {
             dynamicId: realNode._server_id,
             staticId: endpoint.id.get(),
             name: element.name.get(),
             type: element.type.get(),
-            currentValue: currentValue
+            currentValue: currentValue,
+            unit: unit,
+            saveTimeSeries: saveTimeSeries
           };
         })
         return { profileName: profile.name.get(), endpoints: await Promise.all(endpoints) }
       })
-
-      var allNodes = await Promise.all(promises)
+      const allNodes = await Promise.all(promises)
+      res.send(allNodes);
 
 
     } catch (error) {
       if (error.code && error.message) return res.status(error.code).send(error.message);
       return res.status(400).send("list of endpoints is not loaded");
     }
-    res.send(allNodes);
   });
 }
