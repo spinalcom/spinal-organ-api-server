@@ -13896,6 +13896,52 @@
         }
       }
     },
+    "/api/v1/node/{id}/delete_file/{fileServerId}": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Delete a file from a node",
+        "summary": "Delete a file from a node",
+        "tags": [
+          "Nodes"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "path",
+            "name": "fileServerId",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Node successfully deleted"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/node/{id}/delete_smart": {
       "delete": {
         "security": [

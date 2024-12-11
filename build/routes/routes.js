@@ -42,6 +42,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./nodes/node')(logger, app, spinalAPIMiddleware);
     require('./nodes/nodeCreate')(logger, app, spinalAPIMiddleware);
     require('./nodes/nodeDelete')(logger, app, spinalAPIMiddleware);
+    require('./nodes/nodeDeleteFile')(logger, app, spinalAPIMiddleware);
     require('./nodes/nodeDeleteSmart')(logger, app, spinalAPIMiddleware);
     require('./nodes/readNodeMultiple')(logger, app, spinalAPIMiddleware);
     require('./nodes/relationChildrenNode')(logger, app, spinalAPIMiddleware);

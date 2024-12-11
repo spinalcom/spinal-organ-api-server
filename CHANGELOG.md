@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 11/12/2024 -> v1.0.33
+- Added route node/:id/delete_file/:fileId to delete a file from a node
+
 ## 04/12/2024 -> v1.0.32
 - Added unit and saveTimeSeries in route node/control_endpoint_list and only unit in route node/endpoint_list
 - Added saveTimeseries in route node/endpoint_list
