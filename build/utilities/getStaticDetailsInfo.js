@@ -190,12 +190,24 @@ async function getAttributes(room) {
         const categories = await room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
         const promises = categories.map(async (child) => {
             const attributs = await child.element.load();
+            const attributes = [];
+            for (const attribute of attributs) {
+                attributes.push({
+                    label: attribute.label.get(),
+                    value: attribute.value.get(),
+                    date: attribute.date.get(),
+                    type: attribute.type.get(),
+                    unit: attribute.unit.get(),
+                    dynamicId: attribute._server_id,
+                });
+            }
+            console.log('attributes', attributes);
             return {
                 dynamicId: child._server_id,
                 staticId: child.getId().get(),
                 name: child.getName().get(),
                 type: child.getType().get(),
-                attributs: attributs.get(),
+                attributs: attributes,
             };
         });
         return Promise.all(promises);

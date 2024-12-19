@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 19/12/2024 -> v1.0.34
+- Added dynamicId in attribute infos
+
 ## 11/12/2024 -> v1.0.33
 - Added route node/:id/delete_file/:fileId to delete a file from a node
 
