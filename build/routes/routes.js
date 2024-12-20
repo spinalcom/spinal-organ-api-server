@@ -167,6 +167,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./geographicContext/geographicContextTree')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/geographicContextSpace')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/building/readBuilding')(logger, app, spinalAPIMiddleware);
+    require('./geographicContext/building/buildingReferenceObjectsList')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/floor/floorList')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/floor/floorDetails')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/room/readRoom')(logger, app, spinalAPIMiddleware);

@@ -292,15 +292,14 @@ async function getAttributes(room: SpinalNode<any>): Promise<IAttr[]> {
       const attributes = [];
       for (const attribute of attributs) {
         attributes.push({
+          dynamicId: attribute._server_id,
           label: attribute.label.get(),
           value: attribute.value.get(),
           date: attribute.date.get(),
           type: attribute.type.get(),
           unit: attribute.unit.get(),
-          dynamicId: attribute._server_id,
         });
       }
-      console.log('attributes', attributes);
       return {
         dynamicId: child._server_id,
         staticId: child.getId().get(),

@@ -44,6 +44,7 @@ export interface Workflow {
   staticId: string;
   name: string;
   type: string;
+  color?: string;
 }
 
 /**

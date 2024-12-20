@@ -97,7 +97,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           staticId: realNode.getId().get(),
           name: realNode.getName().get(),
           type: realNode.getType().get(),
-          color: group.color.get()
+          color: group.color.get(),
+          icon:  group.icon?.get()
         };
         nodes.push(info);
       }

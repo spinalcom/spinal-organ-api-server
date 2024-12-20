@@ -14,12 +14,23 @@ async function getAttributeListInfo(
   const attributesPromises = childrens.map(
     async (child): Promise<NodeAttribut> => {
       const attributs = await child.element.load();
+      const attributes = [];
+      for (const attribute of attributs) {
+        attributes.push({
+          dynamicId: attribute._server_id,
+          label: attribute.label.get(),
+          value: attribute.value.get(),
+          date: attribute.date.get(),
+          type: attribute.type.get(),
+          unit: attribute.unit.get(),
+        });
+      }
       return {
         dynamicId: child._server_id,
         staticId: child.getId().get(),
         name: child.getName().get(),
         type: child.getType().get(),
-        attributs: attributs.get(),
+        attributs: attributes,
       };
     }
   );

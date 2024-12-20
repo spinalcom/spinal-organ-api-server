@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 20/12/2024 -> v1.0.35
+- Added dynamicId in node/attribute routes
+- Route processList is ready to return color for processes if they exist
+- Added icon in all group list routes
+
 ## 19/12/2024 -> v1.0.34
 - Added dynamicId in attribute infos
 

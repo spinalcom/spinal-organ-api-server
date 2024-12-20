@@ -14892,6 +14892,57 @@
         }
       }
     },
+    "/api/v1/building/reference_object_list": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Return reference objects of the building",
+        "summary": "Gets reference objects of the building",
+        "tags": [
+          "Geographic Context"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "dynamicId": {
+                      "type": "integer"
+                    },
+                    "staticId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "infoReferencesObjects": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Equipement"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/building/{id}/read_static_details": {
       "get": {
         "security": [

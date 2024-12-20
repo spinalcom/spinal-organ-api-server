@@ -125,6 +125,7 @@ module.exports = function (
             name: realNode.getName().get(),
             type: realNode.getType().get(),
             color: group.color.get(),
+            icon: group.icon?.get(),
           };
           nodes.push(info);
         }
