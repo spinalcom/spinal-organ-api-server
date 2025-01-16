@@ -13672,6 +13672,75 @@
         }
       }
     },
+    "/api/v1/context/{idContext}/node/{idNode}/children": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Retrieve children of multiple nodes based on context and relations.",
+        "summary": "Retrieve children of multiple nodes based on context and relations",
+        "tags": [
+          "Nodes"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "idContext",
+            "description": "Context dynamic Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "path",
+            "name": "idNode",
+            "description": "Node dynamic Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success -  Information for the specified relations fetched successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNodeMultiple"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters."
+          }
+        }
+      }
+    },
     "/api/v1/context/{id}/node/children_multiple": {
       "post": {
         "security": [

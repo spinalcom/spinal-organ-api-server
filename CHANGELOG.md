@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 16/01/2025 -> v1.0.37
+- Added route /api/v1/context/:idContext/node/:idNode/children to get children in context for singular node ( also by relation )
+
 ## 16/01/2025 -> v1.0.36
 - Added route /api/v1/context/:id/node/children_multiple to get children in context for multiple nodes ( also by relation )
 
