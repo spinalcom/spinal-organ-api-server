@@ -13672,6 +13672,97 @@
         }
       }
     },
+    "/api/v1/context/{id}/node/children_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Retrieve children of multiple nodes based on context and relations.",
+        "summary": "Retrieve children of multiple nodes based on context and relations",
+        "tags": [
+          "Nodes"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "Context dynamic Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "dynamicId": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "relations": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All children nodes information for the specified relations fetched successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNodeMultiple"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some children node information based on the specified relations could not be fetched.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/BasicNodeMultiple"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters."
+          }
+        }
+      }
+    },
     "/api/v1/node/children_multiple": {
       "post": {
         "security": [

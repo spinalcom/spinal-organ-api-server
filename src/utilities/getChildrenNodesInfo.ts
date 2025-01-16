@@ -7,10 +7,25 @@ async function getChildrenNodesInfo(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string,
   dynamicId: number,
-  relations?: string[]
+  relations?: string[],
+  contextId? : number
 )  : Promise<BasicNode[]>{
+    // if we have a contextId we will get the children in the context.
+    // Additionally , if we have relations we will restrict the children to the relations
+
+
+    let contextNode = undefined;
+
+    if(contextId){
+      contextNode = await spinalAPIMiddleware.load(contextId);
+    }
     const node: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
-    const children = await node.getChildren(relations);
+    let children = await node.getChildren(relations);
+    if(contextNode){
+      children = children.filter( (child) => {
+        return child.belongsToContext(contextNode);
+      })
+    }
     const childrenInfo: BasicNode[] = [];
     for (const child of children) {
       const info : BasicNode = {

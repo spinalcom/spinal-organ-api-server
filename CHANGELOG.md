@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 16/01/2025 -> v1.0.36
+- Added route /api/v1/context/:id/node/children_multiple to get children in context for multiple nodes ( also by relation )
+
 ## 20/12/2024 -> v1.0.35
 - Added dynamicId in node/attribute routes
 - Route processList is ready to return color for processes if they exist

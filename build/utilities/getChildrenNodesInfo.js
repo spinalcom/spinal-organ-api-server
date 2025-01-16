@@ -1,9 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getChildrenNodesInfo = void 0;
-async function getChildrenNodesInfo(spinalAPIMiddleware, profileId, dynamicId, relations) {
+async function getChildrenNodesInfo(spinalAPIMiddleware, profileId, dynamicId, relations, contextId) {
+    // if we have a contextId we will get the children in the context.
+    // Additionally , if we have relations we will restrict the children to the relations
+    let contextNode = undefined;
+    if (contextId) {
+        contextNode = await spinalAPIMiddleware.load(contextId);
+    }
     const node = await spinalAPIMiddleware.load(dynamicId, profileId);
-    const children = await node.getChildren(relations);
+    let children = await node.getChildren(relations);
+    if (contextNode) {
+        children = children.filter((child) => {
+            return child.belongsToContext(contextNode);
+        });
+    }
     const childrenInfo = [];
     for (const child of children) {
         const info = {
