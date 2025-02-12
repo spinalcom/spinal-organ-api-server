@@ -4,6 +4,7 @@ declare function getRoomInventory(spinalAPIMiddleware: ISpinalAPIMiddleware, pro
     staticId: string;
     type: string;
     name: string;
+    color: any;
     inventories: any[];
 }>;
 export { getRoomInventory };

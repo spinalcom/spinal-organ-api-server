@@ -95,20 +95,20 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           }
         }
       })
-      var info = {
+      const  info = {
         dynamicId: ticket._server_id,
         staticId: ticket.getId().get(),
         name: ticket.getName().get(),
         type: ticket.getType().get(),
         actuelStep: step.getName().get()
       }
-
+      return res.json(info);
     } catch (error) {
 
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }
-    res.json(info);
+    
   })
 
 }

@@ -51,6 +51,7 @@ async function getRoomInventory(
         staticId: roomDetail.staticId,
         type: roomDetail.type,
         name: roomDetail.name,
+        color: room.info.color?.get(),
         inventories: inventories
     };
 }
@@ -62,7 +63,8 @@ function getDetail(obj : SpinalNode<any>){
         name: obj.getName().get(),
         type: obj.getType().get(),
         dbid : obj.info.dbid?.get(),
-        bimFileId: obj.info.bimFileId?.get()
+        bimFileId: obj.info.bimFileId?.get(),
+        color: obj.info.color?.get()
     };
     return infoObject;
 }

@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 12/02/2025 -> v1.0.38
+- Added Color info if available in inventory routes
+
 ## 16/01/2025 -> v1.0.37
 - Added route /api/v1/context/:idContext/node/:idNode/children to get children in context for singular node ( also by relation )
 
