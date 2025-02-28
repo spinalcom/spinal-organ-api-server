@@ -172,6 +172,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./geographicContext/building/buildingReferenceObjectsList')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/floor/floorList')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/floor/floorDetails')(logger, app, spinalAPIMiddleware);
+    require('./geographicContext/floor/floorInventory')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/room/readRoom')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/floor/floorReferencesObjectsList')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/room/roomEquipementList')(logger, app, spinalAPIMiddleware);

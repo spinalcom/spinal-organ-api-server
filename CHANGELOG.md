@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 28/02/2025 -> v1.0.39
+- Added route floor/{id}/inventory
+
 ## 12/02/2025 -> v1.0.38
 - Added Color info if available in inventory routes
 

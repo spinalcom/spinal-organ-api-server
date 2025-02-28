@@ -450,6 +450,11 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
+  require('./geographicContext/floor/floorInventory')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./geographicContext/room/readRoom')(
     logger,
     app,
