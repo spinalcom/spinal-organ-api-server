@@ -83,6 +83,8 @@ async function classifyItemsByGroup(itemList : SpinalNode<any>[], groupContext :
             if(!res.find(e=> e.name === parentGroup.getName().get())){
                 res.push({
                     name: parentGroup.getName().get(),
+                    color : parentGroup.info.color?.get(),
+                    icon : parentGroup.info.icon?.get(),
                     groupItems: []
                 })
             }

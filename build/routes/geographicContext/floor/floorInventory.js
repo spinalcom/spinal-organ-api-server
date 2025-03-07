@@ -40,7 +40,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     parameters:
      *       - in: path
      *         name: id
-     *         description: Use the dynamic ID of the room
+     *         description: Use the dynamic ID of the floor
      *         required: true
      *         schema:
      *           type: integer
