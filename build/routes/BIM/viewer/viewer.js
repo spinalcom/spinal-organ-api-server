@@ -34,7 +34,7 @@ function createUrl(urlStr, port, protocol) {
 module.exports = function (logger, app, spinalAPIMiddleware) {
     const hubUrl = createUrl(spinalAPIMiddleware.config.spinalConnector.host, spinalAPIMiddleware.config.spinalConnector.port, spinalAPIMiddleware.config.spinalConnector.protocol);
     const proxyHub = proxy(hubUrl.origin, {
-        limit: '1tb',
+        limit: '1tb', // 1 tb
         proxyReqPathResolver: function (req) {
             return `${hubUrl.origin}/html/viewerForgeFiles${req.url}`;
         },
