@@ -495,6 +495,11 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
+  require('./geographicContext/room/roomInventoryV2')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./geographicContext/room/roomInventoryMultiple')(
     logger,
     app,

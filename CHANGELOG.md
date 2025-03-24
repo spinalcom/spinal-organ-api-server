@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 17/03/2025 -> v1.0.40
+- Added route POST room/{id}/inventory v2 , with same features as floor/{id}/inventory
+
 ## 28/02/2025 -> v1.0.39
 - Added route floor/{id}/inventory
 

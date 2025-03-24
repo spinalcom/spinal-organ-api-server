@@ -40,7 +40,7 @@ module.exports = function (
  *       - bearerAuth:
  *         - readOnly
  *     description: Reads details of a room including its inventory
- *     summary: Gets inventory details of a room
+ *     summary: Gets inventory details of a room ( deprecated )
  *     tags:
  *       - Geographic Context
  *     parameters:
@@ -71,5 +71,4 @@ module.exports = function (
         return res.status(400).send(error.message || "ko");
     }
 });
-
 };

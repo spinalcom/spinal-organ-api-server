@@ -28,19 +28,19 @@ const getInventory_1 = require("../../../utilities/getInventory");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
-     * /api/v1/floor/{id}/inventory:
+     * /api/v1/room/{id}/inventory:
      *   post:
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Gets floor inventory details ( room inventory or equipment inventory  depending on given context)
-     *     summary: Gets floor inventory
+     *     description: Gets room inventory details ( equipment inventory )
+     *     summary: Gets room inventory
      *     tags:
      *       - Geographic Context
      *     parameters:
      *       - in: path
      *         name: id
-     *         description: Use the dynamic ID of the floor
+     *         description: Use the dynamic ID of the room
      *         required: true
      *         schema:
      *           type: integer
@@ -48,12 +48,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - in: query
      *         name: includePosition
      *         description: Include position details in the response
-     *         required: false
-     *         schema:
-     *           type: boolean
-     *       - in: query
-     *         name: includeArea
-     *         description: Include area details in the response
      *         required: false
      *         schema:
      *           type: boolean
@@ -85,7 +79,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.post("/api/v1/floor/:id/inventory", async (req, res, next) => {
+    app.post("/api/v1/room/:id/inventory", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
@@ -94,15 +88,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!groupContext)
                 throw { code: 400, message: "context not found" };
             const includePosition = req.query.includePosition === "true" || false;
-            const includeArea = req.query.includeArea === "true" || false;
             const onlyDynamicId = req.query.onlyDynamicId === "true" || false;
             const reqInfo = {
                 ...req.body,
                 includePosition,
-                includeArea,
                 onlyDynamicId,
             };
-            const inventory = await (0, getInventory_1.getFloorInventory)(spinalAPIMiddleware, profileId, groupContext, parseInt(req.params.id, 10), reqInfo);
+            const inventory = await (0, getInventory_1.getRoomInventory)(spinalAPIMiddleware, profileId, groupContext, parseInt(req.params.id, 10), reqInfo);
             return res.json(inventory);
         }
         catch (error) {
@@ -112,4 +104,4 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
     });
 };
-//# sourceMappingURL=floorInventory.js.map
+//# sourceMappingURL=roomInventoryV2.js.map

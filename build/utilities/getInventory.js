@@ -1,8 +1,24 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getFloorInventory = void 0;
+exports.getRoomInventory = exports.getFloorInventory = void 0;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+async function getRoomInventory(spinalAPIMiddleware, profileId, groupContext, dynamicId, reqInfo) {
+    const room = await spinalAPIMiddleware.load(dynamicId, profileId);
+    //@ts-ignore
+    spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
+    if (room.getType().get() !== "geographicRoom") {
+        throw new Error("node is not of type geographicRoom");
+    }
+    const mapAdditionalInfo = new Map();
+    if (groupContext.getType().get() !== 'BIMObjectGroupContext') {
+        throw new Error("groupContext is not of type BIMObjectGroupContext");
+    }
+    const equipmentList = await room.getChildren("hasBimObject");
+    const classifiedItems = await classifyItemsByGroup(equipmentList, groupContext, reqInfo, mapAdditionalInfo);
+    return classifiedItems;
+}
+exports.getRoomInventory = getRoomInventory;
 async function getFloorInventory(spinalAPIMiddleware, profileId, groupContext, dynamicId, reqInfo) {
     const floor = await spinalAPIMiddleware.load(dynamicId, profileId);
     //@ts-ignore
@@ -61,6 +77,8 @@ async function classifyItemsByGroup(itemList, groupContext, reqInfo, mapAddition
             if (!res.find(e => e.name === parentGroup.getName().get())) {
                 res.push({
                     name: parentGroup.getName().get(),
+                    dynamicId: parentGroup._server_id,
+                    type: parentGroup.getType().get(),
                     color: parentGroup.info.color?.get(),
                     icon: parentGroup.info.icon?.get(),
                     groupItems: []
@@ -106,5 +124,4 @@ async function getArea(room) {
     const area = areaAttribute.value.get();
     return area;
 }
-exports.default = getFloorInventory;
-//# sourceMappingURL=getFloorInventory.js.map
+//# sourceMappingURL=getInventory.js.map

@@ -34,7 +34,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *       - bearerAuth:
    *         - readOnly
    *     description: Reads details of a room including its inventory
-   *     summary: Gets inventory details of a room
+   *     summary: Gets inventory details of a room ( deprecated )
    *     tags:
    *       - Geographic Context
    *     parameters:
