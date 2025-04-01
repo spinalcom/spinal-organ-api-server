@@ -148,12 +148,11 @@ module.exports = function (
 ) {
   async function getRootNodes(
     dynIds: number | number[],
-    res: ViweInfoRes,
     profileId: string
   ): Promise<SpinalNode[]> {
     const ids = Array.isArray(dynIds) ? dynIds : [dynIds];
     const proms = ids.map((dynId) => {
-      return { dynId, prom: spinalAPIMiddleware.load(dynId,profileId) };
+      return { dynId, prom: spinalAPIMiddleware.load(dynId, profileId) };
     });
     const result: SpinalNode[] = [];
     for (const prom of proms) {
@@ -169,7 +168,6 @@ module.exports = function (
         console.error(`Error load, dynId = ${prom.dynId}`);
       }
     }
-    if (result.length === 0) throw errorHandler(res, EError.BAD_REQ_BAD_DYN_ID);
     return result;
   }
 
@@ -220,68 +218,70 @@ module.exports = function (
     }
   }
 
-/**
- * @swagger
- * /api/v1/geographicContext/viewInfo:
- *   post:
- *     security:
- *       - bearerAuth:
- *         - read
- *     description: Fetches view information based on the geographical context for specified IDs and options
- *     summary: Fetch view information for geographical context
- *     tags:
- *       - Geographic Context
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - dynamicId
- *             properties:
- *               dynamicId:
- *                 type: integer
- *                 format: int64
- *                 description: Unique identifier for the node
- *               floorRef:
- *                 type: boolean
- *                 description: Flag to include floor reference, defaults to false
- *               roomRef:
- *                 type: boolean
- *                 description: Flag to include room reference, defaults to true
- *               equipements:
- *                 type: boolean
- *                 description: Flag to include equipment details, defaults to false
- *     responses:
- *       200:
- *         description: Successfully retrieved view information
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   dynamicId:
- *                     type: integer
- *                     format: int64
- *                     description: Server ID of the node
- *                   data:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         bimFileId:
- *                           type: string
- *                           description: Identifier for the BIM file
- *                         dbIds:
- *                           type: array
- *                           items:
- *                             type: string
- *                           description: Database IDs associated with the node
- *       400:
- *         description: Bad request, typically missing required 'dynamicId'
- */
+  /**
+   * @swagger
+   * /api/v1/geographicContext/viewInfo:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - read
+   *     description: Fetches view information based on the geographical context for specified IDs and options
+   *     summary: Fetch view information for geographical context
+   *     tags:
+   *       - Geographic Context
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - dynamicId
+   *             properties:
+   *               dynamicId:
+   *                 type: integer
+   *                 format: int64
+   *                 description: Unique identifier for the node
+   *               floorRef:
+   *                 type: boolean
+   *                 description: Flag to include floor reference, defaults to false
+   *               roomRef:
+   *                 type: boolean
+   *                 description: Flag to include room reference, defaults to true
+   *               equipements:
+   *                 type: boolean
+   *                 description: Flag to include equipment details, defaults to false
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved view information
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 properties:
+   *                   dynamicId:
+   *                     type: integer
+   *                     format: int64
+   *                     description: Server ID of the node
+   *                   data:
+   *                     type: array
+   *                     items:
+   *                       type: object
+   *                       properties:
+   *                         bimFileId:
+   *                           type: string
+   *                           description: Identifier for the BIM file
+   *                         dbIds:
+   *                           type: array
+   *                           items:
+   *                             type: string
+   *                           description: Database IDs associated with the node
+   *       206:
+   *         description: Some retrieved informations were not found and are omitted from the response, content type same as 200
+   *       400:
+   *         description: Bad request, typically missing required 'dynamicId'
+   */
   app.post(
     '/api/v1/geographicContext/viewInfo',
     async (req: ViweInfoReq, res: ViweInfoRes): Promise<any> => {
@@ -308,35 +308,44 @@ module.exports = function (
         //return errorHandler(res, EError.BAD_REQ_NO_DYN_ID);
       }
       // getRootNode
-      const nodes = await getRootNodes(options.dynamicId, res, profilId);
-      // getRelationListFromOption
-      const relations = getRelationListFromOption(options);
-      // visitChildren
-      const resBody: IViewInfoRes[] = [];
-      for (const node of nodes) {
-        const item: IViewInfoTmpRes[] = [];
-        for await (const n of visitNodesWithTypeRelation(node, relations)) {
-          if (
-            n.info.type.get() === REFERENCE_TYPE ||
-            n.info.type.get() === EQUIPMENT_TYPE
-          ) {
-            const bimFileId = n.info.bimFileId.get();
-            const dbId = n.info.dbid.get();
-            if (bimFileId && dbId) pushResBody(item, bimFileId, dbId);
-          }
-        }
-        resBody.push({
-          dynamicId: node._server_id,
-          data: item.map((it: IViewInfoTmpRes): IViewInfoItemRes => {
-            return {
-              bimFileId: it.bimFileId,
-              dbIds: Array.from(it.dbIds),
-            };
-          }),
-        });
-      }
+      try {
+        const nodes = await getRootNodes(options.dynamicId, profilId);
+        if (nodes.length === 0)
+          return errorHandler(res, EError.BAD_REQ_BAD_DYN_ID);
 
-      return res.json(resBody);
+        // getRelationListFromOption
+        const relations = getRelationListFromOption(options);
+        // visitChildren
+        const resBody: IViewInfoRes[] = [];
+        for (const node of nodes) {
+          const item: IViewInfoTmpRes[] = [];
+          for await (const n of visitNodesWithTypeRelation(node, relations)) {
+            if (
+              n.info.type.get() === REFERENCE_TYPE ||
+              n.info.type.get() === EQUIPMENT_TYPE
+            ) {
+              const bimFileId = n.info.bimFileId.get();
+              const dbId = n.info.dbid.get();
+              if (bimFileId && dbId) pushResBody(item, bimFileId, dbId);
+            }
+          }
+          resBody.push({
+            dynamicId: node._server_id,
+            data: item.map((it: IViewInfoTmpRes): IViewInfoItemRes => {
+              return {
+                bimFileId: it.bimFileId,
+                dbIds: Array.from(it.dbIds),
+              };
+            }),
+          });
+        }
+        const sizeRes = Array.isArray(options.dynamicId)
+          ? options.dynamicId.length
+          : 1;
+        return res.status(resBody.length === sizeRes ? 200 : 206).json(resBody);
+      } catch (e) {
+        return res.status(500).send(e.message);
+      }
     }
   );
 };

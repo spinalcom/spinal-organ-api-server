@@ -24,7 +24,7 @@ function errorHandler(res, error) {
     res.status(e.code).send(e.message);
 }
 module.exports = function (logger, app, spinalAPIMiddleware) {
-    async function getRootNodes(dynIds, res, profileId) {
+    async function getRootNodes(dynIds, profileId) {
         const ids = Array.isArray(dynIds) ? dynIds : [dynIds];
         const proms = ids.map((dynId) => {
             return { dynId, prom: spinalAPIMiddleware.load(dynId, profileId) };
@@ -42,8 +42,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 console.error(`Error load, dynId = ${prom.dynId}`);
             }
         }
-        if (result.length === 0)
-            throw errorHandler(res, EError.BAD_REQ_BAD_DYN_ID);
         return result;
     }
     function getRelationListFromOption(options) {
@@ -146,6 +144,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                           items:
      *                             type: string
      *                           description: Database IDs associated with the node
+     *       206:
+     *         description: Some retrieved informations were not found and are omitted from the response, content type same as 200
      *       400:
      *         description: Bad request, typically missing required 'dynamicId'
      */
@@ -172,33 +172,43 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             //return errorHandler(res, EError.BAD_REQ_NO_DYN_ID);
         }
         // getRootNode
-        const nodes = await getRootNodes(options.dynamicId, res, profilId);
-        // getRelationListFromOption
-        const relations = getRelationListFromOption(options);
-        // visitChildren
-        const resBody = [];
-        for (const node of nodes) {
-            const item = [];
-            for await (const n of (0, visitNodesWithTypeRelation_1.visitNodesWithTypeRelation)(node, relations)) {
-                if (n.info.type.get() === constants_1.REFERENCE_TYPE ||
-                    n.info.type.get() === constants_1.EQUIPMENT_TYPE) {
-                    const bimFileId = n.info.bimFileId.get();
-                    const dbId = n.info.dbid.get();
-                    if (bimFileId && dbId)
-                        pushResBody(item, bimFileId, dbId);
+        try {
+            const nodes = await getRootNodes(options.dynamicId, profilId);
+            if (nodes.length === 0)
+                return errorHandler(res, EError.BAD_REQ_BAD_DYN_ID);
+            // getRelationListFromOption
+            const relations = getRelationListFromOption(options);
+            // visitChildren
+            const resBody = [];
+            for (const node of nodes) {
+                const item = [];
+                for await (const n of (0, visitNodesWithTypeRelation_1.visitNodesWithTypeRelation)(node, relations)) {
+                    if (n.info.type.get() === constants_1.REFERENCE_TYPE ||
+                        n.info.type.get() === constants_1.EQUIPMENT_TYPE) {
+                        const bimFileId = n.info.bimFileId.get();
+                        const dbId = n.info.dbid.get();
+                        if (bimFileId && dbId)
+                            pushResBody(item, bimFileId, dbId);
+                    }
                 }
+                resBody.push({
+                    dynamicId: node._server_id,
+                    data: item.map((it) => {
+                        return {
+                            bimFileId: it.bimFileId,
+                            dbIds: Array.from(it.dbIds),
+                        };
+                    }),
+                });
             }
-            resBody.push({
-                dynamicId: node._server_id,
-                data: item.map((it) => {
-                    return {
-                        bimFileId: it.bimFileId,
-                        dbIds: Array.from(it.dbIds),
-                    };
-                }),
-            });
+            const sizeRes = Array.isArray(options.dynamicId)
+                ? options.dynamicId.length
+                : 1;
+            return res.status(resBody.length === sizeRes ? 200 : 206).json(resBody);
         }
-        return res.json(resBody);
+        catch (e) {
+            return res.status(500).send(e.message);
+        }
     });
 };
 //# sourceMappingURL=viewInfo.js.map
