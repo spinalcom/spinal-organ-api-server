@@ -28,6 +28,7 @@ import SpinalAPIMiddleware from './spinalAPIMiddleware';
 import {getSwaggerDocs, initSwagger} from './swagger';
 import ConfigFile from 'spinal-lib-organ-monitoring';
 import {spinalGraphUtils} from 'spinal-organ-api-pubsub';
+import axios from 'axios';
 
 function Requests(logger) {
   async function initSpinalHub() {
@@ -57,7 +58,7 @@ function Requests(logger) {
       const spinalAPIMiddleware = await initSpinalHub();
       const api = initApiServer(spinalAPIMiddleware);
       const port = config.api.port;
-      const server = api.listen(port, () => {
+      const server = api.listen(port, async () => {
         ConfigFile.init(
           spinalAPIMiddleware.conn,
           process.env.ORGAN_NAME,
@@ -73,9 +74,22 @@ function Requests(logger) {
         console.log(
           `  redoc :\thttp://localhost:${port}/spinalcom-api-redoc-docs`
         );
-        console.log();
-      });
+        
 
+        // Automatic API route call logic
+        const autoCallRoute = process.env.AUTO_CALL_ROUTE;
+        if (autoCallRoute) {
+        const url = `http://localhost:${port}${autoCallRoute}`;
+        console.log(`AUTOMATIC CALL : ${url}`);
+        try {
+          const response = await axios.post(url);
+          console.log(`RESPONSE :`, response.status);
+        } catch (err) {
+          console.error(`Error calling auto route:`, err.message);
+        }
+      }
+      });
+      
       SpinalAPIMiddleware.getInstance().runSocketServer(server);
     },
 

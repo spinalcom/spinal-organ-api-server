@@ -2,7 +2,6 @@
 
 Api server that handles most of possible queries to spinalhub.
 
-
 ## [Changelog](CHANGELOG.md)
 
 ## Installation
@@ -13,7 +12,7 @@ cd spinal-organ-api-server
 npm i
 ```
 
-### Requirements 
+### Requirements
 
 You must have a .env file at the root of the project with the following variables :
 
@@ -27,18 +26,17 @@ REQUESTS_PORT="3000"                          # Port on which the server will li
 SPINAL_DTWIN_PATH="xxxxxxxxxxxxxxxxx"         # Path to the digital twin exemple : /__users__/admin/SmartBuilding
 ORGAN_NAME="xxxxxxxxxx"                       # Name of the organ. Used by monitoring platform. If possible make the name obvious which platform/client it belongs to. For exemple : ClientName-Api-Server
 ORGAN_TYPE="api-server"                       # You can keep this as is. Used by monitoring platform to categorize the organs.
+AUTO_CALL_ROUTE="/api/v1/route"               # Route that will be called right after the start ( main used for viewInfo)
 ```
 
 ## Running the API Server
-``` bash
+
+```bash
 npm run start
 # or with pm2 :
 pm2 start index.js --name spinal-organ-api-server
-# Prefer using a name that uncludes the port of the hub it connects to for exemple : 
+# Prefer using a name that uncludes the port of the hub it connects to for exemple :
 pm2 start index.js --name api-server-10100
 # If you want to have color theme in the logs ( pm2 log [processId] ) you can add the option --color
 pm2 start index.js --name api-server-10100 -- --color
 ```
-
-
-

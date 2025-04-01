@@ -295,7 +295,17 @@ module.exports = function (
       };
 
       if (!options.dynamicId) {
-        return errorHandler(res, EError.BAD_REQ_NO_DYN_ID);
+        //get dynamicId of building
+        const graph = await spinalAPIMiddleware.getProfileGraph(profilId);
+        const contexts = await graph.getChildren("hasContext");
+        const geographicContexts = contexts.filter(el => el.getType().get() === "geographicContext");
+        const buildings = await geographicContexts[0].getChildren("hasGeographicBuilding");
+        const building = buildings[0];
+        options.dynamicId=building._server_id;
+        options.floorRef=true;
+        options.roomRef=true;
+        options.equipements=true;
+        //return errorHandler(res, EError.BAD_REQ_NO_DYN_ID);
       }
       // getRootNode
       const nodes = await getRootNodes(options.dynamicId, res, profilId);
