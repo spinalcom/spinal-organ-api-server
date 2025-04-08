@@ -67,6 +67,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./nodes/nodeDownloadFile')(logger, app, spinalAPIMiddleware);
     require('./nodes/nodeEventList')(logger, app, spinalAPIMiddleware);
     require('./nodes/nodeEventListMultiple')(logger, app, spinalAPIMiddleware);
+    require('./nodes/nodeContextPosition')(logger, app, spinalAPIMiddleware);
     // require('./nodes/findInContext')(logger, app, spinalAPIMiddleware);
     require('./nodes/testUploadFileBase64')(logger, app, spinalAPIMiddleware);
     //attributs routes
