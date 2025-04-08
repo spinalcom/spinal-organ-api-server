@@ -1,4 +1,9 @@
 # CHANGELOG
+## 08/04/2025 -> v1.0.42
+- Added route api/v1/context/:contextId/node/:nodeId/get_position 
+
+## 01/04/2025 -> v1.0.41
+- Added option to automatically run an api call after process starts with AUTO_CALL_ROUTE env variable
 
 ## 17/03/2025 -> v1.0.40
 - Added route POST room/{id}/inventory v2 , with same features as floor/{id}/inventory

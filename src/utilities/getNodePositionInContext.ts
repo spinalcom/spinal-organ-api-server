@@ -30,7 +30,8 @@ export async function getNodePositionInContext(
   
     return {
       name: nodeName,
-      id: nodeId,
+      dynamicId: nodeId,
+      type: node.getType().get(),
       parentsInContext,
     };
   }

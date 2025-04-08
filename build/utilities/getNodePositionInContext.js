@@ -23,7 +23,8 @@ async function buildPaths(node, contextStaticId) {
     }
     return {
         name: nodeName,
-        id: nodeId,
+        dynamicId: nodeId,
+        type: node.getType().get(),
         parentsInContext,
     };
 }
