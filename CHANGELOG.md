@@ -1,4 +1,9 @@
 # CHANGELOG
+
+## 15/04/2025 -> v1.0.43
+- Switched to spinalcom-utils installation
+- Added ecosystem.config.js for pm2 and possibility to run in cluster by adding env variables
+
 ## 08/04/2025 -> v1.0.42
 - Added route api/v1/context/:contextId/node/:nodeId/get_position 
 
