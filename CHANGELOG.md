@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 22/04/2025 -> v1.0.44
+- Added route /api/v1/ticket/:ticketId/move_to_step
+- Added route /api/v1/ticket/:ticketId/update
+
+
 ## 15/04/2025 -> v1.0.43
 - Switched to spinalcom-utils installation
 - Added ecosystem.config.js for pm2 and possibility to run in cluster by adding env variables

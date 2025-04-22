@@ -17101,6 +17101,123 @@
         }
       }
     },
+    "/api/v1/ticket/{ticketId}/move_to_step": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "description": "move a Ticket to a specific step",
+        "summary": "move a Ticket",
+        "tags": [
+          "Workflow & ticket"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticketId",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "workflowDynamicId"
+                ],
+                "properties": {
+                  "workflowDynamicId": {
+                    "type": "number"
+                  },
+                  "toStepOrder": {
+                    "type": "number",
+                    "description": "Order number of the target step (optional, required if toStepName is not provided)"
+                  },
+                  "toStepName": {
+                    "type": "string",
+                    "description": "Name of the target step (optional, required if toStepOrderId is not provided)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "move to next step Successfully"
+          },
+          "400": {
+            "description": "move to next step not Successfully"
+          }
+        }
+      }
+    },
+    "/api/v1/ticket/{ticketId}/update": {
+      "put": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "description": "update name and/or description of Ticket",
+        "summary": "update name and/or description of Ticket",
+        "tags": [
+          "Workflow & ticket"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ticketId",
+            "description": "use the dynamic ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "priority": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "updated Successfully"
+          },
+          "400": {
+            "description": "update not Successfully"
+          }
+        }
+      }
+    },
     "/api/v1/eventContext/{ContextId}/eventCategory/{CategoryId}/eventGroup/{GroupId}/event_list": {
       "get": {
         "security": [

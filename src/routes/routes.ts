@@ -236,6 +236,8 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
+  require('./tickets/tickets/ticketUpdate')(logger, app, spinalAPIMiddleware);
+  require('./tickets/tickets/ticketMoveToStep')(logger, app, spinalAPIMiddleware);
   require('./tickets/tickets/ticketFindEntity')(
     logger,
     app,
@@ -251,6 +253,8 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
+
+  
 
   //endPoints routes
   require('./IoTNetwork/IoTNetworkContext/IoTNetworkList')(

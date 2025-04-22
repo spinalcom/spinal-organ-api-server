@@ -126,6 +126,8 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./tickets/tickets/ticketChangeProcess')(logger, app, spinalAPIMiddleware);
     require('./tickets/tickets/ticketChangeWorkflow')(logger, app, spinalAPIMiddleware);
     require('./tickets/tickets/ticketChangeNode')(logger, app, spinalAPIMiddleware);
+    require('./tickets/tickets/ticketUpdate')(logger, app, spinalAPIMiddleware);
+    require('./tickets/tickets/ticketMoveToStep')(logger, app, spinalAPIMiddleware);
     require('./tickets/tickets/ticketFindEntity')(logger, app, spinalAPIMiddleware);
     require('./tickets/tickets/ticketEventList')(logger, app, spinalAPIMiddleware);
     require('./tickets/tickets/ticketCreateEvent')(logger, app, spinalAPIMiddleware);
