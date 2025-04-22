@@ -96,10 +96,12 @@ interface IViewInfoRes {
 interface IViewInfoItemRes {
   bimFileId: string;
   dbIds: number[];
+  dynamicIds: number[];
 }
 interface IViewInfoTmpRes {
   bimFileId: string;
   dbIds: Set<number>;
+  dynamicIds: Set<number>;
 }
 
 type ViweInfoRes = express.Response<string | IViewInfoRes[], IViewInfoBody>;
@@ -200,13 +202,15 @@ module.exports = function (
   function pushResBody(
     resBody: IViewInfoTmpRes[],
     bimFileId: string,
-    dbId: number
+    dbId: number,
+    dynamicId: number
   ): void {
     let found = false;
     for (const item of resBody) {
       if (item.bimFileId === bimFileId) {
         found = true;
         item.dbIds.add(dbId);
+        item.dynamicIds.add(dynamicId);
         break;
       }
     }
@@ -214,6 +218,7 @@ module.exports = function (
       resBody.push({
         bimFileId,
         dbIds: new Set([dbId]),
+        dynamicIds : new Set([dynamicId]),
       });
     }
   }
@@ -326,7 +331,8 @@ module.exports = function (
             ) {
               const bimFileId = n.info.bimFileId.get();
               const dbId = n.info.dbid.get();
-              if (bimFileId && dbId) pushResBody(item, bimFileId, dbId);
+              const dynamicId = n._server_id;
+              if (bimFileId && dbId) pushResBody(item, bimFileId, dbId, dynamicId);
             }
           }
           resBody.push({
@@ -335,6 +341,7 @@ module.exports = function (
               return {
                 bimFileId: it.bimFileId,
                 dbIds: Array.from(it.dbIds),
+                dynamicIds: Array.from(it.dynamicIds)
               };
             }),
           });

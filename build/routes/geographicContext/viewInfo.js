@@ -69,12 +69,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             [constants_1.ROOM_TYPE]: room,
         };
     }
-    function pushResBody(resBody, bimFileId, dbId) {
+    function pushResBody(resBody, bimFileId, dbId, dynamicId) {
         let found = false;
         for (const item of resBody) {
             if (item.bimFileId === bimFileId) {
                 found = true;
                 item.dbIds.add(dbId);
+                item.dynamicIds.add(dynamicId);
                 break;
             }
         }
@@ -82,6 +83,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             resBody.push({
                 bimFileId,
                 dbIds: new Set([dbId]),
+                dynamicIds: new Set([dynamicId]),
             });
         }
     }
@@ -187,8 +189,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         n.info.type.get() === constants_1.EQUIPMENT_TYPE) {
                         const bimFileId = n.info.bimFileId.get();
                         const dbId = n.info.dbid.get();
+                        const dynamicId = n._server_id;
                         if (bimFileId && dbId)
-                            pushResBody(item, bimFileId, dbId);
+                            pushResBody(item, bimFileId, dbId, dynamicId);
                     }
                 }
                 resBody.push({
@@ -197,6 +200,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         return {
                             bimFileId: it.bimFileId,
                             dbIds: Array.from(it.dbIds),
+                            dynamicIds: Array.from(it.dynamicIds)
                         };
                     }),
                 });

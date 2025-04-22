@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 22/04/2025 -> v1.0.45
+- Added dynamicIds property in viewInfo response
+
 ## 22/04/2025 -> v1.0.44
 - Added route /api/v1/ticket/:ticketId/move_to_step
 - Added route /api/v1/ticket/:ticketId/update
