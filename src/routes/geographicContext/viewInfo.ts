@@ -318,33 +318,48 @@ module.exports = function (
         if (nodes.length === 0)
           return errorHandler(res, EError.BAD_REQ_BAD_DYN_ID);
 
+        
         // getRelationListFromOption
         const relations = getRelationListFromOption(options);
         // visitChildren
         const resBody: IViewInfoRes[] = [];
-        for (const node of nodes) {
-          const item: IViewInfoTmpRes[] = [];
-          for await (const n of visitNodesWithTypeRelation(node, relations)) {
-            if (
-              n.info.type.get() === REFERENCE_TYPE ||
-              n.info.type.get() === EQUIPMENT_TYPE
-            ) {
-              const bimFileId = n.info.bimFileId.get();
-              const dbId = n.info.dbid.get();
-              const dynamicId = n._server_id;
-              if (bimFileId && dbId) pushResBody(item, bimFileId, dbId, dynamicId);
+        let totalVisited = 0;
+  
+        const intervalId = setInterval(() => {
+          console.log(`[viewInfo] Processed nodes so far: ${totalVisited}`);
+        }, 5000); 
+
+        try {
+          for (const node of nodes) {
+            const item: IViewInfoTmpRes[] = [];
+            for await (const n of visitNodesWithTypeRelation(node, relations)) {
+              totalVisited++;
+              if (
+                n.info.type.get() === REFERENCE_TYPE ||
+                n.info.type.get() === EQUIPMENT_TYPE
+              ) {
+                
+                const bimFileId = n.info.bimFileId.get();
+                const dbId = n.info.dbid.get();
+                const dynamicId = n._server_id;
+                if (bimFileId && dbId) pushResBody(item, bimFileId, dbId, dynamicId);
+              }
             }
+            resBody.push({
+              dynamicId: node._server_id,
+              data: item.map((it: IViewInfoTmpRes): IViewInfoItemRes => {
+                return {
+                  bimFileId: it.bimFileId,
+                  dbIds: Array.from(it.dbIds),
+                  dynamicIds: Array.from(it.dynamicIds)
+                };
+              }),
+            });
           }
-          resBody.push({
-            dynamicId: node._server_id,
-            data: item.map((it: IViewInfoTmpRes): IViewInfoItemRes => {
-              return {
-                bimFileId: it.bimFileId,
-                dbIds: Array.from(it.dbIds),
-                dynamicIds: Array.from(it.dynamicIds)
-              };
-            }),
-          });
+        } finally {
+          console.log(
+            `[viewInfo] Processed nodes: ${totalVisited}, finished`)
+          clearInterval(intervalId);
         }
         const sizeRes = Array.isArray(options.dynamicId)
           ? options.dynamicId.length

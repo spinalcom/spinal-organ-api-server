@@ -68,5 +68,29 @@ async function getEndpointsInfo(
     return nodes;
 }
 
-export { getEndpointsInfo };
+async function getEndpointsInfoFormat2(spinalAPIMiddleware: ISpinalAPIMiddleware, profilId : string, dynamicId: number): Promise<EndPointNode [] | undefined> {
+  const nodes: EndPointNode[] = [];
+    spinalAPIMiddleware.getGraph();
+      const node: SpinalNode = await spinalAPIMiddleware.load(dynamicId,profilId);
+      // @ts-ignore
+      SpinalGraphService._addNode(node);
+      const endpoints = await SpinalGraphService.findNodesByType(node.getId().get(), BMS_ENDPOINT_RELATIONS, SpinalBmsEndpoint.nodeTypeName)
+      for (const endpoint of endpoints) {
+        const element = await endpoint.element.load();
+        const currentValue = element.currentValue.get();
+        const unit = element.unit?.get();
+        const info: EndPointNode = {
+          dynamicId: endpoint._server_id,
+          staticId: endpoint.getId().get(),
+          name: endpoint.getName().get(),
+          type: endpoint.getType().get(),
+          value: currentValue,
+          unit: unit,
+        };
+        nodes.push(info);
+    }
+    return nodes;
+}
+
+export { getEndpointsInfo, getEndpointsInfoFormat2 };
 export default getEndpointsInfo;

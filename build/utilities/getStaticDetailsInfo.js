@@ -5,6 +5,7 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
 const spinal_env_viewer_plugin_control_endpoint_service_1 = require("spinal-env-viewer-plugin-control-endpoint-service");
 const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
+const getEndpointInfo_1 = require("./getEndpointInfo");
 const ENDPOINT_RELATIONS = [
     'hasBmsEndpoint',
     'hasBmsDevice',
@@ -18,7 +19,7 @@ async function getBuildingStaticDetailsInfo(spinalAPIMiddleware, profileId, buil
     if (building.getType().get() === 'geographicBuilding') {
         const [allNodesControlesEndpoints, allEndpoints, CategorieAttributsList,] = await Promise.all([
             getNodeControlEndpoints(building),
-            getEndpointsInfo(building),
+            (0, getEndpointInfo_1.getEndpointsInfoFormat2)(spinalAPIMiddleware, profileId, buildingId),
             getAttributes(building),
         ]);
         const info = {
@@ -44,7 +45,7 @@ async function getEquipmentStaticDetailsInfo(spinalAPIMiddleware, profileId, equ
     if (equipment.getType().get() === 'BIMObject') {
         const [allNodesControlesEndpoints, allEndpoints, CategorieAttributsList, groupParents,] = await Promise.all([
             getNodeControlEndpoints(equipment),
-            getEndpointsInfo(equipment),
+            (0, getEndpointInfo_1.getEndpointsInfoFormat2)(spinalAPIMiddleware, profileId, equipementId),
             getAttributes(equipment),
             getEquipmentGroupParent(equipment),
         ]);
@@ -96,7 +97,7 @@ async function getFloorStaticDetailsInfo(spinalAPIMiddleware, profileId, floorId
     if (floor.getType().get() === 'geographicFloor') {
         const [allNodesControlesEndpoints, allEndpoints, CategorieAttributsList,] = await Promise.all([
             getNodeControlEndpoints(floor),
-            getEndpointsInfo(floor),
+            (0, getEndpointInfo_1.getEndpointsInfoFormat2)(spinalAPIMiddleware, profileId, floorId),
             getAttributes(floor),
         ]);
         const info = {
@@ -122,7 +123,7 @@ async function getRoomStaticDetailsInfo(spinalAPIMiddleware, profileId, roomId) 
     if (room.getType().get() === 'geographicRoom') {
         const [allNodesControlesEndpoints, allEndpoints, equipements, CategorieAttributsList, groupParents,] = await Promise.all([
             getNodeControlEndpoints(room),
-            getEndpointsInfo(room),
+            (0, getEndpointInfo_1.getEndpointsInfoFormat2)(spinalAPIMiddleware, profileId, roomId),
             getRoomBimObject(room),
             getAttributes(room),
             getRoomParent(room),
@@ -229,20 +230,20 @@ async function getEndpoints(node) {
     }
     return res;
 }
-async function getEndpointsInfo(node) {
-    const endpoints = await getEndpoints(node);
-    const endpointsInfo = await endpoints.map(async (el) => {
-        const element = await el.element.load();
-        return {
-            dynamicId: el._server_id,
-            staticId: el.getId().get(),
-            name: el.getName().get(),
-            type: el.getType().get(),
-            value: element.currentValue?.get(),
-        };
-    });
-    return Promise.all(endpointsInfo);
-}
+// async function getEndpointsInfo(node: SpinalNode<any>) {
+//   const endpoints = await getEndpoints(node);
+//   const endpointsInfo = await endpoints.map(async (el) => {
+//     const element = await el.element.load();
+//     return {
+//       dynamicId: el._server_id,
+//       staticId: el.getId().get(),
+//       name: el.getName().get(),
+//       type: el.getType().get(),
+//       value: element.currentValue?.get(),
+//     };
+//   });
+//   return Promise.all(endpointsInfo);
+// }
 async function getNodeControlEndpoints(node) {
     const profils = await node.getChildren([
         spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP,

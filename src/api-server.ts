@@ -102,7 +102,7 @@ function APIServer(logger, spinalAPIMiddleware: SpinalAPIMiddleware): express.Ex
     return bodyParserDefault(req, res, next);
   });
 
-  useLogger(app, process.env.LOG_BODY);
+  useLogger(app, ["1", "true", "yes"].includes((process.env.LOG_BODY || "").toLowerCase()));
 
   routes(logger, app, spinalAPIMiddleware);
   // app.use('/admin', express.static('public'));

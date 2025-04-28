@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getEndpointsInfo = void 0;
+exports.getEndpointsInfoFormat2 = exports.getEndpointsInfo = void 0;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
@@ -59,5 +59,29 @@ async function getEndpointsInfo(spinalAPIMiddleware, profilId, dynamicId) {
     return nodes;
 }
 exports.getEndpointsInfo = getEndpointsInfo;
+async function getEndpointsInfoFormat2(spinalAPIMiddleware, profilId, dynamicId) {
+    const nodes = [];
+    spinalAPIMiddleware.getGraph();
+    const node = await spinalAPIMiddleware.load(dynamicId, profilId);
+    // @ts-ignore
+    spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
+    const endpoints = await spinal_env_viewer_graph_service_1.SpinalGraphService.findNodesByType(node.getId().get(), BMS_ENDPOINT_RELATIONS, spinal_model_bmsnetwork_1.SpinalBmsEndpoint.nodeTypeName);
+    for (const endpoint of endpoints) {
+        const element = await endpoint.element.load();
+        const currentValue = element.currentValue.get();
+        const unit = element.unit?.get();
+        const info = {
+            dynamicId: endpoint._server_id,
+            staticId: endpoint.getId().get(),
+            name: endpoint.getName().get(),
+            type: endpoint.getType().get(),
+            value: currentValue,
+            unit: unit,
+        };
+        nodes.push(info);
+    }
+    return nodes;
+}
+exports.getEndpointsInfoFormat2 = getEndpointsInfoFormat2;
 exports.default = getEndpointsInfo;
 //# sourceMappingURL=getEndpointInfo.js.map

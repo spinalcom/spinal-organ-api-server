@@ -139,7 +139,8 @@ export interface EndPointNode {
   staticId: string,
   name: string,
   type: string,
-  currentValue: number,
+  currentValue?: number,
+  value?: number,
   unit?: string,
   saveTimeSeries?: boolean
 }

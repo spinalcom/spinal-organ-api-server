@@ -43,13 +43,7 @@ declare function getBuildingStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMid
     type: string;
     attributsList: IAttr[];
     controlEndpoint: INodeControlEndpoint[];
-    endpoints: {
-        dynamicId: number;
-        staticId: string;
-        name: string;
-        type: string;
-        value: any;
-    }[];
+    endpoints: import("../routes/nodes/interfacesNodes").EndPointNode[];
 }>;
 declare function getEquipmentStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, equipementId: number): Promise<{
     dynamicId: number;
@@ -67,13 +61,7 @@ declare function getEquipmentStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMi
     };
     attributsList: IAttr[];
     controlEndpoint: INodeControlEndpoint[];
-    endpoints: {
-        dynamicId: number;
-        staticId: string;
-        name: string;
-        type: string;
-        value: any;
-    }[];
+    endpoints: import("../routes/nodes/interfacesNodes").EndPointNode[];
     groupParents: INodeInfo[];
 }>;
 declare function getFloorStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, floorId: number): Promise<{
@@ -83,13 +71,7 @@ declare function getFloorStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddle
     type: string;
     attributsList: IAttr[];
     controlEndpoint: INodeControlEndpoint[];
-    endpoints: {
-        dynamicId: number;
-        staticId: string;
-        name: string;
-        type: string;
-        value: any;
-    }[];
+    endpoints: import("../routes/nodes/interfacesNodes").EndPointNode[];
 }>;
 declare function getRoomStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, roomId: number): Promise<{
     dynamicId: number;
@@ -98,13 +80,7 @@ declare function getRoomStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddlew
     type: string;
     attributsList: IAttr[];
     controlEndpoint: INodeControlEndpoint[];
-    endpoints: {
-        dynamicId: number;
-        staticId: string;
-        name: string;
-        type: string;
-        value: any;
-    }[];
+    endpoints: import("../routes/nodes/interfacesNodes").EndPointNode[];
     bimObjects: IEquipmentInfo[];
     groupParents: INodeInfo[];
 }>;

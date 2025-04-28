@@ -182,28 +182,39 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const relations = getRelationListFromOption(options);
             // visitChildren
             const resBody = [];
-            for (const node of nodes) {
-                const item = [];
-                for await (const n of (0, visitNodesWithTypeRelation_1.visitNodesWithTypeRelation)(node, relations)) {
-                    if (n.info.type.get() === constants_1.REFERENCE_TYPE ||
-                        n.info.type.get() === constants_1.EQUIPMENT_TYPE) {
-                        const bimFileId = n.info.bimFileId.get();
-                        const dbId = n.info.dbid.get();
-                        const dynamicId = n._server_id;
-                        if (bimFileId && dbId)
-                            pushResBody(item, bimFileId, dbId, dynamicId);
+            let totalVisited = 0;
+            const intervalId = setInterval(() => {
+                console.log(`[viewInfo] Processed nodes so far: ${totalVisited}`);
+            }, 5000);
+            try {
+                for (const node of nodes) {
+                    const item = [];
+                    for await (const n of (0, visitNodesWithTypeRelation_1.visitNodesWithTypeRelation)(node, relations)) {
+                        totalVisited++;
+                        if (n.info.type.get() === constants_1.REFERENCE_TYPE ||
+                            n.info.type.get() === constants_1.EQUIPMENT_TYPE) {
+                            const bimFileId = n.info.bimFileId.get();
+                            const dbId = n.info.dbid.get();
+                            const dynamicId = n._server_id;
+                            if (bimFileId && dbId)
+                                pushResBody(item, bimFileId, dbId, dynamicId);
+                        }
                     }
+                    resBody.push({
+                        dynamicId: node._server_id,
+                        data: item.map((it) => {
+                            return {
+                                bimFileId: it.bimFileId,
+                                dbIds: Array.from(it.dbIds),
+                                dynamicIds: Array.from(it.dynamicIds)
+                            };
+                        }),
+                    });
                 }
-                resBody.push({
-                    dynamicId: node._server_id,
-                    data: item.map((it) => {
-                        return {
-                            bimFileId: it.bimFileId,
-                            dbIds: Array.from(it.dbIds),
-                            dynamicIds: Array.from(it.dynamicIds)
-                        };
-                    }),
-                });
+            }
+            finally {
+                console.log(`[viewInfo] Processed nodes: ${totalVisited}, finished`);
+                clearInterval(intervalId);
             }
             const sizeRes = Array.isArray(options.dynamicId)
                 ? options.dynamicId.length

@@ -6,6 +6,7 @@ import {
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
 import { spinalControlPointService } from 'spinal-env-viewer-plugin-control-endpoint-service';
 import { SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
+import { getEndpointsInfo , getEndpointsInfoFormat2} from './getEndpointInfo'
 
 interface IEquipmentInfo {
   dynamicId: number;
@@ -79,7 +80,7 @@ async function getBuildingStaticDetailsInfo(
 
     ] = await Promise.all([
       getNodeControlEndpoints(building),
-      getEndpointsInfo(building),
+      getEndpointsInfoFormat2(spinalAPIMiddleware,profileId,buildingId),
       getAttributes(building),
     ]);
 
@@ -116,7 +117,7 @@ async function getEquipmentStaticDetailsInfo(
       groupParents,
     ] = await Promise.all([
       getNodeControlEndpoints(equipment),
-      getEndpointsInfo(equipment),
+      getEndpointsInfoFormat2(spinalAPIMiddleware, profileId, equipementId),
       getAttributes(equipment),
       getEquipmentGroupParent(equipment),
     ]);
@@ -181,7 +182,7 @@ async function getFloorStaticDetailsInfo(
 
     ] = await Promise.all([
       getNodeControlEndpoints(floor),
-      getEndpointsInfo(floor),
+      getEndpointsInfoFormat2(spinalAPIMiddleware, profileId, floorId),
       getAttributes(floor),
     ]);
 
@@ -218,7 +219,7 @@ async function getRoomStaticDetailsInfo(
       groupParents,
     ] = await Promise.all([
       getNodeControlEndpoints(room),
-      getEndpointsInfo(room),
+      getEndpointsInfoFormat2(spinalAPIMiddleware, profileId, roomId),
       getRoomBimObject(room),
       getAttributes(room),
       getRoomParent(room),
@@ -333,21 +334,21 @@ async function getEndpoints(node: SpinalNode<any>): Promise<SpinalNode<any>[]> {
   return res;
 }
 
-async function getEndpointsInfo(node: SpinalNode<any>) {
-  const endpoints = await getEndpoints(node);
-  const endpointsInfo = await endpoints.map(async (el) => {
-    const element = await el.element.load();
-    return {
-      dynamicId: el._server_id,
-      staticId: el.getId().get(),
-      name: el.getName().get(),
-      type: el.getType().get(),
-      value: element.currentValue?.get(),
-    };
-  });
+// async function getEndpointsInfo(node: SpinalNode<any>) {
+//   const endpoints = await getEndpoints(node);
+//   const endpointsInfo = await endpoints.map(async (el) => {
+//     const element = await el.element.load();
+//     return {
+//       dynamicId: el._server_id,
+//       staticId: el.getId().get(),
+//       name: el.getName().get(),
+//       type: el.getType().get(),
+//       value: element.currentValue?.get(),
+//     };
+//   });
 
-  return Promise.all(endpointsInfo);
-}
+//   return Promise.all(endpointsInfo);
+// }
 
 async function getNodeControlEndpoints(
   node: SpinalNode<any>

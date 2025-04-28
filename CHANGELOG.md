@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 28/04/2025 -> v1.0.46
+- Added frequent log for viewInfo progress
+- Read static details now fetch endpoints recursively
+
 ## 22/04/2025 -> v1.0.45
 - Added dynamicIds property in viewInfo response
 
