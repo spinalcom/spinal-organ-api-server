@@ -75,6 +75,11 @@ module.exports = function (
    *                 type: string
    *               category:
    *                 type: string
+   *               groups:
+   *                 type: array
+   *                 items:
+   *                   type: string
+   *                 description: Optional list of group names
    *     responses:
    *       200:
    *         description: Success
