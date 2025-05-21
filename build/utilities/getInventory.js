@@ -65,7 +65,10 @@ async function cleanEmptyParentRelations(node) {
 async function classifyItemsByGroup(itemList, groupContext, reqInfo, mapAdditionalInfo) {
     const res = [];
     for (const item of itemList) {
-        const parentGroups = groupContext.getType().get() === 'geographicRoomGroupContext' ? await item.getParents("groupHasgeographicRoom") : await item.getParents("groupHasBIMObject");
+        let parentGroups = groupContext.getType().get() === 'geographicRoomGroupContext' ? await item.getParents("groupHasgeographicRoom") : await item.getParents("groupHasBIMObject");
+        if (reqInfo.groups && reqInfo.groups.length > 0) {
+            parentGroups = parentGroups.filter(e => reqInfo.groups.includes(e.getName().get()));
+        }
         for (const parentGroup of parentGroups) {
             if (!parentGroup.belongsToContext(groupContext)) { // if the group does not belong to the context skip
                 continue;

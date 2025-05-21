@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 21/05/2025 -> v1.0.47
+- Added optional field groups in /api/v1/floor/:id/inventory to filter for specific groups
+- Added better logging for the api server, require dependency reinstallation.
+
 ## 28/04/2025 -> v1.0.46
 - Added frequent log for viewInfo progress
 - Read static details now fetch endpoints recursively
@@ -10,7 +14,6 @@
 ## 22/04/2025 -> v1.0.44
 - Added route /api/v1/ticket/:ticketId/move_to_step
 - Added route /api/v1/ticket/:ticketId/update
-
 
 ## 15/04/2025 -> v1.0.43
 - Switched to spinalcom-utils installation
@@ -51,7 +54,6 @@
 ## 04/12/2024 -> v1.0.32
 - Added unit and saveTimeSeries in route node/control_endpoint_list and only unit in route node/endpoint_list
 - Added saveTimeseries in route node/endpoint_list
-
 
 ## 02/12/2024 -> v1.0.31
 - Added unit in routes equipement/endpoint_list , equipement/control_endpoint_list, room/endpoint_list, room/control_endpoint_list

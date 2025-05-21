@@ -31,6 +31,21 @@ const bodyParser = require("body-parser");
 const routes_1 = require("./routes/routes");
 const morgan = require("morgan");
 const chalk_1 = require("chalk");
+const non_secure_1 = require("nanoid/non-secure");
+function pad(str, length) {
+    return str.padEnd(length);
+}
+function logRequestLifecycle(req, res, next) {
+    const id = (0, non_secure_1.nanoid)(6);
+    req.id = id;
+    const startTime = Date.now();
+    console.log(`[ Pending ] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} from ${req.ip}`);
+    res.on('finish', () => {
+        const duration = Date.now() - startTime;
+        console.log(`[Completed] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} -> ${res.statusCode} (${duration}ms)`);
+    });
+    next();
+}
 exports.morganMiddleware = morgan(function (tokens, req, res) {
     const method = chalk_1.default.hex('#34ace0').bold(tokens.method(req, res));
     const url = chalk_1.default.hex('#ff5252').bold(tokens.url(req, res));
@@ -99,23 +114,10 @@ function APIServer(logger, spinalAPIMiddleware) {
             return bodyParserTicket(req, res, next);
         return bodyParserDefault(req, res, next);
     });
-    useLogger(app, ["1", "true", "yes"].includes((process.env.LOG_BODY || "").toLowerCase()));
+    // app.use(logRequestStart);
+    app.use(logRequestLifecycle);
+    // useLogger(app, ["1", "true", "yes"].includes((process.env.LOG_BODY || "").toLowerCase()));
     (0, routes_1.default)(logger, app, spinalAPIMiddleware);
-    // app.use('/admin', express.static('public'));
-    // app.use(function (req, res, next) {
-    //   var pathUrl = req.path;
-    //   if (pathUrl !== '/') {
-    //     res.download(
-    //       __dirname + '/' + 'download.png',
-    //       'download.png',
-    //       function (err) {
-    //         console.log(err);
-    //       }
-    //     );
-    //   } else {
-    //     next();
-    //   }
-    // });
     return app;
 }
 exports.default = APIServer;

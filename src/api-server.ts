@@ -30,6 +30,32 @@ import type SpinalAPIMiddleware from './spinalAPIMiddleware';
 import routes from './routes/routes';
 import morgan = require('morgan');
 import chalk from 'chalk';
+import { nanoid } from 'nanoid/non-secure';
+
+
+function pad(str: string, length: number) {
+  return str.padEnd(length);
+}
+function logRequestLifecycle(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const id = nanoid(6);
+  (req as any).id = id;
+
+  const startTime = Date.now();
+  
+  console.log(
+    `[ Pending ] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} from ${req.ip}`
+  );
+
+  res.on('finish', () => {
+    const duration = Date.now() - startTime;
+    console.log(
+      `[Completed] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} -> ${res.statusCode} (${duration}ms)`
+    );
+  });
+
+  next();
+}
+
 
 export const morganMiddleware = morgan(function (tokens, req, res) {
   const method = chalk.hex('#34ace0').bold(tokens.method(req, res));
@@ -102,24 +128,11 @@ function APIServer(logger, spinalAPIMiddleware: SpinalAPIMiddleware): express.Ex
     return bodyParserDefault(req, res, next);
   });
 
-  useLogger(app, ["1", "true", "yes"].includes((process.env.LOG_BODY || "").toLowerCase()));
+  // app.use(logRequestStart);
+  app.use(logRequestLifecycle);
+  // useLogger(app, ["1", "true", "yes"].includes((process.env.LOG_BODY || "").toLowerCase()));
 
   routes(logger, app, spinalAPIMiddleware);
-  // app.use('/admin', express.static('public'));
-  // app.use(function (req, res, next) {
-  //   var pathUrl = req.path;
-  //   if (pathUrl !== '/') {
-  //     res.download(
-  //       __dirname + '/' + 'download.png',
-  //       'download.png',
-  //       function (err) {
-  //         console.log(err);
-  //       }
-  //     );
-  //   } else {
-  //     next();
-  //   }
-  // });
 
   return app;
 }
