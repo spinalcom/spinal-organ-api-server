@@ -36,7 +36,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     const proxyHub = proxy(hubUrl.origin, {
         limit: '1tb',
         proxyReqPathResolver: function (req) {
-            return `${hubUrl.origin}/html/viewerForgeFiles${req.url}`;
+            const url = req.url;
+            return `/html/viewerForgeFiles/${url.replace(/^\/+/, '')}`;
         },
     });
     /**
