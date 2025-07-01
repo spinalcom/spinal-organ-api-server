@@ -34,7 +34,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/node/command:
      *   post:
      *     security:
-     *       - OauthSecurity:
+     *       - bearerAuth:
      *         - readOnly
      *     description: Set command value
      *     summary: Set command value
