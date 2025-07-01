@@ -12968,7 +12968,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
@@ -12986,18 +12986,12 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "context": {
-                    "type": "string"
-                  },
                   "propertyReference": {
                     "type": "array",
                     "items": {
                       "type": "object",
                       "properties": {
                         "dynamicId": {
-                          "type": "string"
-                        },
-                        "staticId": {
                           "type": "string"
                         },
                         "keys": {
@@ -13681,8 +13675,8 @@
             ]
           }
         ],
-        "description": "Retrieve children of multiple nodes based on context and relations.",
-        "summary": "Retrieve children of multiple nodes based on context and relations",
+        "description": "Retrieve children of a single node based on context and relations.",
+        "summary": "Retrieve children of a single node based on context and relations",
         "tags": [
           "Nodes"
         ],

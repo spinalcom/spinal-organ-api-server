@@ -61,16 +61,12 @@ module.exports = function (
    *           schema:
    *             type: object
    *             properties:
-   *               context:
-   *                 type: string
    *               propertyReference:
    *                 type: array
    *                 items:
    *                   type: object
    *                   properties:
    *                     dynamicId:
-   *                       type: string
-   *                     staticId:
    *                       type: string
    *                     keys:
    *                       type: array
@@ -95,69 +91,54 @@ module.exports = function (
   app.post('/api/v1/node/command', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      const contextInfo = req.body.context;
-      const context : SpinalContext<any> = await spinalAPIMiddleware.load(parseInt(contextInfo, 10), profileId);
-      
-      if (!context) {
-        res.status(400).send('context not exist');
-        return;
-      }
-
-      let _node: SpinalNode<any>
       const nodetypes = ["geographicRoom", "BIMObject", "BIMObjectGroup", "geographicRoomGroup", "geographicFloor"];
       const controlPointTypes = ["COMMAND_BLIND", "COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE"];
       const nodes = req.body.propertyReference;
-      for (const node of nodes) {
-        if (node.dynamicId.length !== 0) {
-          _node = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10), profileId);
-        } else if (node.staticId.length !== 0) {
-          console.log("node.staticId", node.staticId);
-          _node = SpinalGraphService.getRealNode(
-            node.staticId
-          );
-          console.log("context", context.getName().get());
 
-          if (typeof _node === 'undefined') {
-            _node = await findOneInContext(
-              context,
-              context,
-              (n) => n.getId().get() === node.staticId
-            );
-          }
-          if (_node) {
-            if (!_node.belongsToContext(context)) {
-              res.status(400).send('this node does not belong to this context');
-            }
-          }
+      for (const node of nodes) {
+        if(!node.dynamicId) {
+          res.status(400).send("One dynamicId is missing from provided nodes");
+          return;
         }
-        if (nodetypes.includes(_node.getType().get())) {
-          for (const command of node.keys) {
-            if (controlPointTypes.includes(command.key)) {
-              const controlPoints = await _node.getChildren('hasControlPoints');
-              for (const controlPoint of controlPoints) {
-                if (controlPoint.getName().get() === "Command") {
-                  const bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
-                  for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
-                    if (bmsEndPoint.getName().get() === command.key) {
-                      await updateControlEndpointWithAnalytic(bmsEndPoint, command.value, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
-                      bmsEndPoint.info.directModificationDate.set(Date.now());
-                    }
-                  }
+        const _node : SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10), profileId);
+        
+        if(!nodetypes.includes(_node.getType().get())) {
+          console.error(`Node with dynamicId ${node.dynamicId} is not of type authorized... Skipping it`);
+          continue;
+        }
+
+        SpinalGraphService._addNode(_node);
+        
+        for (const command of node.keys) {
+          if(!controlPointTypes.includes(command.key)){
+            console.error(`Command key ${command.key} is not of type authorized... Skipping it`);
+            continue;
+          }
+          const controlPoints = await _node.getChildren('hasControlPoints');
+          for (const controlPoint of controlPoints) {
+            if (controlPoint.getName().get() === "Command") { // Name of cp profile 
+              const bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
+              for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
+                if (bmsEndPoint.getName().get() === command.key) {
+                  SpinalGraphService._addNode(bmsEndPoint);
+                  await updateControlEndpointWithAnalytic(SpinalGraphService.getInfo(bmsEndPoint.getId().get()), command.value, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
+                  bmsEndPoint.info.directModificationDate.set(Date.now());
                 }
               }
-            } else {
-              res.status(400).send("unkown key");
             }
           }
-        } else {
-          res.status(400).send("one of the node is not of type authorized");
+
         }
+
+
       }
+      res.status(200).send("Command updates executed successfully");
+
     } catch (error) {
       console.error(error);
-      res.status(400).send("one of node is not loaded");
+      res.status(400).send("One of the nodes is not loaded");
     }
 
-    res.send("Endpoint updated");
+    
   });
 };

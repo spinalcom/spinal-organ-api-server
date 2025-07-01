@@ -26,7 +26,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const upstaeControlEndpoint_1 = require("./../../utilities/upstaeControlEndpoint");
 const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
-const findOneInContext_1 = require("../../utilities/findOneInContext");
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
@@ -48,16 +47,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *           schema:
      *             type: object
      *             properties:
-     *               context:
-     *                 type: string
      *               propertyReference:
      *                 type: array
      *                 items:
      *                   type: object
      *                   properties:
      *                     dynamicId:
-     *                       type: string
-     *                     staticId:
      *                       type: string
      *                     keys:
      *                       type: array
@@ -81,64 +76,46 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post('/api/v1/node/command', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const contextInfo = req.body.context;
-            const context = await spinalAPIMiddleware.load(parseInt(contextInfo, 10), profileId);
-            if (!context) {
-                res.status(400).send('context not exist');
-                return;
-            }
-            let _node;
             const nodetypes = ["geographicRoom", "BIMObject", "BIMObjectGroup", "geographicRoomGroup", "geographicFloor"];
             const controlPointTypes = ["COMMAND_BLIND", "COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE"];
             const nodes = req.body.propertyReference;
             for (const node of nodes) {
-                if (node.dynamicId.length !== 0) {
-                    _node = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10), profileId);
+                if (!node.dynamicId) {
+                    res.status(400).send("One dynamicId is missing from provided nodes");
+                    return;
                 }
-                else if (node.staticId.length !== 0) {
-                    console.log("node.staticId", node.staticId);
-                    _node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(node.staticId);
-                    console.log("context", context.getName().get());
-                    if (typeof _node === 'undefined') {
-                        _node = await (0, findOneInContext_1.findOneInContext)(context, context, (n) => n.getId().get() === node.staticId);
-                    }
-                    if (_node) {
-                        if (!_node.belongsToContext(context)) {
-                            res.status(400).send('this node does not belong to this context');
-                        }
-                    }
+                const _node = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10), profileId);
+                if (!nodetypes.includes(_node.getType().get())) {
+                    console.error(`Node with dynamicId ${node.dynamicId} is not of type authorized... Skipping it`);
+                    continue;
                 }
-                if (nodetypes.includes(_node.getType().get())) {
-                    for (const command of node.keys) {
-                        if (controlPointTypes.includes(command.key)) {
-                            const controlPoints = await _node.getChildren('hasControlPoints');
-                            for (const controlPoint of controlPoints) {
-                                if (controlPoint.getName().get() === "Command") {
-                                    const bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint');
-                                    for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
-                                        if (bmsEndPoint.getName().get() === command.key) {
-                                            await (0, upstaeControlEndpoint_1.updateControlEndpointWithAnalytic)(bmsEndPoint, command.value, spinal_model_bmsnetwork_1.InputDataEndpointDataType.Real, spinal_model_bmsnetwork_1.InputDataEndpointType.Other);
-                                            bmsEndPoint.info.directModificationDate.set(Date.now());
-                                        }
-                                    }
+                spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(_node);
+                for (const command of node.keys) {
+                    if (!controlPointTypes.includes(command.key)) {
+                        console.error(`Command key ${command.key} is not of type authorized... Skipping it`);
+                        continue;
+                    }
+                    const controlPoints = await _node.getChildren('hasControlPoints');
+                    for (const controlPoint of controlPoints) {
+                        if (controlPoint.getName().get() === "Command") { // Name of cp profile 
+                            const bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint');
+                            for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
+                                if (bmsEndPoint.getName().get() === command.key) {
+                                    spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(bmsEndPoint);
+                                    await (0, upstaeControlEndpoint_1.updateControlEndpointWithAnalytic)(spinal_env_viewer_graph_service_1.SpinalGraphService.getInfo(bmsEndPoint.getId().get()), command.value, spinal_model_bmsnetwork_1.InputDataEndpointDataType.Real, spinal_model_bmsnetwork_1.InputDataEndpointType.Other);
+                                    bmsEndPoint.info.directModificationDate.set(Date.now());
                                 }
                             }
                         }
-                        else {
-                            res.status(400).send("unkown key");
-                        }
                     }
                 }
-                else {
-                    res.status(400).send("one of the node is not of type authorized");
-                }
             }
+            res.status(200).send("Command updates executed successfully");
         }
         catch (error) {
             console.error(error);
-            res.status(400).send("one of node is not loaded");
+            res.status(400).send("One of the nodes is not loaded");
         }
-        res.send("Endpoint updated");
     });
 };
 //# sourceMappingURL=commandMultiple.js.map
