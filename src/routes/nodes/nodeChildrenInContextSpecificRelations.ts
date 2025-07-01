@@ -38,8 +38,8 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Retrieve children of multiple nodes based on context and relations.
-   *     summary: Retrieve children of multiple nodes based on context and relations
+   *     description: Retrieve children of a single node based on context and relations.
+   *     summary: Retrieve children of a single node based on context and relations
    *     tags:
    *       - Nodes
    *     parameters:

@@ -6,7 +6,7 @@ async function getChildrenNodesInfo(spinalAPIMiddleware, profileId, dynamicId, r
     // Additionally , if we have relations we will restrict the children to the relations
     let contextNode = undefined;
     if (contextId) {
-        contextNode = await spinalAPIMiddleware.load(contextId);
+        contextNode = await spinalAPIMiddleware.load(contextId, profileId);
     }
     const node = await spinalAPIMiddleware.load(dynamicId, profileId);
     let children = await node.getChildren(relations);

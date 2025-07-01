@@ -17,7 +17,7 @@ async function getChildrenNodesInfo(
     let contextNode = undefined;
 
     if(contextId){
-      contextNode = await spinalAPIMiddleware.load(contextId);
+      contextNode = await spinalAPIMiddleware.load(contextId,profileId);
     }
     const node: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
     let children = await node.getChildren(relations);

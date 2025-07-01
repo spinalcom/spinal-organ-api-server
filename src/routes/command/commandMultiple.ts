@@ -34,10 +34,13 @@ import { NetworkService, InputDataEndpoint, InputDataEndpointDataType, InputData
 import { findOneInContext } from '../../utilities/findOneInContext';
 import { spinalCore, FileSystem } from 'spinal-core-connectorjs_type';
 
+import { ISpinalAPIMiddleware } from '../../interfaces';
+import { getProfileId } from '../../utilities/requestUtilities';
+
 module.exports = function (
   logger,
   app: express.Express,
-  spinalAPIMiddleware: spinalAPIMiddleware
+  spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
    * @swagger
@@ -91,36 +94,24 @@ module.exports = function (
 
   app.post('/api/v1/node/command', async (req, res, next) => {
     try {
-      const paramContext = req.body.context;
-      let context: SpinalContext<any>;
-      async function verifyContext(paramContext: string) {
-        if (typeof FileSystem._objects[paramContext] !== 'undefined') {
-          return (context = await spinalAPIMiddleware.load(
-            parseInt(paramContext, 10)
-          ));
-        } else if (SpinalGraphService.getRealNode(paramContext)) {
-          return (context = SpinalGraphService.getRealNode(paramContext));
-        } else if (SpinalGraphService.getContext(paramContext)) {
-          return (context = SpinalGraphService.getContext(paramContext));
-        } else {
-          res.status(400).send('context not exist');
-        }
+      const profileId = getProfileId(req);
+      const contextInfo = req.body.context;
+      const context : SpinalContext<any> = await spinalAPIMiddleware.load(parseInt(contextInfo, 10), profileId);
+      
+      if (!context) {
+        res.status(400).send('context not exist');
+        return;
       }
+
       let _node: SpinalNode<any>
       const nodetypes = ["geographicRoom", "BIMObject", "BIMObjectGroup", "geographicRoomGroup", "geographicFloor"];
-      //const controlPointTypes = ["COMMAND_BLIND", "COMMAND_LIGHT", "COMMAND_TEMP"];
       const controlPointTypes = ["COMMAND_BLIND", "COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE"];
       const nodes = req.body.propertyReference;
       for (const node of nodes) {
         if (node.dynamicId.length !== 0) {
-          _node = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10));
+          _node = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10), profileId);
         } else if (node.staticId.length !== 0) {
           console.log("node.staticId", node.staticId);
-
-          if (paramContext === undefined) {
-            res.status(400).send('context not exist');
-          }
-          context = await verifyContext(paramContext);
           _node = SpinalGraphService.getRealNode(
             node.staticId
           );
@@ -142,10 +133,10 @@ module.exports = function (
         if (nodetypes.includes(_node.getType().get())) {
           for (const command of node.keys) {
             if (controlPointTypes.includes(command.key)) {
-              let controlPoints = await _node.getChildren('hasControlPoints');
+              const controlPoints = await _node.getChildren('hasControlPoints');
               for (const controlPoint of controlPoints) {
                 if (controlPoint.getName().get() === "Command") {
-                  let bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
+                  const bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
                   for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
                     if (bmsEndPoint.getName().get() === command.key) {
                       await updateControlEndpointWithAnalytic(bmsEndPoint, command.value, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
@@ -170,7 +161,3 @@ module.exports = function (
     res.send("Endpoint updated");
   });
 };
-
-
-
-
