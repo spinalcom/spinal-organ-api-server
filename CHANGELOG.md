@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 04/07/2025 -> v1.0.48
+- Modified api /api/v1/node/command definition to correctly use bearer token authentication
+- Modified api /api/v1/node/command to be cleaner
+
 ## 21/05/2025 -> v1.0.47
 - Added optional field groups in /api/v1/floor/:id/inventory to filter for specific groups
 - Added better logging for the api server, require dependency reinstallation.

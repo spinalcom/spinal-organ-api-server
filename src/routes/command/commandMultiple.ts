@@ -47,7 +47,7 @@ module.exports = function (
    * /api/v1/node/command:
    *   post:
    *     security:
-   *       - bearerAuth:
+   *       - OauthSecurity:
    *         - readOnly
    *     description: Set command value
    *     summary: Set command value
@@ -61,12 +61,16 @@ module.exports = function (
    *           schema:
    *             type: object
    *             properties:
+   *               context:
+   *                 type: string
    *               propertyReference:
    *                 type: array
    *                 items:
    *                   type: object
    *                   properties:
    *                     dynamicId:
+   *                       type: string
+   *                     staticId:
    *                       type: string
    *                     keys:
    *                       type: array
@@ -93,22 +97,46 @@ module.exports = function (
       const profileId = getProfileId(req);
       const nodetypes = ["geographicRoom", "BIMObject", "BIMObjectGroup", "geographicRoomGroup", "geographicFloor"];
       const controlPointTypes = ["COMMAND_BLIND", "COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE"];
+      const paramContext = req.body.context;
       const nodes = req.body.propertyReference;
+      let context: SpinalContext<any>;
+      let _node: SpinalNode<any>;
+
 
       for (const node of nodes) {
-        if(!node.dynamicId) {
-          res.status(400).send("One dynamicId is missing from provided nodes");
-          return;
+        if(isNumeric(node.dynamicId)) { // If dynamicId is not empty and looks like a number, load the node by dynamicId
+          _node = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10), profileId);
+        } else if (node.staticId.length !== 0) { // If staticId is not empty, load the node by staticId
+          console.log("node.staticId", node.staticId);
+          if (paramContext === undefined) {
+            return res.status(400).send('Trying to load a node with staticId but no context provided');
+          }
+          if (typeof FileSystem._objects[paramContext] !== 'undefined') {
+            context = await spinalAPIMiddleware.load(
+              parseInt(paramContext, 10), profileId
+            );
+          } 
+          else {
+            context = await loadContextByStaticId(paramContext);
+            if (!context) {
+              return res.status(400).send('Context not found');
+            }
+          }
+          _node = await loadNodeByStaticId(node.staticId, context);
+
+          if (!node) {
+            return res.status(400).send('Node could not be found');
+          }
+          
         }
-        const _node : SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10), profileId);
+
+
         
         if(!nodetypes.includes(_node.getType().get())) {
           console.error(`Node with dynamicId ${node.dynamicId} is not of type authorized... Skipping it`);
           continue;
         }
 
-        SpinalGraphService._addNode(_node);
-        
         for (const command of node.keys) {
           if(!controlPointTypes.includes(command.key)){
             console.error(`Command key ${command.key} is not of type authorized... Skipping it`);
@@ -138,7 +166,35 @@ module.exports = function (
       console.error(error);
       res.status(400).send("One of the nodes is not loaded");
     }
-
-    
   });
 };
+
+
+async function loadContextByStaticId (contextStaticId : string) {
+  if (SpinalGraphService.getRealNode(contextStaticId)) {
+    return SpinalGraphService.getRealNode(contextStaticId);
+  } else if (SpinalGraphService.getContext(contextStaticId)) {
+    return SpinalGraphService.getContext(contextStaticId);
+  }
+  return undefined;
+}
+
+async function loadNodeByStaticId (nodeStaticId : string , context: SpinalContext<any>) {
+  let resultNode = SpinalGraphService.getRealNode(
+    nodeStaticId
+  );
+  console.log("context", context.getName().get());
+
+  if (typeof resultNode === 'undefined') {
+    resultNode = await findOneInContext(
+      context,
+      context,
+      (n) => n.getId().get() === nodeStaticId
+    );
+  }
+ return resultNode;
+}
+
+function isNumeric(str) {
+  return /^[0-9]+$/.test(str);
+}
