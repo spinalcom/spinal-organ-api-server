@@ -40,6 +40,17 @@ function logRequestLifecycle(req, res, next) {
     req.id = id;
     const startTime = Date.now();
     console.log(`[ Pending ] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} from ${req.ip}`);
+    if (process.env.LOG_BODY === '1' &&
+        req.body &&
+        Object.keys(req.body).length > 0) {
+        try {
+            const bodyStr = JSON.stringify(req.body, null, 2);
+            console.log(`[Body][${id}] ${bodyStr}`);
+        }
+        catch (err) {
+            console.log(`[Body][${id}] [Unable to stringify body]`);
+        }
+    }
     res.on('finish', () => {
         const duration = Date.now() - startTime;
         console.log(`[Completed] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} -> ${res.statusCode} (${duration}ms)`);

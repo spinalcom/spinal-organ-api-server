@@ -12968,7 +12968,7 @@
       "post": {
         "security": [
           {
-            "OauthSecurity": [
+            "bearerAuth": [
               "readOnly"
             ]
           }
