@@ -60,7 +60,6 @@ export async function runServerRest(
   spinalIOMiddleware: ISpinalIOMiddleware,
   log_body = false
 ) {
-  console.log('Starting API server with body logging :', log_body, '...');
   initApiServer(app, spinalAPIMiddleware, log_body);
   const io = await runSocketServer(server, spinalIOMiddleware);
   return {app, io};
