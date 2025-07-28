@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.useLogger = exports.morganMiddleware = void 0;
+exports.useLogger = exports.morganMiddleware = exports.logRequestLifecycle = void 0;
 const express = require("express");
 const fileUpload = require("express-fileupload");
 const cors = require("cors");
@@ -57,6 +57,7 @@ function logRequestLifecycle(req, res, next) {
     });
     next();
 }
+exports.logRequestLifecycle = logRequestLifecycle;
 exports.morganMiddleware = morgan(function (tokens, req, res) {
     const method = chalk_1.default.hex('#34ace0').bold(tokens.method(req, res));
     const url = chalk_1.default.hex('#ff5252').bold(tokens.url(req, res));

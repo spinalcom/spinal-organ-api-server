@@ -36,7 +36,7 @@ import { nanoid } from 'nanoid/non-secure';
 function pad(str: string, length: number) {
   return str.padEnd(length);
 }
-function logRequestLifecycle(req: express.Request, res: express.Response, next: express.NextFunction) {
+export function logRequestLifecycle(req: express.Request, res: express.Response, next: express.NextFunction) {
   const id = nanoid(6);
   (req as any).id = id;
 

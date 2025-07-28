@@ -46,7 +46,8 @@ const api_server_1 = require("../api-server");
 const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
 function initApiServer(app, spinalAPIMiddleware, log_body = false) {
     app.use(fileUpload({ createParentPath: true }));
-    (0, api_server_1.useLogger)(app, log_body);
+    app.use(api_server_1.logRequestLifecycle);
+    //useLogger(app, log_body);
     (0, swagger_1.initSwagger)(app);
     app.get('/logo.png', (req, res) => {
         res.sendFile('spinalcore.png', {
