@@ -58,6 +58,7 @@ function initApiServer(app, spinalAPIMiddleware, log_body = false) {
     (0, routes_1.default)({}, app, spinalAPIMiddleware);
 }
 async function runServerRest(server, app, spinalAPIMiddleware, spinalIOMiddleware, log_body = false) {
+    console.log('Starting API server with body logging :', log_body, '...');
     initApiServer(app, spinalAPIMiddleware, log_body);
     const io = await (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
     return { app, io };
