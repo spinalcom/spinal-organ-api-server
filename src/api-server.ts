@@ -36,39 +36,73 @@ import { nanoid } from 'nanoid/non-secure';
 function pad(str: string, length: number) {
   return str.padEnd(length);
 }
-export function logRequestLifecycle(req: express.Request, res: express.Response, next: express.NextFunction) {
-  const id = nanoid(6);
-  (req as any).id = id;
+export function createLogRequestLifecycle(log_body: boolean) {
+  return function logRequestLifecycle(req: express.Request, res: express.Response, next: express.NextFunction) {
+    const id = nanoid(6);
+    (req as any).id = id;
 
-  const startTime = Date.now();
-  
-  
-  console.log(
-    `[ Pending ] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} from ${req.ip}`
-  );
+    const startTime = Date.now();
 
-  if (
-    process.env.LOG_BODY === '1' &&
-    req.body &&
-    Object.keys(req.body).length > 0
-  ) {
-    try {
-      const bodyStr = JSON.stringify(req.body, null, 2);
-      console.log(`[Body][${id}] ${bodyStr}`);
-    } catch (err) {
-      console.log(`[Body][${id}] [Unable to stringify body]`);
-    }
-  }
-
-  res.on('finish', () => {
-    const duration = Date.now() - startTime;
     console.log(
-      `[Completed] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} -> ${res.statusCode} (${duration}ms)`
+      `[ Pending ] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} from ${req.ip}`
     );
-  });
 
-  next();
+    if (
+      log_body &&
+      req.body &&
+      Object.keys(req.body).length > 0
+    ) {
+      try {
+        const bodyStr = JSON.stringify(req.body, null, 2);
+        console.log(`[Body][${id}] ${bodyStr}`);
+      } catch (err) {
+        console.log(`[Body][${id}] [Unable to stringify body]`);
+      }
+    }
+
+    res.on('finish', () => {
+      const duration = Date.now() - startTime;
+      console.log(
+        `[Completed] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} -> ${res.statusCode} (${duration}ms)`
+      );
+    });
+
+    next();
+  };
 }
+// export function logRequestLifecycle(req: express.Request, res: express.Response, next: express.NextFunction) {
+//   const id = nanoid(6);
+//   (req as any).id = id;
+
+//   const startTime = Date.now();
+  
+  
+//   console.log(
+//     `[ Pending ] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} from ${req.ip}`
+//   );
+
+//   if (
+//     process.env.LOG_BODY === '1' &&
+//     req.body &&
+//     Object.keys(req.body).length > 0
+//   ) {
+//     try {
+//       const bodyStr = JSON.stringify(req.body, null, 2);
+//       console.log(`[Body][${id}] ${bodyStr}`);
+//     } catch (err) {
+//       console.log(`[Body][${id}] [Unable to stringify body]`);
+//     }
+//   }
+
+//   res.on('finish', () => {
+//     const duration = Date.now() - startTime;
+//     console.log(
+//       `[Completed] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} -> ${res.statusCode} (${duration}ms)`
+//     );
+//   });
+
+//   next();
+// }
 
 
 export const morganMiddleware = morgan(function (tokens, req, res) {
@@ -118,7 +152,6 @@ export function useLogger(app: express.Application, log_body: boolean | string) 
   }
 }
 
-
 function APIServer(logger, spinalAPIMiddleware: SpinalAPIMiddleware): express.Express {
   const app = express();
   app.use((req, res, next) => {
@@ -143,7 +176,8 @@ function APIServer(logger, spinalAPIMiddleware: SpinalAPIMiddleware): express.Ex
   });
 
   // app.use(logRequestStart);
-  app.use(logRequestLifecycle);
+  // app.use(logRequestLifecycle);
+  app.use(createLogRequestLifecycle(["1", "true", "yes"].includes((process.env.LOG_BODY || "").toLowerCase())));
   // useLogger(app, ["1", "true", "yes"].includes((process.env.LOG_BODY || "").toLowerCase()));
 
   routes(logger, app, spinalAPIMiddleware);

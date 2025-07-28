@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.useLogger = exports.morganMiddleware = exports.logRequestLifecycle = void 0;
+exports.useLogger = exports.morganMiddleware = exports.createLogRequestLifecycle = void 0;
 const express = require("express");
 const fileUpload = require("express-fileupload");
 const cors = require("cors");
@@ -35,29 +35,58 @@ const non_secure_1 = require("nanoid/non-secure");
 function pad(str, length) {
     return str.padEnd(length);
 }
-function logRequestLifecycle(req, res, next) {
-    const id = (0, non_secure_1.nanoid)(6);
-    req.id = id;
-    const startTime = Date.now();
-    console.log(`[ Pending ] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} from ${req.ip}`);
-    if (process.env.LOG_BODY === '1' &&
-        req.body &&
-        Object.keys(req.body).length > 0) {
-        try {
-            const bodyStr = JSON.stringify(req.body, null, 2);
-            console.log(`[Body][${id}] ${bodyStr}`);
+function createLogRequestLifecycle(log_body) {
+    return function logRequestLifecycle(req, res, next) {
+        const id = (0, non_secure_1.nanoid)(6);
+        req.id = id;
+        const startTime = Date.now();
+        console.log(`[ Pending ] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} from ${req.ip}`);
+        if (log_body &&
+            req.body &&
+            Object.keys(req.body).length > 0) {
+            try {
+                const bodyStr = JSON.stringify(req.body, null, 2);
+                console.log(`[Body][${id}] ${bodyStr}`);
+            }
+            catch (err) {
+                console.log(`[Body][${id}] [Unable to stringify body]`);
+            }
         }
-        catch (err) {
-            console.log(`[Body][${id}] [Unable to stringify body]`);
-        }
-    }
-    res.on('finish', () => {
-        const duration = Date.now() - startTime;
-        console.log(`[Completed] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} -> ${res.statusCode} (${duration}ms)`);
-    });
-    next();
+        res.on('finish', () => {
+            const duration = Date.now() - startTime;
+            console.log(`[Completed] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} -> ${res.statusCode} (${duration}ms)`);
+        });
+        next();
+    };
 }
-exports.logRequestLifecycle = logRequestLifecycle;
+exports.createLogRequestLifecycle = createLogRequestLifecycle;
+// export function logRequestLifecycle(req: express.Request, res: express.Response, next: express.NextFunction) {
+//   const id = nanoid(6);
+//   (req as any).id = id;
+//   const startTime = Date.now();
+//   console.log(
+//     `[ Pending ] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} from ${req.ip}`
+//   );
+//   if (
+//     process.env.LOG_BODY === '1' &&
+//     req.body &&
+//     Object.keys(req.body).length > 0
+//   ) {
+//     try {
+//       const bodyStr = JSON.stringify(req.body, null, 2);
+//       console.log(`[Body][${id}] ${bodyStr}`);
+//     } catch (err) {
+//       console.log(`[Body][${id}] [Unable to stringify body]`);
+//     }
+//   }
+//   res.on('finish', () => {
+//     const duration = Date.now() - startTime;
+//     console.log(
+//       `[Completed] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} -> ${res.statusCode} (${duration}ms)`
+//     );
+//   });
+//   next();
+// }
 exports.morganMiddleware = morgan(function (tokens, req, res) {
     const method = chalk_1.default.hex('#34ace0').bold(tokens.method(req, res));
     const url = chalk_1.default.hex('#ff5252').bold(tokens.url(req, res));
@@ -127,7 +156,8 @@ function APIServer(logger, spinalAPIMiddleware) {
         return bodyParserDefault(req, res, next);
     });
     // app.use(logRequestStart);
-    app.use(logRequestLifecycle);
+    // app.use(logRequestLifecycle);
+    app.use(createLogRequestLifecycle(["1", "true", "yes"].includes((process.env.LOG_BODY || "").toLowerCase())));
     // useLogger(app, ["1", "true", "yes"].includes((process.env.LOG_BODY || "").toLowerCase()));
     (0, routes_1.default)(logger, app, spinalAPIMiddleware);
     return app;

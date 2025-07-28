@@ -29,7 +29,7 @@ import {ISpinalAPIMiddleware} from '../interfaces';
 import * as fileUpload from 'express-fileupload';
 import * as path from 'path';
 import routes from '../routes/routes';
-import {useLogger, logRequestLifecycle} from '../api-server';
+import {useLogger, createLogRequestLifecycle} from '../api-server';
 import {runSocketServer, ISpinalIOMiddleware} from 'spinal-organ-api-pubsub';
 
 function initApiServer(
@@ -38,7 +38,8 @@ function initApiServer(
   log_body = false
 ) {
   app.use(fileUpload({createParentPath: true}));
-  app.use(logRequestLifecycle);
+  // app.use(logRequestLifecycle);
+  app.use(createLogRequestLifecycle(log_body));
   //useLogger(app, log_body);
 
   initSwagger(app);
