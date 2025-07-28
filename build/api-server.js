@@ -37,6 +37,7 @@ function pad(str, length) {
 }
 function createLogRequestLifecycle(log_body) {
     return function logRequestLifecycle(req, res, next) {
+        console.log('Should log body:', log_body);
         const id = (0, non_secure_1.nanoid)(6);
         req.id = id;
         const startTime = Date.now();

@@ -38,6 +38,7 @@ function pad(str: string, length: number) {
 }
 export function createLogRequestLifecycle(log_body: boolean) {
   return function logRequestLifecycle(req: express.Request, res: express.Response, next: express.NextFunction) {
+    console.log('Should log body:', log_body);
     const id = nanoid(6);
     (req as any).id = id;
 
