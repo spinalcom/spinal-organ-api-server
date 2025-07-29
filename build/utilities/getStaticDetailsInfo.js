@@ -193,13 +193,9 @@ async function getAttributes(room) {
             const attributs = await child.element.load();
             const attributes = [];
             for (const attribute of attributs) {
-                attributes.push({
-                    dynamicId: attribute._server_id,
-                    label: attribute.label.get(),
-                    value: attribute.value.get(),
-                    date: attribute.date.get(),
-                    type: attribute.type.get(),
-                    unit: attribute.unit.get(),
+                const attrib = attribute.get();
+                attributes.push({ ...attrib,
+                    dynamicId: attribute._server_id
                 });
             }
             return {

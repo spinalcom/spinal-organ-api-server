@@ -16,13 +16,12 @@ async function getAttributeListInfo(
       const attributs = await child.element.load();
       const attributes = [];
       for (const attribute of attributs) {
+        const attrib = attribute.get();
         attributes.push({
+          ...attrib,
           dynamicId: attribute._server_id,
           label: attribute.label.get(),
-          value: attribute.value.get(),
-          date: attribute.date.get(),
-          type: attribute.type.get(),
-          unit: attribute.unit.get(),
+          value: attribute.value.get()
         });
       }
       return {
