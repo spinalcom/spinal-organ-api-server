@@ -33,6 +33,9 @@ async function getChildrenNodesInfo(
         staticId: child.getId().get(),
         name: child.getName().get(),
         type: child.getType().get(),
+        icon: child.info.icon?.get(),
+        bimFileId: child.info.bimFileId?.get(),
+        dbid: child.info.dbid?.get()
       };
       childrenInfo.push(info);
     }

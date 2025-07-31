@@ -54,6 +54,9 @@ export interface BasicNode {
     staticId: string;
     name: string;
     type: string;
+    icon?: string;
+    bimFileId?: string;
+    dbid?: number;
 }
 /**
  * @swagger
