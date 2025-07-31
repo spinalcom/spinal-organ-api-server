@@ -195,15 +195,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
 };
 async function getWorkflowNode(workflowIdOrName, spinalAPIMiddleware, profileId) {
     try {
-        const allContexts = spinal_service_ticket_1.serviceTicketPersonalized.getContexts();
-        for (const context of allContexts) {
-            if (context.name === workflowIdOrName) {
-                const result = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(context.id);
-                //@ts-ignore
-                spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(result);
-                return result;
-            }
-        }
+        const contextByName = await spinal_service_ticket_1.serviceTicketPersonalized.getContexts(workflowIdOrName);
+        if (contextByName && !Array.isArray(contextByName))
+            return contextByName;
+        // const allContexts = serviceTicketPersonalized.getContexts();
+        // for (const context of allContexts) {
+        //   if (context.name === workflowIdOrName) {
+        //     const result = SpinalGraphService.getRealNode(context.id);
+        //     //@ts-ignore
+        //     SpinalGraphService._addNode(result);
+        //     return result;
+        //   }
+        // }
         // at this point we couldn't find the workflow by name
         // we will try to find it by id
         const node = await spinalAPIMiddleware.load(parseInt(workflowIdOrName, 10), profileId);

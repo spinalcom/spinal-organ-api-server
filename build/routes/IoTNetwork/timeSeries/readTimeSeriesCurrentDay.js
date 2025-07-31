@@ -24,7 +24,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const spinalTimeSeries_1 = require("../spinalTimeSeries");
+const spinalTimeSeries_1 = require("../../../utilities/spinalTimeSeries");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/endpoint/:id/timeSeries/readCurrentDay", async (req, res, next) => {

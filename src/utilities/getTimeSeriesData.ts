@@ -1,5 +1,5 @@
 import { SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service'
-import spinalServiceTimeSeries from '../routes/IoTNetwork/spinalTimeSeries'
+import spinalServiceTimeSeries from './spinalTimeSeries'
 import { ISpinalAPIMiddleware } from '../interfaces';
 import { TimeSeriesIntervalDate } from 'spinal-model-timeseries';
 

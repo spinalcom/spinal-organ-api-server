@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 import { SpinalContext, SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service'
-import spinalServiceTimeSeries from '../spinalTimeSeries'
+import spinalServiceTimeSeries from '../../../utilities/spinalTimeSeries'
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 
 import * as express from 'express';

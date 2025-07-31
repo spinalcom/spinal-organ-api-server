@@ -30,7 +30,7 @@ import { File, FileSystem, Lst, Ptr } from 'spinal-core-connectorjs_type';
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
 import { Step } from '../interfacesWorkflowAndTickets';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
+import { serviceTicketPersonalized,  } from 'spinal-service-ticket';
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import { ServiceUser } from 'spinal-service-user';
 import { awaitSync } from '../../../utilities/awaitSync';
@@ -259,15 +259,18 @@ async function getWorkflowNode(
   profileId: string
 ) {
   try {
-    const allContexts = serviceTicketPersonalized.getContexts();
-    for (const context of allContexts) {
-      if (context.name === workflowIdOrName) {
-        const result = SpinalGraphService.getRealNode(context.id);
-        //@ts-ignore
-        SpinalGraphService._addNode(result);
-        return result;
-      }
-    }
+    const contextByName = await serviceTicketPersonalized.getContexts(workflowIdOrName);
+
+    if (contextByName && !Array.isArray(contextByName)) return contextByName;
+    // const allContexts = serviceTicketPersonalized.getContexts();
+    // for (const context of allContexts) {
+    //   if (context.name === workflowIdOrName) {
+    //     const result = SpinalGraphService.getRealNode(context.id);
+    //     //@ts-ignore
+    //     SpinalGraphService._addNode(result);
+    //     return result;
+    //   }
+    // }
     // at this point we couldn't find the workflow by name
     // we will try to find it by id
     const node  : SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(workflowIdOrName, 10), profileId);

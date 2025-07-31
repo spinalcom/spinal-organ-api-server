@@ -21,7 +21,7 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import spinalServiceTimeSeries from '../spinalTimeSeries';
+import spinalServiceTimeSeries from '../../../utilities/spinalTimeSeries';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 import { getTimeSeriesData } from '../../../utilities/getTimeSeriesData';

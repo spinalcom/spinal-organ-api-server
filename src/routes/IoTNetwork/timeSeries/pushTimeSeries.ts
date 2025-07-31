@@ -24,7 +24,7 @@
 
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 // const spinalServiceTimeSeries = require('../../spinalTimeSeries')();
-import spinalServiceTimeSeries from '../spinalTimeSeries'
+import spinalServiceTimeSeries from '../../../utilities/spinalTimeSeries'
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
 import * as moment from 'moment'

@@ -23,7 +23,7 @@
  */
 
 
-import spinalServiceTimeSeries from '../spinalTimeSeries';
+import spinalServiceTimeSeries from '../../../utilities/spinalTimeSeries';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 import { getTimeSeriesData } from '../../../utilities/getTimeSeriesData';

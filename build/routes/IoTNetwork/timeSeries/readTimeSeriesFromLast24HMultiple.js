@@ -23,7 +23,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-const spinalTimeSeries_1 = require("../spinalTimeSeries");
+const spinalTimeSeries_1 = require("../../../utilities/spinalTimeSeries");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getTimeSeriesData_1 = require("../../../utilities/getTimeSeriesData");
 module.exports = function (logger, app, spinalAPIMiddleware) {

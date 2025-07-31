@@ -29,7 +29,7 @@ import {
   SpinalNode,
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
-import { updateControlEndpointWithAnalytic } from './../../utilities/upstaeControlEndpoint'
+import { updateControlEndpointWithAnalytic, updateControlEndpointWithValue } from './../../utilities/upstaeControlEndpoint'
 import { NetworkService, InputDataEndpoint, InputDataEndpointDataType, InputDataEndpointType } from "spinal-model-bmsnetwork"
 import { findOneInContext } from '../../utilities/findOneInContext';
 import { spinalCore, FileSystem } from 'spinal-core-connectorjs_type';
@@ -133,7 +133,7 @@ module.exports = function (
 
         
         if(!nodetypes.includes(_node.getType().get())) {
-          console.error(`Node with dynamicId ${node.dynamicId} is not of type authorized... Skipping it`);
+          console.error(`Node with dynamicId ${node.dynamicId} is not of type authorized (${_node.getType().get()})... Skipping it`);
           continue;
         }
 
@@ -149,6 +149,7 @@ module.exports = function (
               for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
                 if (bmsEndPoint.getName().get() === command.key) {
                   SpinalGraphService._addNode(bmsEndPoint);
+                  // await updateControlEndpointWithValue(bmsEndPoint,command.value,true);
                   await updateControlEndpointWithAnalytic(SpinalGraphService.getInfo(bmsEndPoint.getId().get()), command.value, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
                   bmsEndPoint.info.directModificationDate.set(Date.now());
                 }

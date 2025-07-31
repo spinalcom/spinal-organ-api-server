@@ -112,7 +112,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     }
                 }
                 if (!nodetypes.includes(_node.getType().get())) {
-                    console.error(`Node with dynamicId ${node.dynamicId} is not of type authorized... Skipping it`);
+                    console.error(`Node with dynamicId ${node.dynamicId} is not of type authorized (${_node.getType().get()})... Skipping it`);
                     continue;
                 }
                 for (const command of node.keys) {
@@ -127,6 +127,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
                                 if (bmsEndPoint.getName().get() === command.key) {
                                     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(bmsEndPoint);
+                                    // await updateControlEndpointWithValue(bmsEndPoint,command.value,true);
                                     await (0, upstaeControlEndpoint_1.updateControlEndpointWithAnalytic)(spinal_env_viewer_graph_service_1.SpinalGraphService.getInfo(bmsEndPoint.getId().get()), command.value, spinal_model_bmsnetwork_1.InputDataEndpointDataType.Real, spinal_model_bmsnetwork_1.InputDataEndpointType.Other);
                                     bmsEndPoint.info.directModificationDate.set(Date.now());
                                 }

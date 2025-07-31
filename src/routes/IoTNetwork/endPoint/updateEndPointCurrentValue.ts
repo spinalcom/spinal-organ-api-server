@@ -28,7 +28,7 @@ import {
   SpinalNodeRef,
 } from 'spinal-env-viewer-graph-service';
 import { SpinalNode } from 'spinal-env-viewer-graph-service';
-import spinalServiceTimeSeries from '../spinalTimeSeries';
+import spinalServiceTimeSeries from '../../../utilities/spinalTimeSeries';
 import * as express from 'express';
 import { CurrentValue } from '../interfacesEndpointAndTimeSeries';
 import { getProfileId } from '../../../utilities/requestUtilities';
