@@ -48,6 +48,7 @@ export interface Node {
     type: string;
     children_relation_list: Relation[];
     parent_relation_list: Relation[];
+    [key: string]: any;
 }
 export interface BasicNode {
     dynamicId: number;

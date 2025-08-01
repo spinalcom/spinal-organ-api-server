@@ -40,6 +40,10 @@ async function getNodeInfo(spinalAPIMiddleware, profileId, dynamicId, includeChi
         staticId: node.getId().get(),
         name: node.getName().get(),
         type: node.getType().get(),
+        color: node.info.color?.get(),
+        dbid: node.info.dbid?.get(),
+        bimFileId: node.info.bimFileId?.get(),
+        icon: node.info.icon?.get(),
         children_relation_list: childrens_list,
         parent_relation_list: parents_list
     };

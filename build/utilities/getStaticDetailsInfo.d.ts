@@ -78,6 +78,9 @@ declare function getRoomStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddlew
     staticId: string;
     name: string;
     type: string;
+    bimFileId: any;
+    dbid: any;
+    color: any;
     attributsList: IAttr[];
     controlEndpoint: INodeControlEndpoint[];
     endpoints: import("../routes/nodes/interfacesNodes").EndPointNode[];

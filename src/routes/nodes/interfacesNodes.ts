@@ -74,6 +74,7 @@ export interface Node {
   type: string;
   children_relation_list: Relation[];
   parent_relation_list: Relation[];
+  [key: string]: any; // Allow additional properties
 }
 
 export interface BasicNode {
