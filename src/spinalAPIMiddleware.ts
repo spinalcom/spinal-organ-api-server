@@ -22,24 +22,31 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {Server} from 'http';
-import {spinalCore, FileSystem} from 'spinal-core-connectorjs_type';
-import {SpinalGraphService} from 'spinal-env-viewer-graph-service';
-import {SpinalContext, SpinalGraph, SpinalNode} from 'spinal-model-graph';
-import {runSocketServer} from 'spinal-organ-api-pubsub';
-import {IConfig} from 'src/interfaces';
-import {ISpinalAPIMiddleware} from './interfaces/ISpinalAPIMiddleware';
-const Q = require('q');
+import { Server } from 'http';
+import {
+  spinalCore,
+  FileSystem,
+  type Model,
+  type Ptr,
+  File,
+  type Pbr,
+} from 'spinal-core-connectorjs';
+import type { SpinalGraph } from 'spinal-model-graph';
+import type { IConfig } from 'src/interfaces';
+import type { ISpinalAPIMiddleware } from './interfaces/ISpinalAPIMiddleware';
+import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { runSocketServer } from 'spinal-organ-api-pubsub';
+
 // get the config
 import config from './config';
-import {SpinalIOMiddleware} from './spinalIOMiddleware';
-import {Server as SocketServer} from 'socket.io';
+import { SpinalIOMiddleware } from './spinalIOMiddleware';
+import { Server as SocketServer } from 'socket.io';
 
 class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
   static instance: SpinalAPIMiddleware = null;
-  loadedPtr: Map<number, any>;
-  conn: spinal.FileSystem;
-  iteratorGraph = this.geneGraph();
+  loadedPtr: Map<number, Model> = new Map();
+  conn: FileSystem;
+  iteratorGraph: AsyncGenerator<SpinalGraph>;
   config: IConfig = config;
 
   // singleton class
@@ -51,7 +58,6 @@ class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
   }
 
   constructor() {
-    this.loadedPtr = new Map();
     // connection string to connect to spinalhub
     const protocol = this.config.spinalConnector.protocol
       ? this.config.spinalConnector.protocol
@@ -70,38 +76,27 @@ class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
     this.conn = spinalCore.connect(connect_opt);
     // get the Model from the spinalhub, "onLoadSuccess" and "onLoadError" are 2
     // callback function.
+    this.iteratorGraph = this.geneGraph();
   }
 
-  private async *geneGraph(): AsyncGenerator<SpinalGraph<any>, never> {
-    const init = new Promise<SpinalGraph<any>>((resolve, reject) => {
-      spinalCore.load(
+  private async *geneGraph(): AsyncGenerator<SpinalGraph> {
+    try {
+      const graph = await spinalCore.load<SpinalGraph>(
         this.conn,
-        config.file.path,
-        (graph: any) => {
-          SpinalGraphService.setGraph(graph)
-            .then(() => {
-              resolve(graph);
-            })
-            .catch((e) => {
-              console.error(e);
-              reject();
-            });
-        },
-        () => {
-          console.error(`File does not exist in location ${config.file.path}`);
-          reject();
-        }
+        config.file.path
       );
-    });
+      await SpinalGraphService.setGraph(graph);
 
-    const graph = await init;
-    while (true) {
-      yield graph;
+      while (true) {
+        yield graph;
+      }
+    } catch (error) {
+      console.error(`File does not exist in location ${config.file.path}`);
     }
   }
   // called if connected to the server and if the spinalhub sent us the Model
 
-  async getGraph(): Promise<SpinalGraph<any>> {
+  async getGraph(): Promise<SpinalGraph> {
     const g = await this.iteratorGraph.next();
     return g.value;
   }
@@ -110,7 +105,7 @@ class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
     return this.getGraph();
   }
 
-  load<T extends spinal.Model>(server_id: number): Promise<T> {
+  async load<T extends Model>(server_id: number): Promise<T> {
     if (!server_id) {
       return Promise.reject('Invalid serverId');
     }
@@ -118,72 +113,55 @@ class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
       // @ts-ignore
       return Promise.resolve(FileSystem._objects[server_id]);
     }
-    return new Promise((resolve, reject) => {
-      this.conn.load_ptr(server_id, (model: T) => {
-        if (!model) {
-          // on error
-          reject('loadptr failed...!');
-        } else {
-          // on success
-          resolve(model);
-        }
-      });
-    });
-  }
-
-  loadPtr<T extends spinal.Model>(
-    ptr: spinal.File<T> | spinal.Ptr<T> | spinal.Pbr<T>
-  ): Promise<T> {
-    if (ptr instanceof spinalCore._def['File']) return this.loadPtr(ptr._ptr);
-    const server_id = ptr.data.value;
-
-    if (this.loadedPtr.has(server_id)) {
-      return this.loadedPtr.get(server_id);
+    try {
+      return await this.conn.load_ptr(server_id);
+    } catch (error) {
+      throw new Error(`Error loading model with server_id: ${server_id}`);
     }
-    const prom: Promise<T> = new Promise((resolve, reject) => {
-      try {
-        this.conn.load_ptr(server_id, (model: T) => {
-          if (!model) {
-            reject(new Error(`LoadedPtr Error server_id: '${server_id}'`));
-          } else {
-            resolve(model);
-          }
-        });
-      } catch (e) {
-        reject(e);
-      }
-    });
-    this.loadedPtr.set(server_id, prom);
-    return prom;
   }
 
-  runSocketServer(
+  async loadPtr<T extends Model>(ptr: File<T> | Ptr<T> | Pbr<T>): Promise<T> {
+    if (!ptr) throw new Error('Invalid ptr');
+    if (ptr instanceof File) return this.loadPtr(ptr._ptr);
+    const server_id = ptr.data.value;
+    if (!server_id) throw new Error('Invalid serverId');
+    if (this.loadedPtr.has(server_id)) {
+      return this.loadedPtr.get(server_id) as T;
+    }
+    try {
+      const model = await this.conn.load_ptr<T>(server_id);
+      this.loadedPtr.set(server_id, model);
+      return model;
+    } catch (error) {
+      throw new Error(`Error loading model with server_id: ${server_id}`);
+    }
+  }
+
+  async runSocketServer(
     server: Server,
     spinalIOMiddleware?: SpinalIOMiddleware
   ): Promise<SocketServer> {
-    return this._waitConnection().then(async (result) => {
-      if (spinalIOMiddleware == undefined)
-        spinalIOMiddleware = new SpinalIOMiddleware(this.conn, this.config);
-      const io = await runSocketServer(server, spinalIOMiddleware);
-      return io;
-    });
+    await this._waitConnection();
+    if (spinalIOMiddleware == undefined)
+      spinalIOMiddleware = new SpinalIOMiddleware(this.conn, this.config);
+    const io = await runSocketServer(server, spinalIOMiddleware);
+    return io;
   }
 
-  _waitConnection(): Promise<boolean> {
-    const deferred = Q.defer();
-    const _waitConnectionLoop = (defer) => {
-      const graph = this.getGraph().then((g) => {
-        if (!this.conn || !g) {
-          setTimeout(() => {
-            defer.resolve(_waitConnectionLoop(defer));
-          }, 200);
-        } else {
-          defer.resolve();
+  async _waitConnection() {
+    const timeout = 10000 + Date.now();
+    while (timeout > Date.now()) {
+      try {
+        const graph = await this.getGraph();
+        if (this.conn && graph) {
+          return;
         }
-      });
-      return defer.promise;
-    };
-    return _waitConnectionLoop(deferred);
+      } catch (error) {
+        // do nothing, we will retry
+      }
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+    throw new Error('Connection timed out');
   }
 }
 

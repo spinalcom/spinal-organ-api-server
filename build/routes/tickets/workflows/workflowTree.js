@@ -23,60 +23,60 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const spinal_model_graph_1 = require("spinal-model-graph");
 const recTree_1 = require("../../../utilities/recTree");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-    * @swagger
-    * /api/v1/workflow/{id}/tree:
-    *   get:
-    *     security:
-    *       - bearerAuth:
-    *         - readOnly
-    *     description: Return tree of workflow
-    *     summary: Get a tree workflow by ID
-    *     tags:
-    *       - Workflow & ticket
-    *     parameters:
-    *      - in: path
-    *        name: id
-    *        description: use the dynamic ID
-    *        required: true
-    *        schema:
-    *          type: integer
-    *          format: int64
-    *     responses:
-    *       200:
-    *         description: Success
-    *         content:
-    *           application/json:
-    *             schema:
-    *                $ref: '#/components/schemas/ContextTree'
-    *       400:
-    *         description: Bad request
-    */
-    app.get("/api/v1/workflow/:id/tree", async (req, res, next) => {
-        let workflows;
+     * @swagger
+     * /api/v1/workflow/{id}/tree:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     description: Return tree of workflow
+     *     summary: Get a tree workflow by ID
+     *     tags:
+     *       - Workflow & ticket
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/ContextTree'
+     *       400:
+     *         description: Bad request
+     */
+    app.get('/api/v1/workflow/:id/tree', async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            if (workflow instanceof spinal_env_viewer_graph_service_1.SpinalContext) {
-                workflows = {
+            if (workflow instanceof spinal_model_graph_1.SpinalContext) {
+                const workflows = {
                     dynamicId: workflow._server_id,
-                    staticId: workflow.getId().get(),
-                    name: workflow.getName().get(),
-                    type: workflow.getType().get(),
-                    children: await (0, recTree_1.recTree)(workflow, workflow)
+                    staticId: workflow.info.id?.get() || undefined,
+                    name: workflow.info.name?.get() || undefined,
+                    type: workflow.info.type?.get() || undefined,
+                    children: await (0, recTree_1.recTree)(workflow, workflow),
                 };
+                return res.json(workflows);
             }
+            return res.status(400).send('The ID is not a workflow');
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(500).send(error.message);
+            return res.status(500).send(error.message);
         }
-        res.json(workflows);
     });
 };
 //# sourceMappingURL=workflowTree.js.map

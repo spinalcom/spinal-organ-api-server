@@ -49,29 +49,29 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get("/api/v1/workflow/list", async (req, res, next) => {
-        const nodes = [];
+    app.get('/api/v1/workflow/list', async (req, res) => {
         try {
+            const nodes = [];
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
-            const childrens = await graph.getChildren("hasContext");
+            const childrens = await graph.getChildren('hasContext');
             for (const child of childrens) {
-                if (child.getType().get() === spinal_service_ticket_1.SERVICE_TYPE) {
+                if (child.info.type?.get() === spinal_service_ticket_1.TICKET_CONTEXT_TYPE) {
                     const info = {
                         dynamicId: child._server_id,
-                        staticId: child.getId().get(),
-                        name: child.getName().get(),
-                        type: child.getType().get()
+                        staticId: child.info.id?.get() || undefined,
+                        name: child.info.name?.get() || undefined,
+                        type: child.info.type?.get() || undefined,
                     };
                     nodes.push(info);
                 }
             }
-            res.send(nodes);
+            return res.send(nodes);
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send("list of worflows is not loaded");
+            return res.status(400).send('list of worflows is not loaded');
         }
     });
 };

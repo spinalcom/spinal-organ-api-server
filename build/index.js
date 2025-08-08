@@ -53,7 +53,9 @@ function Requests(logger) {
             const api = initApiServer(spinalAPIMiddleware);
             const port = config_1.default.api.port;
             const server = api.listen(port, async () => {
-                spinal_lib_organ_monitoring_1.default.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME, process.env.ORGAN_TYPE, process.env.SPINALHUB_IP, parseInt(process.env.REQUESTS_PORT));
+                if (!process.env.DISABLE_MONITORING) {
+                    spinal_lib_organ_monitoring_1.default.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME, process.env.ORGAN_TYPE, process.env.SPINALHUB_IP, parseInt(process.env.REQUESTS_PORT));
+                }
                 console.log(`\nApi server is listening at 0.0.0.0:${port}`);
                 console.log(`  openapi :\thttp://localhost:${port}/docs/swagger.json`);
                 console.log(`  swagger-ui :\thttp://localhost:${port}/spinalcom-api-docs`);
@@ -72,7 +74,7 @@ function Requests(logger) {
                     }
                 }
             });
-            spinalAPIMiddleware_1.default.getInstance().runSocketServer(server);
+            return spinalAPIMiddleware_1.default.getInstance().runSocketServer(server);
         },
         getSwaggerDocs: swagger_1.getSwaggerDocs,
     };

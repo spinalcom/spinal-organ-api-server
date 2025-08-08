@@ -22,81 +22,114 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import { SpinalNode } from 'spinal-model-graph';
 import * as express from 'express';
-import { serviceTicketPersonalized } from 'spinal-service-ticket'
+import {
+  removeStepFromProcess,
+  PROCESS_TYPE,
+  STEP_TYPE,
+} from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { getWorkflowContextNode } from 'src/utilities/workflow/getWorkflowContextNode';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
-  * @swagger
-  * /api/v1/workflow/{workflowId}/process/{processId}/step/{stepId}/delete_step:
-  *   delete:
-  *     security:
-  *       - bearerAuth:
-  *         - read
-  *     description: Delete a step
-  *     summary: delete an step
-  *     tags:
-  *       - Workflow & ticket
-  *     parameters:
-  *      - in: path
-  *        name: workflowId
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *      - in: path
-  *        name: processId
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *      - in: path
-  *        name: stepId
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *     responses:
-  *       200:
-  *         description: Delete Successfully
-  *       400:
-  *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/workflow/{workflowId}/process/{processId}/step/{stepId}/delete_step:
+   *   delete:
+   *     security:
+   *       - bearerAuth:
+   *         - read
+   *     description: Delete a step
+   *     summary: delete an step
+   *     tags:
+   *       - Workflow & ticket
+   *     parameters:
+   *      - in: path
+   *        name: workflowId
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *      - in: path
+   *        name: processId
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *      - in: path
+   *        name: stepId
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Delete Successfully
+   *       400:
+   *         description: Bad request
+   */
 
-  app.delete("/api/v1/workflow/:workflowId/process/:processId/step/:stepId/delete_step", async (req, res, next) => {
-    try {
-      const profileId = getProfileId(req);
-      const workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-      const process: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
-      const step: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.stepId, 10), profileId);
-      // @ts-ignore
-      SpinalGraphService._addNode(process);
-      // @ts-ignore
-      SpinalGraphService._addNode(step);
+  app.delete(
+    '/api/v1/workflow/:workflowId/process/:processId/step/:stepId/delete_step',
+    async (req, res) => {
+      // check if workflowId, processId and stepId are valid
+      if (!req.params.workflowId || isNaN(+req.params.workflowId))
+        return res.status(400).send('Invalid workflowId');
+      if (!req.params.processId || isNaN(+req.params.processId))
+        return res.status(400).send('Invalid processId');
+      if (!req.params.stepId || isNaN(+req.params.stepId))
+        return res.status(400).send('Invalid stepId');
 
-      if (workflow instanceof SpinalContext && process.belongsToContext(workflow) && step.belongsToContext(workflow)) {
-        if (workflow.getType().get() === "SpinalSystemServiceTicket") {
-          serviceTicketPersonalized.removeStep(process.getId().get(), workflow.getId().get(), step.getId().get())
+      try {
+        const profileId = getProfileId(req);
+        const [workflowContextNode, processNode, stepNode] = await Promise.all([
+          getWorkflowContextNode(
+            spinalAPIMiddleware,
+            profileId,
+            req.params.workflowId
+          ),
+          spinalAPIMiddleware.load<SpinalNode>(
+            parseInt(req.params.processId, 10),
+            profileId
+          ),
+          spinalAPIMiddleware.load<SpinalNode>(
+            parseInt(req.params.stepId, 10),
+            profileId
+          ),
+        ]);
+
+        // check if process and step are valid
+        if (
+          !(processNode instanceof SpinalNode) ||
+          processNode.info.type.get() !== PROCESS_TYPE ||
+          !processNode.belongsToContext(workflowContextNode)
+        ) {
+          return res.status(400).send('Invalid process');
         }
-        else {
-          return res.status(400).send("this context is not a SpinalSystemServiceTicket");
+        if (
+          !(stepNode instanceof SpinalNode) ||
+          stepNode.info.type.get() !== STEP_TYPE ||
+          !stepNode.belongsToContext(workflowContextNode)
+        ) {
+          return res.status(400).send('Invalid step');
         }
-      } else {
-        return res.status(400).send("process or step not found in context");
+
+        await removeStepFromProcess(processNode, workflowContextNode, stepNode);
+        return res.status(204).end();
+      } catch (error) {
+        if (error.code && error.message)
+          return res.status(error.code).send(error.message);
+        return res.status(500).send(error.message);
       }
-
-    } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      return res.status(500).send(error.message);
     }
-    res.json();
-  })
-}
+  );
+};

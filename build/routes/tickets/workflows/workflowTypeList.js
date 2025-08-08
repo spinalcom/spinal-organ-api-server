@@ -23,56 +23,36 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const requestUtilities_1 = require("../../../utilities/requestUtilities");
-module.exports = function (logger, app, spinalAPIMiddleware) {
+const spinal_service_ticket_1 = require("spinal-service-ticket");
+module.exports = function (logger, app) {
     /**
-   * @swagger
-   * /api/v1/workflow/{id}/nodeTypeList:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return node type list of workflow
-   *     summary: Get type list in workflow with given ID
-   *     tags:
-   *       - Workflow & ticket
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/WorkflowNodeTypeList'
-   *       400:
-   *         description: Bad request
-   */
-    app.get("/api/v1/workflow/:id/nodeTypeList", async (req, res, next) => {
-        try {
-            const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            const SpinalContextId = workflow.getId().get();
-            if (workflow.getType().get() === "SpinalSystemServiceTicket") {
-                var type_list = await spinal_env_viewer_graph_service_1.SpinalGraphService.browseAndClassifyByTypeInContext(SpinalContextId, SpinalContextId);
-            }
-            else {
-                res.status(400).send("this context is not a SpinalSystemServiceTicket");
-            }
-        }
-        catch (error) {
-            if (error.code && error.message)
-                return res.status(error.code).send(error.message);
-            res.status(400).send("context not found");
-        }
-        res.json(type_list.types);
+     * @swagger
+     * /api/v1/workflow/{id}/nodeTypeList:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     description: Return node type list of workflow
+     *     summary: Get type list in workflow
+     *     tags:
+     *       - Workflow & ticket
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/WorkflowNodeTypeList'
+     */
+    app.get('/api/v1/workflow/:id/nodeTypeList', async (req, res, next) => {
+        return res
+            .status(200)
+            .json([
+            spinal_service_ticket_1.TICKET_CONTEXT_TYPE,
+            spinal_service_ticket_1.PROCESS_TYPE,
+            spinal_service_ticket_1.STEP_TYPE,
+            spinal_service_ticket_1.SPINAL_TICKET_SERVICE_TICKET_TYPE,
+        ]);
     });
 };
 //# sourceMappingURL=workflowTypeList.js.map

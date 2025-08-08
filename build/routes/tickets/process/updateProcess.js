@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const getWorkflowContextNode_1 = require("src/utilities/workflow/getWorkflowContextNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -69,39 +70,34 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.put("/api/v1/workflow/:workflowId/process/:processId/update", async (req, res, next) => {
+    app.put('/api/v1/workflow/:workflowId/process/:processId/update', async (req, res) => {
+        if (typeof req.body.newNameProcess !== 'string')
+            return res
+                .status(400)
+                .send('newNameProcess is required and must be a string');
         try {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-            const node = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
-            // @ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            const allProcess = await spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflow.getId().get());
-            for (let index = 0; index < allProcess.length; index++) {
-                const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(allProcess[index].id.get());
-                if (realNode.getName().get() === req.body.newNameProcess) {
-                    return res.status(400).send("the name of process already exists");
+            const workflowContextNode = await (0, getWorkflowContextNode_1.getWorkflowContextNode)(spinalAPIMiddleware, profileId, req.params.workflowId);
+            const processNode = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
+            if (!(processNode instanceof spinal_env_viewer_graph_service_1.SpinalNode) ||
+                !processNode.belongsToContext(workflowContextNode)) {
+                return res.status(400).send('invalid processId');
+            }
+            const processNodes = await (0, spinal_service_ticket_1.getAllTicketProcess)(workflowContextNode);
+            for (const pNode of processNodes) {
+                if (pNode.info.name.get() === req.body.newNameProcess) {
+                    return res.status(400).send('The name of process already exists');
                 }
             }
-            if (workflow instanceof spinal_env_viewer_graph_service_1.SpinalContext && node.belongsToContext(workflow)) {
-                if (workflow.getType().get() === "SpinalSystemServiceTicket" && req.body.newNameProcess !== "string") {
-                    node.info.name.set(req.body.newNameProcess);
-                }
-                else {
-                    return res.status(400).send("this context is not a SpinalSystemServiceTicket or invalid name string");
-                }
-            }
-            else {
-                res.status(400).send("node not found in context");
-            }
+            processNode.info.name.set(req.body.newNameProcess);
+            return res.status(200).send('Success');
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
             return res.status(400).send(error.message);
         }
-        res.json();
     });
 };
 //# sourceMappingURL=updateProcess.js.map

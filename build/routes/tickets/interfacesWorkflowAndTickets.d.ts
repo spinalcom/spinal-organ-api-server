@@ -181,53 +181,53 @@ export interface TicketDetails {
  *           type: "string"
  */
 /**
-* @swagger
-* components:
-*   schemas:
-*     BasicNode:
-*       type: "object"
-*       properties:
-*         dynamicId:
-*           type: "integer"
-*         staticId:
-*           type: "string"
-*         name:
-*           type: "string"
-*         type:
-*           type: "string"
-*/
+ * @swagger
+ * components:
+ *   schemas:
+ *     BasicNode:
+ *       type: "object"
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         staticId:
+ *           type: "string"
+ *         name:
+ *           type: "string"
+ *         type:
+ *           type: "string"
+ */
 /**
-* @swagger
-* components:
-*   schemas:
-*     Process:
-*       type: "object"
-*       properties:
-*         dynamicId:
-*           type: "integer"
-*         staticId:
-*           type: "string"
-*         name:
-*           type: "string"
-*         type:
-*           type: "string"
-*/
+ * @swagger
+ * components:
+ *   schemas:
+ *     Process:
+ *       type: "object"
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         staticId:
+ *           type: "string"
+ *         name:
+ *           type: "string"
+ *         type:
+ *           type: "string"
+ */
 /**
-* @swagger
-* components:
-*   schemas:
-*     LogTicket:
-*       type: "object"
-*       properties:
-*         userName:
-*           type: "string"
-*         date:
-*           type: "number"
-*         event:
-*           type: "number"
-*         ticketStaticId:
-*           type: "string"
-*/
+ * @swagger
+ * components:
+ *   schemas:
+ *     LogTicket:
+ *       type: "object"
+ *       properties:
+ *         userName:
+ *           type: "string"
+ *         date:
+ *           type: "number"
+ *         event:
+ *           type: "number"
+ *         ticketStaticId:
+ *           type: "string"
+ */
 /**
  * @swagger
  * components:

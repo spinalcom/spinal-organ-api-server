@@ -22,68 +22,73 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import type { Workflow } from '../interfacesWorkflowAndTickets';
+import { SpinalContext } from 'spinal-model-graph';
 import * as express from 'express';
-import { Workflow } from '../interfacesWorkflowAndTickets'
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { TICKET_CONTEXT_TYPE } from 'spinal-service-ticket';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
-  * @swagger
-  * /api/v1/workflow/{id}/read:
-  *   get:
-  *     security:
-  *       - bearerAuth:
-  *         - readOnly
-  *     description: read a workflow
-  *     summary: read a workflow
-  *     tags:
-  *       - Workflow & ticket
-  *     parameters:
-  *       - in: path
-  *         name: id
-  *         description: use the dynamic ID
-  *         required: true
-  *         schema:
-  *           type: integer
-  *           format: int64
-  *     responses:
-  *       200:
-  *         description: Success
-  *         content:
-  *           application/json:
-  *             schema:
-  *                $ref: '#/components/schemas/Workflow'
-  *       400:
-  *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/workflow/{id}/read:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: read a workflow
+   *     summary: read a workflow
+   *     tags:
+   *       - Workflow & ticket
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         description: use the dynamic ID
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/Workflow'
+   *       400:
+   *         description: Bad request
+   */
 
-  app.get("/api/v1/workflow/:id/read", async (req, res, next) => {
+  app.get('/api/v1/workflow/:id/read', async (req, res) => {
     try {
       const profileId = getProfileId(req);
-      const workflow: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const workflow: SpinalContext = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10),
+        profileId
+      );
 
-      if (workflow.getType().get() === "SpinalSystemServiceTicket") {
-        var info: Workflow = {
+      if (workflow.info.type?.get() === TICKET_CONTEXT_TYPE) {
+        const info: Workflow = {
           dynamicId: workflow._server_id,
           staticId: workflow.getId().get(),
           name: workflow.getName().get(),
           type: workflow.getType().get(),
-        }
+        };
+        return res.json(info);
+      } else {
+        return res
+          .status(400)
+          .send(`this context is not a '${TICKET_CONTEXT_TYPE}'`);
       }
-      else {
-        res.status(400).send("this context is not a SpinalSystemServiceTicket");
-      }
-
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(500).send(error.message);
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
+      return res.status(500).send(error.message);
     }
-    res.json(info);
-  })
-}
+  });
+};

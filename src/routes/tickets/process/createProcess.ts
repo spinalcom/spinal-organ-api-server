@@ -22,14 +22,22 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service';
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
-import * as express from 'express';
-import { Workflow } from '../interfacesWorkflowAndTickets'
-import { serviceTicketPersonalized } from 'spinal-service-ticket'
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import {
+  createTicketProcess,
+  getAllTicketProcess,
+} from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+import { SpinalContext } from 'spinal-model-graph';
+import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
+import * as express from 'express';
+import { awaitSync } from 'src/utilities/awaitSync';
+
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/workflow/{id}/create_process:
@@ -66,32 +74,45 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *         description: create not Successfully
    */
 
-  app.post('/api/v1/workflow/:id/create_process', async (req, res, next) => {
+  app.post('/api/v1/workflow/:id/create_process', async (req, res) => {
     try {
       await spinalAPIMiddleware.getGraph();
-
       const profileId = getProfileId(req);
-      const workflow: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      // @ts-ignore
-      SpinalGraphService._addNode(workflow)
+      const workflowContextNode: SpinalContext = await getWorkflowContextNode(
+        spinalAPIMiddleware,
+        profileId,
+        req.params.id
+      );
+      if (
+        typeof req.body.nameProcess === 'string' &&
+        req.body.nameProcess.length === 0
+      ) {
+        return res.status(400).send('nameProcess is required');
+      }
 
-      const allProcess = await serviceTicketPersonalized.getAllProcess(workflow.getId().get());
-      for (let index = 0; index < allProcess.length; index++) {
-        const realNode = SpinalGraphService.getRealNode(allProcess[index].id.get())
-        if (realNode.getName().get() === req.body.nameProcess) {
-          return res.status(400).send("the name process already exists")
+      const allProcess = await getAllTicketProcess(workflowContextNode);
+      for (const processNode of allProcess) {
+        if (processNode.info.name.get() === req.body.nameProcess) {
+          return res.status(400).send('The name process already exists');
         }
       }
-      if (req.body.nameProcess !== "string") {
-        await serviceTicketPersonalized.createProcess({ name: req.body.nameProcess }, workflow.getId().get())
-      } else {
-        return res.status(400).send("invalid name string")
-      }
-    } catch (error) {
 
-      if (error.code && error.message) return res.status(error.code).send(error.message);
+      const processNode = await createTicketProcess(
+        req.body.nameProcess,
+        workflowContextNode
+      );
+      await awaitSync(processNode);
+      const info = {
+        dynamicId: processNode._server_id,
+        staticId: processNode.info.id?.get(),
+        name: processNode.info.name?.get(),
+        type: processNode.info.type?.get(),
+      };
+      return res.json(info);
+    } catch (error) {
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
       return res.status(500).send(error.message);
     }
-    res.json();
-  })
-}
+  });
+};

@@ -22,15 +22,22 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import { SpinalNode } from 'spinal-model-graph';
 import * as express from 'express';
-import { Step } from '../interfacesWorkflowAndTickets'
-import { serviceTicketPersonalized } from 'spinal-service-ticket'
+import {
+  createStepToProcess,
+  getStepNodesFromProcess,
+} from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { getWorkflowContextNode } from 'src/utilities/workflow/getWorkflowContextNode';
+import { awaitSync } from 'src/utilities/awaitSync';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/workflow/{id}/create_step:
@@ -71,42 +78,76 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *                 type: number
    *     responses:
    *       200:
-   *         description: Add Successfully
+   *         description: Added Successfully
    *       400:
    *         description: Add not Successfully
    */
 
-  app.post("/api/v1/workflow/:id/create_step", async (req, res, next) => {
+  app.post('/api/v1/workflow/:id/create_step', async (req, res) => {
     try {
-      await spinalAPIMiddleware.getGraph(); await spinalAPIMiddleware.getGraph();
+      // check params
+      if (!req.body.processDynamicId || isNaN(+req.body.processDynamicId))
+        return res
+          .status(400)
+          .send('Invalid processDynamicId attribute in the body');
+      if (!req.body.name || typeof req.body.name !== 'string')
+        return res.status(400).send('Invalid name attribute in the body');
+      if (!req.body.color || typeof req.body.color !== 'string')
+        return res.status(400).send('Invalid color attribute in the body');
+
+      await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);
-      const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      // @ts-ignore
-      SpinalGraphService._addNode(workflow);
-      const process = await spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10), profileId);
-      // @ts-ignore
-      SpinalGraphService._addNode(process);
+      // check workflowContextNode
+      const workflowContextNode = await getWorkflowContextNode(
+        spinalAPIMiddleware,
+        profileId,
+        req.params.id
+      );
 
+      // check processNode
+      const processNode = await spinalAPIMiddleware.load<SpinalNode>(
+        parseInt(req.body.processDynamicId, 10),
+        profileId
+      );
+      if (!(processNode instanceof SpinalNode))
+        return res.status(400).send('Invalid processDynamicId');
 
-      const allSteps = await SpinalGraphService.getChildren(process.getId().get(), ["SpinalSystemServiceTicketHasStep"])
-      for (let index = 0; index < allSteps.length; index++) {
-        const realNode = SpinalGraphService.getRealNode(allSteps[index].id.get())
-        if (realNode.getName().get() === req.body.name || req.body.name === "string") {
-          return res.status(400).send("the name of step already exists or invalid name string")
-        }
+      // check stepsNodes duplication
+      const stepsNodes = await getStepNodesFromProcess(
+        processNode,
+        workflowContextNode
+      );
+      if (
+        stepsNodes.some(
+          (stepNode) => stepNode.info.name.get() === req.body.name
+        )
+      ) {
+        return res.status(400).send('The name of step already exists');
       }
 
-      if (workflow instanceof SpinalContext) {
-        if (workflow.getType().get() === "SpinalSystemServiceTicket") {
-          serviceTicketPersonalized.addStep(process.getId().get(), workflow.getId().get(), req.body.name, req.body.color, req.body.order)
-        } else { return res.status(400).send("this context is not a SpinalSystemServiceTicket"); }
-      } else { return res.status(400).send("node not found in context"); }
+      // create stepNode
+      const stepNode = await createStepToProcess(
+        processNode,
+        workflowContextNode,
+        req.body.name,
+        req.body.color,
+        req.body.order
+      );
+      // the creation was local so we need to sync it
+      await awaitSync(stepNode);
 
+      return res.status(200).json({
+        dynamicId: stepNode._server_id,
+        staticId: stepNode.info.id?.get() || undefined,
+        name: stepNode.info.name?.get() || undefined,
+        type: stepNode.info.type?.get() || undefined,
+        color: stepNode.info.color?.get() || undefined,
+        order: stepNode.info.order?.get() || undefined,
+      });
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
       return res.status(500).send(error.message);
     }
-    res.json();
-  })
-}
+  });
+};

@@ -21,15 +21,19 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
-import * as express from 'express';
-import { Workflow } from '../interfacesWorkflowAndTickets'
-import { serviceTicketPersonalized } from 'spinal-service-ticket'
-import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import type { Workflow } from '../interfacesWorkflowAndTickets';
+import * as express from 'express';
+import { getAllTicketProcess } from 'spinal-service-ticket';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { getWorkflowContextNode } from 'src/utilities/workflow/getWorkflowContextNode';
+
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/workflow/{id}/processList:
@@ -61,31 +65,33 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *       400:
    *         description: Bad request
    */
-  app.get("/api/v1/workflow/:id/processList", async (req, res, next) => {
-    const nodes = []
+  app.get('/api/v1/workflow/:id/processList', async (req, res, next) => {
     try {
       await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);
-      const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      // @ts-ignore
-      SpinalGraphService._addNode(workflow)
-      const allProcess = await serviceTicketPersonalized.getAllProcess(workflow.getId().get());
-      for (let index = 0; index < allProcess.length; index++) {
-        const realNode = SpinalGraphService.getRealNode(allProcess[index].id.get())
+      const workflowContextNode = await getWorkflowContextNode(
+        spinalAPIMiddleware,
+        profileId,
+        req.params.id
+      );
+      const processNodes = await getAllTicketProcess(workflowContextNode);
+      const nodes: Workflow[] = [];
+
+      for (const processNode of processNodes) {
         const info: Workflow = {
-          dynamicId: realNode._server_id,
-          staticId: realNode.getId().get(),
-          name: realNode.getName().get(),
-          type: realNode.getType().get(),
-          color: realNode.info.color?.get(),
-        }
+          dynamicId: processNode._server_id,
+          staticId: processNode.info.id?.get() || undefined,
+          name: processNode.info.name?.get() || undefined,
+          type: processNode.info.type?.get() || undefined,
+          color: processNode.info.color?.get() || undefined,
+        };
         nodes.push(info);
       }
+      return res.json(nodes);
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
       return res.status(500).send(error.message);
     }
-    res.json(nodes);
-  })
-}
+  });
+};

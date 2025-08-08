@@ -24,58 +24,61 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const spinal_service_ticket_1 = require("spinal-service-ticket");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-    * @swagger
-    * /api/v1/workflow/{id}/read:
-    *   get:
-    *     security:
-    *       - bearerAuth:
-    *         - readOnly
-    *     description: read a workflow
-    *     summary: read a workflow
-    *     tags:
-    *       - Workflow & ticket
-    *     parameters:
-    *       - in: path
-    *         name: id
-    *         description: use the dynamic ID
-    *         required: true
-    *         schema:
-    *           type: integer
-    *           format: int64
-    *     responses:
-    *       200:
-    *         description: Success
-    *         content:
-    *           application/json:
-    *             schema:
-    *                $ref: '#/components/schemas/Workflow'
-    *       400:
-    *         description: Bad request
-    */
-    app.get("/api/v1/workflow/:id/read", async (req, res, next) => {
+     * @swagger
+     * /api/v1/workflow/{id}/read:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     description: read a workflow
+     *     summary: read a workflow
+     *     tags:
+     *       - Workflow & ticket
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         description: use the dynamic ID
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/Workflow'
+     *       400:
+     *         description: Bad request
+     */
+    app.get('/api/v1/workflow/:id/read', async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            if (workflow.getType().get() === "SpinalSystemServiceTicket") {
-                var info = {
+            if (workflow.info.type?.get() === spinal_service_ticket_1.TICKET_CONTEXT_TYPE) {
+                const info = {
                     dynamicId: workflow._server_id,
                     staticId: workflow.getId().get(),
                     name: workflow.getName().get(),
                     type: workflow.getType().get(),
                 };
+                return res.json(info);
             }
             else {
-                res.status(400).send("this context is not a SpinalSystemServiceTicket");
+                return res
+                    .status(400)
+                    .send(`this context is not a '${spinal_service_ticket_1.TICKET_CONTEXT_TYPE}'`);
             }
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(500).send(error.message);
+            return res.status(500).send(error.message);
         }
-        res.json(info);
     });
 };
 //# sourceMappingURL=readWorkflow.js.map

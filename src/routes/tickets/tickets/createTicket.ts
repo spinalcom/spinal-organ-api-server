@@ -26,11 +26,14 @@ import {
   SpinalNode,
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
-import { File, FileSystem, Lst, Ptr } from 'spinal-core-connectorjs_type';
+import { File, FileSystem, Lst, Ptr } from 'spinal-core-connectorjs';
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
 import { Step } from '../interfacesWorkflowAndTickets';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
+import {
+  getTicketContexts,
+  serviceTicketPersonalized,
+} from 'spinal-service-ticket';
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import { ServiceUser } from 'spinal-service-user';
 import { awaitSync } from '../../../utilities/awaitSync';
@@ -72,7 +75,6 @@ module.exports = function (
    *               - priority
    *               - description
    *               - declarer_id
-   *               - imageString
    *             properties:
    *               workflow:
    *                 type: string
@@ -111,7 +113,7 @@ module.exports = function (
    *       400:
    *         description: Add not Successfully
    */
-  app.post('/api/v1/ticket/create_ticket', async (req, res, next) => {
+  app.post('/api/v1/ticket/create_ticket', async (req, res) => {
     try {
       const profileId = getProfileId(req);
 
@@ -173,16 +175,17 @@ module.exports = function (
         node.getId().get()
       );
 
-      // clear modèles vides : 
-      const lst = await node.children.PtrLst.SpinalSystemServiceTicketHasTicket.children.load()
-      const toRemove = []
-      for(const x of lst){
-        if(x.info == undefined){
-          toRemove.push(x)
+      // clear modèles vides :
+      const lst =
+        await node.children.PtrLst.SpinalSystemServiceTicketHasTicket.children.load();
+      const toRemove = [];
+      for (const x of lst) {
+        if (x.info == undefined) {
+          toRemove.push(x);
         }
       }
-      for(const emptyModel of toRemove){
-        lst.remove(emptyModel)
+      for (const emptyModel of toRemove) {
+        lst.remove(emptyModel);
       }
       // fin clear modèles vides
 
@@ -203,9 +206,7 @@ module.exports = function (
               .get()}`
           );
       }
-      const realNodeTicket = SpinalGraphService.getRealNode(
-        linkedTicket.id
-      );
+      const realNodeTicket = SpinalGraphService.getRealNode(linkedTicket.id);
       await awaitSync(realNodeTicket);
       const info = {
         dynamicId: realNodeTicket._server_id,
@@ -259,7 +260,7 @@ async function getWorkflowNode(
   profileId: string
 ) {
   try {
-    const allContexts = serviceTicketPersonalized.getContexts();
+    const allContexts = await getTicketContexts();
     for (const context of allContexts) {
       if (context.name === workflowIdOrName) {
         const result = SpinalGraphService.getRealNode(context.id);
@@ -270,7 +271,10 @@ async function getWorkflowNode(
     }
     // at this point we couldn't find the workflow by name
     // we will try to find it by id
-    const node  : SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(workflowIdOrName, 10), profileId);
+    const node: SpinalNode<any> = await spinalAPIMiddleware.load(
+      parseInt(workflowIdOrName, 10),
+      profileId
+    );
     return node;
   } catch (error) {
     return undefined;
@@ -297,8 +301,11 @@ async function getProcessNode(
     }
     // at this point we couldn't find the process by name
     // we will try to find it by id
-    const node  : SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(processIdOrName, 10), profileId);
-    return node; 
+    const node: SpinalNode<any> = await spinalAPIMiddleware.load(
+      parseInt(processIdOrName, 10),
+      profileId
+    );
+    return node;
   } catch (error) {
     return undefined;
   }

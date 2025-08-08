@@ -23,77 +23,84 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const spinal_model_graph_1 = require("spinal-model-graph");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const getWorkflowContextNode_1 = require("src/utilities/workflow/getWorkflowContextNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-    * @swagger
-    * /api/v1/workflow/{workflowId}/process/{processId}/step/{stepId}/delete_step:
-    *   delete:
-    *     security:
-    *       - bearerAuth:
-    *         - read
-    *     description: Delete a step
-    *     summary: delete an step
-    *     tags:
-    *       - Workflow & ticket
-    *     parameters:
-    *      - in: path
-    *        name: workflowId
-    *        description: use the dynamic ID
-    *        required: true
-    *        schema:
-    *          type: integer
-    *          format: int64
-    *      - in: path
-    *        name: processId
-    *        description: use the dynamic ID
-    *        required: true
-    *        schema:
-    *          type: integer
-    *          format: int64
-    *      - in: path
-    *        name: stepId
-    *        description: use the dynamic ID
-    *        required: true
-    *        schema:
-    *          type: integer
-    *          format: int64
-    *     responses:
-    *       200:
-    *         description: Delete Successfully
-    *       400:
-    *         description: Bad request
-    */
-    app.delete("/api/v1/workflow/:workflowId/process/:processId/step/:stepId/delete_step", async (req, res, next) => {
+     * @swagger
+     * /api/v1/workflow/{workflowId}/process/{processId}/step/{stepId}/delete_step:
+     *   delete:
+     *     security:
+     *       - bearerAuth:
+     *         - read
+     *     description: Delete a step
+     *     summary: delete an step
+     *     tags:
+     *       - Workflow & ticket
+     *     parameters:
+     *      - in: path
+     *        name: workflowId
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *      - in: path
+     *        name: processId
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *      - in: path
+     *        name: stepId
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: Delete Successfully
+     *       400:
+     *         description: Bad request
+     */
+    app.delete('/api/v1/workflow/:workflowId/process/:processId/step/:stepId/delete_step', async (req, res) => {
+        // check if workflowId, processId and stepId are valid
+        if (!req.params.workflowId || isNaN(+req.params.workflowId))
+            return res.status(400).send('Invalid workflowId');
+        if (!req.params.processId || isNaN(+req.params.processId))
+            return res.status(400).send('Invalid processId');
+        if (!req.params.stepId || isNaN(+req.params.stepId))
+            return res.status(400).send('Invalid stepId');
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-            const process = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
-            const step = await spinalAPIMiddleware.load(parseInt(req.params.stepId, 10), profileId);
-            // @ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(process);
-            // @ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(step);
-            if (workflow instanceof spinal_env_viewer_graph_service_1.SpinalContext && process.belongsToContext(workflow) && step.belongsToContext(workflow)) {
-                if (workflow.getType().get() === "SpinalSystemServiceTicket") {
-                    spinal_service_ticket_1.serviceTicketPersonalized.removeStep(process.getId().get(), workflow.getId().get(), step.getId().get());
-                }
-                else {
-                    return res.status(400).send("this context is not a SpinalSystemServiceTicket");
-                }
+            const [workflowContextNode, processNode, stepNode] = await Promise.all([
+                (0, getWorkflowContextNode_1.getWorkflowContextNode)(spinalAPIMiddleware, profileId, req.params.workflowId),
+                spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId),
+                spinalAPIMiddleware.load(parseInt(req.params.stepId, 10), profileId),
+            ]);
+            // check if process and step are valid
+            if (!(processNode instanceof spinal_model_graph_1.SpinalNode) ||
+                processNode.info.type.get() !== spinal_service_ticket_1.PROCESS_TYPE ||
+                !processNode.belongsToContext(workflowContextNode)) {
+                return res.status(400).send('Invalid process');
             }
-            else {
-                return res.status(400).send("process or step not found in context");
+            if (!(stepNode instanceof spinal_model_graph_1.SpinalNode) ||
+                stepNode.info.type.get() !== spinal_service_ticket_1.STEP_TYPE ||
+                !stepNode.belongsToContext(workflowContextNode)) {
+                return res.status(400).send('Invalid step');
             }
+            await (0, spinal_service_ticket_1.removeStepFromProcess)(processNode, workflowContextNode, stepNode);
+            return res.status(204).end();
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
             return res.status(500).send(error.message);
         }
-        res.json();
     });
 };
 //# sourceMappingURL=deleteStep.js.map

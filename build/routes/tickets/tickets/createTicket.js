@@ -57,7 +57,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               - priority
      *               - description
      *               - declarer_id
-     *               - imageString
      *             properties:
      *               workflow:
      *                 type: string
@@ -96,7 +95,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Add not Successfully
      */
-    app.post('/api/v1/ticket/create_ticket', async (req, res, next) => {
+    app.post('/api/v1/ticket/create_ticket', async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const ticketInfo = {
@@ -132,7 +131,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     req.body.workflow);
             }
             const ticketCreated = await spinal_service_ticket_1.serviceTicketPersonalized.addTicket(ticketInfo, processNode.getId().get(), workflowNode.getId().get(), node.getId().get());
-            // clear modèles vides : 
+            // clear modèles vides :
             const lst = await node.children.PtrLst.SpinalSystemServiceTicketHasTicket.children.load();
             const toRemove = [];
             for (const x of lst) {
@@ -195,7 +194,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
 };
 async function getWorkflowNode(workflowIdOrName, spinalAPIMiddleware, profileId) {
     try {
-        const allContexts = spinal_service_ticket_1.serviceTicketPersonalized.getContexts();
+        const allContexts = await (0, spinal_service_ticket_1.getTicketContexts)();
         for (const context of allContexts) {
             if (context.name === workflowIdOrName) {
                 const result = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(context.id);

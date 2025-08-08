@@ -22,7 +22,6 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-
 /**
  * @swagger
  * components:
@@ -82,13 +81,12 @@ export interface Workflow {
  *           children: []
  */
 export interface WorkflowTree {
-  dynamicId: number,
-  staticId: string,
-  name: string,
-  type: string,
-  children: WorkflowTree[]
+  dynamicId: number;
+  staticId: string;
+  name: string;
+  type: string;
+  children: WorkflowTree[];
 }
-
 
 /**
  * @swagger
@@ -113,13 +111,13 @@ export interface WorkflowTree {
  *           type: "string"
  */
 export interface Step {
-  dynamicId: number,
-  staticId: string,
-  name: string,
-  type: string,
-  color: string,
-  order: number,
-  processId: string
+  dynamicId: number;
+  staticId: string;
+  name: string;
+  type: string;
+  color: string;
+  order: number;
+  processId: string;
 }
 
 /**
@@ -178,22 +176,21 @@ export interface Step {
  *             $ref: "#/components/schemas/LogTicket"
  */
 export interface TicketDetails {
-  dynamicId: number,
-  staticId: string,
-  name: string,
-  type: string,
-  priority: number,
-  creationDate: number,
-  elementSelectedId: number,
-  userName: string,
-  stepId: string,
-  workflowId: number,
-  workflowName: string,
-  annotation_list: [],
-  file_list: [],
-  log_list: []
+  dynamicId: number;
+  staticId: string;
+  name: string;
+  type: string;
+  priority: number;
+  creationDate: number;
+  elementSelectedId: number;
+  userName: string;
+  stepId: string;
+  workflowId: number;
+  workflowName: string;
+  annotation_list: [];
+  file_list: [];
+  log_list: [];
 }
-
 
 /**
  * @swagger
@@ -213,56 +210,55 @@ export interface TicketDetails {
  */
 
 /**
-* @swagger
-* components:
-*   schemas:
-*     BasicNode:
-*       type: "object"
-*       properties:
-*         dynamicId:
-*           type: "integer"
-*         staticId:
-*           type: "string"
-*         name:
-*           type: "string"
-*         type:
-*           type: "string"
-*/
+ * @swagger
+ * components:
+ *   schemas:
+ *     BasicNode:
+ *       type: "object"
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         staticId:
+ *           type: "string"
+ *         name:
+ *           type: "string"
+ *         type:
+ *           type: "string"
+ */
 
 /**
-* @swagger
-* components:
-*   schemas:
-*     Process:
-*       type: "object"
-*       properties:
-*         dynamicId:
-*           type: "integer"
-*         staticId:
-*           type: "string"
-*         name:
-*           type: "string"
-*         type:
-*           type: "string"
-*/
+ * @swagger
+ * components:
+ *   schemas:
+ *     Process:
+ *       type: "object"
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         staticId:
+ *           type: "string"
+ *         name:
+ *           type: "string"
+ *         type:
+ *           type: "string"
+ */
 
 /**
-* @swagger
-* components:
-*   schemas:
-*     LogTicket:
-*       type: "object"
-*       properties:
-*         userName:
-*           type: "string"
-*         date:
-*           type: "number"
-*         event:
-*           type: "number"
-*         ticketStaticId:
-*           type: "string"
-*/
-
+ * @swagger
+ * components:
+ *   schemas:
+ *     LogTicket:
+ *       type: "object"
+ *       properties:
+ *         userName:
+ *           type: "string"
+ *         date:
+ *           type: "number"
+ *         event:
+ *           type: "number"
+ *         ticketStaticId:
+ *           type: "string"
+ */
 
 /**
  * @swagger

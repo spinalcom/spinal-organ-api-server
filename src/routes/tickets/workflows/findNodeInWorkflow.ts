@@ -22,16 +22,20 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import type { Workflow } from '../interfacesWorkflowAndTickets';
+import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode } from 'spinal-model-graph';
 import { findOneInContext } from '../../../utilities/findOneInContext';
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { Workflow } from '../interfacesWorkflowAndTickets'
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { TICKET_CONTEXT_TYPE } from 'spinal-service-ticket';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/workflow/{workflowId}/node/{nodeId}/find:
@@ -68,39 +72,50 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *         description: Bad request
    */
 
-  app.get("/api/v1/workflow/:workflowId/node/:nodeId/find", async (req, res, next) => {
-    try {
-      await spinalAPIMiddleware.getGraph();
-      const profileId = getProfileId(req);
-      const workflow: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-      if (req.params.nodeId) {
-      }
-      let node = SpinalGraphService.getRealNode(req.params.nodeId);
-      if (workflow.getType().get() === "SpinalSystemServiceTicket" && typeof node === "undefined") {
-        node = await findOneInContext(workflow, workflow, (n) => n.getId().get() === req.params.nodeId)
-        if (typeof node === "undefined") {
-          return res.status(404).send("node not found");
+  app.get(
+    '/api/v1/workflow/:workflowId/node/:nodeId/find',
+    async (req, res) => {
+      try {
+        await spinalAPIMiddleware.getGraph();
+        const profileId = getProfileId(req);
+
+        //  check workflow
+        const workflow: SpinalContext = await spinalAPIMiddleware.load(
+          parseInt(req.params.workflowId, 10),
+          profileId
+        );
+        if (
+          !(workflow instanceof SpinalContext) ||
+          workflow.getType().get() !== TICKET_CONTEXT_TYPE
+        ) {
+          return res
+            .status(400)
+            .send(`this context is not a '${TICKET_CONTEXT_TYPE}'`);
         }
-        // @ts-ignore
-        SpinalGraphService._addNode(node);
-      }
-      else if (workflow.getType().get() !== "SpinalSystemServiceTicket") {
-        return res.status(400).send("this context is not a SpinalSystemServiceTicket");
-      }
-      var info: Workflow = {
-        dynamicId: node._server_id,
-        staticId: node.getId().get(),
-        name: node.getName().get(),
-        type: node.getType().get(),
-      }
 
-    } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(500).send(error.message);
+        let node = SpinalGraphService.getRealNode(req.params.nodeId);
+        if (typeof node === 'undefined') {
+          node = await findOneInContext(
+            workflow,
+            workflow,
+            (n) => n.info.id.get() === req.params.nodeId
+          );
+        }
+        if (node instanceof SpinalNode && node.belongsToContext(workflow)) {
+          const info: Workflow = {
+            dynamicId: node._server_id,
+            staticId: node.info.id.get() || undefined,
+            name: node.info.name.get() || undefined,
+            type: node.info.type.get() || undefined,
+          };
+          return res.json(info);
+        }
+        return res.status(404).send('node not found');
+      } catch (error) {
+        if (error.code && error.message)
+          return res.status(error.code).send(error.message);
+        return res.status(500).send(error.message);
+      }
     }
-    res.json(info);
-  })
-
-
-}
+  );
+};

@@ -24,6 +24,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const spinal_service_ticket_1 = require("spinal-service-ticket");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -60,22 +61,28 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.put("/api/v1/workflow/:id/update", async (req, res, next) => {
+    app.put('/api/v1/workflow/:id/update', async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            // check if the name already exists in another context
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
-            const childrens = await graph.getChildren("hasContext");
-            for (const child of childrens) {
-                if (child.getName().get() === req.body.newNameWorkflow) {
-                    return res.status(400).send("the name context already exists");
-                }
+            const childrens = await graph.getChildren('hasContext');
+            if (childrens.some((child) => {
+                return child.info.name?.get() === req.body.newNameWorkflow;
+            })) {
+                return res.status(400).send('the name context already exists');
             }
-            if (workflow.getType().get() === "SpinalSystemServiceTicket" && req.body.nameWorkflow !== "string") {
+            // update the workflow name
+            if (workflow.info.type?.get() === spinal_service_ticket_1.TICKET_CONTEXT_TYPE &&
+                typeof req.body.nameWorkflow !== 'string') {
                 workflow.info.name.set(req.body.newNameWorkflow);
+                return res.status(200).send('Success');
             }
             else {
-                return res.status(400).send("this context is not a SpinalSystemServiceTicket Or string is invalid name");
+                return res
+                    .status(400)
+                    .send(`this context is not a '${spinal_service_ticket_1.TICKET_CONTEXT_TYPE}' Or string is invalid name`);
             }
         }
         catch (error) {
@@ -83,7 +90,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             return res.status(400).send(error.message);
         }
-        res.json();
     });
 };
 //# sourceMappingURL=updateWorkflow.js.map
