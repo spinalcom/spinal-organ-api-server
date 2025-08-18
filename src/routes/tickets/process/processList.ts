@@ -27,7 +27,7 @@ import type { Workflow } from '../interfacesWorkflowAndTickets';
 import * as express from 'express';
 import { getAllTicketProcess } from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { getWorkflowContextNode } from 'src/utilities/workflow/getWorkflowContextNode';
+import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
 
 module.exports = function (
   logger,
@@ -65,7 +65,7 @@ module.exports = function (
    *       400:
    *         description: Bad request
    */
-  app.get('/api/v1/workflow/:id/processList', async (req, res, next) => {
+  app.get('/api/v1/workflow/:id/processList', async (req, res) => {
     try {
       await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);

@@ -25,7 +25,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
-const getWorkflowContextNode_1 = require("src/utilities/workflow/getWorkflowContextNode");
+const getWorkflowContextNode_1 = require("../../../utilities/workflow/getWorkflowContextNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -58,7 +58,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/workflow/:id/processList', async (req, res, next) => {
+    app.get('/api/v1/workflow/:id/processList', async (req, res) => {
         try {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);

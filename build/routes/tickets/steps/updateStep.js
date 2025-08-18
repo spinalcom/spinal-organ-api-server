@@ -23,10 +23,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const spinal_model_graph_1 = require("spinal-model-graph");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
-const getWorkflowContextNode_1 = require("src/utilities/workflow/getWorkflowContextNode");
+const getWorkflowContextNode_1 = require("../../../utilities/workflow/getWorkflowContextNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -98,12 +98,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 spinalAPIMiddleware.load(parseInt(req.params.stepId, 10), profileId),
             ]);
             // check if process and step are valid
-            if (!(processNode instanceof spinal_env_viewer_graph_service_1.SpinalNode) ||
+            if (!(processNode instanceof spinal_model_graph_1.SpinalNode) ||
                 processNode.info.type.get() !== spinal_service_ticket_1.PROCESS_TYPE ||
                 !processNode.belongsToContext(workflowContextNode)) {
                 return res.status(400).send('Invalid process');
             }
-            if (!(stepNode instanceof spinal_env_viewer_graph_service_1.SpinalNode) ||
+            if (!(stepNode instanceof spinal_model_graph_1.SpinalNode) ||
                 stepNode.info.type.get() !== spinal_service_ticket_1.STEP_TYPE ||
                 !stepNode.belongsToContext(workflowContextNode)) {
                 return res.status(400).send('Invalid step');

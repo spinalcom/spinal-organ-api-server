@@ -1,3 +1,4 @@
 node_modules
 spinal-model-graph
 .env
+.parcel-cache

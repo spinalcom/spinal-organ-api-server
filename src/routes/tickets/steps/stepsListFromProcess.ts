@@ -27,7 +27,7 @@ import { SpinalNode } from 'spinal-model-graph';
 import * as express from 'express';
 import { getStepNodesFromProcess, PROCESS_TYPE } from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { getWorkflowContextNode } from 'src/utilities/workflow/getWorkflowContextNode';
+import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
 
 module.exports = function (
   logger,
@@ -82,7 +82,6 @@ module.exports = function (
       if (!req.params.processId || isNaN(+req.params.processId))
         return res.status(400).send('Invalid processId');
 
-      const nodes = [];
       try {
         const profileId = getProfileId(req);
         const [workflowContextNode, processNode] = await Promise.all([

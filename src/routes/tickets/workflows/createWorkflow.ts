@@ -25,7 +25,7 @@
 import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import { createTicketContext, type ITicketStep } from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { awaitSync } from 'src/utilities/awaitSync';
+import { awaitSync } from '../../../utilities/awaitSync';
 import * as express from 'express';
 
 module.exports = function (

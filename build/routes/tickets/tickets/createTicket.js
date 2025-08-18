@@ -188,7 +188,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send({ ko: error });
+            return res.status(400).send({ ko: error });
         }
     });
 };

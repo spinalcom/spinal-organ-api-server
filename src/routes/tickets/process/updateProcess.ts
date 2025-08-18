@@ -22,19 +22,12 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalNode } from 'spinal-model-graph';
 import * as express from 'express';
-import {
-  getAllTicketProcess,
-  serviceTicketPersonalized,
-} from 'spinal-service-ticket';
+import { getAllTicketProcess } from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
-import { getWorkflowContextNode } from 'src/utilities/workflow/getWorkflowContextNode';
+import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
 
 module.exports = function (
   logger,

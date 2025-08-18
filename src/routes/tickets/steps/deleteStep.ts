@@ -31,7 +31,7 @@ import {
   STEP_TYPE,
 } from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { getWorkflowContextNode } from 'src/utilities/workflow/getWorkflowContextNode';
+import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
 
 module.exports = function (
   logger,

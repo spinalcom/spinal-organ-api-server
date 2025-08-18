@@ -30,8 +30,8 @@ import {
   getStepNodesFromProcess,
 } from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { getWorkflowContextNode } from 'src/utilities/workflow/getWorkflowContextNode';
-import { awaitSync } from 'src/utilities/awaitSync';
+import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
+import { awaitSync } from '../../../utilities/awaitSync';
 
 module.exports = function (
   logger,

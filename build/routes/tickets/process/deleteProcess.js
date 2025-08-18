@@ -25,7 +25,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_model_graph_1 = require("spinal-model-graph");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
-const getWorkflowContextNode_1 = require("src/utilities/workflow/getWorkflowContextNode");
+const getWorkflowContextNode_1 = require("../../../utilities/workflow/getWorkflowContextNode");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**

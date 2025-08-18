@@ -26,7 +26,7 @@ import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import { SpinalContext, SpinalNode } from 'spinal-model-graph';
 import * as express from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { getWorkflowContextNode } from 'src/utilities/workflow/getWorkflowContextNode';
+import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
 import {
   TICKET_CONTEXT_TYPE,
   PROCESS_TYPE,

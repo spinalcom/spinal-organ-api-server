@@ -31,7 +31,7 @@ import { getProfileId } from '../../../utilities/requestUtilities';
 import { SpinalContext } from 'spinal-model-graph';
 import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
 import * as express from 'express';
-import { awaitSync } from 'src/utilities/awaitSync';
+import { awaitSync } from '../../../utilities/awaitSync';
 
 module.exports = function (
   logger,

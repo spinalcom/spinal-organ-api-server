@@ -26,7 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getWorkflowContextNode_1 = require("../../../utilities/workflow/getWorkflowContextNode");
-const awaitSync_1 = require("src/utilities/awaitSync");
+const awaitSync_1 = require("../../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger

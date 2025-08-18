@@ -23,10 +23,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const spinal_model_graph_1 = require("spinal-model-graph");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
-const getWorkflowContextNode_1 = require("src/utilities/workflow/getWorkflowContextNode");
+const getWorkflowContextNode_1 = require("../../../utilities/workflow/getWorkflowContextNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -80,7 +80,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const workflowContextNode = await (0, getWorkflowContextNode_1.getWorkflowContextNode)(spinalAPIMiddleware, profileId, req.params.workflowId);
             const processNode = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
-            if (!(processNode instanceof spinal_env_viewer_graph_service_1.SpinalNode) ||
+            if (!(processNode instanceof spinal_model_graph_1.SpinalNode) ||
                 !processNode.belongsToContext(workflowContextNode)) {
                 return res.status(400).send('invalid processId');
             }

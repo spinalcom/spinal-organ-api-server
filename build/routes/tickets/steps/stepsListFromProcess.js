@@ -26,7 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_model_graph_1 = require("spinal-model-graph");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
-const getWorkflowContextNode_1 = require("src/utilities/workflow/getWorkflowContextNode");
+const getWorkflowContextNode_1 = require("../../../utilities/workflow/getWorkflowContextNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -72,7 +72,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             return res.status(400).send('Invalid workflowId');
         if (!req.params.processId || isNaN(+req.params.processId))
             return res.status(400).send('Invalid processId');
-        const nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const [workflowContextNode, processNode] = await Promise.all([
