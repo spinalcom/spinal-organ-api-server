@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 21/08/2025 -> v1.0.49
+- Added additional info in multiple apis ( color , icon, dbid and bimFileId)
+- Improved logging , and support for bos-config
+
 ## 04/07/2025 -> v1.0.48
 - Modified api /api/v1/node/command definition to correctly use bearer token authentication
 - Modified api /api/v1/node/command to be cleaner

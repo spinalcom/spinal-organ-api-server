@@ -19,6 +19,7 @@ export interface Context {
     staticId: string;
     name: string;
     type: string;
+    color?: string;
 }
 /**
  * @swagger

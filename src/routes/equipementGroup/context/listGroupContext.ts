@@ -71,7 +71,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
             dynamicId: realNode._server_id,
             staticId: realNode.getId().get(),
             name: realNode.getName().get(),
-            type: realNode.getType().get()
+            type: realNode.getType().get(),
+            color: realNode.info.color?.get()
           };
           nodes.push(info)
         }
