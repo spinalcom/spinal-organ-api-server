@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -23,15 +23,11 @@
  */
 
 import type { ISpinalAPIMiddleware } from '../../../interfaces';
-import { SpinalContext, SpinalNode } from 'spinal-model-graph';
 import * as express from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
-import {
-  TICKET_CONTEXT_TYPE,
-  PROCESS_TYPE,
-  getStepNodesFromProcess,
-} from 'spinal-service-ticket';
+import { PROCESS_TYPE, getStepNodesFromProcess } from 'spinal-service-ticket';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
 module.exports = function (
   logger,
@@ -81,20 +77,16 @@ module.exports = function (
           profileId,
           req.params.workflowId
         );
-        const processNode: SpinalNode = await spinalAPIMiddleware.load(
+        const processNode = await loadAndValidateNode(
+          spinalAPIMiddleware,
           parseInt(req.params.processId, 10),
-          profileId
+          profileId,
+          PROCESS_TYPE
         );
-        if (
-          !(workflowContextNode instanceof SpinalContext) ||
-          workflowContextNode.info.type.get() !== TICKET_CONTEXT_TYPE
-        )
-          return res.status(400).send('Workflow context not found');
-        if (
-          !(processNode instanceof SpinalNode) ||
-          processNode.info.type.get() !== PROCESS_TYPE
-        )
-          return res.status(400).send('Process node not found');
+        if (processNode.belongsToContext(workflowContextNode) === false)
+          return res
+            .status(400)
+            .send('Process node does not belong to the workflow context');
 
         const stepNodes = await getStepNodesFromProcess(
           processNode,
@@ -108,9 +100,9 @@ module.exports = function (
         await Promise.all(proms);
         return res.status(200).send('Delete Successfully');
       } catch (error) {
-        if (error.code && error.message)
+        if (error?.code && error?.message)
           return res.status(error.code).send(error.message);
-        return res.status(500).send(error.message);
+        return res.status(500).send(error?.message);
       }
     }
   );

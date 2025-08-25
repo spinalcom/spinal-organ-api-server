@@ -26,10 +26,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getWorkflowContextNode = void 0;
 const spinal_model_graph_1 = require("spinal-model-graph");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
+const loadAndValidateNode_1 = require("../loadAndValidateNode");
 async function getWorkflowContextNode(spinalAPIMiddleware, profileId, workflowServerId) {
-    const workflowContextNode = await spinalAPIMiddleware.load(parseInt(workflowServerId, 10), profileId);
-    if (!(workflowContextNode instanceof spinal_model_graph_1.SpinalContext) ||
-        workflowContextNode.info.type?.get() !== spinal_service_ticket_1.TICKET_CONTEXT_TYPE)
+    const workflowContextNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, parseInt(workflowServerId, 10), profileId, spinal_service_ticket_1.TICKET_CONTEXT_TYPE);
+    if (!(workflowContextNode instanceof spinal_model_graph_1.SpinalContext))
         throw {
             code: 400,
             message: `this context is not a '${spinal_service_ticket_1.TICKET_CONTEXT_TYPE}'`,

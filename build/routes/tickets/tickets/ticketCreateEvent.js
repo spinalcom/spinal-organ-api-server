@@ -1,11 +1,11 @@
 "use strict";
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -28,7 +28,8 @@ const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const moment = require("moment");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
-const spinal_env_viewer_task_service_2 = require("spinal-env-viewer-task-service");
+const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
+const awaitSync_1 = require("../../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -43,8 +44,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - Workflow & ticket
      *     parameters:
      *      - in: path
-     *        name: id
-     *        description: use the dynamic ID
+     *        name: ticketDynamicId
+     *        description: use the dynamic ID of a ticket
      *        required: true
      *        schema:
      *          type: integer
@@ -69,22 +70,22 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                 type: string
      *               startDate:
      *                 type: string
-  *                 default: DD MM YYYY HH:mm:ss
+     *                 default: DD MM YYYY HH:mm:ss
      *               endDate:
      *                 type: string
-  *                 default: DD MM YYYY HH:mm:ss
+     *                 default: DD MM YYYY HH:mm:ss
      *               description:
      *                 type: string
      *               repeat:
      *                 type: boolean
      *               repeatEnd:
-  *                 type: string
-  *                 default: DD MM YYYY HH:mm:ss
+     *                 type: string
+     *                 default: DD MM YYYY HH:mm:ss
      *               count:
      *                 type: number
      *               period:
-  *                 type: string
-  *                 default: day|week|month|year
+     *                 type: string
+     *                 default: day|week|month|year
      *               user:
      *                 type: object
      *                 required:
@@ -92,7 +93,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                   - email
      *                   - gsm
      *                 properties:
-  *                   userName:
+     *                   userName:
      *                     type: string
      *                   email:
      *                     type: string
@@ -108,79 +109,74 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.post("/api/v1/ticket/:id/create_event", async (req, res, next) => {
+    app.post('/api/v1/ticket/:ticketDynamicId/create_event', async (req, res) => {
         try {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            //@ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
+            const ticketNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, parseInt(req.params.ticketDynamicId, 10), profileId, spinal_service_ticket_1.SPINAL_TICKET_SERVICE_TICKET_TYPE);
+            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(ticketNode);
             const tree = await spinal_env_viewer_task_service_1.SpinalEventService.createOrgetDefaultTreeStructure();
-            const context = tree.context;
-            const category = tree.category;
-            const group = tree.group;
-            if (node.getType().get() === spinal_service_ticket_1.TIKET_TYPE) {
-                if (context.type.get() === "SpinalEventGroupContext") {
-                    const eventInfo = {
-                        contextId: context.id.get(),
-                        groupId: group.id.get(),
-                        categoryId: category.id.get(),
-                        nodeId: node.getId().get(),
-                        startDate: moment(req.body.startDate, 'DD MM YYYY HH:mm:ss', true).toString(),
-                        description: req.body.description,
-                        endDate: moment(req.body.endDate, 'DD MM YYYY HH:mm:ss', true).toString(),
-                        periodicity: { count: req.body.count, period: spinal_env_viewer_task_service_2.Period[req.body.period] },
-                        repeat: req.body.repeat,
-                        name: req.body.name,
-                        creationDate: moment(new Date().toISOString()).toString(),
-                        repeatEnd: moment(req.body.repeatEnd, 'DD MM YYYY HH:mm:ss', true).toString(),
-                    };
-                    const user = {
-                        username: req.body.user.userName,
-                        email: req.body.user.email,
-                        gsm: req.body.user.gsm,
-                    };
-                    const result = await spinal_env_viewer_task_service_1.SpinalEventService.createEvent(context.id.get(), group.id.get(), node.getId().get(), eventInfo, user);
-                    const ticketCreated = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(result.id.get());
-                    console.log(ticketCreated._server_id);
-                    var info = {
-                        dynamicId: ticketCreated._server_id,
-                        staticId: ticketCreated.getId().get(),
-                        name: ticketCreated.getName().get(),
-                        type: ticketCreated.getType().get(),
-                        groupID: ticketCreated.info.groupId.get(),
-                        categoryID: ticketCreated.info.categoryId.get(),
-                        nodeId: ticketCreated.info.nodeId.get(),
-                        startDate: ticketCreated.info.startDate.get(),
-                        endDate: ticketCreated.info.endDate.get(),
-                        creationDate: ticketCreated.info.creationDate.get(),
-                        user: {
-                            username: ticketCreated.info.user.username.get(),
-                            email: ticketCreated.info.user.email == undefined
-                                ? undefined
-                                : ticketCreated.info.user.email.get(),
-                            gsm: ticketCreated.info.user.gsm == undefined
-                                ? undefined
-                                : ticketCreated.info.user.gsm.get(),
-                        },
-                    };
-                }
-                else {
-                    return res
-                        .status(400)
-                        .send('this context is not a SpinalEventGroupContext');
-                }
-            }
-            else {
-                res.status(400).send('the node is not of type Ticket');
-            }
+            const contextNodeRef = tree.context;
+            const categoryNodeRef = tree.category;
+            const groupNodeRef = tree.group;
+            if (contextNodeRef.type.get() !== 'SpinalEventGroupContext')
+                return res
+                    .status(400)
+                    .send('this context is not a SpinalEventGroupContext');
+            const eventInfo = {
+                contextId: contextNodeRef.id?.get(),
+                groupId: groupNodeRef.id?.get(),
+                categoryId: categoryNodeRef.id?.get(),
+                nodeId: ticketNode.info.id?.get(),
+                startDate: moment(req.body.startDate, 'DD MM YYYY HH:mm:ss', true).toString(),
+                description: req.body.description,
+                endDate: moment(req.body.endDate, 'DD MM YYYY HH:mm:ss', true).toString(),
+                periodicity: {
+                    count: req.body.count,
+                    period: spinal_env_viewer_task_service_1.Period[req.body.period],
+                },
+                repeat: req.body.repeat,
+                name: req.body.name,
+                creationDate: moment(new Date().toISOString()).toString(),
+                repeatEnd: moment(req.body.repeatEnd, 'DD MM YYYY HH:mm:ss', true).toString(),
+            };
+            const userInfo = {
+                username: req.body.user.userName,
+                email: req.body.user.email,
+                gsm: req.body.user.gsm,
+            };
+            let eventRefs = await spinal_env_viewer_task_service_1.SpinalEventService.createEvent(contextNodeRef.id.get(), groupNodeRef.id.get(), ticketNode.getId().get(), eventInfo, userInfo);
+            eventRefs = Array.isArray(eventRefs) ? eventRefs : [eventRefs];
+            await Promise.all(eventRefs.map((event) => (0, awaitSync_1.awaitSync)(spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(event.id.get()))));
+            const data = eventRefs.map((event) => {
+                const eventNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(event.id.get());
+                return {
+                    dynamicId: eventNode._server_id,
+                    staticId: eventNode.info.id.get(),
+                    name: eventNode.info.name.get(),
+                    type: eventNode.info.type.get(),
+                    groupID: eventNode.info.groupId?.get(),
+                    categoryID: eventNode.info.categoryId?.get(),
+                    nodeId: eventNode.info.nodeId?.get(),
+                    startDate: eventNode.info.startDate?.get(),
+                    endDate: eventNode.info.endDate?.get(),
+                    creationDate: eventNode.info.creationDate?.get(),
+                    user: {
+                        username: eventNode.info.user?.username?.get(),
+                        email: eventNode.info.user?.email?.get() || undefined,
+                        gsm: eventNode.info.user?.gsm?.get() || undefined,
+                    },
+                };
+            });
+            if (data.length === 1)
+                return res.json(data[0]);
+            return res.json(data);
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            res.status(500).send(error.message);
+            return res.status(500).send(error?.message);
         }
-        res.json(info);
     });
 };
 //# sourceMappingURL=ticketCreateEvent.js.map

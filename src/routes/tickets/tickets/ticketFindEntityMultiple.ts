@@ -22,12 +22,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-
+import type { ISpinalAPIMiddleware } from '../../../interfaces/ISpinalAPIMiddleware';
 import * as express from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { getTicketEntityInfo } from '../../../utilities/getTicketEntityInfo';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
-
+import { getTicketEntityInfo } from '../../../utilities/workflow/getTicketEntityInfo';
 
 module.exports = function (
   logger,
@@ -77,7 +75,7 @@ module.exports = function (
    *       400:
    *         description: Bad request
    */
-  app.post('/api/v1/ticket/find_entity_multiple', async (req, res, next) => {
+  app.post('/api/v1/ticket/find_entity_multiple', async (req, res) => {
     try {
       const profileId = getProfileId(req);
       const ids: number[] = req.body;
@@ -87,7 +85,7 @@ module.exports = function (
 
       // Map each id to a promise
       const promises = ids.map((id) =>
-        getTicketEntityInfo(spinalAPIMiddleware,profileId, id)
+        getTicketEntityInfo(spinalAPIMiddleware, profileId, id)
       );
 
       const settledResults = await Promise.allSettled(promises);
@@ -111,9 +109,9 @@ module.exports = function (
       if (isGotError) return res.status(206).json(finalResults);
       return res.status(200).json(finalResults);
     } catch (error) {
-      if (error.code && error.message)
+      if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
-      res.status(400).send(error.message || 'ko');
+      return res.status(400).send(error?.message || 'ko');
     }
   });
 };

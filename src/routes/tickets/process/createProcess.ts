@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -28,7 +28,6 @@ import {
   getAllTicketProcess,
 } from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { SpinalContext } from 'spinal-model-graph';
 import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
 import * as express from 'express';
 import { awaitSync } from '../../../utilities/awaitSync';
@@ -76,19 +75,20 @@ module.exports = function (
 
   app.post('/api/v1/workflow/:id/create_process', async (req, res) => {
     try {
-      await spinalAPIMiddleware.getGraph();
-      const profileId = getProfileId(req);
-      const workflowContextNode: SpinalContext = await getWorkflowContextNode(
-        spinalAPIMiddleware,
-        profileId,
-        req.params.id
-      );
       if (
         typeof req.body.nameProcess === 'string' &&
         req.body.nameProcess.length === 0
       ) {
         return res.status(400).send('nameProcess is required');
       }
+
+      await spinalAPIMiddleware.getGraph();
+      const profileId = getProfileId(req);
+      const workflowContextNode = await getWorkflowContextNode(
+        spinalAPIMiddleware,
+        profileId,
+        req.params.id
+      );
 
       const allProcess = await getAllTicketProcess(workflowContextNode);
       for (const processNode of allProcess) {
@@ -110,9 +110,9 @@ module.exports = function (
       };
       return res.json(info);
     } catch (error) {
-      if (error.code && error.message)
+      if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
-      return res.status(500).send(error.message);
+      return res.status(500).send(error?.message);
     }
   });
 };

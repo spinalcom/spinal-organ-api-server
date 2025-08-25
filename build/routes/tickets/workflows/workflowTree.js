@@ -26,6 +26,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_model_graph_1 = require("spinal-model-graph");
 const recTree_1 = require("../../../utilities/recTree");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const loadAndValidateNode_1 = require("src/utilities/loadAndValidateNode");
+const spinal_service_ticket_1 = require("spinal-service-ticket");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -59,7 +61,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get('/api/v1/workflow/:id/tree', async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const workflow = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, parseInt(req.params.id, 10), profileId, spinal_service_ticket_1.TICKET_CONTEXT_TYPE);
             if (workflow instanceof spinal_model_graph_1.SpinalContext) {
                 const workflows = {
                     dynamicId: workflow._server_id,
@@ -73,9 +75,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             return res.status(400).send('The ID is not a workflow');
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            return res.status(500).send(error.message);
+            return res.status(500).send(error?.message);
         }
     });
 };

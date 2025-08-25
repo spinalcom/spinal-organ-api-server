@@ -25,20 +25,21 @@
 import type { ISpinalAPIMiddleware } from '../../interfaces/ISpinalAPIMiddleware';
 import { SpinalContext } from 'spinal-model-graph';
 import { TICKET_CONTEXT_TYPE } from 'spinal-service-ticket';
+import { loadAndValidateNode } from '../loadAndValidateNode';
 
 export async function getWorkflowContextNode(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string,
   workflowServerId: string
 ): Promise<SpinalContext> {
-  const workflowContextNode: SpinalContext = await spinalAPIMiddleware.load(
+  const workflowContextNode: SpinalContext = await loadAndValidateNode(
+    spinalAPIMiddleware,
     parseInt(workflowServerId, 10),
-    profileId
+    profileId,
+    TICKET_CONTEXT_TYPE
   );
-  if (
-    !(workflowContextNode instanceof SpinalContext) ||
-    workflowContextNode.info.type?.get() !== TICKET_CONTEXT_TYPE
-  )
+
+  if (!(workflowContextNode instanceof SpinalContext))
     throw {
       code: 400,
       message: `this context is not a '${TICKET_CONTEXT_TYPE}'`,

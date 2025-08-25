@@ -69,7 +69,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             return res.send(nodes);
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
             return res.status(400).send('list of worflows is not loaded');
         }

@@ -44,7 +44,7 @@ module.exports = function (logger, app) {
      *             schema:
      *                $ref: '#/components/schemas/WorkflowNodeTypeList'
      */
-    app.get('/api/v1/workflow/:id/nodeTypeList', async (req, res, next) => {
+    app.get('/api/v1/workflow/:id/nodeTypeList', async (req, res) => {
         return res
             .status(200)
             .json([

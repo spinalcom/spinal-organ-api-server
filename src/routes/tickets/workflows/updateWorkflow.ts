@@ -26,6 +26,7 @@ import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import * as express from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { TICKET_CONTEXT_TYPE } from 'spinal-service-ticket';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
 module.exports = function (
   logger,
@@ -70,10 +71,15 @@ module.exports = function (
 
   app.put('/api/v1/workflow/:id/update', async (req, res) => {
     try {
+      if (typeof req.body.newNameWorkflow !== 'string') {
+        return res.status(400).send(`the newNameWorkflow string is invalid`);
+      }
       const profileId = getProfileId(req);
-      const workflow = await spinalAPIMiddleware.load(
+      const workflowNode = await loadAndValidateNode(
+        spinalAPIMiddleware,
         parseInt(req.params.id, 10),
-        profileId
+        profileId,
+        TICKET_CONTEXT_TYPE
       );
 
       // check if the name already exists in another context
@@ -87,24 +93,12 @@ module.exports = function (
         return res.status(400).send('the name context already exists');
       }
 
-      // update the workflow name
-      if (
-        workflow.info.type?.get() === TICKET_CONTEXT_TYPE &&
-        typeof req.body.nameWorkflow !== 'string'
-      ) {
-        workflow.info.name.set(req.body.newNameWorkflow);
-        return res.status(200).send('Success');
-      } else {
-        return res
-          .status(400)
-          .send(
-            `this context is not a '${TICKET_CONTEXT_TYPE}' Or string is invalid name`
-          );
-      }
+      workflowNode.info.name.set(req.body.newNameWorkflow);
+      return res.status(200).send('Success');
     } catch (error) {
-      if (error.code && error.message)
+      if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
-      return res.status(400).send(error.message);
+      return res.status(400).send(error?.message);
     }
   });
 };

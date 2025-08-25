@@ -21,94 +21,112 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import { FileSystem } from 'spinal-core-connectorjs_type';
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import * as express from 'express';
-import { Step } from '../interfacesWorkflowAndTickets'
-import { serviceTicketPersonalized } from 'spinal-service-ticket'
-import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
-import { ServiceUser } from "spinal-service-user";
+import {
+  getStepFromTicket,
+  moveTicketToPreviousStep,
+  PROCESS_TYPE,
+  SPINAL_TICKET_SERVICE_TICKET_TYPE,
+  TICKET_CONTEXT_TYPE,
+} from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
-  * @swagger
-  * /api/v1/ticket/{ticketId}/previous_step:
-  *   post:
-  *     security:
-  *       - bearerAuth:
-  *         - read
-  *     description: move a Ticket
-  *     summary: move a Ticket
-  *     tags:
-  *       - Workflow & ticket
-  *     parameters:
-  *       - in: path
-  *         name: ticketId
-  *         description: use the dynamic ID
-  *         required: true
-  *         schema:
-  *           type: integer
-  *           format: int64
-  *     requestBody:
-  *       content:
-  *         application/json:
-  *           schema:
-  *             type: object
-  *             required:
-  *               - workflowDynamicId
-  *               - processDynamicId
-  *             properties:
-  *               workflowDynamicId:
-  *                 type: number
-  *               processDynamicId:
-  *                 type: number
-  *     responses:
-  *       200:
-  *         description: move to previous step Successfully
-  *       400:
-  *         description: move to previous step not Successfully
-  */
-  app.post("/api/v1/ticket/:ticketId/previous_step", async (req, res, next) => {
-
+   * @swagger
+   * /api/v1/ticket/{ticketId}/previous_step:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - read
+   *     description: move a Ticket
+   *     summary: move a Ticket
+   *     tags:
+   *       - Workflow & ticket
+   *     parameters:
+   *       - in: path
+   *         name: ticketId
+   *         description: use the dynamic ID
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - workflowDynamicId
+   *               - processDynamicId
+   *             properties:
+   *               workflowDynamicId:
+   *                 type: number
+   *               processDynamicId:
+   *                 type: number
+   *     responses:
+   *       200:
+   *         description: move to previous step Successfully
+   *       400:
+   *         description: move to previous step not Successfully
+   */
+  app.post('/api/v1/ticket/:ticketId/previous_step', async (req, res) => {
     try {
       const profileId = getProfileId(req);
-      const workflow = await spinalAPIMiddleware.load(parseInt(req.body.workflowDynamicId, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(workflow)
-      const process = await spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(process)
-      const ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(ticket)
+      const [workflowContextNode, processNode, ticketNode] = await Promise.all([
+        loadAndValidateNode(
+          spinalAPIMiddleware,
+          parseInt(req.body.workflowDynamicId, 10),
+          profileId,
+          TICKET_CONTEXT_TYPE
+        ),
+        loadAndValidateNode(
+          spinalAPIMiddleware,
+          parseInt(req.body.processDynamicId, 10),
+          profileId,
+          PROCESS_TYPE
+        ),
+        loadAndValidateNode(
+          spinalAPIMiddleware,
+          parseInt(req.params.ticketId, 10),
+          profileId,
+          SPINAL_TICKET_SERVICE_TICKET_TYPE
+        ),
+      ]);
+      if (processNode.belongsToContext(workflowContextNode) === false)
+        return res
+          .status(400)
+          .send('Process does not belong to workflow context.');
+      if (ticketNode.belongsToContext(workflowContextNode) === false)
+        return res
+          .status(400)
+          .send('Ticket does not belong to workflow context.');
 
-      await serviceTicketPersonalized.moveTicketToPreviousStep(workflow.getId().get(), process.getId().get(), ticket.getId().get())
+      await moveTicketToPreviousStep(
+        workflowContextNode,
+        processNode,
+        ticketNode
+      );
 
-      const step = await ticket.getParents("SpinalSystemServiceTicketHasTicket").then((steps) => {
-        for (const step of steps) {
-          if (step.getType().get() === "SpinalSystemServiceTicketTypeStep") {
-            return step
-          }
-        }
-      })
-      const  info = {
-        dynamicId: ticket._server_id,
-        staticId: ticket.getId().get(),
-        name: ticket.getName().get(),
-        type: ticket.getType().get(),
-        actuelStep: step.getName().get()
-      }
+      const step = await getStepFromTicket(ticketNode, workflowContextNode);
+      const info = {
+        dynamicId: ticketNode._server_id,
+        staticId: ticketNode.info.id.get(),
+        name: ticketNode.info.name.get(),
+        type: ticketNode.info.type.get(),
+        actuelStep: step?.info.name?.get(),
+      };
       return res.json(info);
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(500).send(error.message);
+      if (error?.code && error?.message)
+        return res.status(error.code).send(error.message);
+      return res.status(500).send(error?.message);
     }
-    
-  })
-
-}
+  });
+};

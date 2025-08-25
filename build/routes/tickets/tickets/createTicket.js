@@ -1,12 +1,11 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -23,12 +22,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const awaitSync_1 = require("../../../utilities/awaitSync");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
-const getNode_1 = require("../../../utilities/getNode");
+const getSpatialContext_1 = require("../../../utilities/getSpatialContext");
+const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -42,7 +43,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     tags:
      *       - Workflow & ticket
      *     requestBody:
-     *       description: For the two parameters *workflow* and *process* you can browse it either by putting the dynamicId or the name and to associate the ticket with an element, please fill in the dynamicId or StaticId parameter
+     *       description: For the two parameters *workflow* and *process* you can use either the dynamicId or the name. To associate the ticket with an element, please fill in the dynamicId parameter
      *       required: true
      *       content:
      *         application/json:
@@ -52,24 +53,34 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               - workflow
      *               - process
      *               - nodeDynamicId
-     *               - nodeStaticId
      *               - name
      *               - priority
      *               - description
-     *               - declarer_id
      *             properties:
      *               workflow:
-     *                 type: string
+     *                 description: The workflow's dynamicId or name
+     *                 oneOf:
+     *                   - type: string
+     *                   - type: integer
      *               process:
-     *                 type: string
+     *                 description: The process's dynamicId or name
+     *                 oneOf:
+     *                   - type: string
+     *                   - type: integer
      *               nodeDynamicId:
-     *                 type: number
+     *                 type: integer
+     *                 description: The node's target dynamicId
      *               nodeStaticId:
      *                 type: string
+     *                 deprecated: true
+     *                 description: (deprecated) The node's target staticId
      *               name:
      *                 type: string
+     *                 description: The ticket's name
      *               priority:
-     *                 type: number
+     *                 type: integer
+     *                 enum: [0, 1, 2]
+     *                 description: "Priority levels — 0 (OCCASIONALLY), 1 (NORMAL), 2 (URGENT)"
      *               description:
      *                 type: string
      *               declarer_id:
@@ -86,7 +97,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                    comments:
      *                      type: string
      *     responses:
-     *       200:
+     *       201:
      *         description: Success
      *         content:
      *           application/json:
@@ -95,12 +106,51 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Add not Successfully
      */
-    app.post('/api/v1/ticket/create_ticket', async (req, res) => {
+    app.post('/api/v1/ticket/create_ticket', validateTicketCreationData, createTicket);
+    // validate the body
+    function validateTicketCreationData(req, res, next) {
+        const { workflow, process, nodeDynamicId, nodeStaticId, name, priority, description, } = req.body;
+        const missing = [];
+        if (!workflow)
+            missing.push('workflow');
+        if (!process)
+            missing.push('process');
+        if (!nodeDynamicId && !nodeStaticId) {
+            missing.push('nodeDynamicId');
+        }
+        else if (nodeDynamicId && isNaN(+nodeDynamicId)) {
+            missing.push('nodeDynamicId (must be a number)');
+        }
+        else if (typeof nodeStaticId !== 'string') {
+            missing.push("nodeStaticId (must be a string and it's deprecated)");
+        }
+        if (priority === undefined)
+            missing.push('priority');
+        if (!name || typeof name !== 'string')
+            missing.push('name (must be a string)');
+        if (!description || typeof description !== 'string')
+            missing.push('description (must be a string)');
+        if (missing.length > 0) {
+            return res
+                .status(400)
+                .send('Missing required attributes: ' + missing.join(', '));
+        }
+        // validate and normalize priority to allowed values 0,1,2
+        const priorityValue = Number(priority);
+        if (!Number.isInteger(priorityValue) ||
+            ![0, 1, 2].includes(priorityValue)) {
+            return res
+                .status(400)
+                .send('Invalid priority: must be 0 (OCCASIONALLY), 1 (NORMAL), or 2 (URGENT)');
+        }
+        next();
+    }
+    async function createTicket(req, res) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const ticketInfo = {
                 name: req.body.name,
-                priority: req.body.priority,
+                priority: Number(req.body.priority),
                 description: req.body.description,
                 declarer_id: req.body.declarer_id,
             };
@@ -108,128 +158,160 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const workflowNode = await getWorkflowNode(req.body.workflow, spinalAPIMiddleware, profileId);
             if (!workflowNode)
                 return res
-                    .status(400)
+                    .status(404)
                     .send('Could not find the workflow : ' + req.body.workflow);
             const processNode = await getProcessNode(workflowNode, req.body.process, spinalAPIMiddleware, profileId);
             if (!processNode)
                 return res
-                    .status(400)
+                    .status(404)
                     .send('Could not find the process : ' + req.body.process);
-            const node = await (0, getNode_1.default)(spinalAPIMiddleware, req.body.nodeDynamicId, req.body.nodeStaticId, profileId);
-            if (!node)
-                return res.status(400).send('invalid nodeDynamicId or nodeStaticId');
-            //@ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            //@ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(workflowNode);
-            //@ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(processNode);
             if (!processNode.belongsToContext(workflowNode)) {
                 return res
                     .status(400)
                     .send('The process exists, but is not part of the workflow given : ' +
                     req.body.workflow);
             }
-            const ticketCreated = await spinal_service_ticket_1.serviceTicketPersonalized.addTicket(ticketInfo, processNode.getId().get(), workflowNode.getId().get(), node.getId().get());
-            // clear modèles vides :
-            const lst = await node.children.PtrLst.SpinalSystemServiceTicketHasTicket.children.load();
-            const toRemove = [];
-            for (const x of lst) {
-                if (x.info == undefined) {
-                    toRemove.push(x);
-                }
-            }
-            for (const emptyModel of toRemove) {
-                lst.remove(emptyModel);
-            }
-            // fin clear modèles vides
-            const ticketList = await spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(node.getId().get());
-            const linkedTicket = ticketList.find((element) => element.id === ticketCreated);
+            const targetNode = await fetchSpinalNodeTarget(spinalAPIMiddleware, profileId, req.body.nodeDynamicId, req.body.nodeStaticId);
+            if (!targetNode)
+                return res.status(400).send('invalid nodeDynamicId or nodeStaticId');
+            const ticketCreatedNode = await (0, spinal_service_ticket_1.addTicket)(ticketInfo, processNode, workflowNode, targetNode);
+            await purgeEmptyChildren(targetNode);
+            const ticketList = await (0, spinal_service_ticket_1.getTicketsFromNode)(targetNode);
+            const linkedTicket = ticketList.find((element) => element.info.id.get() === ticketCreatedNode.info.id.get());
             if (!linkedTicket) {
                 return res
                     .status(400)
-                    .send(`Ticket created, but could not be found to be linked to node : ${node
+                    .send(`Ticket created, but could not be found to be linked to node : ${targetNode
                     .getName()
-                    .get()}`);
+                    .get()}, the images might not be uploaded correctly too`);
             }
-            const realNodeTicket = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(linkedTicket.id);
-            await (0, awaitSync_1.awaitSync)(realNodeTicket);
+            await (0, awaitSync_1.awaitSync)(ticketCreatedNode);
+            const infoFromTicket = await (0, spinal_service_ticket_1.getTicketInfo)(ticketCreatedNode);
             const info = {
-                dynamicId: realNodeTicket._server_id,
-                staticId: realNodeTicket.getId().get(),
-                name: realNodeTicket.getName().get(),
-                type: realNodeTicket.getType().get(),
-                elementSelcted: req.body.nodeDynamicId,
-                priority: realNodeTicket.info?.priority.get(),
-                description: realNodeTicket.info?.description.get(),
-                declarer_id: realNodeTicket.info?.declarer_id.get(),
-                creationDate: realNodeTicket.info?.creationDate.get(),
+                dynamicId: ticketCreatedNode._server_id,
+                staticId: ticketCreatedNode.info.id.get(),
+                name: infoFromTicket.name || ticketCreatedNode.info.name.get(),
+                type: ticketCreatedNode.info.type.get(),
+                elementSelcted: targetNode._server_id,
+                priority: +infoFromTicket.priority,
+                description: infoFromTicket.description,
+                declarer_id: infoFromTicket.declarer_id,
+                creationDate: +infoFromTicket.creationDate,
             };
+            const errorImages = [];
             if (req.body.images && req.body.images.length > 0) {
-                // const objImage = new Lst(req.body.images);
-                // realNodeTicket.info.add_attr('images', new Ptr(objImage));
                 for (const image of req.body.images) {
                     // @ts-ignore
                     const user = {
-                        username: realNodeTicket.info?.declarer_id?.get() || 'user',
+                        username: infoFromTicket.declarer_id || 'user',
                         userId: 0,
                     };
-                    const base64Image = image.value;
-                    // check if data base64
-                    if (/^data:image\/\w+;base64,/.test(base64Image) === true) {
-                        const imageData = base64Image.replace(/^data:image\/\w+;base64,/, '');
-                        const imageBufferData = Buffer.from(imageData, 'base64');
-                        await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addFileAsNote(realNodeTicket, { name: image.name, buffer: imageBufferData }, user);
+                    try {
+                        const imageBufferData = processImageBase64(image.value);
+                        await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addFileAsNote(ticketCreatedNode, { name: image.name, buffer: imageBufferData }, user);
+                    }
+                    catch (error) {
+                        errorImages.push(image.name);
                     }
                 }
             }
-            return res.json(info);
+            if (errorImages.length > 0) {
+                info.errorImages = 'error uploading images : ' + errorImages.join(', ');
+            }
+            return res.send(201).json(info);
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
             return res.status(400).send({ ko: error });
         }
-    });
+    }
 };
-async function getWorkflowNode(workflowIdOrName, spinalAPIMiddleware, profileId) {
-    try {
-        const allContexts = await (0, spinal_service_ticket_1.getTicketContexts)();
-        for (const context of allContexts) {
-            if (context.name === workflowIdOrName) {
-                const result = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(context.id);
-                //@ts-ignore
-                spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(result);
-                return result;
+/**
+ * Helper function to process base64 image string, stripping data URL prefix if present.
+ */
+function processImageBase64(base64Image) {
+    if (base64Image.startsWith('data:image/')) {
+        const indexOfComma = base64Image.indexOf(',');
+        if (indexOfComma !== -1) {
+            base64Image = base64Image.slice(indexOfComma + 1);
+        }
+    }
+    return Buffer.from(base64Image, 'base64');
+}
+async function purgeEmptyChildren(targetNode) {
+    // load the SpinalRelation children list
+    const lst = await targetNode.children?.PtrLst?.SpinalSystemServiceTicketHasTicket?.children?.load();
+    if (lst) {
+        const toRemove = [];
+        for (const x of lst) {
+            if (x.info == undefined) {
+                toRemove.push(x);
             }
         }
-        // at this point we couldn't find the workflow by name
-        // we will try to find it by id
-        const node = await spinalAPIMiddleware.load(parseInt(workflowIdOrName, 10), profileId);
-        return node;
+        for (const emptyModel of toRemove) {
+            lst.remove(emptyModel);
+        }
+    }
+}
+async function getWorkflowNode(workflowIdOrName, spinalAPIMiddleware, profileId) {
+    try {
+        const workflowId = +workflowIdOrName;
+        if (isNaN(workflowId)) {
+            return (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, workflowId, profileId, spinal_service_ticket_1.TICKET_CONTEXT_TYPE);
+        }
+        // try to find the workflow by name
+        const allContexts = await (0, spinal_service_ticket_1.getTicketContexts)();
+        for (const context of allContexts) {
+            if (context.info.name.get() === workflowIdOrName) {
+                return context;
+            }
+        }
     }
     catch (error) {
         return undefined;
     }
 }
-async function getProcessNode(workflow, processIdOrName, spinalAPIMiddleware, profileId) {
+async function getProcessNode(contextWorkflowNode, processIdOrName, spinalAPIMiddleware, profileId) {
     try {
-        const allProcess = await spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflow.getId().get());
-        for (const process of allProcess) {
-            if (process.name.get() === processIdOrName) {
-                const result = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(process.id.get());
-                //@ts-ignore
-                spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(result);
-                return result;
+        const processId = +processIdOrName;
+        if (!isNaN(processId)) {
+            return (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, processId, profileId, spinal_service_ticket_1.PROCESS_TYPE);
+        }
+        // try to find the process by name
+        const ticketProcesses = await (0, spinal_service_ticket_1.getAllTicketProcess)(contextWorkflowNode);
+        for (const ticketProcess of ticketProcesses) {
+            if (ticketProcess.info.name.get() === processIdOrName) {
+                return ticketProcess;
             }
         }
-        // at this point we couldn't find the process by name
-        // we will try to find it by id
-        const node = await spinalAPIMiddleware.load(parseInt(processIdOrName, 10), profileId);
-        return node;
     }
     catch (error) {
         return undefined;
+    }
+}
+async function fetchSpinalNodeTarget(spinalAPIMiddleware, profileId, dynamicId, staticId) {
+    if (dynamicId) {
+        try {
+            const node = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, +dynamicId, profileId);
+            return node;
+        }
+        catch (error) {
+            return undefined;
+        }
+    }
+    if (staticId && typeof staticId === 'string') {
+        const node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(staticId);
+        if (node !== undefined)
+            return node;
+        const context = await (0, getSpatialContext_1.getSpatialContext)(spinalAPIMiddleware, profileId);
+        if (context === undefined)
+            return undefined;
+        for await (const node of context.visitChildrenInContext(context)) {
+            if (node.info.id.get() === staticId) {
+                return node;
+            }
+        }
     }
 }
 //# sourceMappingURL=createTicket.js.map

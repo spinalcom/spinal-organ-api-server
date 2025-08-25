@@ -28,6 +28,7 @@ import { SpinalContext } from 'spinal-model-graph';
 import * as express from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { TICKET_CONTEXT_TYPE } from 'spinal-service-ticket';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
 module.exports = function (
   logger,
@@ -67,28 +68,23 @@ module.exports = function (
   app.get('/api/v1/workflow/:id/read', async (req, res) => {
     try {
       const profileId = getProfileId(req);
-      const workflow: SpinalContext = await spinalAPIMiddleware.load(
+      const workflowNode: SpinalContext = await loadAndValidateNode(
+        spinalAPIMiddleware,
         parseInt(req.params.id, 10),
-        profileId
+        profileId,
+        TICKET_CONTEXT_TYPE
       );
-
-      if (workflow.info.type?.get() === TICKET_CONTEXT_TYPE) {
-        const info: Workflow = {
-          dynamicId: workflow._server_id,
-          staticId: workflow.getId().get(),
-          name: workflow.getName().get(),
-          type: workflow.getType().get(),
-        };
-        return res.json(info);
-      } else {
-        return res
-          .status(400)
-          .send(`this context is not a '${TICKET_CONTEXT_TYPE}'`);
-      }
+      const info: Workflow = {
+        dynamicId: workflowNode._server_id,
+        staticId: workflowNode.info.id.get(),
+        name: workflowNode.info.name.get(),
+        type: workflowNode.info.type.get(),
+      };
+      return res.json(info);
     } catch (error) {
-      if (error.code && error.message)
+      if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
-      return res.status(500).send(error.message);
+      return res.status(500).send(error?.message);
     }
   });
 };

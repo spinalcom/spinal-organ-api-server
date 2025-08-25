@@ -28,6 +28,7 @@ const spinal_model_graph_1 = require("spinal-model-graph");
 const findOneInContext_1 = require("../../../utilities/findOneInContext");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
+const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -69,13 +70,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             //  check workflow
-            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-            if (!(workflow instanceof spinal_model_graph_1.SpinalContext) ||
-                workflow.getType().get() !== spinal_service_ticket_1.TICKET_CONTEXT_TYPE) {
-                return res
-                    .status(400)
-                    .send(`this context is not a '${spinal_service_ticket_1.TICKET_CONTEXT_TYPE}'`);
-            }
+            const workflow = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, parseInt(req.params.workflowId, 10), profileId, spinal_service_ticket_1.TICKET_CONTEXT_TYPE);
             let node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(req.params.nodeId);
             if (typeof node === 'undefined') {
                 node = await (0, findOneInContext_1.findOneInContext)(workflow, workflow, (n) => n.info.id.get() === req.params.nodeId);
@@ -92,9 +87,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             return res.status(404).send('node not found');
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            return res.status(500).send(error.message);
+            return res.status(500).send(error?.message);
         }
     });
 };

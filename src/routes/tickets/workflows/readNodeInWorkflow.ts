@@ -22,12 +22,12 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalNode } from 'spinal-env-viewer-graph-service';
+import type { Workflow } from '../interfacesWorkflowAndTickets';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import * as express from 'express';
-import { Workflow } from '../interfacesWorkflowAndTickets';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
 import { TICKET_CONTEXT_TYPE } from 'spinal-service-ticket';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
 module.exports = function (
   logger,
@@ -76,37 +76,34 @@ module.exports = function (
     async (req, res) => {
       try {
         const profileId = getProfileId(req);
-        const workflow: SpinalNode = await spinalAPIMiddleware.load(
+        const workflow = await loadAndValidateNode(
+          spinalAPIMiddleware,
           parseInt(req.params.workflowId, 10),
-          profileId
+          profileId,
+          TICKET_CONTEXT_TYPE
         );
-        const node: SpinalNode = await spinalAPIMiddleware.load(
+        const node = await loadAndValidateNode(
+          spinalAPIMiddleware,
           parseInt(req.params.nodeId, 10),
           profileId
         );
 
-        if (workflow.info.type?.get() !== TICKET_CONTEXT_TYPE) {
-          return res
-            .status(400)
-            .send(`this context is not a '${TICKET_CONTEXT_TYPE}'`);
-        }
-
-        if (node instanceof SpinalNode && node.belongsToContext(workflow)) {
-          const info: Workflow = {
-            dynamicId: node._server_id,
-            staticId: node.getId().get(),
-            name: node.getName().get(),
-            type: node.getType().get(),
-          };
-          return res.json(info);
-        } else
+        if (!node.belongsToContext(workflow))
           return res
             .status(400)
             .send(`this node is not valid in the workflow context`);
+
+        const info: Workflow = {
+          dynamicId: node._server_id,
+          staticId: node.info.id.get(),
+          name: node.info.name.get(),
+          type: node.info.type.get(),
+        };
+        return res.json(info);
       } catch (error) {
-        if (error.code && error.message)
+        if (error?.code && error?.message)
           return res.status(error.code).send(error.message);
-        return res.status(500).send(error.message);
+        return res.status(500).send(error?.message);
       }
     }
   );

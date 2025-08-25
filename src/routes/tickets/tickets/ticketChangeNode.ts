@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -22,71 +22,77 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import { FileSystem } from 'spinal-core-connectorjs_type';
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import { ISpinalAPIMiddleware } from '../../../interfaces/ISpinalAPIMiddleware';
 import * as express from 'express';
-import { Step } from '../interfacesWorkflowAndTickets'
-import { serviceTicketPersonalized, spinalServiceTicket } from 'spinal-service-ticket'
-import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
-import { ServiceUser } from "spinal-service-user";
+import {
+  SPINAL_TICKET_SERVICE_TICKET_TYPE,
+  changeTicketNodeTarget,
+} from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
-  * @swagger
-  * /api/v1/ticket/{ticketId}/change_node:
-  *   put:
-  *     security:
-  *       - bearerAuth:
-  *         - read
-  *     description: change a node of Ticket
-  *     summary: change a node of Ticket
-  *     tags:
-  *       - Workflow & ticket
-  *     parameters:
-  *       - in: path
-  *         name: ticketId
-  *         description: use the dynamic ID
-  *         required: true
-  *         schema:
-  *           type: integer
-  *           format: int64
-  *     requestBody:
-  *       content:
-  *         application/json:
-  *           schema:
-  *             type: object
-  *             required:
-  *               - nodeDynamicId
-  *             properties:
-  *               nodeDynamicId:
-  *                 type: number
-  *     responses:
-  *       200:
-  *         description: change node Successfully
-  *       400:
-  *         description: change node not Successfully
-  */
-  app.put("/api/v1/ticket/:ticketId/change_node", async (req, res, next) => {
+   * @swagger
+   * /api/v1/ticket/{ticketId}/change_node:
+   *   put:
+   *     security:
+   *       - bearerAuth:
+   *         - read
+   *     description: change a node of Ticket, usualy a room or equipment
+   *     summary: change a node of Ticket
+   *     tags:
+   *       - Workflow & ticket
+   *     parameters:
+   *       - in: path
+   *         name: ticketId
+   *         description: use the dynamic ID
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - nodeDynamicId
+   *             properties:
+   *               nodeDynamicId:
+   *                 type: number
+   *     responses:
+   *       200:
+   *         description: change node Successfully
+   *       400:
+   *         description: change node not Successfully
+   */
+  app.put('/api/v1/ticket/:ticketId/change_node', async (req, res) => {
     try {
       const profileId = getProfileId(req);
-      const node = await spinalAPIMiddleware.load(parseInt(req.body.nodeDynamicId, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(node)
-      const ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(ticket)
-      await serviceTicketPersonalized.changeTicketElementNode(ticket.getId().get(), node.getId().get())
-
+      const [targetNode, ticketNode] = await Promise.all([
+        loadAndValidateNode(
+          spinalAPIMiddleware,
+          parseInt(req.body.nodeDynamicId, 10),
+          profileId
+        ),
+        loadAndValidateNode(
+          spinalAPIMiddleware,
+          parseInt(req.params.ticketId, 10),
+          profileId,
+          SPINAL_TICKET_SERVICE_TICKET_TYPE
+        ),
+      ]);
+      await changeTicketNodeTarget(ticketNode, targetNode);
+      return res.json({ success: true });
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(500).send(error.message);
+      if (error?.code && error?.message)
+        return res.status(error.code).send(error.message);
+      return res.status(500).send(error?.message);
     }
-    res.json();
-  })
-
-}
+  });
+};

@@ -81,6 +81,9 @@ module.exports = function (
    */
   app.post('/api/v1/workflow/create', async (req, res) => {
     try {
+      if (typeof req.body.nameWorkflow !== 'string') {
+        return res.status(400).send('string nameWorkflow is invalide name');
+      }
       const profileId = getProfileId(req);
       const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
       const graph = await spinalAPIMiddleware.getGraph();
@@ -94,9 +97,6 @@ module.exports = function (
       )
         return res.status(400).send('the name context already exists');
 
-      if (req.body.nameWorkflow !== 'string') {
-        return res.status(400).send('string is invalide name');
-      }
       const steps: ITicketStep[] = [];
       if (req.body.steps && Array.isArray(req.body.steps)) {
         for (const step of req.body.steps) {
@@ -124,9 +124,9 @@ module.exports = function (
         staticId: contextTicketNode.info.id.get() || undefined,
       });
     } catch (error) {
-      if (error.code && error.message)
+      if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
-      return res.status(500).send(error.message);
+      return res.status(500).send(error?.message);
     }
   });
 };

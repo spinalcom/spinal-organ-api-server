@@ -25,11 +25,12 @@
 import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import type { Workflow } from '../interfacesWorkflowAndTickets';
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
-import { SpinalContext, SpinalNode } from 'spinal-model-graph';
+import { SpinalNode } from 'spinal-model-graph';
 import { findOneInContext } from '../../../utilities/findOneInContext';
 import * as express from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { TICKET_CONTEXT_TYPE } from 'spinal-service-ticket';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
 module.exports = function (
   logger,
@@ -80,18 +81,12 @@ module.exports = function (
         const profileId = getProfileId(req);
 
         //  check workflow
-        const workflow: SpinalContext = await spinalAPIMiddleware.load(
+        const workflow = await loadAndValidateNode(
+          spinalAPIMiddleware,
           parseInt(req.params.workflowId, 10),
-          profileId
+          profileId,
+          TICKET_CONTEXT_TYPE
         );
-        if (
-          !(workflow instanceof SpinalContext) ||
-          workflow.getType().get() !== TICKET_CONTEXT_TYPE
-        ) {
-          return res
-            .status(400)
-            .send(`this context is not a '${TICKET_CONTEXT_TYPE}'`);
-        }
 
         let node = SpinalGraphService.getRealNode(req.params.nodeId);
         if (typeof node === 'undefined') {
@@ -112,9 +107,9 @@ module.exports = function (
         }
         return res.status(404).send('node not found');
       } catch (error) {
-        if (error.code && error.message)
+        if (error?.code && error?.message)
           return res.status(error.code).send(error.message);
-        return res.status(500).send(error.message);
+        return res.status(500).send(error?.message);
       }
     }
   );

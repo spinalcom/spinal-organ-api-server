@@ -25,6 +25,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
+const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -58,26 +59,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get('/api/v1/workflow/:id/read', async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            if (workflow.info.type?.get() === spinal_service_ticket_1.TICKET_CONTEXT_TYPE) {
-                const info = {
-                    dynamicId: workflow._server_id,
-                    staticId: workflow.getId().get(),
-                    name: workflow.getName().get(),
-                    type: workflow.getType().get(),
-                };
-                return res.json(info);
-            }
-            else {
-                return res
-                    .status(400)
-                    .send(`this context is not a '${spinal_service_ticket_1.TICKET_CONTEXT_TYPE}'`);
-            }
+            const workflowNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, parseInt(req.params.id, 10), profileId, spinal_service_ticket_1.TICKET_CONTEXT_TYPE);
+            const info = {
+                dynamicId: workflowNode._server_id,
+                staticId: workflowNode.info.id.get(),
+                name: workflowNode.info.name.get(),
+                type: workflowNode.info.type.get(),
+            };
+            return res.json(info);
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            return res.status(500).send(error.message);
+            return res.status(500).send(error?.message);
         }
     });
 };

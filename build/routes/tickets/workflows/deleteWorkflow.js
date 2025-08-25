@@ -23,9 +23,9 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const spinal_model_graph_1 = require("spinal-model-graph");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
+const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -55,27 +55,24 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.delete('/api/v1/workflow/:id/delete', async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            if (!(workflow instanceof spinal_model_graph_1.SpinalContext) ||
-                workflow.getType().get() !== spinal_service_ticket_1.TICKET_CONTEXT_TYPE)
-                res.status(400).send(`this context is not a '${spinal_service_ticket_1.TICKET_CONTEXT_TYPE}'`);
+            const workflowNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, parseInt(req.params.id, 10), profileId, spinal_service_ticket_1.TICKET_CONTEXT_TYPE);
             const proms = [];
-            const processNodes = await (0, spinal_service_ticket_1.getAllTicketProcess)(workflow);
+            const processNodes = await (0, spinal_service_ticket_1.getAllTicketProcess)(workflowNode);
             for (const processNode of processNodes) {
-                const stepNodes = await (0, spinal_service_ticket_1.getStepNodesFromProcess)(processNode, workflow);
+                const stepNodes = await (0, spinal_service_ticket_1.getStepNodesFromProcess)(processNode, workflowNode);
                 for (const stepNode of stepNodes) {
                     proms.push(stepNode.removeFromGraph());
                 }
                 proms.push(processNode.removeFromGraph());
             }
-            proms.push(workflow.removeFromGraph());
+            proms.push(workflowNode.removeFromGraph());
             await Promise.all(proms);
             return res.status(200).send('Delete Successfully');
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            return res.status(500).send(error.message);
+            return res.status(500).send(error?.message);
         }
     });
 };

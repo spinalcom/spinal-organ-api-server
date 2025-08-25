@@ -31,6 +31,7 @@ import {
   getStepNodesFromProcess,
   TICKET_CONTEXT_TYPE,
 } from 'spinal-service-ticket';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
 module.exports = function (
   logger,
@@ -66,31 +67,31 @@ module.exports = function (
   app.delete('/api/v1/workflow/:id/delete', async (req, res) => {
     try {
       const profileId = getProfileId(req);
-      const workflow: SpinalContext = await spinalAPIMiddleware.load(
+      const workflowNode: SpinalContext = await loadAndValidateNode(
+        spinalAPIMiddleware,
         parseInt(req.params.id, 10),
-        profileId
+        profileId,
+        TICKET_CONTEXT_TYPE
       );
-      if (
-        !(workflow instanceof SpinalContext) ||
-        workflow.getType().get() !== TICKET_CONTEXT_TYPE
-      )
-        res.status(400).send(`this context is not a '${TICKET_CONTEXT_TYPE}'`);
       const proms: Promise<void>[] = [];
-      const processNodes = await getAllTicketProcess(workflow);
+      const processNodes = await getAllTicketProcess(workflowNode);
       for (const processNode of processNodes) {
-        const stepNodes = await getStepNodesFromProcess(processNode, workflow);
+        const stepNodes = await getStepNodesFromProcess(
+          processNode,
+          workflowNode
+        );
         for (const stepNode of stepNodes) {
           proms.push(stepNode.removeFromGraph());
         }
         proms.push(processNode.removeFromGraph());
       }
-      proms.push(workflow.removeFromGraph());
+      proms.push(workflowNode.removeFromGraph());
       await Promise.all(proms);
       return res.status(200).send('Delete Successfully');
     } catch (error) {
-      if (error.code && error.message)
+      if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
-      return res.status(500).send(error.message);
+      return res.status(500).send(error?.message);
     }
   });
 };

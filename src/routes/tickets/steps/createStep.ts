@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -23,15 +23,16 @@
  */
 
 import type { ISpinalAPIMiddleware } from '../../../interfaces';
-import { SpinalNode } from 'spinal-model-graph';
 import * as express from 'express';
 import {
   createStepToProcess,
   getStepNodesFromProcess,
+  PROCESS_TYPE,
 } from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
 import { awaitSync } from '../../../utilities/awaitSync';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
 module.exports = function (
   logger,
@@ -77,7 +78,7 @@ module.exports = function (
    *               order:
    *                 type: number
    *     responses:
-   *       200:
+   *       201:
    *         description: Added Successfully
    *       400:
    *         description: Add not Successfully
@@ -105,12 +106,12 @@ module.exports = function (
       );
 
       // check processNode
-      const processNode = await spinalAPIMiddleware.load<SpinalNode>(
+      const processNode = await loadAndValidateNode(
+        spinalAPIMiddleware,
         parseInt(req.body.processDynamicId, 10),
-        profileId
+        profileId,
+        PROCESS_TYPE
       );
-      if (!(processNode instanceof SpinalNode))
-        return res.status(400).send('Invalid processDynamicId');
 
       // check stepsNodes duplication
       const stepsNodes = await getStepNodesFromProcess(
@@ -136,7 +137,7 @@ module.exports = function (
       // the creation was local so we need to sync it
       await awaitSync(stepNode);
 
-      return res.status(200).json({
+      return res.status(201).json({
         dynamicId: stepNode._server_id,
         staticId: stepNode.info.id?.get() || undefined,
         name: stepNode.info.name?.get() || undefined,
@@ -145,9 +146,9 @@ module.exports = function (
         order: stepNode.info.order?.get() || undefined,
       });
     } catch (error) {
-      if (error.code && error.message)
+      if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
-      return res.status(500).send(error.message);
+      return res.status(500).send(error?.message);
     }
   });
 };

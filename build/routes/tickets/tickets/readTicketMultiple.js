@@ -1,11 +1,11 @@
 "use strict";
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const getTicketDetails_1 = require("../../../utilities/getTicketDetails");
+const getTicketDetails_1 = require("../../../utilities/workflow/getTicketDetails");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
@@ -69,15 +69,22 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.post('/api/v1/ticket/read_details_multiple', async (req, res, next) => {
+    app.post('/api/v1/ticket/read_details_multiple', async (req, res) => {
         try {
-            const profileId = (0, requestUtilities_1.getProfileId)(req);
             const ids = req.body;
             if (!Array.isArray(ids)) {
                 return res.status(400).send('Expected an array of IDs.');
             }
+            // check if the array is only numbers or string of numbers
+            if (!ids.every((id) => typeof id === 'number' ||
+                (typeof id === 'string' && !isNaN(Number(id))))) {
+                return res
+                    .status(400)
+                    .send('Expected an array of numbers or strings of numbers.');
+            }
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
             // Map each id to a promise
-            const promises = ids.map((id) => (0, getTicketDetails_1.getTicketDetails)(spinalAPIMiddleware, profileId, id));
+            const promises = ids.map((id) => (0, getTicketDetails_1.getTicketDetails)(spinalAPIMiddleware, profileId, +id));
             const settledResults = await Promise.allSettled(promises);
             const finalResults = settledResults.map((result, index) => {
                 if (result.status === 'fulfilled') {
@@ -93,15 +100,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     };
                 }
             });
-            const isGotError = settledResults.some((result) => result.status === 'rejected');
-            if (isGotError)
+            const didGotError = settledResults.some((result) => result.status === 'rejected');
+            if (didGotError)
                 return res.status(206).json(finalResults);
             return res.status(200).json(finalResults);
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send(error.message || 'ko');
+            return res.status(400).send(error.message || 'ko');
         }
     });
 };

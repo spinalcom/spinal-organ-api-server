@@ -1,11 +1,11 @@
 "use strict";
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -65,13 +65,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      */
     app.post('/api/v1/workflow/:id/create_process', async (req, res) => {
         try {
-            await spinalAPIMiddleware.getGraph();
-            const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const workflowContextNode = await (0, getWorkflowContextNode_1.getWorkflowContextNode)(spinalAPIMiddleware, profileId, req.params.id);
             if (typeof req.body.nameProcess === 'string' &&
                 req.body.nameProcess.length === 0) {
                 return res.status(400).send('nameProcess is required');
             }
+            await spinalAPIMiddleware.getGraph();
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const workflowContextNode = await (0, getWorkflowContextNode_1.getWorkflowContextNode)(spinalAPIMiddleware, profileId, req.params.id);
             const allProcess = await (0, spinal_service_ticket_1.getAllTicketProcess)(workflowContextNode);
             for (const processNode of allProcess) {
                 if (processNode.info.name.get() === req.body.nameProcess) {
@@ -89,9 +89,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             return res.json(info);
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            return res.status(500).send(error.message);
+            return res.status(500).send(error?.message);
         }
     });
 };

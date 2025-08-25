@@ -23,94 +23,90 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const spinal_service_ticket_1 = require("spinal-service-ticket");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-    * @swagger
-    * /api/v1/ticket/{ticketId}/update:
-    *   put:
-    *     security:
-    *       - bearerAuth:
-    *         - read
-    *     description: update name and/or description of Ticket
-    *     summary: update name and/or description of Ticket
-    *     tags:
-    *       - Workflow & ticket
-    *     parameters:
-    *       - in: path
-    *         name: ticketId
-    *         description: use the dynamic ID
-    *         required: true
-    *         schema:
-    *           type: integer
-    *           format: int64
-    *     requestBody:
-    *       content:
-    *         application/json:
-    *           schema:
-    *             type: object
-    *             properties:
-    *               name:
-    *                 type: string
-    *               description:
-    *                 type: string
-    *               priority:
-    *                 type: number
-    *     responses:
-    *       200:
-    *         description: updated Successfully
-    *       400:
-    *         description: update not Successfully
-    */
-    app.put("/api/v1/ticket/:ticketId/update", async (req, res, next) => {
+     * @swagger
+     * /api/v1/ticket/{ticketId}/update:
+     *   put:
+     *     security:
+     *       - bearerAuth:
+     *         - read
+     *     description: update name and/or description of Ticket
+     *     summary: update name and/or description of Ticket
+     *     tags:
+     *       - Workflow & ticket
+     *     parameters:
+     *       - in: path
+     *         name: ticketId
+     *         description: use the dynamic ID
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               name:
+     *                 type: string
+     *               description:
+     *                 type: string
+     *               priority:
+     *                 type: number
+     *     responses:
+     *       200:
+     *         description: updated Successfully
+     *       400:
+     *         description: update not Successfully
+     */
+    app.put('/api/v1/ticket/:ticketId/update', async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
-            //@ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(ticket);
             const name = req.body.name;
             const description = req.body.description;
             const priority = req.body.priority;
-            if (!ticket) {
-                return res.status(400).send('Ticket not found');
-            }
+            const ticketInfoToUpdate = {};
             if (name) {
                 if (typeof name !== 'string' || name.trim() === '') {
                     return res.status(400).send('Invalid name');
                 }
-                else {
-                    ticket.info.name.set(name);
-                }
+                Object.assign(ticketInfoToUpdate, { name });
             }
             if (description) {
                 if (typeof description !== 'string' || description.trim() === '') {
                     return res.status(400).send('Invalid description');
                 }
-                else {
-                    ticket.info.description.set(description);
-                }
+                Object.assign(ticketInfoToUpdate, { description });
             }
             if (priority) {
                 if (typeof priority !== 'number' || priority < 0 || priority > 5) {
                     return res.status(400).send('Invalid priority');
                 }
-                else {
-                    ticket.info.priority.set(priority);
-                }
+                Object.assign(ticketInfoToUpdate, { priority });
             }
-            const ticketInfo = {
-                name: ticket.info.name.get(),
-                description: ticket.info.description.get(),
-                priority: ticket.info.priority.get(),
+            const ticketNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, parseInt(req.params.ticketId, 10), profileId, spinal_service_ticket_1.SPINAL_TICKET_SERVICE_TICKET_TYPE);
+            await (0, spinal_service_ticket_1.updateTicketAttributes)(ticketNode, ticketInfoToUpdate);
+            const ticketInfo = await (0, spinal_service_ticket_1.getTicketInfo)(ticketNode, [
+                'description',
+                'priority',
+            ]);
+            const updatedTicketInfo = {
+                name: ticketNode.info.name.get(),
+                description: ticketInfo.description,
+                priority: ticketInfo.priority,
             };
-            console.log('Ticket updated successfully:', ticketInfo);
-            return res.json({ 'success': true, 'ticketInfo': ticketInfo });
+            console.log('Ticket updated successfully:', updatedTicketInfo);
+            return res.json({ success: true, ticketInfo: updatedTicketInfo });
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            res.status(500).send(error.message);
+            return res.status(500).send(error?.message);
         }
     });
 };

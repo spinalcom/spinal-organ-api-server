@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -22,12 +22,12 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalNode } from 'spinal-model-graph';
 import * as express from 'express';
-import { getAllTicketProcess } from 'spinal-service-ticket';
+import { getAllTicketProcess, PROCESS_TYPE } from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
 module.exports = function (
   logger,
@@ -93,14 +93,13 @@ module.exports = function (
           profileId,
           req.params.workflowId
         );
-        const processNode: SpinalNode = await spinalAPIMiddleware.load(
+        const processNode = await loadAndValidateNode(
+          spinalAPIMiddleware,
           parseInt(req.params.processId, 10),
-          profileId
+          profileId,
+          PROCESS_TYPE
         );
-        if (
-          !(processNode instanceof SpinalNode) ||
-          !processNode.belongsToContext(workflowContextNode)
-        ) {
+        if (!processNode.belongsToContext(workflowContextNode)) {
           return res.status(400).send('invalid processId');
         }
 
@@ -114,7 +113,7 @@ module.exports = function (
         processNode.info.name.set(req.body.newNameProcess);
         return res.status(200).send('Success');
       } catch (error) {
-        if (error.code && error.message)
+        if (error?.code && error?.message)
           return res.status(error.code).send(error.message);
         return res.status(400).send(error.message);
       }

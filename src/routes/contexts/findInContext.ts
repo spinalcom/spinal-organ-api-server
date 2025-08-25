@@ -37,7 +37,7 @@ import { findOneInContext } from '../../utilities/findOneInContext';
 import { spinalCore, FileSystem } from 'spinal-core-connectorjs_type';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
-import { getTicketDetails } from '../../utilities/getTicketDetails';
+import { getTicketDetails } from '../../utilities/workflow/getTicketDetails';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
 
 module.exports = function (
@@ -118,9 +118,12 @@ module.exports = function (
           return result.value;
         } else {
           console.error(`Error with node id ${tab[index]}: ${result.reason}`);
-          const errorObject = {}
+          const errorObject = {};
           errorObject[req.body.optionSearchNodes] = tab[index];
-          errorObject['error'] = result.reason?.message || result.reason || 'Failed to get Node Details';
+          errorObject['error'] =
+            result.reason?.message ||
+            result.reason ||
+            'Failed to get Node Details';
           return errorObject;
         }
       });
@@ -265,8 +268,7 @@ async function getNodeWithSearchOption(
   searchValue: string,
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string
- ) : Promise<SpinalNode<any>>
-{
+): Promise<SpinalNode<any>> {
   let node: SpinalNode<any>;
   if (searchOption === 'dynamicId') {
     node = await spinalAPIMiddleware.load(parseInt(searchValue, 10), profileId);
@@ -285,9 +287,10 @@ async function getNodeWithSearchOption(
     node = await findOneInContext(
       context,
       context,
-      (n) => n.getName().get() === searchValue && n.getId().get() !== context.getId().get()
+      (n) =>
+        n.getName().get() === searchValue &&
+        n.getId().get() !== context.getId().get()
     );
-    
   }
   return node;
 }

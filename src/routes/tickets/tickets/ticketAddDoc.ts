@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -21,15 +21,14 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+
+import type { ISpinalAPIMiddleware } from '../../../interfaces/ISpinalAPIMiddleware';
 import * as express from 'express';
 import { FileExplorer } from 'spinal-env-viewer-plugin-documentation-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { UploadedFile } from 'express-fileupload';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
+import { SPINAL_TICKET_SERVICE_TICKET_TYPE } from 'spinal-service-ticket';
 
 module.exports = function (
   logger,
@@ -81,47 +80,66 @@ module.exports = function (
    *       400:
    *         description: Add not Successfully
    */
-  app.post('/api/v1/ticket/:ticketId/add_doc', async (req, res, next) => {
+  app.post('/api/v1/ticket/:ticketId/add_doc', async (req, res) => {
     try {
-      // var workflow = await spinalAPIMiddleware.load(parseInt(req.body.workflowId, 10));
-      // //@ts-ignore
-      // SpinalGraphService._addNode(workflow)
       const profileId = getProfileId(req);
-      const ticket: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.ticketId, 10), profileId
+      const ticket = await loadAndValidateNode(
+        spinalAPIMiddleware,
+        parseInt(req.params.ticketId, 10),
+        profileId,
+        SPINAL_TICKET_SERVICE_TICKET_TYPE
       );
-      //@ts-ignore
-      SpinalGraphService._addNode(ticket);
 
       // @ts-ignore
       if (!req.files) {
-        res.send({
+        return res.send({
           status: false,
           message: 'No file uploaded',
         });
-      } else {
-        //@ts-ignore
-        const file = req.files.file;
-        const data = {
-          name: file.name,
-          buffer: file.data,
-        };
-        await FileExplorer.uploadFiles(ticket, data);
-        res.send({
+      }
+      //@ts-ignore
+      const files = req.files.file as UploadedFile | UploadedFile[];
+      const list = Array.isArray(files) ? files : [files];
+
+      if (list.length === 0) {
+        return res.send({
+          status: false,
+          message: 'No file uploaded',
+        });
+      }
+      if (list.length === 1)
+        return res.send({
           status: true,
           message: 'File is uploaded',
           data: {
-            name: file.name,
-            mimetype: file.mimetype,
-            size: file.size,
+            name: list[0].name,
+            mimetype: list[0].mimetype,
+            size: list[0].size,
           },
         });
-      }
-    } catch (error) {
 
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send('ko');
+      const resData = [];
+      for (const element of list) {
+        const data = {
+          name: element.name,
+          buffer: element.data,
+        };
+        await FileExplorer.uploadFiles(ticket, data);
+        resData.push({
+          name: element.name,
+          mimetype: element.mimetype,
+          size: element.size,
+        });
+      }
+      return res.send({
+        status: true,
+        message: 'Files are uploaded',
+        data: resData,
+      });
+    } catch (error) {
+      if (error?.code && error?.message)
+        return res.status(error.code).send(error.message);
+      return res.status(400).send('ko');
     }
-    // res.json();
   });
 };

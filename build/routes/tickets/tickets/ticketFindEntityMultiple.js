@@ -24,7 +24,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
-const getTicketEntityInfo_1 = require("../../../utilities/getTicketEntityInfo");
+const getTicketEntityInfo_1 = require("../../../utilities/workflow/getTicketEntityInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -69,7 +69,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.post('/api/v1/ticket/find_entity_multiple', async (req, res, next) => {
+    app.post('/api/v1/ticket/find_entity_multiple', async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const ids = req.body;
@@ -97,9 +97,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             return res.status(200).json(finalResults);
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send(error.message || 'ko');
+            return res.status(400).send(error?.message || 'ko');
         }
     });
 };

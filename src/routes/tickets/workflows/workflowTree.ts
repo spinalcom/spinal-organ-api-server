@@ -28,6 +28,8 @@ import * as express from 'express';
 import { SpinalContext } from 'spinal-model-graph';
 import { recTree } from '../../../utilities/recTree';
 import { getProfileId } from '../../../utilities/requestUtilities';
+import { loadAndValidateNode } from 'src/utilities/loadAndValidateNode';
+import { TICKET_CONTEXT_TYPE } from 'spinal-service-ticket';
 
 module.exports = function (
   logger,
@@ -67,9 +69,11 @@ module.exports = function (
   app.get('/api/v1/workflow/:id/tree', async (req, res) => {
     try {
       const profileId = getProfileId(req);
-      const workflow = await spinalAPIMiddleware.load(
+      const workflow = await loadAndValidateNode(
+        spinalAPIMiddleware,
         parseInt(req.params.id, 10),
-        profileId
+        profileId,
+        TICKET_CONTEXT_TYPE
       );
       if (workflow instanceof SpinalContext) {
         const workflows: WorkflowTree = {
@@ -83,9 +87,9 @@ module.exports = function (
       }
       return res.status(400).send('The ID is not a workflow');
     } catch (error) {
-      if (error.code && error.message)
+      if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
-      return res.status(500).send(error.message);
+      return res.status(500).send(error?.message);
     }
   });
 };
