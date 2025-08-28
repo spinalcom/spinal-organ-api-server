@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 28/08/2025 -> v1.0.50
+- Modified room context, category and group creation, now handles icon and color on all of them
+- Modified room context, category and group creation, now also returns server_id of the created nodes.
+- Fixed an error if the roomcontext name is already taken.
+
 ## 21/08/2025 -> v1.0.49
 - Added additional info in multiple apis ( color , icon, dbid and bimFileId)
 - Improved logging , and support for bos-config

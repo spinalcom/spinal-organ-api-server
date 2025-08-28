@@ -27,6 +27,7 @@ import * as express from 'express';
 import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import { getProfileId } from '../../../utilities/requestUtilities';
+import { awaitSync } from '../../../utilities/awaitSync';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
@@ -55,11 +56,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  *             type: object
  *             required:
  *               - categoryName
- *               - iconName
  *             properties:
  *                categoryName:
  *                 type: string
- *                iconName:
+ *                categoryIcon:
+ *                 type: string
+ *                categoryColor:
  *                 type: string
  *     responses:
  *       200:
@@ -75,16 +77,30 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
-      if (context.getType().get() === "geographicRoomGroupContext") {
-        groupManagerService.addCategory(context.getId().get(), req.body.categoryName, req.body.iconName)
-      } else {
-        res.status(400).send("node is not type of geographicRoomGroupContext ");
+      if (context.getType().get() !== "geographicRoomGroupContext") {
+        return res.status(400).send("Context is not type of geographicRoomGroupContext (This is not a room group context)");
       }
+      const category = await groupManagerService.addCategory(context.getId().get(), req.body.categoryName, req.body.categoryIcon);
+      if(req.body.categoryColor){
+        category.info.add_attr({color : req.body.categoryColor})
+      }
+
+
+      await awaitSync(category);
+      return res.status(200).json({
+        name: category.getName().get(),
+        staticId: category.getId().get(),
+        dynamicId: category._server_id,
+        type: category.getType().get(),
+        icon: category.info.icon?.get(),
+        color : category.info.color?.get()
+      });
+
+
     } catch (error) {
       if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send(error.message)
+      return res.status(400).send(error.message)
     }
-    res.json();
   })
 
 }

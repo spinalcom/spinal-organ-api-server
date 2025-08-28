@@ -9346,6 +9346,12 @@
                 "properties": {
                   "contextName": {
                     "type": "string"
+                  },
+                  "contextColor": {
+                    "type": "string"
+                  },
+                  "contextIcon": {
+                    "type": "string"
                   }
                 }
               }
@@ -9572,14 +9578,16 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "categoryName",
-                  "iconName"
+                  "categoryName"
                 ],
                 "properties": {
                   "categoryName": {
                     "type": "string"
                   },
-                  "iconName": {
+                  "categoryIcon": {
+                    "type": "string"
+                  },
+                  "categoryColor": {
                     "type": "string"
                   }
                 }
@@ -9861,14 +9869,16 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "groupName",
-                  "colorName"
+                  "groupName"
                 ],
                 "properties": {
                   "groupName": {
                     "type": "string"
                   },
-                  "colorName": {
+                  "groupColor": {
+                    "type": "string"
+                  },
+                  "groupIcon": {
                     "type": "string"
                   }
                 }

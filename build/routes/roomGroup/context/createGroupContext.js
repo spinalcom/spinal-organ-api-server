@@ -27,6 +27,7 @@ const spinal_env_viewer_plugin_group_manager_service_1 = require("spinal-env-vie
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const constants_1 = require("spinal-env-viewer-context-geographic-service/build/constants");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const awaitSync_1 = require("../../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -49,6 +50,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *             properties:
    *                contextName:
    *                 type: string
+   *                contextColor:
+   *                 type: string
+   *                contextIcon:
+   *                 type: string
    *     responses:
    *       200:
    *         description: Create Successfully
@@ -63,19 +68,32 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 res.status(406).send(`No graph found for ${profileId}`);
             const graph = await spinalAPIMiddleware.getGraph();
             await spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
+            const contextExist = await graph.getContext(req.body.contextName);
+            if (contextExist) {
+                return res.status(400).send("Context name already exists");
+            }
             const context = await spinal_env_viewer_plugin_group_manager_service_1.default.createGroupContext(req.body.contextName, constants_1.ROOM_TYPE);
-            userGraph.addContext(context);
-            res.status(200).json({
+            if (req.body.contextColor) {
+                context.info.add_attr({ color: req.body.contextColor });
+            }
+            if (req.body.contextIcon) {
+                context.info.add_attr({ icon: req.body.contextIcon });
+            }
+            await (0, awaitSync_1.awaitSync)(context); // Wait for the _server_id to be assigned by hub
+            //userGraph.addContext(context);
+            return res.status(200).json({
                 name: context.getName().get(),
                 staticId: context.getId().get(),
                 dynamicId: context._server_id,
-                type: context.getType().get()
+                type: context.getType().get(),
+                icon: context.info.icon?.get(),
+                color: context.info.color?.get()
             });
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(500).send(error.message);
+            return res.status(400).send(error.message);
         }
     });
 };
