@@ -100,8 +100,8 @@ interface IViewInfoItemRes {
 }
 interface IViewInfoTmpRes {
   bimFileId: string;
-  dbIds: Set<number>;
-  dynamicIds: Set<number>;
+  dbIds: Array<number>;
+  dynamicIds: Array<number>;
 }
 
 type ViweInfoRes = express.Response<string | IViewInfoRes[], IViewInfoBody>;
@@ -206,19 +206,20 @@ module.exports = function (
     dynamicId: number
   ): void {
     let found = false;
+    if (dbId === -1) return;
     for (const item of resBody) {
       if (item.bimFileId === bimFileId) {
         found = true;
-        item.dbIds.add(dbId);
-        item.dynamicIds.add(dynamicId);
+        item.dbIds.push(dbId);
+        item.dynamicIds.push(dynamicId);
         break;
       }
     }
     if (found === false) {
       resBody.push({
         bimFileId,
-        dbIds: new Set([dbId]),
-        dynamicIds : new Set([dynamicId]),
+        dbIds:  [dbId],
+        dynamicIds : [dynamicId],
       });
     }
   }

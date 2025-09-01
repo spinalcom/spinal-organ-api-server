@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 01/09/2025 -> v1.0.51
+- Filtered out dbId = -1 in viewInfo response
+
 ## 28/08/2025 -> v1.0.50
 - Modified room context, category and group creation, now handles icon and color on all of them
 - Modified room context, category and group creation, now also returns server_id of the created nodes.
