@@ -28,6 +28,7 @@ import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { awaitSync } from '../../../utilities/awaitSync';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
@@ -53,6 +54,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  *                 type: string
  *                childrenType:
  *                 type: string
+ *                contextColor:
+ *                 type: string
+ *                contextIcon:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Create Successfully
@@ -72,27 +77,31 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const graph = await spinalAPIMiddleware.getGraph();
       await SpinalGraphService.setGraph(graph);
 
-      const node = await groupManagerService.createGroupContext(req.body.contextName, req.body.childrenType,userGraph);
+      const contextExist = await graph.getContext(req.body.contextName)
+      if (contextExist) {
+        return res.status(400).send("Context name already exists")
+      }
 
+      const context = await groupManagerService.createGroupContext(req.body.contextName, req.body.childrenType,userGraph);
+      if(req.body.contextColor){
+        context.info.add_attr({color : req.body.contextColor})
+      }
+      if(req.body.contextIcon){
+        context.info.add_attr({icon : req.body.contextIcon})
+      }
+      await awaitSync(context); // Wait for the _server_id to be assigned by hub
 
-      let serverId = node._server_id;
-        let count = 5;
-        while (serverId === undefined && count >= 0) {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          serverId = node._server_id;
-          count--;
-        }
-        const info = {
-          dynamicId: serverId || -1,
-          staticId: node.getId().get(),
-          name: node.getName().get(),
-          type: node.getType().get(),
-        };
-
-      res.status(200).json(info);
+      return res.status(200).json({
+        name: context.getName().get(),
+        staticId: context.getId().get(),
+        dynamicId: context._server_id,
+        type: context.getType().get(),
+        icon: context.info.icon?.get(),
+        color: context.info.color?.get()
+      });
     } catch (error) {
       if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send(error.message)
+      return res.status(400).send(error.message)
     }
   })
 

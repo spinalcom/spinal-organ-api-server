@@ -32,6 +32,8 @@ import {
 } from 'spinal-env-viewer-graph-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { awaitSync } from '../../../utilities/awaitSync';
+
 module.exports = function (
   logger,
   app: express.Express,
@@ -63,12 +65,14 @@ module.exports = function (
    *             type: object
    *             required:
    *               - categoryName
-   *               - iconName
+   *               - categoryIcon
    *             properties:
    *                categoryName:
    *                 type: string
-   *                iconName:
+   *                categoryIcon:
    *                 type: string
+   *                categoryColor:
+ *                   type: string
    *     responses:
    *       200:
    *         description: Create Successfully
@@ -81,37 +85,33 @@ module.exports = function (
     async (req, res, next) => {
       try {
         const profileId = getProfileId(req);
-        const context: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.id, 10),
-          profileId
-        );
+        const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
         //@ts-ignore
-        SpinalGraphService._addNode(context);
-        const node = await groupManagerService.addCategory(
+        SpinalGraphService._addNode(context)
+
+        const category = await groupManagerService.addCategory(
           context.getId().get(),
           req.body.categoryName,
-          req.body.iconName
+          req.body.categoryIcon
         );
-        let serverId = node._server_id;
-        let count = 5;
-        while (serverId === undefined && count >= 0) {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          serverId = node._server_id;
-          count--;
-        }
-        const info = {
-          dynamicId: serverId || -1,
-          staticId: node.getId().get(),
-          name: node.getName().get(),
-          type: node.getType().get(),
-        };
-        return res.json(info);
-      } catch (error) {
-        if (error.code && error.message)
-          return res.status(error.code).send(error.message);
 
-        return res.status(400).send(error.message);
+        if(req.body.categoryColor){
+        category.info.add_attr({color : req.body.categoryColor})
+        }
+        await awaitSync(category);
+        return res.status(200).json({
+          name: category.getName().get(),
+          staticId: category.getId().get(),
+          dynamicId: category._server_id,
+          type: category.getType().get(),
+          icon: category.info.icon?.get(),
+          color : category.info.color?.get()
+        });
+      } catch (error) {
+        if (error.code && error.message) return res.status(error.code).send(error.message);
+        return res.status(400).send(error.message)
       }
+
     }
   );
 };

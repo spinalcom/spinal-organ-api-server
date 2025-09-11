@@ -28,6 +28,7 @@ import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { awaitSync } from '../../../utilities/awaitSync';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
    * @swagger
@@ -62,11 +63,13 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *             type: object
    *             required:
    *               - groupName
-   *               - colorName
+   *               - groupColor
    *             properties:
    *                groupName:
    *                 type: string
-   *                colorName:
+   *                groupColor:
+   *                 type: string
+   *                groupIcon:
    *                 type: string
    *     responses:
    *       200:
@@ -79,7 +82,6 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-
       const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(context)
@@ -87,23 +89,34 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       //@ts-ignore
       SpinalGraphService._addNode(category)
 
-      if (context instanceof SpinalContext && category.belongsToContext(context)) {
-        if (context.getType().get() === "BIMObjectGroupContext") {
-          groupManagerService.addGroup(context.getId().get(), category.getId().get(), req.body.groupName, req.body.colorName)
+      if(!(context instanceof SpinalContext)) return res.status(400).send("contextId does not refer to a SpinalContext");
+      if(!(category.belongsToContext(context))) return res.status(400).send("categoryId does not belong to context provided");
+      if(context.getType().get() !== 'BIMObjectGroupContext') return res.status(400).send("contextId is not a BIMObjectGroupContext");
+      const group = await groupManagerService.addGroup(
+        context.getId().get(),
+        category.getId().get(),
+        req.body.groupName,
+        req.body.groupColor,
+        req.body.groupIcon
+      )
 
-        } else {
-          res.status(400).send("node is not type of BIMObjectGroupContext ");
-        }
-      } else {
-        res.status(400).send("category not found in context");
-      }
+      await awaitSync(group);
 
+      return res.status(200).json({
+        name: group.getName().get(),
+        staticId: group.getId().get(),
+        dynamicId: group._server_id,
+        type: group.getType().get(),
+        icon: group.info.icon?.get(),
+        color : group.info.color?.get()
+      });
+
+      
+      
     } catch (error) {
-      console.error(error)
       if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send(error.message)
+      return res.status(400).send(error.message)
     }
-    res.json();
   })
 
 }

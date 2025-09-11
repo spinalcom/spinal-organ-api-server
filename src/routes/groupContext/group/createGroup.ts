@@ -32,6 +32,7 @@ import {
 } from 'spinal-env-viewer-graph-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { awaitSync } from '../../../utilities/awaitSync';
 module.exports = function (
   logger,
   app: express.Express,
@@ -70,11 +71,13 @@ module.exports = function (
    *             type: object
    *             required:
    *               - groupName
-   *               - colorName
+   *               - groupColor
    *             properties:
    *                groupName:
    *                 type: string
-   *                colorName:
+   *                groupColor:
+   *                 type: string
+   *                groupIcon:
    *                 type: string
    *     responses:
    *       200:
@@ -87,54 +90,41 @@ module.exports = function (
     '/api/v1/groupeContext/:contextId/category/:categoryId/create_group',
     async (req, res, next) => {
       try {
-        const profileId = getProfileId(req);
-        const context: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.contextId, 10),
-          profileId
-        );
-        //@ts-ignore
-        SpinalGraphService._addNode(context);
-        const category: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.categoryId, 10),
-          profileId
-        );
-        //@ts-ignore
-        SpinalGraphService._addNode(category);
+      const profileId = getProfileId(req);
+      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+      //@ts-ignore
+      SpinalGraphService._addNode(context)
+      const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+      //@ts-ignore
+      SpinalGraphService._addNode(category)
 
-        if (
-          context instanceof SpinalContext &&
-          category.belongsToContext(context)
-        ) {
-          const node = await groupManagerService.addGroup(
-            context.getId().get(),
-            category.getId().get(),
-            req.body.groupName,
-            req.body.colorName
-          );
-          let serverId = node._server_id;
-          let count = 5;
-          while (serverId === undefined && count >= 0) {
-            await new Promise((resolve) => setTimeout(resolve, 100));
-            serverId = node._server_id;
-            count--;
-          }
-          const info = {
-            dynamicId: serverId || -1,
-            staticId: node.getId().get(),
-            name: node.getName().get(),
-            type: node.getType().get(),
-          };
-          return res.json(info);
-        } else {
-          return res.status(400).send('category not found in context');
-        }
-      } catch (error) {
-        if (error.code && error.message)
-          return res.status(error.code).send(error.message);
+      if(!(context instanceof SpinalContext)) return res.status(400).send("contextId does not refer to a SpinalContext");
+      if(!(category.belongsToContext(context))) return res.status(400).send("categoryId does not belong to context provided");
+      const group = await groupManagerService.addGroup(
+        context.getId().get(),
+        category.getId().get(),
+        req.body.groupName,
+        req.body.groupColor,
+        req.body.groupIcon
+      )
 
-        return res.status(400).send(error.message);
-      }
-      res.json();
+      await awaitSync(group);
+
+      return res.status(200).json({
+        name: group.getName().get(),
+        staticId: group.getId().get(),
+        dynamicId: group._server_id,
+        type: group.getType().get(),
+        icon: group.info.icon?.get(),
+        color : group.info.color?.get()
+      });
+
+      
+      
+    } catch (error) {
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(400).send(error.message)
+    }
     }
   );
 };

@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_plugin_group_manager_service_1 = require("spinal-env-viewer-plugin-group-manager-service");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const awaitSync_1 = require("../../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -53,12 +54,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             type: object
      *             required:
      *               - categoryName
-     *               - iconName
+     *               - categoryIcon
      *             properties:
      *                categoryName:
      *                 type: string
-     *                iconName:
+     *                categoryIcon:
      *                 type: string
+     *                categoryColor:
+   *                   type: string
      *     responses:
      *       200:
      *         description: Create Successfully
@@ -71,21 +74,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            const node = await spinal_env_viewer_plugin_group_manager_service_1.default.addCategory(context.getId().get(), req.body.categoryName, req.body.iconName);
-            let serverId = node._server_id;
-            let count = 5;
-            while (serverId === undefined && count >= 0) {
-                await new Promise((resolve) => setTimeout(resolve, 100));
-                serverId = node._server_id;
-                count--;
+            const category = await spinal_env_viewer_plugin_group_manager_service_1.default.addCategory(context.getId().get(), req.body.categoryName, req.body.categoryIcon);
+            if (req.body.categoryColor) {
+                category.info.add_attr({ color: req.body.categoryColor });
             }
-            const info = {
-                dynamicId: serverId || -1,
-                staticId: node.getId().get(),
-                name: node.getName().get(),
-                type: node.getType().get(),
-            };
-            return res.json(info);
+            await (0, awaitSync_1.awaitSync)(category);
+            return res.status(200).json({
+                name: category.getName().get(),
+                staticId: category.getId().get(),
+                dynamicId: category._server_id,
+                type: category.getType().get(),
+                icon: category.info.icon?.get(),
+                color: category.info.color?.get()
+            });
         }
         catch (error) {
             if (error.code && error.message)

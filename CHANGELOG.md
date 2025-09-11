@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 11/09/2025 -> v1.0.52
+- Modified and cleaned up create context, category and group routes
+
 ## 01/09/2025 -> v1.0.51
 - Filtered out dbId = -1 in viewInfo response
 

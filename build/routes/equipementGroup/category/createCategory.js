@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_plugin_group_manager_service_1 = require("spinal-env-viewer-plugin-group-manager-service");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const awaitSync_1 = require("../../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -53,11 +54,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *             type: object
    *             required:
    *               - categoryName
-   *               - iconName
+   *               - categoryIcon
    *             properties:
    *                categoryName:
    *                 type: string
-   *                iconName:
+   *                categoryIcon:
+   *                 type: string
+   *                categoryColor:
    *                 type: string
    *     responses:
    *       200:
@@ -71,20 +74,28 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            if (context.getType().get() === "BIMObjectGroupContext") {
-                spinal_env_viewer_plugin_group_manager_service_1.default.addCategory(context.getId().get(), req.body.categoryName, req.body.iconName);
+            if (context.getType().get() !== "BIMObjectGroupContext") {
+                return res.status(400).send("Context is not type of BIMObjectGroupContext (This is not an equipment group context)");
             }
-            else {
-                res.status(400).send("node is not type of BIMObjectGroupContext ");
+            const category = await spinal_env_viewer_plugin_group_manager_service_1.default.addCategory(context.getId().get(), req.body.categoryName, req.body.categoryIcon);
+            if (req.body.categoryColor) {
+                category.info.add_attr({ color: req.body.categoryColor });
             }
+            await (0, awaitSync_1.awaitSync)(category);
+            return res.status(200).json({
+                name: category.getName().get(),
+                staticId: category.getId().get(),
+                dynamicId: category._server_id,
+                type: category.getType().get(),
+                icon: category.info.icon?.get(),
+                color: category.info.color?.get()
+            });
         }
         catch (error) {
-            console.error(error);
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send(error.message);
+            return res.status(400).send(error.message);
         }
-        res.json();
     });
 };
 //# sourceMappingURL=createCategory.js.map

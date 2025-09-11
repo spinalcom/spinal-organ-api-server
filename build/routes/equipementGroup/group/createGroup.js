@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_plugin_group_manager_service_1 = require("spinal-env-viewer-plugin-group-manager-service");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const awaitSync_1 = require("../../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -60,11 +61,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             type: object
      *             required:
      *               - groupName
-     *               - colorName
+     *               - groupColor
      *             properties:
      *                groupName:
      *                 type: string
-     *                colorName:
+     *                groupColor:
+     *                 type: string
+     *                groupIcon:
      *                 type: string
      *     responses:
      *       200:
@@ -81,25 +84,28 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && category.belongsToContext(context)) {
-                if (context.getType().get() === "BIMObjectGroupContext") {
-                    spinal_env_viewer_plugin_group_manager_service_1.default.addGroup(context.getId().get(), category.getId().get(), req.body.groupName, req.body.colorName);
-                }
-                else {
-                    res.status(400).send("node is not type of BIMObjectGroupContext ");
-                }
-            }
-            else {
-                res.status(400).send("category not found in context");
-            }
+            if (!(context instanceof spinal_env_viewer_graph_service_1.SpinalContext))
+                return res.status(400).send("contextId does not refer to a SpinalContext");
+            if (!(category.belongsToContext(context)))
+                return res.status(400).send("categoryId does not belong to context provided");
+            if (context.getType().get() !== 'BIMObjectGroupContext')
+                return res.status(400).send("contextId is not a BIMObjectGroupContext");
+            const group = await spinal_env_viewer_plugin_group_manager_service_1.default.addGroup(context.getId().get(), category.getId().get(), req.body.groupName, req.body.groupColor, req.body.groupIcon);
+            await (0, awaitSync_1.awaitSync)(group);
+            return res.status(200).json({
+                name: group.getName().get(),
+                staticId: group.getId().get(),
+                dynamicId: group._server_id,
+                type: group.getType().get(),
+                icon: group.info.icon?.get(),
+                color: group.info.color?.get()
+            });
         }
         catch (error) {
-            console.error(error);
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send(error.message);
+            return res.status(400).send(error.message);
         }
-        res.json();
     });
 };
 //# sourceMappingURL=createGroup.js.map
