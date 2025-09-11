@@ -28,9 +28,40 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const awaitSync_1 = require("../../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
+    // Deprecated Name typo in route
+    app.post('/api/v1/groupeContext/:contextId/category/:categoryId/create_group', async (req, res, next) => {
+        try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            //@ts-ignore
+            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+            //@ts-ignore
+            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
+            if (!(context instanceof spinal_env_viewer_graph_service_1.SpinalContext))
+                return res.status(400).send("contextId does not refer to a SpinalContext");
+            if (!(category.belongsToContext(context)))
+                return res.status(400).send("categoryId does not belong to context provided");
+            const group = await spinal_env_viewer_plugin_group_manager_service_1.default.addGroup(context.getId().get(), category.getId().get(), req.body.groupName, req.body.groupColor, req.body.groupIcon);
+            await (0, awaitSync_1.awaitSync)(group);
+            return res.status(200).json({
+                name: group.getName().get(),
+                staticId: group.getId().get(),
+                dynamicId: group._server_id,
+                type: group.getType().get(),
+                icon: group.info.icon?.get(),
+                color: group.info.color?.get()
+            });
+        }
+        catch (error) {
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            return res.status(400).send(error.message);
+        }
+    });
     /**
      * @swagger
-     * /api/v1/groupeContext/{contextId}/category/{categoryId}/create_group:
+     * /api/v1/groupContext/{contextId}/category/{categoryId}/create_group:
      *   post:
      *     security:
      *       - bearerAuth:
@@ -75,7 +106,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.post('/api/v1/groupeContext/:contextId/category/:categoryId/create_group', async (req, res, next) => {
+    app.post('/api/v1/groupContext/:contextId/category/:categoryId/create_group', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);

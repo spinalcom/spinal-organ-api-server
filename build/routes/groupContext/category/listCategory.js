@@ -27,9 +27,38 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const spinal_env_viewer_plugin_group_manager_service_1 = require("spinal-env-viewer-plugin-group-manager-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
+    app.get("/api/v1/groupeContext/:id/category_list", async (req, res, next) => {
+        const nodes = [];
+        try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            //@ts-ignore
+            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
+            const listCategories = await spinal_env_viewer_plugin_group_manager_service_1.default.getCategories(context.getId().get());
+            for (const category of listCategories) {
+                // @ts-ignore
+                const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(category.id.get());
+                const info = {
+                    dynamicId: realNode._server_id,
+                    staticId: realNode.getId().get(),
+                    name: realNode.getName().get(),
+                    type: realNode.getType().get(),
+                    icon: category.icon.get(),
+                    color: category.color?.get()
+                };
+                nodes.push(info);
+            }
+        }
+        catch (error) {
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(400).send("list of category event is not loaded");
+        }
+        res.send(nodes);
+    });
     /**
    * @swagger
-   * /api/v1/groupeContext/{id}/category_list:
+   * /api/v1/groupContext/{id}/category_list:
    *   get:
    *     security:
    *       - bearerAuth:
@@ -58,7 +87,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *       400:
    *         description: Bad request
     */
-    app.get("/api/v1/groupeContext/:id/category_list", async (req, res, next) => {
+    app.get("/api/v1/groupContext/:id/category_list", async (req, res, next) => {
         const nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

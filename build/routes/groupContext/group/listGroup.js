@@ -27,9 +27,47 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const spinal_env_viewer_plugin_group_manager_service_1 = require("spinal-env-viewer-plugin-group-manager-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
+    app.get("/api/v1/groupeContext/:contextId/category/:categoryId/group_list", async (req, res, next) => {
+        const nodes = [];
+        try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const context = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+            //@ts-ignore
+            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
+            const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+            //@ts-ignore
+            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
+            if (!(context instanceof spinal_env_viewer_graph_service_1.SpinalContext)) {
+                return res.status(400).send("The context Id provided does not represent a context");
+            }
+            if (!category.belongsToContext(context)) {
+                return res.status(400).send("The category does not belong to the context");
+            }
+            const listGroups = await spinal_env_viewer_plugin_group_manager_service_1.default.getGroups(category.getId().get());
+            for (const group of listGroups) {
+                // @ts-ignore
+                const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(group.id.get());
+                const info = {
+                    dynamicId: realNode._server_id,
+                    staticId: realNode.getId().get(),
+                    name: realNode.getName().get(),
+                    type: realNode.getType().get(),
+                    color: group.color.get(),
+                    icon: group.icon?.get()
+                };
+                nodes.push(info);
+            }
+        }
+        catch (error) {
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            res.status(400).send("ko");
+        }
+        res.send(nodes);
+    });
     /**
    * @swagger
-   * /api/v1/groupeContext/{contextId}/category/{categoryId}/group_list:
+   * /api/v1/groupContext/{contextId}/category/{categoryId}/group_list:
    *   get:
    *     security:
    *       - bearerAuth:
@@ -65,7 +103,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *       400:
    *         description: Bad request
     */
-    app.get("/api/v1/groupeContext/:contextId/category/:categoryId/group_list", async (req, res, next) => {
+    app.get("/api/v1/groupContext/:contextId/category/:categoryId/group_list", async (req, res, next) => {
         const nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

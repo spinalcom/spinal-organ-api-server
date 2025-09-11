@@ -8508,6 +8508,12 @@
                   },
                   "childrenType": {
                     "type": "string"
+                  },
+                  "contextColor": {
+                    "type": "string"
+                  },
+                  "contextIcon": {
+                    "type": "string"
                   }
                 }
               }
@@ -8656,7 +8662,7 @@
         }
       }
     },
-    "/api/v1/groupeContext/{id}/category_list": {
+    "/api/v1/groupContext/{id}/category_list": {
       "get": {
         "security": [
           {
@@ -8735,13 +8741,16 @@
                 "type": "object",
                 "required": [
                   "categoryName",
-                  "iconName"
+                  "categoryIcon"
                 ],
                 "properties": {
                   "categoryName": {
                     "type": "string"
                   },
-                  "iconName": {
+                  "categoryIcon": {
+                    "type": "string"
+                  },
+                  "categoryColor": {
                     "type": "string"
                   }
                 }
@@ -8925,7 +8934,7 @@
         }
       }
     },
-    "/api/v1/groupeContext/{contextId}/category/{categoryId}/group_list": {
+    "/api/v1/groupContext/{contextId}/category/{categoryId}/group_list": {
       "get": {
         "security": [
           {
@@ -8981,7 +8990,7 @@
         }
       }
     },
-    "/api/v1/groupeContext/{contextId}/category/{categoryId}/create_group": {
+    "/api/v1/groupContext/{contextId}/category/{categoryId}/create_group": {
       "post": {
         "security": [
           {
@@ -9024,13 +9033,16 @@
                 "type": "object",
                 "required": [
                   "groupName",
-                  "colorName"
+                  "groupColor"
                 ],
                 "properties": {
                   "groupName": {
                     "type": "string"
                   },
-                  "colorName": {
+                  "groupColor": {
+                    "type": "string"
+                  },
+                  "groupIcon": {
                     "type": "string"
                   }
                 }
@@ -10194,6 +10206,12 @@
                 "properties": {
                   "contextName": {
                     "type": "string"
+                  },
+                  "contextColor": {
+                    "type": "string"
+                  },
+                  "contextIcon": {
+                    "type": "string"
                   }
                 }
               }
@@ -10421,13 +10439,16 @@
                 "type": "object",
                 "required": [
                   "categoryName",
-                  "iconName"
+                  "categoryIcon"
                 ],
                 "properties": {
                   "categoryName": {
                     "type": "string"
                   },
-                  "iconName": {
+                  "categoryIcon": {
+                    "type": "string"
+                  },
+                  "categoryColor": {
                     "type": "string"
                   }
                 }
@@ -10710,13 +10731,16 @@
                 "type": "object",
                 "required": [
                   "groupName",
-                  "colorName"
+                  "groupColor"
                 ],
                 "properties": {
                   "groupName": {
                     "type": "string"
                   },
-                  "colorName": {
+                  "groupColor": {
+                    "type": "string"
+                  },
+                  "groupIcon": {
                     "type": "string"
                   }
                 }

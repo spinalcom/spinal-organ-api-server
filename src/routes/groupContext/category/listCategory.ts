@@ -31,9 +31,43 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
+  app.get("/api/v1/groupeContext/:id/category_list", async (req, res, next) => {
+
+    const nodes = [];
+    try {
+      const profileId = getProfileId(req);
+      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      //@ts-ignore
+      SpinalGraphService._addNode(context)
+
+      const listCategories = await groupManagerService.getCategories(context.getId().get())
+
+      for (const category of listCategories) {
+        // @ts-ignore
+        const realNode = SpinalGraphService.getRealNode(category.id.get())
+        const info = {
+          dynamicId: realNode._server_id,
+          staticId: realNode.getId().get(),
+          name: realNode.getName().get(),
+          type: realNode.getType().get(),
+          icon: category.icon.get(),
+          color: category.color?.get()
+        };
+        nodes.push(info);
+
+      }
+
+    } catch (error) {
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      res.status(400).send("list of category event is not loaded");
+    }
+    res.send(nodes);
+  });
+
   /**
  * @swagger
- * /api/v1/groupeContext/{id}/category_list:
+ * /api/v1/groupContext/{id}/category_list:
  *   get:
  *     security:
  *       - bearerAuth:
@@ -63,7 +97,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  *         description: Bad request
   */
 
-  app.get("/api/v1/groupeContext/:id/category_list", async (req, res, next) => {
+  app.get("/api/v1/groupContext/:id/category_list", async (req, res, next) => {
 
     const nodes = [];
     try {

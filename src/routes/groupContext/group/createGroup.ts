@@ -38,9 +38,55 @@ module.exports = function (
   app: express.Express,
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
+
+  // Deprecated Name typo in route
+  app.post(
+    '/api/v1/groupeContext/:contextId/category/:categoryId/create_group',
+    async (req, res, next) => {
+      try {
+      const profileId = getProfileId(req);
+      const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.contextId, 10), profileId);
+      //@ts-ignore
+      SpinalGraphService._addNode(context)
+      const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
+      //@ts-ignore
+      SpinalGraphService._addNode(category)
+
+      if(!(context instanceof SpinalContext)) return res.status(400).send("contextId does not refer to a SpinalContext");
+      if(!(category.belongsToContext(context))) return res.status(400).send("categoryId does not belong to context provided");
+      const group = await groupManagerService.addGroup(
+        context.getId().get(),
+        category.getId().get(),
+        req.body.groupName,
+        req.body.groupColor,
+        req.body.groupIcon
+      )
+
+      await awaitSync(group);
+
+      return res.status(200).json({
+        name: group.getName().get(),
+        staticId: group.getId().get(),
+        dynamicId: group._server_id,
+        type: group.getType().get(),
+        icon: group.info.icon?.get(),
+        color : group.info.color?.get()
+      });
+
+      
+      
+    } catch (error) {
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(400).send(error.message)
+    }
+    }
+  );
+
+
+
   /**
    * @swagger
-   * /api/v1/groupeContext/{contextId}/category/{categoryId}/create_group:
+   * /api/v1/groupContext/{contextId}/category/{categoryId}/create_group:
    *   post:
    *     security:
    *       - bearerAuth:
@@ -87,7 +133,7 @@ module.exports = function (
    */
 
   app.post(
-    '/api/v1/groupeContext/:contextId/category/:categoryId/create_group',
+    '/api/v1/groupContext/:contextId/category/:categoryId/create_group',
     async (req, res, next) => {
       try {
       const profileId = getProfileId(req);
