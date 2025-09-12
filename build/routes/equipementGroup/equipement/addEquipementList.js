@@ -100,7 +100,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 if (context.getType().get() === 'BIMObjectGroupContext') {
                     if (_equipementList.length > 0) {
                         for (let index = 0; index < _equipementList.length; index++) {
-                            const realNode = await spinalAPIMiddleware.load(_equipementList[index]);
+                            const realNode = await spinalAPIMiddleware.load(_equipementList[index], profileId);
                             //@ts-ignore
                             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(realNode);
                             if (realNode.getType().get() === 'BIMObject') {

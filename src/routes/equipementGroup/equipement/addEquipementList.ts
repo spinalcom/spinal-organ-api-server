@@ -120,7 +120,8 @@ module.exports = function (
             if (_equipementList.length > 0) {
               for (let index = 0; index < _equipementList.length; index++) {
                 const realNode = await spinalAPIMiddleware.load(
-                  _equipementList[index]
+                  _equipementList[index],
+                  profileId
                 );
                 //@ts-ignore
                 SpinalGraphService._addNode(realNode);
