@@ -41,19 +41,13 @@ async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId, incl
             staticId: ticket.getId().get(),
             name: ticket.getName().get(),
             type: ticket.getType().get(),
-            priority: ticket.info.priority == undefined ? '' : ticket.info.priority.get(),
-            creationDate: ticket.info.creationDate.get(),
-            userName: ticket.info.user?.name == undefined ? '' : ticket.info.user.name.get(),
-            gmaoId: ticket.info.gmaoId == undefined ? '' : ticket.info.gmaoId.get(),
-            gmaoDateCreation: ticket.info.gmaoDateCreation == undefined
-                ? ''
-                : ticket.info.gmaoDateCreation.get(),
-            description: ticket.info.description == undefined
-                ? ''
-                : ticket.info.description.get(),
-            declarer_id: ticket.info.declarer_id == undefined
-                ? ''
-                : ticket.info.declarer_id.get(),
+            priority: ticket.info.priority?.get(),
+            creationDate: ticket.info.creationDate?.get() ?? '',
+            userName: ticket.info.user?.name?.get() ?? '',
+            gmaoId: ticket.info.gmaoId?.get() ?? '',
+            gmaoDateCreation: ticket.info.gmaoDateCreation?.get() ?? '',
+            description: ticket.info.description?.get() ?? '',
+            declarer_id: ticket.info.declarer_id?.get() ?? '',
             process: _process === undefined
                 ? ''
                 : {
@@ -69,8 +63,8 @@ async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId, incl
                     staticId: _step.getId().get(),
                     name: _step.getName().get(),
                     type: _step.getType().get(),
-                    color: _step.info.color.get(),
-                    order: _step.info.order.get(),
+                    color: _step.info.color?.get(),
+                    order: _step.info.order?.get(),
                 },
             workflowId: workflow?._server_id,
             workflowName: workflow?.getName().get(),
@@ -81,10 +75,10 @@ async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId, incl
             const _notes = [];
             for (const note of notes) {
                 const infoNote = {
-                    userName: note.element.username.get(),
-                    date: note.element.date.get(),
-                    type: note.element.type.get(),
-                    message: note.element.message.get(),
+                    userName: note.element.username?.get(),
+                    date: note.element.date?.get(),
+                    type: note.element.type?.get(),
+                    message: note.element.message?.get(),
                 };
                 _notes.push(infoNote);
             }
