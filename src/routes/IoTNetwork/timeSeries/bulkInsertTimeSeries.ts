@@ -204,7 +204,6 @@ module.exports = function (
           });
         }
 
-        // Insert sequentially (simple & safe). For very large files, consider chunking/queueing.
         let inserted = 0;
         for (const r of ok) {
           await timeseries.insert(r.value, r.date);
