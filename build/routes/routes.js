@@ -168,6 +168,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./IoTNetwork/timeSeries/readTimeSeriesCurrentYearMultiple')(logger, app, spinalAPIMiddleware);
     require('./IoTNetwork/timeSeries/pushTimeSeries')(logger, app, spinalAPIMiddleware);
     require('./IoTNetwork/timeSeries/insertTimeSeries')(logger, app, spinalAPIMiddleware);
+    require('./IoTNetwork/timeSeries/bulkInsertTimeSeries')(logger, app, spinalAPIMiddleware);
     //context geographique routes
     require('./geographicContext/geographicContextTree')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/geographicContextSpace')(logger, app, spinalAPIMiddleware);

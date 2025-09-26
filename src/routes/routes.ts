@@ -424,6 +424,12 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     spinalAPIMiddleware
   );
 
+  require('./IoTNetwork/timeSeries/bulkInsertTimeSeries')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+
   //context geographique routes
   require('./geographicContext/geographicContextTree')(
     logger,

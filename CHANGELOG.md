@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 26-09-2025 -> v1.0.53
+- Added route /api/v1/endpoint/:id/timeSeries/bulk-insert to bulk insert time series data from an excel file.
+
 ## 11/09/2025 -> v1.0.52
 - Modified and cleaned up create context, category and group routes
 

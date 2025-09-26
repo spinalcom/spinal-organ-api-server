@@ -16388,6 +16388,96 @@
         }
       }
     },
+    "/api/v1/endpoint/{id}/timeSeries/bulk-insert": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Bulk insert values from an Excel file",
+        "description": "Upload an Excel file (.xls/.xlsx) containing a **date** column and a **value** column.<br/> Date formats supported in strings: \"DD-MM-YYYY HH:mm:ss\", \"DD MM YYYY HH:mm:ss\", \"DD/MM/YYYY HH:mm:ss\".<br/> Also supports Excel native date cells and Excel date serial numbers.\n",
+        "tags": [
+          "IoTNetwork & Time Series"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "dynamic ID of the endpoint node",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "query",
+            "name": "dateCol",
+            "schema": {
+              "type": "string",
+              "default": "date"
+            },
+            "description": "Name of the date column in the Excel sheet"
+          },
+          {
+            "in": "query",
+            "name": "valueCol",
+            "schema": {
+              "type": "string",
+              "default": "value"
+            },
+            "description": "Name of the numeric value column in the Excel sheet"
+          },
+          {
+            "in": "query",
+            "name": "sheet",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional sheet name to use (defaults to first sheet)"
+          },
+          {
+            "in": "query",
+            "name": "dryRun",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Validate and preview without inserting anything"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Insert summary"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "422": {
+            "description": "Validation errors"
+          }
+        }
+      }
+    },
     "/api/v1/endpoint/timeSeries/readCurrentDay_multiple": {
       "post": {
         "security": [
