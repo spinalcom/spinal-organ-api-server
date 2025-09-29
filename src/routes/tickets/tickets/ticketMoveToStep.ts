@@ -21,20 +21,19 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
-import { FileSystem } from 'spinal-core-connectorjs_type';
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import * as express from 'express';
-import { Step } from '../interfacesWorkflowAndTickets';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import { ServiceUser } from 'spinal-service-user';
+import {
+  getProcessFromStep,
+  getStepFromTicket,
+  getStepNodesFromProcess,
+  getTicketInfo,
+  moveTicketToStep,
+  SPINAL_TICKET_SERVICE_TICKET_TYPE,
+  TICKET_CONTEXT_TYPE,
+} from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
 module.exports = function (
   logger,
@@ -82,59 +81,79 @@ module.exports = function (
    *       400:
    *         description: move to next step not Successfully
    */
-  app.post('/api/v1/ticket/:ticketId/move_to_step', async (req, res, next) => {
+  app.post('/api/v1/ticket/:ticketId/move_to_step', async (req, res) => {
     try {
       const { toStepOrder, toStepName } = req.body;
       if (toStepOrder == null && toStepName == null) {
-        return res.status(400).send('Either toStepOrder or toStepName must be provided.');
+        return res
+          .status(400)
+          .send('Either toStepOrder or toStepName must be provided.');
       }
       const profileId = getProfileId(req);
-      const workflow: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.body.workflowDynamicId, 10),
-        profileId
+      const [workflowContextNode, ticketNode] = await Promise.all([
+        loadAndValidateNode(
+          spinalAPIMiddleware,
+          parseInt(req.body.workflowDynamicId, 10),
+          profileId,
+          TICKET_CONTEXT_TYPE
+        ),
+        loadAndValidateNode(
+          spinalAPIMiddleware,
+          parseInt(req.params.ticketId, 10),
+          profileId,
+          SPINAL_TICKET_SERVICE_TICKET_TYPE
+        ),
+      ]);
+      if (!ticketNode.belongsToContext(workflowContextNode)) {
+        return res
+          .status(400)
+          .send('Ticket does not belong to the workflow context.');
+      }
+
+      const fromStepNode = await getStepFromTicket(ticketNode);
+      const processNode = await getProcessFromStep(fromStepNode);
+
+      const steps = await getStepNodesFromProcess(
+        processNode,
+        workflowContextNode
       );
-
-      SpinalGraphService._addNode(workflow);
-      
-      const ticket: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.ticketId, 10),
-        profileId
+      const toStepNode = steps.find(
+        (step) =>
+          step.info.name.get() === toStepName ||
+          step.info.order.get() === toStepOrder
       );
-      SpinalGraphService._addNode(ticket);
-      
-      const fromStepId = ticket.info.stepId.get();
-
-      const processNode : SpinalNode<any> = await serviceTicketPersonalized.getTicketProcess(ticket.getId().get())
-      SpinalGraphService._addNode(processNode);
-
-      const steps = await serviceTicketPersonalized.getStepsFromProcess(processNode.getId().get(), workflow.getId().get());
-      const toStep = steps.find(step => step.name.get() === toStepName || step.order.get() === toStepOrder);
-      if (!toStep) {
+      if (!toStepNode) {
         return res.status(400).send('Target step not found.');
       }
 
-      if(toStep.id.get() === fromStepId) {
-        return res.status(400).send('The ticket is already in the target step.');
+      if (toStepNode._server_id === fromStepNode._server_id) {
+        return res
+          .status(400)
+          .send('The ticket is already in the target step.');
       }
 
-      const result = await serviceTicketPersonalized.moveTicketToStep(
-        ticket.getId().get(),
-        fromStepId,
-        toStep.id.get(),
-        workflow.getId().get()
+      await moveTicketToStep(
+        ticketNode,
+        fromStepNode,
+        toStepNode,
+        workflowContextNode
       );
 
+      const { description } = await getTicketInfo(ticketNode, [
+        'description',
+      ] as const);
+
       const info = {
-        name: ticket.getName().get(),
-        id: ticket.getId().get(),
-        description: ticket.info.description.get(),
-        stepId: ticket.info.stepId.get(),
+        name: ticketNode.info.name.get(),
+        id: ticketNode.info.id.get(),
+        description,
+        stepId: toStepNode.info.id.get(),
       };
       return res.json(info);
     } catch (error) {
-      if (error.code && error.message)
+      if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
-      res.status(500).send(error.message);
+      return res.status(500).send(error?.message);
     }
   });
 };

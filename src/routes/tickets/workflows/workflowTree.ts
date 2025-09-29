@@ -22,65 +22,74 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import type { WorkflowTree } from '../interfacesWorkflowAndTickets';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import * as express from 'express';
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
-import { WorkflowTree } from '../interfacesWorkflowAndTickets'
-import { recTree } from '../../../utilities/recTree'
+import { SpinalContext } from 'spinal-model-graph';
+import { recTree } from '../../../utilities/recTree';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+import { loadAndValidateNode } from 'src/utilities/loadAndValidateNode';
+import { TICKET_CONTEXT_TYPE } from 'spinal-service-ticket';
 
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
-  * @swagger
-  * /api/v1/workflow/{id}/tree:
-  *   get:
-  *     security:
-  *       - bearerAuth:
-  *         - readOnly
-  *     description: Return tree of workflow
-  *     summary: Get a tree workflow by ID
-  *     tags:
-  *       - Workflow & ticket
-  *     parameters:
-  *      - in: path
-  *        name: id
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *     responses:
-  *       200:
-  *         description: Success
-  *         content:
-  *           application/json:
-  *             schema:
-  *                $ref: '#/components/schemas/ContextTree'
-  *       400:
-  *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/workflow/{id}/tree:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: Return tree of workflow
+   *     summary: Get a tree workflow by ID
+   *     tags:
+   *       - Workflow & ticket
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/ContextTree'
+   *       400:
+   *         description: Bad request
+   */
 
-  app.get("/api/v1/workflow/:id/tree", async (req, res, next) => {
-    let workflows: WorkflowTree;
-
+  app.get('/api/v1/workflow/:id/tree', async (req, res) => {
     try {
       const profileId = getProfileId(req);
-      const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const workflow = await loadAndValidateNode(
+        spinalAPIMiddleware,
+        parseInt(req.params.id, 10),
+        profileId,
+        TICKET_CONTEXT_TYPE
+      );
       if (workflow instanceof SpinalContext) {
-        workflows = {
+        const workflows: WorkflowTree = {
           dynamicId: workflow._server_id,
-          staticId: workflow.getId().get(),
-          name: workflow.getName().get(),
-          type: workflow.getType().get(),
-          children: await recTree(workflow, workflow)
+          staticId: workflow.info.id?.get() || undefined,
+          name: workflow.info.name?.get() || undefined,
+          type: workflow.info.type?.get() || undefined,
+          children: await recTree(workflow, workflow),
         };
+        return res.json(workflows);
       }
+      return res.status(400).send('The ID is not a workflow');
     } catch (error) {
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(500).send(error.message);
+      if (error?.code && error?.message)
+        return res.status(error.code).send(error.message);
+      return res.status(500).send(error?.message);
     }
-    res.json(workflows);
   });
-
-}
+};

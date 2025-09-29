@@ -22,17 +22,17 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import * as express from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { TICKET_CONTEXT_TYPE } from 'spinal-service-ticket';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/workflow/{id}/update:
@@ -69,30 +69,36 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *         description: Bad request
    */
 
-  app.put("/api/v1/workflow/:id/update", async (req, res, next) => {
-
+  app.put('/api/v1/workflow/:id/update', async (req, res) => {
     try {
+      if (typeof req.body.newNameWorkflow !== 'string') {
+        return res.status(400).send(`the newNameWorkflow string is invalid`);
+      }
       const profileId = getProfileId(req);
-      const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
-      const graph = await spinalAPIMiddleware.getProfileGraph(profileId)
-      const childrens = await graph.getChildren("hasContext");
+      const workflowNode = await loadAndValidateNode(
+        spinalAPIMiddleware,
+        parseInt(req.params.id, 10),
+        profileId,
+        TICKET_CONTEXT_TYPE
+      );
 
-      for (const child of childrens) {
-        if (child.getName().get() === req.body.newNameWorkflow) {
-          return res.status(400).send("the name context already exists")
-        }
+      // check if the name already exists in another context
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
+      const childrens = await graph.getChildren('hasContext');
+      if (
+        childrens.some((child) => {
+          return child.info.name?.get() === req.body.newNameWorkflow;
+        })
+      ) {
+        return res.status(400).send('the name context already exists');
       }
-      if (workflow.getType().get() === "SpinalSystemServiceTicket" && req.body.nameWorkflow !== "string") {
-        workflow.info.name.set(req.body.newNameWorkflow)
-      }
-      else {
-        return res.status(400).send("this context is not a SpinalSystemServiceTicket Or string is invalid name");
-      }
+
+      workflowNode.info.name.set(req.body.newNameWorkflow);
+      return res.status(200).send('Success');
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      return res.status(400).send(error.message)
+      if (error?.code && error?.message)
+        return res.status(error.code).send(error.message);
+      return res.status(400).send(error?.message);
     }
-    res.json();
-  })
-}
+  });
+};

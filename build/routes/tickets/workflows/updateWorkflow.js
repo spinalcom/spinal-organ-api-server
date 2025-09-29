@@ -24,6 +24,8 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const spinal_service_ticket_1 = require("spinal-service-ticket");
+const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -60,30 +62,29 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.put("/api/v1/workflow/:id/update", async (req, res, next) => {
+    app.put('/api/v1/workflow/:id/update', async (req, res) => {
         try {
+            if (typeof req.body.newNameWorkflow !== 'string') {
+                return res.status(400).send(`the newNameWorkflow string is invalid`);
+            }
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+            const workflowNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, parseInt(req.params.id, 10), profileId, spinal_service_ticket_1.TICKET_CONTEXT_TYPE);
+            // check if the name already exists in another context
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
-            const childrens = await graph.getChildren("hasContext");
-            for (const child of childrens) {
-                if (child.getName().get() === req.body.newNameWorkflow) {
-                    return res.status(400).send("the name context already exists");
-                }
+            const childrens = await graph.getChildren('hasContext');
+            if (childrens.some((child) => {
+                return child.info.name?.get() === req.body.newNameWorkflow;
+            })) {
+                return res.status(400).send('the name context already exists');
             }
-            if (workflow.getType().get() === "SpinalSystemServiceTicket" && req.body.nameWorkflow !== "string") {
-                workflow.info.name.set(req.body.newNameWorkflow);
-            }
-            else {
-                return res.status(400).send("this context is not a SpinalSystemServiceTicket Or string is invalid name");
-            }
+            workflowNode.info.name.set(req.body.newNameWorkflow);
+            return res.status(200).send('Success');
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            return res.status(400).send(error.message);
+            return res.status(400).send(error?.message);
         }
-        res.json();
     });
 };
 //# sourceMappingURL=updateWorkflow.js.map

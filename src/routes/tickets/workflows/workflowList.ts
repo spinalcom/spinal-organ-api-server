@@ -22,14 +22,17 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import type { Workflow } from '../interfacesWorkflowAndTickets';
 import * as express from 'express';
-import { Workflow } from '../interfacesWorkflowAndTickets'
-import { profile } from 'console';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { SERVICE_TYPE } from 'spinal-service-ticket'
-import { ISpinalAPIMiddleware } from '../../../interfaces';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+import { TICKET_CONTEXT_TYPE } from 'spinal-service-ticket';
+
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/workflow/list:
@@ -54,32 +57,29 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *         description: Bad request
    */
 
-  app.get("/api/v1/workflow/list", async (req, res, next) => {
-
-    const nodes = [];
+  app.get('/api/v1/workflow/list', async (req, res) => {
     try {
+      const nodes: Workflow[] = [];
       const profileId = getProfileId(req);
-      const graph = await spinalAPIMiddleware.getProfileGraph(profileId)
-      const childrens = await graph.getChildren("hasContext");
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
+      const childrens = await graph.getChildren('hasContext');
 
       for (const child of childrens) {
-        if (child.getType().get() === SERVICE_TYPE) {
+        if (child.info.type?.get() === TICKET_CONTEXT_TYPE) {
           const info: Workflow = {
             dynamicId: child._server_id,
-            staticId: child.getId().get(),
-            name: child.getName().get(),
-            type: child.getType().get()
+            staticId: child.info.id?.get() || undefined,
+            name: child.info.name?.get() || undefined,
+            type: child.info.type?.get() || undefined,
           };
           nodes.push(info);
         }
       }
-
-      res.send(nodes);
-
-
+      return res.send(nodes);
     } catch (error) {
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send("list of worflows is not loaded");
+      if (error?.code && error?.message)
+        return res.status(error.code).send(error.message);
+      return res.status(400).send('list of worflows is not loaded');
     }
   });
 };

@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -22,77 +22,107 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import { FileSystem } from 'spinal-core-connectorjs_type';
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import type { ISpinalAPIMiddleware } from '../../../interfaces/ISpinalAPIMiddleware';
 import * as express from 'express';
-import { Step } from '../interfacesWorkflowAndTickets'
-import { serviceTicketPersonalized } from 'spinal-service-ticket'
-import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
-import { ServiceUser } from "spinal-service-user";
+import {
+  archiveTickets,
+  PROCESS_TYPE,
+  SPINAL_TICKET_SERVICE_TICKET_TYPE,
+  TICKET_CONTEXT_TYPE,
+} from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
-  * @swagger
-  * /api/v1/ticket/{ticketId}/archive:
-  *   post:
-  *     security:
-  *       - bearerAuth:
-  *         - read
-  *     description: archive a Ticket
-  *     summary: archive a Ticket
-  *     tags:
-  *       - Workflow & ticket
-  *     parameters:
-  *       - in: path
-  *         name: ticketId
-  *         description: use the dynamic ID
-  *         required: true
-  *         schema:
-  *           type: integer
-  *           format: int64
-  *     requestBody:
-  *       content:
-  *         application/json:
-  *           schema:
-  *             type: object
-  *             required:
-  *               - workflowDynamicId
-  *               - processDynamicId
-  *             properties:
-  *               workflowDynamicId:
-  *                 type: number
-  *               processDynamicId:
-  *                 type: number
-  *     responses:
-  *       200:
-  *         description: Archive Successfully
-  *       400:
-  *         description: Archive not Successfully
-  */
-  app.post("/api/v1/ticket/:ticketId/archive", async (req, res, next) => {
+   * @swagger
+   * /api/v1/ticket/{ticketId}/archive:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - read
+   *     description: archive a Ticket
+   *     summary: archive a Ticket
+   *     tags:
+   *       - Workflow & ticket
+   *     parameters:
+   *       - in: path
+   *         name: ticketId
+   *         description: use the dynamic ID
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - workflowDynamicId
+   *               - processDynamicId
+   *             properties:
+   *               workflowDynamicId:
+   *                 type: number
+   *               processDynamicId:
+   *                 type: number
+   *     responses:
+   *       200:
+   *         description: Archive Successfully
+   *       400:
+   *         description: Archive not Successfully
+   */
+  app.post('/api/v1/ticket/:ticketId/archive', async (req, res) => {
     try {
+      if (!req.params.ticketId) {
+        return res.status(400).send('ticketId is required');
+      }
+      if (!req.body?.workflowDynamicId) {
+        return res.status(400).send('workflowDynamicId is required');
+      }
+      if (!req.body?.processDynamicId) {
+        return res.status(400).send('processDynamicId is required');
+      }
+      // test types
+      if (typeof req.body.workflowDynamicId !== 'number') {
+        return res.status(400).send('workflowDynamicId must be a number');
+      }
+      if (typeof req.body.processDynamicId !== 'number') {
+        return res.status(400).send('processDynamicId must be a number');
+      }
+
       const profileId = getProfileId(req);
-      const workflow = await spinalAPIMiddleware.load(parseInt(req.body.workflowDynamicId, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(workflow)
-      const process = await spinalAPIMiddleware.load(parseInt(req.body.processDynamicId, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(process)
-      const ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(ticket)
+      const [workflow, process, ticket] = await Promise.all([
+        loadAndValidateNode(
+          spinalAPIMiddleware,
+          parseInt(req.body.workflowDynamicId, 10),
+          profileId,
+          TICKET_CONTEXT_TYPE
+        ),
+        loadAndValidateNode(
+          spinalAPIMiddleware,
+          parseInt(req.body.processDynamicId, 10),
+          profileId,
+          PROCESS_TYPE
+        ),
+        loadAndValidateNode(
+          spinalAPIMiddleware,
+          parseInt(req.params.ticketId, 10),
+          profileId,
+          SPINAL_TICKET_SERVICE_TICKET_TYPE
+        ),
+      ]);
 
-      await serviceTicketPersonalized.ArchiveTickets(workflow.getId().get(), process.getId().get(), ticket.getId().get())
+      await archiveTickets(workflow, process, ticket);
+      return res.status(202).send('Ticket archived successfully');
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(500).send(error.message);
+      if (error?.code && error?.message)
+        return res.status(error.code).send(error.message);
+      return res.status(500).send(error?.message);
     }
-    res.json();
-  })
-
-}
+  });
+};

@@ -1,1 +1,2 @@
-export declare function awaitSync(model: spinal.Model): Promise<void>;
+import { type Model } from 'spinal-core-connectorjs';
+export declare function awaitSync(model: Model): Promise<void>;

@@ -24,47 +24,49 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
-const getTicketEntityInfo_1 = require("../../../utilities/getTicketEntityInfo");
+const getTicketEntityInfo_1 = require("../../../utilities/workflow/getTicketEntityInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-  * @swagger
-  * /api/v1/ticket/{ticketId}/find_entity:
-  *   get:
-  *     security:
-  *       - bearerAuth:
-  *         - readOnly
-  *     description: Return entity of ticket
-  *     summary: Get entity of ticket
-  *     tags:
-  *       - Workflow & ticket
-  *     parameters:
-  *      - in: path
-  *        name: ticketId
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *     responses:
-  *       200:
-  *         description: Success
-  *         content:
-  *           application/json:
-  *             schema:
-  *                $ref: '#/components/schemas/BasicNode'
-  *       400:
-  *         description: Bad request
-  */
-    app.get("/api/v1/ticket/:ticketId/find_entity", async (req, res, next) => {
+     * @swagger
+     * /api/v1/ticket/{ticketId}/find_entity:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     description: Return entity of ticket
+     *     summary: Get entity of ticket
+     *     tags:
+     *       - Workflow & ticket
+     *     parameters:
+     *      - in: path
+     *        name: ticketId
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/BasicNode'
+     *       400:
+     *         description: Bad request
+     */
+    app.get('/api/v1/ticket/:ticketId/find_entity', async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const info = await (0, getTicketEntityInfo_1.getTicketEntityInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.ticketId, 10));
+            if (!info)
+                return res.status(404).send('Entity not found');
             return res.status(200).json(info);
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            res.status(500).send(error.message);
+            return res.status(500).send(error?.message);
         }
     });
 };

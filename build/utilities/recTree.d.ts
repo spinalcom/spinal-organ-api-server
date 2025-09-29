@@ -1,5 +1,5 @@
 import { SpinalContext, SpinalNode } from 'spinal-model-graph';
 import { ContextTree } from '../routes/contexts/interfacesContexts';
-declare function recTree(node: SpinalNode<any>, context?: SpinalContext<any>): Promise<ContextTree[]>;
-declare function recTreeDepth(node: SpinalNode<any>, context: SpinalContext<any>, depth: number): Promise<ContextTree[]>;
-export { recTree, recTreeDepth };
+export declare function recTree(node: SpinalNode, context?: SpinalContext): Promise<ContextTree[]>;
+export declare function recTreeDetails(node: SpinalNode, context?: SpinalContext): Promise<ContextTree[]>;
+export declare function recTreeDepth(node: SpinalNode, context: SpinalContext, depth: number): Promise<ContextTree[]>;

@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -22,16 +22,18 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service';
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { serviceTicketPersonalized } from 'spinal-service-ticket'
+import { getAllTicketProcess, PROCESS_TYPE } from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
-
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/workflow/{workflowId}/process/{processId}/update:
@@ -75,39 +77,46 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *         description: Bad request
    */
 
-  app.put("/api/v1/workflow/:workflowId/process/:processId/update", async (req, res, next) => {
-    try {
-      await spinalAPIMiddleware.getGraph();
-      const profileId = getProfileId(req);
-      const workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-      const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
-      // @ts-ignore
-      SpinalGraphService._addNode(node);
+  app.put(
+    '/api/v1/workflow/:workflowId/process/:processId/update',
+    async (req, res) => {
+      if (typeof req.body.newNameProcess !== 'string')
+        return res
+          .status(400)
+          .send('newNameProcess is required and must be a string');
 
-      const allProcess = await serviceTicketPersonalized.getAllProcess(workflow.getId().get());
-      for (let index = 0; index < allProcess.length; index++) {
-        const realNode = SpinalGraphService.getRealNode(allProcess[index].id.get())
-        if (realNode.getName().get() === req.body.newNameProcess) {
-          return res.status(400).send("the name of process already exists")
+      try {
+        await spinalAPIMiddleware.getGraph();
+        const profileId = getProfileId(req);
+        const workflowContextNode = await getWorkflowContextNode(
+          spinalAPIMiddleware,
+          profileId,
+          req.params.workflowId
+        );
+        const processNode = await loadAndValidateNode(
+          spinalAPIMiddleware,
+          parseInt(req.params.processId, 10),
+          profileId,
+          PROCESS_TYPE
+        );
+        if (!processNode.belongsToContext(workflowContextNode)) {
+          return res.status(400).send('invalid processId');
         }
+
+        const processNodes = await getAllTicketProcess(workflowContextNode);
+        for (const pNode of processNodes) {
+          if (pNode.info.name.get() === req.body.newNameProcess) {
+            return res.status(400).send('The name of process already exists');
+          }
+        }
+
+        processNode.info.name.set(req.body.newNameProcess);
+        return res.status(200).send('Success');
+      } catch (error) {
+        if (error?.code && error?.message)
+          return res.status(error.code).send(error.message);
+        return res.status(400).send(error.message);
       }
-
-      if (workflow instanceof SpinalContext && node.belongsToContext(workflow)) {
-        if (workflow.getType().get() === "SpinalSystemServiceTicket" && req.body.newNameProcess !== "string") {
-          node.info.name.set(req.body.newNameProcess)
-        }
-        else {
-          return res.status(400).send("this context is not a SpinalSystemServiceTicket or invalid name string");
-        }
-      } else {
-        res.status(400).send("node not found in context");
-      }
-    } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      return res.status(400).send(error.message)
     }
-    res.json();
-  })
-}
-
+  );
+};

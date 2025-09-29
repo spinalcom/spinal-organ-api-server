@@ -1,12 +1,11 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -23,9 +22,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const getWorkflowContextNode_1 = require("../../../utilities/workflow/getWorkflowContextNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -58,33 +58,30 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get("/api/v1/workflow/:id/processList", async (req, res, next) => {
-        const nodes = [];
+    app.get('/api/v1/workflow/:id/processList', async (req, res) => {
         try {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            // @ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(workflow);
-            const allProcess = await spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflow.getId().get());
-            for (let index = 0; index < allProcess.length; index++) {
-                const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(allProcess[index].id.get());
+            const workflowContextNode = await (0, getWorkflowContextNode_1.getWorkflowContextNode)(spinalAPIMiddleware, profileId, req.params.id);
+            const processNodes = await (0, spinal_service_ticket_1.getAllTicketProcess)(workflowContextNode);
+            const nodes = [];
+            for (const processNode of processNodes) {
                 const info = {
-                    dynamicId: realNode._server_id,
-                    staticId: realNode.getId().get(),
-                    name: realNode.getName().get(),
-                    type: realNode.getType().get(),
-                    color: realNode.info.color?.get(),
+                    dynamicId: processNode._server_id,
+                    staticId: processNode.info.id?.get() || undefined,
+                    name: processNode.info.name?.get() || undefined,
+                    type: processNode.info.type?.get() || undefined,
+                    color: processNode.info.color?.get() || undefined,
                 };
                 nodes.push(info);
             }
+            return res.json(nodes);
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            return res.status(500).send(error.message);
+            return res.status(500).send(error?.message);
         }
-        res.json(nodes);
     });
 };
 //# sourceMappingURL=processList.js.map

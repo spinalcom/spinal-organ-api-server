@@ -1,12 +1,11 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -23,66 +22,67 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const getWorkflowContextNode_1 = require("../../../utilities/workflow/getWorkflowContextNode");
+const spinal_service_ticket_1 = require("spinal-service-ticket");
+const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-    * @swagger
-    * /api/v1/workflow/{workflowId}/process/{processId}/delete_process:
-    *   delete:
-    *     security:
-    *       - bearerAuth:
-    *         - read
-    *     description: Delete a process
-    *     summary: delete an process
-    *     tags:
-    *       - Workflow & ticket
-    *     parameters:
-    *      - in: path
-    *        name: workflowId
-    *        description: use the dynamic ID
-    *        required: true
-    *        schema:
-    *          type: integer
-    *          format: int64
-    *      - in: path
-    *        name: processId
-    *        description: use the dynamic ID
-    *        required: true
-    *        schema:
-    *          type: integer
-    *          format: int64
-    *     responses:
-    *       200:
-    *         description: Delete Successfully
-    *       400:
-    *         description: Bad request
-    */
-    app.delete("/api/v1/workflow/:workflowId/process/:processId/delete_process", async (req, res, next) => {
+     * @swagger
+     * /api/v1/workflow/{workflowId}/process/{processId}/delete_process:
+     *   delete:
+     *     security:
+     *       - bearerAuth:
+     *         - read
+     *     description: Delete a process
+     *     summary: delete an process and steps but NOT the tickets
+     *     tags:
+     *       - Workflow & ticket
+     *     parameters:
+     *      - in: path
+     *        name: workflowId
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *      - in: path
+     *        name: processId
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: Delete Successfully
+     *       400:
+     *         description: Bad request
+     */
+    app.delete('/api/v1/workflow/:workflowId/process/:processId/delete_process', async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-            const process = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
-            // @ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(process);
-            if (workflow instanceof spinal_env_viewer_graph_service_1.SpinalContext && process.belongsToContext(workflow)) {
-                if (workflow.getType().get() === "SpinalSystemServiceTicket") {
-                    process.removeFromGraph();
-                }
-                else {
-                    return res.status(400).send("this context is not a SpinalSystemServiceTicket");
-                }
+            const workflowContextNode = await (0, getWorkflowContextNode_1.getWorkflowContextNode)(spinalAPIMiddleware, profileId, req.params.workflowId);
+            const processNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, parseInt(req.params.processId, 10), profileId, spinal_service_ticket_1.PROCESS_TYPE);
+            if (processNode.belongsToContext(workflowContextNode) === false)
+                return res
+                    .status(400)
+                    .send('Process node does not belong to the workflow context');
+            const stepNodes = await (0, spinal_service_ticket_1.getStepNodesFromProcess)(processNode, workflowContextNode);
+            const proms = [];
+            for (const stepNode of stepNodes) {
+                proms.push(stepNode.removeFromGraph());
             }
-            else {
-                res.status(400).send("node not found in context");
-            }
+            proms.push(processNode.removeFromGraph());
+            await Promise.all(proms);
+            return res.status(200).send('Delete Successfully');
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            res.status(500).send(error.message);
+            return res.status(500).send(error?.message);
         }
-        res.json();
     });
 };
 //# sourceMappingURL=deleteProcess.js.map

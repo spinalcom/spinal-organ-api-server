@@ -1,11 +1,11 @@
 "use strict";
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -23,9 +23,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const getWorkflowContextNode_1 = require("../../../utilities/workflow/getWorkflowContextNode");
+const awaitSync_1 = require("../../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -62,33 +63,36 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: create not Successfully
      */
-    app.post('/api/v1/workflow/:id/create_process', async (req, res, next) => {
+    app.post('/api/v1/workflow/:id/create_process', async (req, res) => {
         try {
+            if (typeof req.body.nameProcess === 'string' &&
+                req.body.nameProcess.length === 0) {
+                return res.status(400).send('nameProcess is required');
+            }
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const workflow = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            // @ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(workflow);
-            const allProcess = await spinal_service_ticket_1.serviceTicketPersonalized.getAllProcess(workflow.getId().get());
-            for (let index = 0; index < allProcess.length; index++) {
-                const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(allProcess[index].id.get());
-                if (realNode.getName().get() === req.body.nameProcess) {
-                    return res.status(400).send("the name process already exists");
+            const workflowContextNode = await (0, getWorkflowContextNode_1.getWorkflowContextNode)(spinalAPIMiddleware, profileId, req.params.id);
+            const allProcess = await (0, spinal_service_ticket_1.getAllTicketProcess)(workflowContextNode);
+            for (const processNode of allProcess) {
+                if (processNode.info.name.get() === req.body.nameProcess) {
+                    return res.status(400).send('The name process already exists');
                 }
             }
-            if (req.body.nameProcess !== "string") {
-                await spinal_service_ticket_1.serviceTicketPersonalized.createProcess({ name: req.body.nameProcess }, workflow.getId().get());
-            }
-            else {
-                return res.status(400).send("invalid name string");
-            }
+            const processNode = await (0, spinal_service_ticket_1.createTicketProcess)(req.body.nameProcess, workflowContextNode);
+            await (0, awaitSync_1.awaitSync)(processNode);
+            const info = {
+                dynamicId: processNode._server_id,
+                staticId: processNode.info.id?.get(),
+                name: processNode.info.name?.get(),
+                type: processNode.info.type?.get(),
+            };
+            return res.json(info);
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            return res.status(500).send(error.message);
+            return res.status(500).send(error?.message);
         }
-        res.json();
     });
 };
 //# sourceMappingURL=createProcess.js.map

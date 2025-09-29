@@ -179,55 +179,73 @@ export interface TicketDetails {
  *           type: "string"
  *         type:
  *           type: "string"
+ *         elementSelected:
+ *           type: integer
+ *           description: "the Element dynamicId where the ticket is created"
+ *         priority:
+ *           type: integer
+ *           enum: [0, 1, 2]
+ *           description: "Priority levels — 0 (OCCASIONALLY), 1 (NORMAL), 2 (URGENT)"
+ *         description:
+ *           type: "string"
+ *         declarer_id:
+ *           type: "string"
+ *           description: "The ID of the user who declared the ticket"
+ *         creationDate:
+ *           type: "integer"
+ *           description: "The timestamp of the creation of the ticket, in milliseconds since the epoch"
+ *         errorImages:
+ *           type: string
+ *           description: "A string containing error messages related to image uploads, if any"
  */
 /**
-* @swagger
-* components:
-*   schemas:
-*     BasicNode:
-*       type: "object"
-*       properties:
-*         dynamicId:
-*           type: "integer"
-*         staticId:
-*           type: "string"
-*         name:
-*           type: "string"
-*         type:
-*           type: "string"
-*/
+ * @swagger
+ * components:
+ *   schemas:
+ *     BasicNode:
+ *       type: "object"
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         staticId:
+ *           type: "string"
+ *         name:
+ *           type: "string"
+ *         type:
+ *           type: "string"
+ */
 /**
-* @swagger
-* components:
-*   schemas:
-*     Process:
-*       type: "object"
-*       properties:
-*         dynamicId:
-*           type: "integer"
-*         staticId:
-*           type: "string"
-*         name:
-*           type: "string"
-*         type:
-*           type: "string"
-*/
+ * @swagger
+ * components:
+ *   schemas:
+ *     Process:
+ *       type: "object"
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         staticId:
+ *           type: "string"
+ *         name:
+ *           type: "string"
+ *         type:
+ *           type: "string"
+ */
 /**
-* @swagger
-* components:
-*   schemas:
-*     LogTicket:
-*       type: "object"
-*       properties:
-*         userName:
-*           type: "string"
-*         date:
-*           type: "number"
-*         event:
-*           type: "number"
-*         ticketStaticId:
-*           type: "string"
-*/
+ * @swagger
+ * components:
+ *   schemas:
+ *     LogTicket:
+ *       type: "object"
+ *       properties:
+ *         userName:
+ *           type: "string"
+ *         date:
+ *           type: "number"
+ *         event:
+ *           type: "number"
+ *         ticketStaticId:
+ *           type: "string"
+ */
 /**
  * @swagger
  * components:

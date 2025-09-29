@@ -21,14 +21,19 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import { FileSystem } from "spinal-core-connectorjs_type";
-export function awaitSync(model: spinal.Model) {
+import { FileSystem, type Model } from 'spinal-core-connectorjs';
+
+export function awaitSync(model: Model) {
   return new Promise<void>((resolve) => {
+    if (model._server_id && FileSystem._objects[model._server_id] === model) {
+      return resolve();
+    }
+    // Wait for the model to be synced with the FileSystem
     const interval = setInterval(() => {
       if (model._server_id && FileSystem._objects[model._server_id] === model) {
         clearInterval(interval);
         resolve();
       }
-    }, 300)
-  })
+    }, 300);
+  });
 }

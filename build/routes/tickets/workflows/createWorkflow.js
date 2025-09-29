@@ -1,5 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
  *
@@ -23,8 +22,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const awaitSync_1 = require("../../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -47,41 +48,70 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               nameWorkflow:
      *                 type: string
+     *                 description: name of the workflow
+     *               steps:
+     *                 type: array
+     *                 description: optionnal default steps that will be created in the workflow process
+     *                 items:
+     *                   type: object
+     *                   required:
+     *                     - name
+     *                     - order
+     *                   properties:
+     *                     name:
+     *                       type: string
+     *                       description: name of the step
+     *                     color:
+     *                       type: string
+     *                       description: color of the step
+     *                     order:
+     *                       type: integer
+     *                       description: order of the step
      *     responses:
      *       200:
      *         description: Create Successfully
      *       400:
      *         description: create not Successfully
      */
-    app.post("/api/v1/workflow/create", async (req, res, next) => {
+    app.post('/api/v1/workflow/create', async (req, res) => {
         try {
+            if (typeof req.body.nameWorkflow !== 'string') {
+                return res.status(400).send('string nameWorkflow is invalide name');
+            }
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
             const graph = await spinalAPIMiddleware.getGraph();
-            const childrens = await graph.getChildren("hasContext");
-            for (const child of childrens) {
-                if (child.getName().get() === req.body.nameWorkflow) {
-                    return res.status(400).send('the name context already exists');
+            // search if the context name already exists
+            const contextNodes = await graph.getChildren('hasContext');
+            if (contextNodes.some((child) => child.info.name?.get() === req.body.nameWorkflow))
+                return res.status(400).send('the name context already exists');
+            const steps = [];
+            if (req.body.steps && Array.isArray(req.body.steps)) {
+                for (const step of req.body.steps) {
+                    if (step.name && step.order) {
+                        steps.push({
+                            name: step.name,
+                            color: step.color || undefined,
+                            order: step.order,
+                        });
+                    }
                 }
+                steps.sort((a, b) => a.order - b.order);
             }
-            if (req.body.nameWorkflow !== "string") {
-                const context = await spinal_service_ticket_1.serviceTicketPersonalized.createContext(req.body.nameWorkflow, []);
-                await userGraph.addContext(context);
-                return res.status(200).json({
-                    name: context.getName().get(),
-                    type: context.getType().get(),
-                    staticId: context.getId().get(),
-                    dynamicId: context._server_id,
-                });
-            }
-            else {
-                return res.status(400).send("string is invalide name");
-            }
+            const contextTicketNode = await (0, spinal_service_ticket_1.createTicketContext)(req.body.nameWorkflow, steps);
+            await userGraph.addContext(contextTicketNode);
+            await (0, awaitSync_1.awaitSync)(contextTicketNode);
+            return res.status(200).json({
+                dynamicId: contextTicketNode._server_id,
+                name: contextTicketNode.info.name.get() || undefined,
+                type: contextTicketNode.info.type.get() || undefined,
+                staticId: contextTicketNode.info.id.get() || undefined,
+            });
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            return res.status(500).send(error.message);
+            return res.status(500).send(error?.message);
         }
     });
 };

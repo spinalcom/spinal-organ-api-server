@@ -6260,7 +6260,33 @@
                 ],
                 "properties": {
                   "nameWorkflow": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "name of the workflow"
+                  },
+                  "steps": {
+                    "type": "array",
+                    "description": "optionnal default steps that will be created in the workflow process",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "name",
+                        "order"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "name of the step"
+                        },
+                        "color": {
+                          "type": "string",
+                          "description": "color of the step"
+                        },
+                        "order": {
+                          "type": "integer",
+                          "description": "order of the step"
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -6383,7 +6409,7 @@
           }
         ],
         "description": "Delete a workflow",
-        "summary": "delete an workflow",
+        "summary": "this will delete an workflow but also delete the related Process and Steps but NOT the tickets",
         "tags": [
           "Workflow & ticket"
         ],
@@ -6419,21 +6445,9 @@
           }
         ],
         "description": "Return node type list of workflow",
-        "summary": "Get type list in workflow with given ID",
+        "summary": "Get type list in workflow",
         "tags": [
           "Workflow & ticket"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "description": "use the dynamic ID",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
         ],
         "responses": {
           "200": {
@@ -6445,9 +6459,6 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad request"
           }
         }
       }
@@ -6666,7 +6677,7 @@
           }
         ],
         "description": "Delete a process",
-        "summary": "delete an process",
+        "summary": "delete an process and steps but NOT the tickets",
         "tags": [
           "Workflow & ticket"
         ],
@@ -6878,7 +6889,7 @@
         },
         "responses": {
           "200": {
-            "description": "Add Successfully"
+            "description": "Added Successfully"
           },
           "400": {
             "description": "Add not Successfully"
@@ -7048,8 +7059,7 @@
                   "name",
                   "priority",
                   "description",
-                  "declarer_id",
-                  "imageString"
+                  "declarer_id"
                 ],
                 "properties": {
                   "workflow": {

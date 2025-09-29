@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -21,69 +21,89 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import * as express from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
+import { PROCESS_TYPE, getStepNodesFromProcess } from 'spinal-service-ticket';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
+
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
-  * @swagger
-  * /api/v1/workflow/{workflowId}/process/{processId}/delete_process:
-  *   delete:
-  *     security:
-  *       - bearerAuth:
-  *         - read
-  *     description: Delete a process
-  *     summary: delete an process
-  *     tags:
-  *       - Workflow & ticket
-  *     parameters:
-  *      - in: path
-  *        name: workflowId
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *      - in: path
-  *        name: processId
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *     responses:
-  *       200:
-  *         description: Delete Successfully
-  *       400:
-  *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/workflow/{workflowId}/process/{processId}/delete_process:
+   *   delete:
+   *     security:
+   *       - bearerAuth:
+   *         - read
+   *     description: Delete a process
+   *     summary: delete an process and steps but NOT the tickets
+   *     tags:
+   *       - Workflow & ticket
+   *     parameters:
+   *      - in: path
+   *        name: workflowId
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *      - in: path
+   *        name: processId
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Delete Successfully
+   *       400:
+   *         description: Bad request
+   */
 
-  app.delete("/api/v1/workflow/:workflowId/process/:processId/delete_process", async (req, res, next) => {
-    try {
-      const profileId = getProfileId(req);
-      const workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-      const process: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
-      // @ts-ignore
-      SpinalGraphService._addNode(process);
+  app.delete(
+    '/api/v1/workflow/:workflowId/process/:processId/delete_process',
+    async (req, res) => {
+      try {
+        const profileId = getProfileId(req);
+        const workflowContextNode = await getWorkflowContextNode(
+          spinalAPIMiddleware,
+          profileId,
+          req.params.workflowId
+        );
+        const processNode = await loadAndValidateNode(
+          spinalAPIMiddleware,
+          parseInt(req.params.processId, 10),
+          profileId,
+          PROCESS_TYPE
+        );
+        if (processNode.belongsToContext(workflowContextNode) === false)
+          return res
+            .status(400)
+            .send('Process node does not belong to the workflow context');
 
-      if (workflow instanceof SpinalContext && process.belongsToContext(workflow)) {
-        if (workflow.getType().get() === "SpinalSystemServiceTicket") {
-          process.removeFromGraph();
+        const stepNodes = await getStepNodesFromProcess(
+          processNode,
+          workflowContextNode
+        );
+        const proms: Promise<void>[] = [];
+        for (const stepNode of stepNodes) {
+          proms.push(stepNode.removeFromGraph());
         }
-        else {
-          return res.status(400).send("this context is not a SpinalSystemServiceTicket");
-        }
-      } else {
-        res.status(400).send("node not found in context");
+        proms.push(processNode.removeFromGraph());
+        await Promise.all(proms);
+        return res.status(200).send('Delete Successfully');
+      } catch (error) {
+        if (error?.code && error?.message)
+          return res.status(error.code).send(error.message);
+        return res.status(500).send(error?.message);
       }
-
-    } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(500).send(error.message);
     }
-    res.json();
-  })
-}
+  );
+};

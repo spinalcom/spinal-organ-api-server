@@ -1,11 +1,11 @@
 "use strict";
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const getTicketDetails_1 = require("../../../utilities/getTicketDetails");
+const getTicketDetails_1 = require("../../../utilities/workflow/getTicketDetails");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
@@ -55,16 +55,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/ticket/:ticketId/read_details', async (req, res, next) => {
+    app.get('/api/v1/ticket/:ticketId/read_details', async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const details = await (0, getTicketDetails_1.getTicketDetails)(spinalAPIMiddleware, profileId, parseInt(req.params.ticketId, 10));
+            const details = await (0, getTicketDetails_1.getTicketDetails)(spinalAPIMiddleware, profileId, +req.params.ticketId);
             return res.json(details);
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send('ko');
+            return res.status(400).send('ko');
         }
     });
 };

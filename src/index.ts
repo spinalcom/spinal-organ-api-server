@@ -25,9 +25,8 @@
 import config from './config';
 import APIServer from './api-server';
 import SpinalAPIMiddleware from './spinalAPIMiddleware';
-import {getSwaggerDocs, initSwagger} from './swagger';
+import { getSwaggerDocs, initSwagger } from './swagger';
 import ConfigFile from 'spinal-lib-organ-monitoring';
-import {spinalGraphUtils} from 'spinal-organ-api-pubsub';
 import axios from 'axios';
 
 function Requests(logger) {
@@ -46,7 +45,7 @@ function Requests(logger) {
 
     // serve logo.png file
     api.get('/logo.png', (req, res) => {
-      res.sendFile('spinalcore.png', {root: process.cwd() + '/uploads'});
+      res.sendFile('spinalcore.png', { root: process.cwd() + '/uploads' });
     });
 
     return api;
@@ -54,18 +53,20 @@ function Requests(logger) {
 
   return {
     // TODO host should be configurable
-    run: async function (): Promise<void> {
+    run: async function () {
       const spinalAPIMiddleware = await initSpinalHub();
       const api = initApiServer(spinalAPIMiddleware);
       const port = config.api.port;
       const server = api.listen(port, async () => {
-        ConfigFile.init(
-          spinalAPIMiddleware.conn,
-          process.env.ORGAN_NAME,
-          process.env.ORGAN_TYPE,
-          process.env.SPINALHUB_IP,
-          parseInt(process.env.REQUESTS_PORT)
-        );
+        if (!process.env.DISABLE_MONITORING) {
+          ConfigFile.init(
+            spinalAPIMiddleware.conn,
+            process.env.ORGAN_NAME,
+            process.env.ORGAN_TYPE,
+            process.env.SPINALHUB_IP,
+            parseInt(process.env.REQUESTS_PORT)
+          );
+        }
         console.log(`\nApi server is listening at 0.0.0.0:${port}`);
         console.log(`  openapi :\thttp://localhost:${port}/docs/swagger.json`);
         console.log(
@@ -74,23 +75,22 @@ function Requests(logger) {
         console.log(
           `  redoc :\thttp://localhost:${port}/spinalcom-api-redoc-docs`
         );
-        
 
         // Automatic API route call logic
         const autoCallRoute = process.env.AUTO_CALL_ROUTE;
         if (autoCallRoute) {
-        const url = `http://localhost:${port}${autoCallRoute}`;
-        console.log(`AUTOMATIC CALL : ${url}`);
-        try {
-          const response = await axios.post(url);
-          console.log(`RESPONSE :`, response.status);
-        } catch (err) {
-          console.error(`Error calling auto route:`, err.message);
+          const url = `http://localhost:${port}${autoCallRoute}`;
+          console.log(`AUTOMATIC CALL : ${url}`);
+          try {
+            const response = await axios.post(url);
+            console.log(`RESPONSE :`, response.status);
+          } catch (err) {
+            console.error(`Error calling auto route:`, err.message);
+          }
         }
-      }
       });
-      
-      SpinalAPIMiddleware.getInstance().runSocketServer(server);
+
+      return SpinalAPIMiddleware.getInstance().runSocketServer(server);
     },
 
     getSwaggerDocs,

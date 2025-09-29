@@ -1,12 +1,11 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -23,71 +22,77 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
+const spinal_service_ticket_1 = require("spinal-service-ticket");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-    * @swagger
-    * /api/v1/ticket/{ticketId}/add_note:
-    *   post:
-    *     security:
-    *       - bearerAuth:
-    *         - read
-    *     description: add a note
-    *     summary: add a note
-    *     tags:
-    *       - Workflow & ticket
-    *     parameters:
-    *       - in: path
-    *         name: ticketId
-    *         description: use the dynamic ID
-    *         required: true
-    *         schema:
-    *           type: integer
-    *           format: int64
-    *     requestBody:
-    *       content:
-    *         application/json:
-    *           schema:
-    *             type: object
-    *             required:
-    *               - note
-    *             properties:
-    *               note:
-    *                 type: string
-    *     responses:
-    *       200:
-    *         description: Add Successfully
-    *       400:
-    *         description: Add not Successfully
-    */
-    app.post("/api/v1/ticket/:ticketId/add_note", async (req, res, next) => {
+     * @swagger
+     * /api/v1/ticket/{ticketId}/add_note:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - read
+     *     description: add a note
+     *     summary: add a note
+     *     tags:
+     *       - Workflow & ticket
+     *     parameters:
+     *       - in: path
+     *         name: ticketId
+     *         description: use the dynamic ID
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - note
+     *             properties:
+     *               note:
+     *                 type: string
+     *     responses:
+     *       201:
+     *         description: Add Successfully
+     *       400:
+     *         description: Add not Successfully
+     */
+    app.post('/api/v1/ticket/:ticketId/add_note', async (req, res) => {
         try {
+            if (!req.params.ticketId) {
+                return res.status(400).send('Ticket ID is required');
+            }
+            if (!req.body.note) {
+                return res.status(400).send('Note content is required');
+            }
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const ticket = await spinalAPIMiddleware.load(parseInt(req.params.ticketId, 10), profileId);
-            //@ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(ticket);
-            const user = { username: "admin", userId: 168 };
+            const ticket = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, parseInt(req.params.ticketId, 10), profileId, spinal_service_ticket_1.SPINAL_TICKET_SERVICE_TICKET_TYPE);
+            const user = { username: 'admin', userId: 168 };
             const note = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addNote(ticket, user, req.body.note);
             const elementNote = await note.element.load();
-            var info = {
+            const info = {
                 dynamicId: note._server_id,
-                staticId: note.getId().get(),
-                name: note.getName().get(),
-                typeNode: note.getType().get(),
-                userName: elementNote.username.get(),
-                date: elementNote.date.get(),
-                typeNote: elementNote.type.get(),
-                message: elementNote.message.get()
+                staticId: note.info.id.get(),
+                name: note.info.name.get(),
+                typeNode: note.info.type.get(),
+                userName: elementNote.username?.get(),
+                date: elementNote.date?.get(),
+                typeNote: elementNote.type?.get(),
+                message: elementNote.message?.get(),
             };
+            return res.status(201).json(info);
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            res.status(500).send(error.message);
+            return res.status(500).send(error?.message);
         }
-        res.json(info);
     });
 };
 //# sourceMappingURL=ticketAddNote.js.map

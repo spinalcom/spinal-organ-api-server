@@ -91,7 +91,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     console.error(`Error with node id ${tab[index]}: ${result.reason}`);
                     const errorObject = {};
                     errorObject[req.body.optionSearchNodes] = tab[index];
-                    errorObject['error'] = result.reason?.message || result.reason || 'Failed to get Node Details';
+                    errorObject['error'] =
+                        result.reason?.message ||
+                            result.reason ||
+                            'Failed to get Node Details';
                     return errorObject;
                 }
             });
@@ -221,7 +224,8 @@ async function getNodeWithSearchOption(context, searchOption, searchValue, spina
         }
     }
     if (searchOption === 'name') {
-        node = await (0, findOneInContext_1.findOneInContext)(context, context, (n) => n.getName().get() === searchValue && n.getId().get() !== context.getId().get());
+        node = await (0, findOneInContext_1.findOneInContext)(context, context, (n) => n.getName().get() === searchValue &&
+            n.getId().get() !== context.getId().get());
     }
     return node;
 }

@@ -23,10 +23,9 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const spinal_core_connectorjs_type_1 = require("spinal-core-connectorjs_type");
+const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
-const Q = require('q');
 // get the config
 const config_1 = require("./config");
 const spinalIOMiddleware_1 = require("./spinalIOMiddleware");
@@ -39,9 +38,8 @@ class SpinalAPIMiddleware {
         return SpinalAPIMiddleware.instance;
     }
     constructor() {
-        this.iteratorGraph = this.geneGraph();
-        this.config = config_1.default;
         this.loadedPtr = new Map();
+        this.config = config_1.default;
         // connection string to connect to spinalhub
         const protocol = this.config.spinalConnector.protocol
             ? this.config.spinalConnector.protocol
@@ -54,29 +52,21 @@ class SpinalAPIMiddleware {
         const connect_opt = `${protocol}://${login}@${host}/`;
         console.log(`start connect to hub: ${protocol}://${host}/`);
         // initialize the connection
-        this.conn = spinal_core_connectorjs_type_1.spinalCore.connect(connect_opt);
+        this.conn = spinal_core_connectorjs_1.spinalCore.connect(connect_opt);
         // get the Model from the spinalhub, "onLoadSuccess" and "onLoadError" are 2
         // callback function.
+        this.iteratorGraph = this.geneGraph();
     }
     async *geneGraph() {
-        const init = new Promise((resolve, reject) => {
-            spinal_core_connectorjs_type_1.spinalCore.load(this.conn, config_1.default.file.path, (graph) => {
-                spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph)
-                    .then(() => {
-                    resolve(graph);
-                })
-                    .catch((e) => {
-                    console.error(e);
-                    reject();
-                });
-            }, () => {
-                console.error(`File does not exist in location ${config_1.default.file.path}`);
-                reject();
-            });
-        });
-        const graph = await init;
-        while (true) {
-            yield graph;
+        try {
+            const graph = await spinal_core_connectorjs_1.spinalCore.load(this.conn, config_1.default.file.path);
+            await spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
+            while (true) {
+                yield graph;
+            }
+        }
+        catch (error) {
+            console.error(`File does not exist in location ${config_1.default.file.path}`);
         }
     }
     // called if connected to the server and if the spinalhub sent us the Model
@@ -87,76 +77,63 @@ class SpinalAPIMiddleware {
     getProfileGraph() {
         return this.getGraph();
     }
-    load(server_id) {
+    async load(server_id) {
         if (!server_id) {
             return Promise.reject('Invalid serverId');
         }
-        if (typeof spinal_core_connectorjs_type_1.FileSystem._objects[server_id] !== 'undefined') {
+        if (typeof spinal_core_connectorjs_1.FileSystem._objects[server_id] !== 'undefined') {
             // @ts-ignore
-            return Promise.resolve(spinal_core_connectorjs_type_1.FileSystem._objects[server_id]);
+            return Promise.resolve(spinal_core_connectorjs_1.FileSystem._objects[server_id]);
         }
-        return new Promise((resolve, reject) => {
-            this.conn.load_ptr(server_id, (model) => {
-                if (!model) {
-                    // on error
-                    reject('loadptr failed...!');
-                }
-                else {
-                    // on success
-                    resolve(model);
-                }
-            });
-        });
+        try {
+            return await this.conn.load_ptr(server_id);
+        }
+        catch (error) {
+            throw new Error(`Error loading model with server_id: ${server_id}`);
+        }
     }
-    loadPtr(ptr) {
-        if (ptr instanceof spinal_core_connectorjs_type_1.spinalCore._def['File'])
+    async loadPtr(ptr) {
+        if (!ptr)
+            throw new Error('Invalid ptr');
+        if (ptr instanceof spinal_core_connectorjs_1.File)
             return this.loadPtr(ptr._ptr);
         const server_id = ptr.data.value;
+        if (!server_id)
+            throw new Error('Invalid serverId');
         if (this.loadedPtr.has(server_id)) {
             return this.loadedPtr.get(server_id);
         }
-        const prom = new Promise((resolve, reject) => {
+        try {
+            const model = await this.conn.load_ptr(server_id);
+            this.loadedPtr.set(server_id, model);
+            return model;
+        }
+        catch (error) {
+            throw new Error(`Error loading model with server_id: ${server_id}`);
+        }
+    }
+    async runSocketServer(server, spinalIOMiddleware) {
+        await this._waitConnection();
+        if (spinalIOMiddleware == undefined)
+            spinalIOMiddleware = new spinalIOMiddleware_1.SpinalIOMiddleware(this.conn, this.config);
+        const io = await (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
+        return io;
+    }
+    async _waitConnection() {
+        const timeout = 10000 + Date.now();
+        while (timeout > Date.now()) {
             try {
-                this.conn.load_ptr(server_id, (model) => {
-                    if (!model) {
-                        reject(new Error(`LoadedPtr Error server_id: '${server_id}'`));
-                    }
-                    else {
-                        resolve(model);
-                    }
-                });
-            }
-            catch (e) {
-                reject(e);
-            }
-        });
-        this.loadedPtr.set(server_id, prom);
-        return prom;
-    }
-    runSocketServer(server, spinalIOMiddleware) {
-        return this._waitConnection().then(async (result) => {
-            if (spinalIOMiddleware == undefined)
-                spinalIOMiddleware = new spinalIOMiddleware_1.SpinalIOMiddleware(this.conn, this.config);
-            const io = await (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
-            return io;
-        });
-    }
-    _waitConnection() {
-        const deferred = Q.defer();
-        const _waitConnectionLoop = (defer) => {
-            const graph = this.getGraph().then((g) => {
-                if (!this.conn || !g) {
-                    setTimeout(() => {
-                        defer.resolve(_waitConnectionLoop(defer));
-                    }, 200);
+                const graph = await this.getGraph();
+                if (this.conn && graph) {
+                    return;
                 }
-                else {
-                    defer.resolve();
-                }
-            });
-            return defer.promise;
-        };
-        return _waitConnectionLoop(deferred);
+            }
+            catch (error) {
+                // do nothing, we will retry
+            }
+            await new Promise((resolve) => setTimeout(resolve, 200));
+        }
+        throw new Error('Connection timed out');
     }
 }
 SpinalAPIMiddleware.instance = null;

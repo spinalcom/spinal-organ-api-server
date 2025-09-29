@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { getTicketDetails } from '../../../utilities/getTicketDetails';
+import { getTicketDetails } from '../../../utilities/workflow/getTicketDetails';
 import * as express from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
@@ -75,18 +75,31 @@ module.exports = function (
    *       400:
    *         description: Bad request
    */
-  app.post('/api/v1/ticket/read_details_multiple', async (req, res, next) => {
+  app.post('/api/v1/ticket/read_details_multiple', async (req, res) => {
     try {
-      const profileId = getProfileId(req);
       const ids: number[] = req.body;
 
       if (!Array.isArray(ids)) {
         return res.status(400).send('Expected an array of IDs.');
       }
 
+      // check if the array is only numbers or string of numbers
+      if (
+        !ids.every(
+          (id) =>
+            typeof id === 'number' ||
+            (typeof id === 'string' && !isNaN(Number(id)))
+        )
+      ) {
+        return res
+          .status(400)
+          .send('Expected an array of numbers or strings of numbers.');
+      }
+
+      const profileId = getProfileId(req);
       // Map each id to a promise
       const promises = ids.map((id) =>
-        getTicketDetails(spinalAPIMiddleware,profileId, id)
+        getTicketDetails(spinalAPIMiddleware, profileId, +id)
       );
 
       const settledResults = await Promise.allSettled(promises);
@@ -106,15 +119,15 @@ module.exports = function (
         }
       });
 
-      const isGotError = settledResults.some(
+      const didGotError = settledResults.some(
         (result) => result.status === 'rejected'
       );
-      if (isGotError) return res.status(206).json(finalResults);
+      if (didGotError) return res.status(206).json(finalResults);
       return res.status(200).json(finalResults);
     } catch (error) {
-      if (error.code && error.message)
+      if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
-      res.status(400).send(error.message || 'ko');
+      return res.status(400).send(error.message || 'ko');
     }
   });
 };

@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -22,15 +22,18 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import * as express from 'express';
-import { Step } from '../interfacesWorkflowAndTickets'
-import { serviceTicketPersonalized } from 'spinal-service-ticket'
+import { getStepNodesFromProcess, PROCESS_TYPE } from 'spinal-service-ticket';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { getWorkflowContextNode } from '../../../utilities/workflow/getWorkflowContextNode';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/workflow/{workflowId}/process/{processId}/stepList:
@@ -72,49 +75,51 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get(
     '/api/v1/workflow/:workflowId/process/:processId/stepList',
-    async (req, res, next) => {
-      const nodes = [];
+    async (req, res) => {
+      // check if workflowId and processId   are valid
+      if (!req.params.workflowId || isNaN(+req.params.workflowId))
+        return res.status(400).send('Invalid workflowId');
+      if (!req.params.processId || isNaN(+req.params.processId))
+        return res.status(400).send('Invalid processId');
+
       try {
         const profileId = getProfileId(req);
+        const [workflowContextNode, processNode] = await Promise.all([
+          getWorkflowContextNode(
+            spinalAPIMiddleware,
+            profileId,
+            req.params.workflowId
+          ),
+          loadAndValidateNode(
+            spinalAPIMiddleware,
+            parseInt(req.params.processId, 10),
+            profileId,
+            PROCESS_TYPE
+          ),
+        ]);
 
-        const workflow = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-        const process: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.processId, 10), profileId);
-        // @ts-ignore
-        SpinalGraphService._addNode(workflow);
-
-        // @ts-ignore
-        SpinalGraphService._addNode(process);
-
-
-        if (workflow instanceof SpinalContext && process.belongsToContext(workflow)) {
-          if (workflow.getType().get() === "SpinalSystemServiceTicket") {
-            const allSteps = await SpinalGraphService.getChildren(process.getId().get(), ["SpinalSystemServiceTicketHasStep"])
-
-            for (let index = 0; index < allSteps.length; index++) {
-              const realNode = SpinalGraphService.getRealNode(allSteps[index].id.get())
-              const info: Step = {
-                dynamicId: realNode._server_id,
-                staticId: realNode.getId().get(),
-                name: realNode.getName().get(),
-                type: realNode.getType().get(),
-                color: realNode.info.color.get(),
-                order: realNode.info.order.get(),
-                processId: realNode.info.processId.get()
-              }
-              nodes.push(info);
-            }
-          }
-          else {
-            return res.status(400).send("this context is not a SpinalSystemServiceTicket");
-          }
-        } else {
-          res.status(400).send("node not found in context");
-        }
+        const stepNodes = await getStepNodesFromProcess(
+          processNode,
+          workflowContextNode
+        );
+        return res.status(200).json(
+          stepNodes.map((realNode) => {
+            return {
+              dynamicId: realNode._server_id,
+              staticId: realNode.getId().get(),
+              name: realNode.getName().get(),
+              type: realNode.getType().get(),
+              color: realNode.info.color.get(),
+              order: realNode.info.order.get(),
+              processId: realNode.info.processId.get(),
+            };
+          })
+        );
       } catch (error) {
-
-        if (error.code && error.message) return res.status(error.code).send(error.message);
-        return res.status(500).send(error.message);
+        if (error?.code && error?.message)
+          return res.status(error.code).send(error.message);
+        return res.status(500).send(error?.message);
       }
-      res.json(nodes);
-    })
-}
+    }
+  );
+};

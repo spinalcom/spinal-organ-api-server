@@ -1,3 +1,3 @@
-import { ISpinalAPIMiddleware } from '../interfaces';
-import { SpinalNode } from 'spinal-env-viewer-graph-service';
-export declare function getSpatialContext(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string): Promise<SpinalNode<any>>;
+import type { ISpinalAPIMiddleware } from '../interfaces';
+import type { SpinalContext } from 'spinal-model-graph';
+export declare function getSpatialContext(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string): Promise<SpinalContext>;

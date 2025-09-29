@@ -22,78 +22,89 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import { findOneInContext } from '../../../utilities/findOneInContext';
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import type { Workflow } from '../interfacesWorkflowAndTickets';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import * as express from 'express';
-import { Workflow } from '../interfacesWorkflowAndTickets'
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { TICKET_CONTEXT_TYPE } from 'spinal-service-ticket';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
-  * @swagger
-  * /api/v1/workflow/{workflowId}/node/{nodeId}/read:
-  *   get:
-  *     security:
-  *       - bearerAuth:
-  *         - readOnly
-  *     description: read a node in workflow
-  *     summary: read a node in workflow
-  *     tags:
-  *       - Workflow & ticket
-  *     parameters:
-  *       - in: path
-  *         name: workflowId
-  *         description: use the dynamic ID
-  *         required: true
-  *         schema:
-  *           type: integer
-  *           format: int64
-  *       - in: path
-  *         name: nodeId
-  *         description: use the dynamic ID
-  *         required: true
-  *         schema:
-  *           type: integer
-  *           format: int64
-  *     responses:
-  *       200:
-  *         description: Success
-  *         content:
-  *           application/json:
-  *             schema:
-  *                $ref: '#/components/schemas/Workflow'
-  *       400:
-  *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/workflow/{workflowId}/node/{nodeId}/read:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: read a node in workflow
+   *     summary: read a node in workflow
+   *     tags:
+   *       - Workflow & ticket
+   *     parameters:
+   *       - in: path
+   *         name: workflowId
+   *         description: use the dynamic ID
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: nodeId
+   *         description: use the dynamic ID
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/Workflow'
+   *       400:
+   *         description: Bad request
+   */
 
-  app.get("/api/v1/workflow/:workflowId/node/:nodeId/read", async (req, res, next) => {
-    try {
-      const profileId = getProfileId(req);
-      const workflow: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.workflowId, 10), profileId);
-      const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
-      // @ts-ignore
-      SpinalGraphService._addNode(node);
+  app.get(
+    '/api/v1/workflow/:workflowId/node/:nodeId/read',
+    async (req, res) => {
+      try {
+        const profileId = getProfileId(req);
+        const workflow = await loadAndValidateNode(
+          spinalAPIMiddleware,
+          parseInt(req.params.workflowId, 10),
+          profileId,
+          TICKET_CONTEXT_TYPE
+        );
+        const node = await loadAndValidateNode(
+          spinalAPIMiddleware,
+          parseInt(req.params.nodeId, 10),
+          profileId
+        );
 
-      if (workflow.getType().get() === "SpinalSystemServiceTicket" && typeof node !== "undefined") {
-        var info: Workflow = {
+        if (!node.belongsToContext(workflow))
+          return res
+            .status(400)
+            .send(`this node is not valid in the workflow context`);
+
+        const info: Workflow = {
           dynamicId: node._server_id,
-          staticId: node.getId().get(),
-          name: node.getName().get(),
-          type: node.getType().get(),
-        }
+          staticId: node.info.id.get(),
+          name: node.info.name.get(),
+          type: node.info.type.get(),
+        };
+        return res.json(info);
+      } catch (error) {
+        if (error?.code && error?.message)
+          return res.status(error.code).send(error.message);
+        return res.status(500).send(error?.message);
       }
-      else if (workflow.getType().get() !== "SpinalSystemServiceTicket") {
-        return res.status(400).send("this context is not a SpinalSystemServiceTicket");
-      }
-    } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(500).send(error.message);
     }
-    res.json(info);
-  })
-
-}
+  );
+};

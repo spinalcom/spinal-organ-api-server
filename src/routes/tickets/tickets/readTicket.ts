@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2025 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -22,10 +22,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { getTicketDetails } from '../../../utilities/getTicketDetails';
-import * as express from 'express';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import { getTicketDetails } from '../../../utilities/workflow/getTicketDetails';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
+import * as express from 'express';
 
 module.exports = function (
   logger,
@@ -61,19 +61,19 @@ module.exports = function (
    *       400:
    *         description: Bad request
    */
-  app.get('/api/v1/ticket/:ticketId/read_details', async (req, res, next) => {
+  app.get('/api/v1/ticket/:ticketId/read_details', async (req, res) => {
     try {
       const profileId = getProfileId(req);
       const details = await getTicketDetails(
         spinalAPIMiddleware,
         profileId,
-        parseInt(req.params.ticketId, 10)
+        +req.params.ticketId
       );
       return res.json(details);
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send('ko');
+      if (error?.code && error?.message)
+        return res.status(error.code).send(error.message);
+      return res.status(400).send('ko');
     }
   });
 };

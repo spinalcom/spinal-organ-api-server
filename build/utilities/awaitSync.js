@@ -24,11 +24,15 @@ exports.awaitSync = void 0;
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-const spinal_core_connectorjs_type_1 = require("spinal-core-connectorjs_type");
+const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
 function awaitSync(model) {
     return new Promise((resolve) => {
+        if (model._server_id && spinal_core_connectorjs_1.FileSystem._objects[model._server_id] === model) {
+            return resolve();
+        }
+        // Wait for the model to be synced with the FileSystem
         const interval = setInterval(() => {
-            if (model._server_id && spinal_core_connectorjs_type_1.FileSystem._objects[model._server_id] === model) {
+            if (model._server_id && spinal_core_connectorjs_1.FileSystem._objects[model._server_id] === model) {
                 clearInterval(interval);
                 resolve();
             }
