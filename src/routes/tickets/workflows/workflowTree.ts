@@ -28,7 +28,7 @@ import * as express from 'express';
 import { SpinalContext } from 'spinal-model-graph';
 import { recTree } from '../../../utilities/recTree';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { loadAndValidateNode } from 'src/utilities/loadAndValidateNode';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 import { TICKET_CONTEXT_TYPE } from 'spinal-service-ticket';
 
 module.exports = function (

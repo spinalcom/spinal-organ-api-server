@@ -80,7 +80,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 context.info.add_attr({ icon: req.body.contextIcon });
             }
             await (0, awaitSync_1.awaitSync)(context); // Wait for the _server_id to be assigned by hub
-            //userGraph.addContext(context);
+            if (userGraph._server_id != graph._server_id) {
+                await userGraph.addContext(context);
+            }
             return res.status(200).json({
                 name: context.getName().get(),
                 staticId: context.getId().get(),

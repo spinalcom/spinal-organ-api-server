@@ -1407,6 +1407,34 @@
           },
           "type": {
             "type": "string"
+          },
+          "elementSelected": {
+            "type": "integer",
+            "description": "the Element dynamicId where the ticket is created"
+          },
+          "priority": {
+            "type": "integer",
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "description": "Priority levels — 0 (OCCASIONALLY), 1 (NORMAL), 2 (URGENT)"
+          },
+          "description": {
+            "type": "string"
+          },
+          "declarer_id": {
+            "type": "string",
+            "description": "The ID of the user who declared the ticket"
+          },
+          "creationDate": {
+            "type": "integer",
+            "description": "The timestamp of the creation of the ticket, in milliseconds since the epoch"
+          },
+          "errorImages": {
+            "type": "string",
+            "description": "A string containing error messages related to image uploads, if any"
           }
         }
       },
@@ -6265,7 +6293,7 @@
                   },
                   "steps": {
                     "type": "array",
-                    "description": "optionnal default steps that will be created in the workflow process",
+                    "description": "optionnal default steps that will be created in the workflow process, steps start at order 1",
                     "items": {
                       "type": "object",
                       "required": [
@@ -6283,7 +6311,7 @@
                         },
                         "order": {
                           "type": "integer",
-                          "description": "order of the step"
+                          "description": "order of the step, starts at 1"
                         }
                       }
                     }
@@ -6409,7 +6437,7 @@
           }
         ],
         "description": "Delete a workflow",
-        "summary": "this will delete an workflow but also delete the related Process and Steps but NOT the tickets",
+        "summary": "this will delete an workflow but also delete the related Process and Steps, deleting the tickets is an optional choice",
         "tags": [
           "Workflow & ticket"
         ],
@@ -6422,6 +6450,15 @@
             "schema": {
               "type": "integer",
               "format": "int64"
+            }
+          },
+          {
+            "in": "query",
+            "name": "shouldDeleteTickets",
+            "description": "if true all tickets in the workflow will be deleted",
+            "required": false,
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -6888,7 +6925,7 @@
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Added Successfully"
           },
           "400": {
@@ -7045,7 +7082,7 @@
           "Workflow & ticket"
         ],
         "requestBody": {
-          "description": "For the two parameters *workflow* and *process* you can browse it either by putting the dynamicId or the name and to associate the ticket with an element, please fill in the dynamicId or StaticId parameter",
+          "description": "For the two parameters *workflow* and *process* you can use either the dynamicId or the name. To associate the ticket with an element, please fill in the dynamicId parameter",
           "required": true,
           "content": {
             "application/json": {
@@ -7055,30 +7092,54 @@
                   "workflow",
                   "process",
                   "nodeDynamicId",
-                  "nodeStaticId",
                   "name",
                   "priority",
-                  "description",
-                  "declarer_id"
+                  "description"
                 ],
                 "properties": {
                   "workflow": {
-                    "type": "string"
+                    "description": "The workflow's dynamicId or name",
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ]
                   },
                   "process": {
-                    "type": "string"
+                    "description": "The process's dynamicId or name",
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ]
                   },
                   "nodeDynamicId": {
-                    "type": "number"
+                    "type": "integer",
+                    "description": "The node's target dynamicId"
                   },
                   "nodeStaticId": {
-                    "type": "string"
+                    "type": "string",
+                    "deprecated": true,
+                    "description": "(deprecated) The node's target staticId"
                   },
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ticket's name"
                   },
                   "priority": {
-                    "type": "number"
+                    "type": "integer",
+                    "enum": [
+                      0,
+                      1,
+                      2
+                    ],
+                    "description": "Priority levels — 0 (OCCASIONALLY), 1 (NORMAL), 2 (URGENT)"
                   },
                   "description": {
                     "type": "string"
@@ -7109,7 +7170,7 @@
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Success",
             "content": {
               "application/json": {
@@ -7281,7 +7342,7 @@
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Add Successfully"
           },
           "400": {
@@ -7299,7 +7360,7 @@
             ]
           }
         ],
-        "description": "change a node of Ticket",
+        "description": "change a node of Ticket, usualy a room or equipment",
         "summary": "change a node of Ticket",
         "tags": [
           "Workflow & ticket"
@@ -14393,6 +14454,166 @@
         }
       }
     },
+    "/api/v1/context/{idContext}/node/{idNode}/parents": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Retrieve parents of a single node based on context and relations.",
+        "summary": "Retrieve parents of a single node based on context and relations",
+        "tags": [
+          "Nodes"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "idContext",
+            "description": "Context dynamic Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "path",
+            "name": "idNode",
+            "description": "Node dynamic Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success -  Information for the specified relations fetched successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNodeMultiple"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters."
+          }
+        }
+      }
+    },
+    "/api/v1/context/{id}/node/parents_multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Retrieve parents of multiple nodes based on context and relations.",
+        "summary": "Retrieve parents of multiple nodes based on context and relations",
+        "tags": [
+          "Nodes"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "Context dynamic Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "dynamicId": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "relations": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success - All parent nodes information for the specified relations fetched successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNodeMultiple"
+                  }
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial Content - Some parent node information based on the specified relations could not be fetched.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/BasicNodeMultiple"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters."
+          }
+        }
+      }
+    },
     "/api/v1/node/{id}/parents": {
       "get": {
         "security": [
@@ -17015,8 +17236,8 @@
         "parameters": [
           {
             "in": "path",
-            "name": "id",
-            "description": "use the dynamic ID",
+            "name": "ticketDynamicId",
+            "description": "use the dynamic ID of a ticket",
             "required": true,
             "schema": {
               "type": "integer",
@@ -17127,7 +17348,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "id",
+            "name": "ticketDynamicId",
             "description": "use the dynamic ID",
             "required": true,
             "schema": {

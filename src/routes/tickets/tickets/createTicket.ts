@@ -144,16 +144,13 @@ module.exports = function (
       description,
     } = req.body;
     const missing: string[] = [];
-
     if (!workflow) missing.push('workflow');
     if (!process) missing.push('process');
     if (!nodeDynamicId && !nodeStaticId) {
-      missing.push('nodeDynamicId');
+      missing.push('nodeDynamicId | nodeStaticId (one is required)');
     } else if (nodeDynamicId && isNaN(+nodeDynamicId)) {
       missing.push('nodeDynamicId (must be a number)');
-    } else if (typeof nodeStaticId !== 'string') {
-      missing.push("nodeStaticId (must be a string and it's deprecated)");
-    }
+    } 
     if (priority === undefined) missing.push('priority');
     if (!name || typeof name !== 'string')
       missing.push('name (must be a string)');
@@ -291,7 +288,7 @@ module.exports = function (
       if (errorImages.length > 0) {
         info.errorImages = 'error uploading images : ' + errorImages.join(', ');
       }
-      return res.send(201).json(info);
+      return res.status(201).json(info);
     } catch (error) {
       if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
@@ -337,7 +334,7 @@ async function getWorkflowNode(
 ) {
   try {
     const workflowId = +workflowIdOrName;
-    if (isNaN(workflowId)) {
+    if (!isNaN(workflowId)) {
       return loadAndValidateNode(
         spinalAPIMiddleware,
         workflowId,

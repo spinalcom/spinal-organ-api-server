@@ -51,7 +51,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                 description: name of the workflow
      *               steps:
      *                 type: array
-     *                 description: optionnal default steps that will be created in the workflow process
+     *                 description: optionnal default steps that will be created in the workflow process, steps start at order 1
      *                 items:
      *                   type: object
      *                   required:
@@ -66,7 +66,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                       description: color of the step
      *                     order:
      *                       type: integer
-     *                       description: order of the step
+     *                       description: order of the step, starts at 1
      *     responses:
      *       200:
      *         description: Create Successfully
@@ -88,7 +88,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const steps = [];
             if (req.body.steps && Array.isArray(req.body.steps)) {
                 for (const step of req.body.steps) {
-                    if (step.name && step.order) {
+                    if (step.name && typeof step.order === 'number') {
                         steps.push({
                             name: step.name,
                             color: step.color || undefined,
@@ -99,7 +99,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 steps.sort((a, b) => a.order - b.order);
             }
             const contextTicketNode = await (0, spinal_service_ticket_1.createTicketContext)(req.body.nameWorkflow, steps);
-            await userGraph.addContext(contextTicketNode);
+            if (userGraph._server_id != graph._server_id) {
+                await userGraph.addContext(contextTicketNode);
+            }
             await (0, awaitSync_1.awaitSync)(contextTicketNode);
             return res.status(200).json({
                 dynamicId: contextTicketNode._server_id,

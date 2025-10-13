@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 13-10-2025 -> v1.1.0
+- Added routes /context/:idContext/node/:idNode/parents to get parents of a node in a context based on specific relations. Also added /context/{id}/node/parents_multiple for multiple nodes.
+- Merge with dev-ticket-service-ticket branch + fixes
+
 ## 26-09-2025 -> v1.0.53
 - Added route /api/v1/endpoint/:id/timeSeries/bulk-insert to bulk insert time series data from an excel file.
 - Hotfix ticket more safeguards on missing optional info

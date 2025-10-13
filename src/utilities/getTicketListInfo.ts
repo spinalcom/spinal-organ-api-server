@@ -7,7 +7,7 @@ import { ISpinalAPIMiddleware } from '../interfaces';
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import { LOGS_EVENTS } from 'spinal-service-ticket/dist/Constants';
 import getFiles from './getFiles';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
+import { serviceTicketPersonalized, getTicketInfo } from 'spinal-service-ticket';
 
 async function getTicketListInfo(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
@@ -21,9 +21,9 @@ async function getTicketListInfo(
   //@ts-ignore
   SpinalGraphService._addNode(node);
 
+
   const ticketList = await node.getChildren('SpinalSystemServiceTicketHasTicket');
   for (const ticket of ticketList) {
-    
     //@ts-ignore
     SpinalGraphService._addNode(ticket);
     //context && workflow
@@ -47,6 +47,8 @@ async function getTicketListInfo(
           }
         }
       });
+
+    const ticketNodeInfo = await getTicketInfo(ticket);
       
 
     const info = {
@@ -54,13 +56,13 @@ async function getTicketListInfo(
       staticId: ticket.getId().get(),
       name: ticket.getName().get(),
       type: ticket.getType().get(),
-      priority: ticket.info.priority?.get(),
-      creationDate: ticket.info.creationDate?.get() ?? '',
-      userName: ticket.info.user?.name?.get() ?? '',
-      gmaoId: ticket.info.gmaoId?.get() ?? '',
-      gmaoDateCreation: ticket.info.gmaoDateCreation?.get() ?? '',
-      description: ticket.info.description?.get() ?? '',
-      declarer_id: ticket.info.declarer_id?.get() ?? '',
+      priority: Number(ticketNodeInfo.priority) ?? 1,
+      creationDate: Number(ticketNodeInfo.creationDate) || NaN,
+      userName: ticketNodeInfo.username || ticketNodeInfo.user || '',
+      gmaoId: ticketNodeInfo.gmaoId ?? '',
+      gmaoDateCreation: ticketNodeInfo.gmaoDateCreation ?? '',
+      description: ticketNodeInfo.description ?? '',
+      declarer_id: ticketNodeInfo.declarer_id ?? '',
       process:
         _process === undefined
           ? ''

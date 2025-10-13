@@ -69,6 +69,8 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   require('./nodes/nodeChildrenInContextSpecificRelationsMultiple')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeParentsSpecificRelations')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeParentsSpecificRelationsMultiple')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeParentInContextSpecificRelations')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeParentInContextSpecificRelationsMultiple')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeParents')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeEndPointList')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeEndPointListMultiple')(logger, app, spinalAPIMiddleware);

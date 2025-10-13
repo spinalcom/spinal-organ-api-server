@@ -63,7 +63,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const graph = await spinalAPIMiddleware.getGraph();
             await spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
             const context = await spinal_env_viewer_plugin_group_manager_service_1.default.createGroupContext(req.body.contextName, "BmsEndpoint");
-            userGraph.addContext(context);
+            if (userGraph._server_id != graph._server_id) {
+                await userGraph.addContext(context);
+            }
             res.status(200).json({
                 name: context.getName().get(),
                 staticId: context.getId().get(),

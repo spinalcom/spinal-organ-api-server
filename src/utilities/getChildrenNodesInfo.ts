@@ -20,12 +20,17 @@ async function getChildrenNodesInfo(
       contextNode = await spinalAPIMiddleware.load(contextId,profileId);
     }
     const node: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
-    let children = await node.getChildren(relations);
-    if(contextNode){
-      children = children.filter( (child) => {
-        return child.belongsToContext(contextNode);
-      })
+    let children: SpinalNode<any>[];
+
+    if (contextNode) {
+      // children = await node.getChildrenInContext(contextNode, )
+      children = await node.getChildrenInContext(contextNode, relations);
     }
+    else {
+      children = await node.getChildren(relations);
+    }
+    // console.log("test",children);
+
     const childrenInfo: BasicNode[] = [];
     for (const child of children) {
       const info : BasicNode = {

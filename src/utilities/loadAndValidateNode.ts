@@ -32,8 +32,8 @@ export async function loadAndValidateNode(
   nodeType?: string
 ) {
   if (
-    typeof serverId === 'number' ||
-    (typeof serverId === 'string' && !isNaN(Number(serverId)))
+    (typeof serverId === 'number' && isNaN(serverId)) ||
+    (typeof serverId === 'string' && isNaN(Number(serverId)))
   )
     throw createErrorResponse(400, `Invalid dynamicId: ${serverId}`);
 

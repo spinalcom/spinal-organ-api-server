@@ -89,7 +89,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         context.info.add_attr({icon : req.body.contextIcon})
       }
       await awaitSync(context); // Wait for the _server_id to be assigned by hub
-      //userGraph.addContext(context);
+      if(userGraph._server_id != graph._server_id){
+        await userGraph.addContext(context);
+      }
 
       return res.status(200).json({
         name: context.getName().get(),

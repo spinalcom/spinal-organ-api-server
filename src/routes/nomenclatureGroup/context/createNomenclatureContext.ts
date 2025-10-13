@@ -73,7 +73,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
       const context = await spinalNomenclatureService.createOrGetContext(req.body.nomenclatureContextName)
 
-      userGraph.addContext(context);
+      if(userGraph._server_id != graph._server_id){
+        await userGraph.addContext(context);
+      }
 
       const info = {
         dynamicId: context._server_id,

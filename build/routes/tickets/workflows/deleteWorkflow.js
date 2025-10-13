@@ -35,7 +35,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - read
      *     description: Delete a workflow
-     *     summary: this will delete an workflow but also delete the related Process and Steps but NOT the tickets
+     *     summary: this will delete an workflow but also delete the related Process and Steps, deleting the tickets is an optional choice
      *     tags:
      *       - Workflow & ticket
      *     parameters:
@@ -46,6 +46,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *        schema:
      *          type: integer
      *          format: int64
+     *      - in : query
+     *        name : shouldDeleteTickets
+     *        description : if true all tickets in the workflow will be deleted
+     *        required : false
+     *        schema:
+     *          type: boolean
      *     responses:
      *       200:
      *         description: Delete Successfully
@@ -55,12 +61,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.delete('/api/v1/workflow/:id/delete', async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const shouldDeleteTickets = req.query.shouldDeleteTickets === 'true';
             const workflowNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, parseInt(req.params.id, 10), profileId, spinal_service_ticket_1.TICKET_CONTEXT_TYPE);
             const proms = [];
             const processNodes = await (0, spinal_service_ticket_1.getAllTicketProcess)(workflowNode);
             for (const processNode of processNodes) {
                 const stepNodes = await (0, spinal_service_ticket_1.getStepNodesFromProcess)(processNode, workflowNode);
                 for (const stepNode of stepNodes) {
+                    const tickets = await (0, spinal_service_ticket_1.getTicketsFromStep)(stepNode);
+                    if (shouldDeleteTickets) {
+                        for (const ticket of tickets) {
+                            proms.push(ticket.removeFromGraph());
+                        }
+                    }
                     proms.push(stepNode.removeFromGraph());
                 }
                 proms.push(processNode.removeFromGraph());

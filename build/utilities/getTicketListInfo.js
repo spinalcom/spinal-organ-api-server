@@ -36,18 +36,19 @@ async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId, incl
                 }
             }
         });
+        const ticketNodeInfo = await (0, spinal_service_ticket_1.getTicketInfo)(ticket);
         const info = {
             dynamicId: ticket._server_id,
             staticId: ticket.getId().get(),
             name: ticket.getName().get(),
             type: ticket.getType().get(),
-            priority: ticket.info.priority?.get(),
-            creationDate: ticket.info.creationDate?.get() ?? '',
-            userName: ticket.info.user?.name?.get() ?? '',
-            gmaoId: ticket.info.gmaoId?.get() ?? '',
-            gmaoDateCreation: ticket.info.gmaoDateCreation?.get() ?? '',
-            description: ticket.info.description?.get() ?? '',
-            declarer_id: ticket.info.declarer_id?.get() ?? '',
+            priority: Number(ticketNodeInfo.priority) ?? 1,
+            creationDate: Number(ticketNodeInfo.creationDate) || NaN,
+            userName: ticketNodeInfo.username || ticketNodeInfo.user || '',
+            gmaoId: ticketNodeInfo.gmaoId ?? '',
+            gmaoDateCreation: ticketNodeInfo.gmaoDateCreation ?? '',
+            description: ticketNodeInfo.description ?? '',
+            declarer_id: ticketNodeInfo.declarer_id ?? '',
             process: _process === undefined
                 ? ''
                 : {

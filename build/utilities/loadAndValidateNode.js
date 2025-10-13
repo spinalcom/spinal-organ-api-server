@@ -26,8 +26,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.loadAndValidateNode = void 0;
 const spinal_model_graph_1 = require("spinal-model-graph");
 async function loadAndValidateNode(spinalAPIMiddleware, serverId, profileId, nodeType) {
-    if (typeof serverId === 'number' ||
-        (typeof serverId === 'string' && !isNaN(Number(serverId))))
+    if ((typeof serverId === 'number' && isNaN(serverId)) ||
+        (typeof serverId === 'string' && isNaN(Number(serverId))))
         throw createErrorResponse(400, `Invalid dynamicId: ${serverId}`);
     const node = await safeLoadNode(spinalAPIMiddleware, serverId, profileId);
     if (!(node instanceof spinal_model_graph_1.SpinalNode))

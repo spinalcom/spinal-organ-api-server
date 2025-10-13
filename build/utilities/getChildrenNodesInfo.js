@@ -9,12 +9,15 @@ async function getChildrenNodesInfo(spinalAPIMiddleware, profileId, dynamicId, r
         contextNode = await spinalAPIMiddleware.load(contextId, profileId);
     }
     const node = await spinalAPIMiddleware.load(dynamicId, profileId);
-    let children = await node.getChildren(relations);
+    let children;
     if (contextNode) {
-        children = children.filter((child) => {
-            return child.belongsToContext(contextNode);
-        });
+        // children = await node.getChildrenInContext(contextNode, )
+        children = await node.getChildrenInContext(contextNode, relations);
     }
+    else {
+        children = await node.getChildren(relations);
+    }
+    // console.log("test",children);
     const childrenInfo = [];
     for (const child of children) {
         const info = {

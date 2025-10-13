@@ -116,13 +116,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         if (!process)
             missing.push('process');
         if (!nodeDynamicId && !nodeStaticId) {
-            missing.push('nodeDynamicId');
+            missing.push('nodeDynamicId | nodeStaticId (one is required)');
         }
         else if (nodeDynamicId && isNaN(+nodeDynamicId)) {
             missing.push('nodeDynamicId (must be a number)');
-        }
-        else if (typeof nodeStaticId !== 'string') {
-            missing.push("nodeStaticId (must be a string and it's deprecated)");
         }
         if (priority === undefined)
             missing.push('priority');
@@ -218,7 +215,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (errorImages.length > 0) {
                 info.errorImages = 'error uploading images : ' + errorImages.join(', ');
             }
-            return res.send(201).json(info);
+            return res.status(201).json(info);
         }
         catch (error) {
             if (error?.code && error?.message)
@@ -257,7 +254,7 @@ async function purgeEmptyChildren(targetNode) {
 async function getWorkflowNode(workflowIdOrName, spinalAPIMiddleware, profileId) {
     try {
         const workflowId = +workflowIdOrName;
-        if (isNaN(workflowId)) {
+        if (!isNaN(workflowId)) {
             return (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, workflowId, profileId, spinal_service_ticket_1.TICKET_CONTEXT_TYPE);
         }
         // try to find the workflow by name

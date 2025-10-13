@@ -1,20 +1,31 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getParentNodesInfo = void 0;
-async function getParentNodesInfo(spinalAPIMiddleware, profileId, dynamicId, relations) {
+async function getParentNodesInfo(spinalAPIMiddleware, profileId, dynamicId, relations, contextId) {
     const node = await spinalAPIMiddleware.load(dynamicId, profileId);
-    const children = await node.getParents(relations);
-    const childrenInfo = [];
-    for (const child of children) {
-        const info = {
-            dynamicId: child._server_id,
-            staticId: child.getId().get(),
-            name: child.getName().get(),
-            type: child.getType().get(),
-        };
-        childrenInfo.push(info);
+    let contextNode = undefined;
+    if (contextId) {
+        contextNode = await spinalAPIMiddleware.load(contextId, profileId);
     }
-    return childrenInfo;
+    let parents;
+    if (contextNode) {
+        // children = await node.getChildrenInContext(contextNode, )
+        parents = await node.getParentsInContext(contextNode, relations);
+    }
+    else {
+        parents = await node.getParents(relations);
+    }
+    const parentsInfo = [];
+    for (const parent of parents) {
+        const info = {
+            dynamicId: parent._server_id,
+            staticId: parent.getId().get(),
+            name: parent.getName().get(),
+            type: parent.getType().get(),
+        };
+        parentsInfo.push(info);
+    }
+    return parentsInfo;
 }
 exports.getParentNodesInfo = getParentNodesInfo;
 exports.default = getParentNodesInfo;

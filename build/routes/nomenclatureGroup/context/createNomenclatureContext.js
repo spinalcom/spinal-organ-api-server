@@ -63,7 +63,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const graph = await spinalAPIMiddleware.getGraph();
             await spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
             const context = await spinal_env_viewer_plugin_nomenclature_service_1.spinalNomenclatureService.createOrGetContext(req.body.nomenclatureContextName);
-            userGraph.addContext(context);
+            if (userGraph._server_id != graph._server_id) {
+                await userGraph.addContext(context);
+            }
             const info = {
                 dynamicId: context._server_id,
                 staticId: context.getId().get(),
