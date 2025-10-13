@@ -77,7 +77,7 @@
     "spinal-model-timeseries": "spinal-model-timeseries",
     "spinal-organ-api-pubsub": "spinal-organ-api-pubsub",
     "spinal-organ-network_sample": "spinal-organ-network_sample",
-    "spinal-service-ticket": "spinal-service-ticket",
+    "spinal-service-ticket": "spinal-service-ticket@v0",
     "spinal-service-user": "spinal-service-user"
   }
 }
