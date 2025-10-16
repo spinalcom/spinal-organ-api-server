@@ -24,6 +24,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const spinal_core_connectorjs_type_1 = require("spinal-core-connectorjs_type");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const awaitSync_1 = require("../../../utilities/awaitSync");
@@ -116,11 +117,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res
                     .status(400)
                     .send('Could not find the process : ' + req.body.process);
-            const node = await (0, getNode_1.default)(spinalAPIMiddleware, req.body.nodeDynamicId, req.body.nodeStaticId, profileId);
-            if (!node)
-                return res.status(400).send('invalid nodeDynamicId or nodeStaticId');
-            //@ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(workflowNode);
             //@ts-ignore
@@ -131,60 +127,91 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     .send('The process exists, but is not part of the workflow given : ' +
                     req.body.workflow);
             }
-            const ticketCreated = await spinal_service_ticket_1.serviceTicketPersonalized.addTicket(ticketInfo, processNode.getId().get(), workflowNode.getId().get(), node.getId().get());
-            // clear modèles vides : 
-            const lst = await node.children.PtrLst.SpinalSystemServiceTicketHasTicket.children.load();
-            const toRemove = [];
-            for (const x of lst) {
-                if (x.info == undefined) {
-                    toRemove.push(x);
-                }
-            }
-            for (const emptyModel of toRemove) {
-                lst.remove(emptyModel);
-            }
-            // fin clear modèles vides
-            const ticketList = await spinal_service_ticket_1.serviceTicketPersonalized.getTicketsFromNode(node.getId().get());
-            const linkedTicket = ticketList.find((element) => element.id === ticketCreated);
-            if (!linkedTicket) {
-                return res
-                    .status(400)
-                    .send(`Ticket created, but could not be found to be linked to node : ${node
-                    .getName()
-                    .get()}`);
-            }
-            const realNodeTicket = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(linkedTicket.id);
-            await (0, awaitSync_1.awaitSync)(realNodeTicket);
+            const stepId = await spinal_service_ticket_1.serviceTicketPersonalized.getFirstStep(processNode.getId().get(), workflowNode.getId().get());
+            const stepNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(stepId);
+            const ticketNode = new spinal_env_viewer_graph_service_1.SpinalNode(ticketInfo.name, 'SpinalSystemServiceTicketTypeTicket');
+            ticketNode.info.add_attr({
+                processId: processNode.getId().get(),
+                stepId: stepId,
+                contextId: workflowNode.getId().get(),
+                priority: ticketInfo.priority,
+                description: ticketInfo.description,
+                declarer_id: ticketInfo.declarer_id,
+                creationDate: (new Date()).toISOString(),
+            });
+            spinal_core_connectorjs_type_1.FileSystem._objects_to_send.set(ticketNode.model_id, ticketNode);
+            //@ts-ignore
+            spinal_core_connectorjs_type_1.FileSystem._send_data_to_hub_func();
+            await (0, awaitSync_1.awaitSync)(ticketNode);
+            console.log('server_id AFTER sending data', ticketNode._server_id);
             const info = {
-                dynamicId: realNodeTicket._server_id,
-                staticId: realNodeTicket.getId().get(),
-                name: realNodeTicket.getName().get(),
-                type: realNodeTicket.getType().get(),
+                dynamicId: ticketNode._server_id,
+                staticId: ticketNode.getId().get(),
+                name: ticketNode.getName().get(),
+                type: ticketNode.getType().get(),
                 elementSelcted: req.body.nodeDynamicId,
-                priority: realNodeTicket.info?.priority.get(),
-                description: realNodeTicket.info?.description.get(),
-                declarer_id: realNodeTicket.info?.declarer_id.get(),
-                creationDate: realNodeTicket.info?.creationDate.get(),
+                priority: ticketNode.info?.priority?.get(),
+                description: ticketNode.info?.description?.get(),
+                declarer_id: ticketNode.info?.declarer_id?.get(),
+                creationDate: ticketNode.info?.creationDate?.get(),
             };
-            if (req.body.images && req.body.images.length > 0) {
-                // const objImage = new Lst(req.body.images);
-                // realNodeTicket.info.add_attr('images', new Ptr(objImage));
-                for (const image of req.body.images) {
-                    // @ts-ignore
-                    const user = {
-                        username: realNodeTicket.info?.declarer_id?.get() || 'user',
-                        userId: 0,
-                    };
-                    const base64Image = image.value;
-                    // check if data base64
-                    if (/^data:image\/\w+;base64,/.test(base64Image) === true) {
-                        const imageData = base64Image.replace(/^data:image\/\w+;base64,/, '');
-                        const imageBufferData = Buffer.from(imageData, 'base64');
-                        await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addFileAsNote(realNodeTicket, { name: image.name, buffer: imageBufferData }, user);
-                    }
-                }
-            }
+            const node = await (0, getNode_1.default)(spinalAPIMiddleware, req.body.nodeDynamicId, req.body.nodeStaticId, profileId);
+            if (!node)
+                return res.status(400).send('invalid nodeDynamicId or nodeStaticId');
+            //@ts-ignore
+            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
+            // Here we call a function that does the rest of the work asynchronously
+            doTicketCreationAsyncWork(ticketNode, node, stepNode, processNode, workflowNode, req.body.images);
             return res.json(info);
+            //await stepNode.addChildInContext(model, 'SpinalSystemServiceTicketHasTicket','PtrLst', workflowNode);
+            // const ticketCreated = await serviceTicketPersonalized.addTicket(
+            //   ticketInfo,
+            //   processNode.getId().get(),
+            //   workflowNode.getId().get(),
+            //   node.getId().get()
+            // );
+            // // clear modèles vides : 
+            // const lst = await node.children.PtrLst.SpinalSystemServiceTicketHasTicket.children.load()
+            // const toRemove = []
+            // for(const x of lst){
+            //   if(x.info == undefined){
+            //     toRemove.push(x)
+            //   }
+            // }
+            // for(const emptyModel of toRemove){
+            //   lst.remove(emptyModel)
+            // }
+            // // fin clear modèles vides
+            // const ticketList = await serviceTicketPersonalized.getTicketsFromNode(
+            //   node.getId().get()
+            // );
+            // const linkedTicket = ticketList.find(
+            //   (element) => element.id === ticketCreated
+            // );
+            // if (!linkedTicket) {
+            //   return res
+            //     .status(400)
+            //     .send(
+            //       `Ticket created, but could not be found to be linked to node : ${node
+            //         .getName()
+            //         .get()}`
+            //     );
+            // }
+            // const realNodeTicket = SpinalGraphService.getRealNode(
+            //   linkedTicket.id
+            // );
+            // await awaitSync(realNodeTicket);
+            // const info = {
+            //   dynamicId: realNodeTicket._server_id,
+            //   staticId: realNodeTicket.getId().get(),
+            //   name: realNodeTicket.getName().get(),
+            //   type: realNodeTicket.getType().get(),
+            //   elementSelcted: req.body.nodeDynamicId,
+            //   priority: realNodeTicket.info?.priority.get(),
+            //   description: realNodeTicket.info?.description.get(),
+            //   declarer_id: realNodeTicket.info?.declarer_id.get(),
+            //   creationDate: realNodeTicket.info?.creationDate.get(),
+            // };
         }
         catch (error) {
             if (error.code && error.message)
@@ -193,6 +220,32 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
     });
 };
+async function doTicketCreationAsyncWork(ticketNode, anchorNode, stepNode, processNode, workflowNode, images) {
+    try {
+        const addedTicket = await spinal_service_ticket_1.serviceTicketPersonalized.addTicketFromNode(ticketNode, stepNode, workflowNode, anchorNode);
+        if (images && images.length > 0) {
+            for (const image of images) {
+                console.log('Adding image : ', image.name);
+                // @ts-ignore
+                const user = {
+                    username: ticketNode.info?.declarer_id?.get() || 'user',
+                    userId: 0,
+                };
+                const base64Image = image.value;
+                // check if data base64
+                if (/^data:image\/\w+;base64,/.test(base64Image) === true) {
+                    const imageData = base64Image.replace(/^data:image\/\w+;base64,/, '');
+                    const imageBufferData = Buffer.from(imageData, 'base64');
+                    await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addFileAsNote(ticketNode, { name: image.name, buffer: imageBufferData }, user);
+                }
+            }
+        }
+    }
+    catch (error) {
+        console.error('Error in ticket creation work : ', ticketNode.getName().get(), error);
+        ticketNode.removeFromGraph();
+    }
+}
 async function getWorkflowNode(workflowIdOrName, spinalAPIMiddleware, profileId) {
     try {
         const allContexts = spinal_service_ticket_1.serviceTicketPersonalized.getContexts();
