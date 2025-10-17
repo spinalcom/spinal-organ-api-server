@@ -178,8 +178,6 @@ module.exports = function (
       //@ts-ignore
       FileSystem._send_data_to_hub_func();
       await awaitSync(ticketNode);
-      console.log('server_id AFTER sending data', ticketNode._server_id);
-
       const info = {
         dynamicId: ticketNode._server_id,
         staticId: ticketNode.getId().get(),
@@ -205,9 +203,9 @@ module.exports = function (
 
 
       // Here we call a function that does the rest of the work asynchronously
-      doTicketCreationAsyncWork(ticketNode, node, stepNode, processNode, workflowNode,req.body.images);
-      
+      doTicketCreationAsyncWork(ticketNode, node, stepNode, processNode, workflowNode, req.body.images);
 
+      
       return res.json(info);
 
 
