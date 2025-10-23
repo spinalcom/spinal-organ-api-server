@@ -77,12 +77,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       SpinalGraphService._addNode(node);
       const timeseries = await spinalServiceTimeSeries().getOrCreateTimeSeries(node.getId().get())
       await timeseries.push(req.body.newValue)
+      return res.status(200).json({
+        newValue: req.body.newValue
+      });
     } catch (error) {
       if (error.code && error.message) return res.status(error.code).send(error.message);
 
-      res.status(400).send(error.message)
+      return res.status(400).send(error.message)
     }
-    res.json();
   })
 
 }
