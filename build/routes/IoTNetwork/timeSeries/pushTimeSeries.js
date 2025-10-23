@@ -71,13 +71,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             const timeseries = await (0, spinalTimeSeries_1.default)().getOrCreateTimeSeries(node.getId().get());
             await timeseries.push(req.body.newValue);
+            return res.status(200).json({
+                newValue: req.body.newValue
+            });
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send(error.message);
+            return res.status(400).send(error.message);
         }
-        res.json();
     });
 };
 //# sourceMappingURL=pushTimeSeries.js.map

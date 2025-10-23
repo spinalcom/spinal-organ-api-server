@@ -143,7 +143,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             //@ts-ignore
             spinal_core_connectorjs_type_1.FileSystem._send_data_to_hub_func();
             await (0, awaitSync_1.awaitSync)(ticketNode);
-            console.log('server_id AFTER sending data', ticketNode._server_id);
             const info = {
                 dynamicId: ticketNode._server_id,
                 staticId: ticketNode.getId().get(),
@@ -225,7 +224,6 @@ async function doTicketCreationAsyncWork(ticketNode, anchorNode, stepNode, proce
         const addedTicket = await spinal_service_ticket_1.serviceTicketPersonalized.addTicketFromNode(ticketNode, stepNode, workflowNode, anchorNode);
         if (images && images.length > 0) {
             for (const image of images) {
-                console.log('Adding image : ', image.name);
                 // @ts-ignore
                 const user = {
                     username: ticketNode.info?.declarer_id?.get() || 'user',
