@@ -13567,6 +13567,42 @@
         }
       }
     },
+    "/api/v1/test-timeout": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Test timeout behavior by delaying the response.",
+        "summary": "Test timeout behavior",
+        "tags": [
+          "Health"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "ms",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "example": 5000
+            },
+            "description": "Delay in milliseconds before sending response."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/nomenclatureGroup/{contextId}/profile_list": {
       "get": {
         "security": [
