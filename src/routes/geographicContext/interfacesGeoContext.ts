@@ -589,5 +589,47 @@ export interface Note {
  */
 
 
+/**
+* @swagger
+* components:
+*   schemas:
+*     ViewInfoNode:
+*       type: object
+*       description: Flattened node representing a geographic graph element.
+*       properties:
+*         dynamicId:
+*           type: integer
+*           format: int64
+*           description: Unique Spinal dynamic ID of the node
+*           example: 24063840
+* 
+*         parentId:
+*           type: integer
+*           format: int64
+*           nullable: true
+*           description: |
+*             Parent dynamicId.  
+*             Null when the node is a root.
+*           example: 24062000
+* 
+*         dbId:
+*           type: integer
+*           nullable: true
+*           description: dbId of the BIM object (only for equipment/reference)
+*           example: 3365
+* 
+*         bimFileAlias:
+*           type: integer
+*           nullable: true
+*           description: Mapped integer alias for BIM file identifiers
+*           example: 1
+* 
+*         type:
+*           type: string
+*           description: SpinalGraph type of the node
+*           example: geographicRoom
+*/
+
+
 
 

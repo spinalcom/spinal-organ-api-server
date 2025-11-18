@@ -1065,6 +1065,42 @@
           }
         }
       },
+      "ViewInfoNode": {
+        "type": "object",
+        "description": "Flattened node representing a geographic graph element.",
+        "properties": {
+          "dynamicId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique Spinal dynamic ID of the node",
+            "example": 24063840
+          },
+          "parentId": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "Parent dynamicId.  \nNull when the node is a root.\n",
+            "example": 24062000
+          },
+          "dbId": {
+            "type": "integer",
+            "nullable": true,
+            "description": "dbId of the BIM object (only for equipment/reference)",
+            "example": 3365
+          },
+          "bimFileAlias": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Mapped integer alias for BIM file identifiers",
+            "example": 1
+          },
+          "type": {
+            "type": "string",
+            "description": "SpinalGraph type of the node",
+            "example": "geographicRoom"
+          }
+        }
+      },
       "IoTNetwork": {
         "type": "object",
         "properties": {
@@ -16582,6 +16618,89 @@
           },
           "400": {
             "description": "Bad request, typically missing required 'dynamicId'"
+          }
+        }
+      }
+    },
+    "/api/v1/geographicContext/viewInfo2": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "description": "Fetches view information based on the geographical context for specified IDs and options",
+        "summary": "Fetch view information for geographical context",
+        "tags": [
+          "Geographic Context"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "dynamicId"
+                ],
+                "properties": {
+                  "dynamicId": {
+                    "type": "integer",
+                    "format": "int64",
+                    "description": "Unique identifier for the node"
+                  },
+                  "floorRef": {
+                    "type": "boolean",
+                    "description": "Flag to include floor reference, defaults to false"
+                  },
+                  "roomRef": {
+                    "type": "boolean",
+                    "description": "Flag to include room reference, defaults to true"
+                  },
+                  "equipements": {
+                    "type": "boolean",
+                    "description": "Flag to include equipment details, defaults to false"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Flattened geographic tree with BIM alias dictionary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bimFileAlias": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "example": {
+                        "1": "SpinalNode-7cc0401e-31fc-40c8-385d-c618d1df8bd2",
+                        "2": "SpinalNode-a39ef912-7df0-11ee-995d-afa741c67b94"
+                      }
+                    },
+                    "nodes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ViewInfoNode"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request (missing dynamicId)"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         }
       }
