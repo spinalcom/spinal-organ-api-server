@@ -30,6 +30,7 @@ const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-vie
 const awaitSync_1 = require("../../../utilities/awaitSync");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getNode_1 = require("../../../utilities/getNode");
+const moment = require("moment");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -143,16 +144,29 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             //@ts-ignore
             spinal_core_connectorjs_type_1.FileSystem._send_data_to_hub_func();
             await (0, awaitSync_1.awaitSync)(ticketNode);
+            // add attributes to ticketNode
+            await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.createOrUpdateAttrsAndCategories(ticketNode, 'default', { name: ticketInfo.name,
+                priority: getPriorityName(ticketInfo.priority),
+                description: ticketInfo.description,
+                declarer_id: ticketInfo.declarer_id,
+                processId: processNode.getId().get(),
+                stepId: stepId,
+                contextId: workflowNode.getId().get(),
+                type: 'SpinalSystemServiceTicketTypeTicket',
+                creationDate: moment(ticketNode.info?.creationDate?.get()).format('MMMM Do YYYY, h:mm:ss a'),
+                id: ticketNode.getId().get(),
+                'Occurence Number': '0'
+            });
             const info = {
                 dynamicId: ticketNode._server_id,
                 staticId: ticketNode.getId().get(),
                 name: ticketNode.getName().get(),
                 type: ticketNode.getType().get(),
                 elementSelcted: req.body.nodeDynamicId,
-                priority: ticketNode.info?.priority?.get(),
+                priority: getPriorityName(ticketInfo.priority),
                 description: ticketNode.info?.description?.get(),
                 declarer_id: ticketNode.info?.declarer_id?.get(),
-                creationDate: ticketNode.info?.creationDate?.get(),
+                creationDate: moment(ticketNode.info?.creationDate?.get()).format('MMMM Do YYYY, h:mm:ss a'),
             };
             const node = await (0, getNode_1.default)(spinalAPIMiddleware, req.body.nodeDynamicId, req.body.nodeStaticId, profileId);
             if (!node)
@@ -162,55 +176,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             // Here we call a function that does the rest of the work asynchronously
             doTicketCreationAsyncWork(ticketNode, node, stepNode, processNode, workflowNode, req.body.images);
             return res.json(info);
-            //await stepNode.addChildInContext(model, 'SpinalSystemServiceTicketHasTicket','PtrLst', workflowNode);
-            // const ticketCreated = await serviceTicketPersonalized.addTicket(
-            //   ticketInfo,
-            //   processNode.getId().get(),
-            //   workflowNode.getId().get(),
-            //   node.getId().get()
-            // );
-            // // clear modèles vides : 
-            // const lst = await node.children.PtrLst.SpinalSystemServiceTicketHasTicket.children.load()
-            // const toRemove = []
-            // for(const x of lst){
-            //   if(x.info == undefined){
-            //     toRemove.push(x)
-            //   }
-            // }
-            // for(const emptyModel of toRemove){
-            //   lst.remove(emptyModel)
-            // }
-            // // fin clear modèles vides
-            // const ticketList = await serviceTicketPersonalized.getTicketsFromNode(
-            //   node.getId().get()
-            // );
-            // const linkedTicket = ticketList.find(
-            //   (element) => element.id === ticketCreated
-            // );
-            // if (!linkedTicket) {
-            //   return res
-            //     .status(400)
-            //     .send(
-            //       `Ticket created, but could not be found to be linked to node : ${node
-            //         .getName()
-            //         .get()}`
-            //     );
-            // }
-            // const realNodeTicket = SpinalGraphService.getRealNode(
-            //   linkedTicket.id
-            // );
-            // await awaitSync(realNodeTicket);
-            // const info = {
-            //   dynamicId: realNodeTicket._server_id,
-            //   staticId: realNodeTicket.getId().get(),
-            //   name: realNodeTicket.getName().get(),
-            //   type: realNodeTicket.getType().get(),
-            //   elementSelcted: req.body.nodeDynamicId,
-            //   priority: realNodeTicket.info?.priority.get(),
-            //   description: realNodeTicket.info?.description.get(),
-            //   declarer_id: realNodeTicket.info?.declarer_id.get(),
-            //   creationDate: realNodeTicket.info?.creationDate.get(),
-            // };
         }
         catch (error) {
             if (error.code && error.message)
@@ -263,6 +228,10 @@ async function getWorkflowNode(workflowIdOrName, spinalAPIMiddleware, profileId)
     catch (error) {
         return undefined;
     }
+}
+function getPriorityName(numberPriority) {
+    const found = Object.keys(spinal_service_ticket_1.TICKET_PRIORITIES).find((el) => spinal_service_ticket_1.TICKET_PRIORITIES[el] == numberPriority);
+    return found ? found : '-';
 }
 async function getProcessNode(workflow, processIdOrName, spinalAPIMiddleware, profileId) {
     try {
