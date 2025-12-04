@@ -22,22 +22,23 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {Application} from 'express';
-import {Server} from 'http';
-import {initSwagger} from '../swagger';
-import {ISpinalAPIMiddleware} from '../interfaces';
+import { Application } from 'express';
+import { Server } from 'http';
+import { initSwagger } from '../swagger';
+import { ISpinalAPIMiddleware } from '../interfaces';
 import * as fileUpload from 'express-fileupload';
 import * as path from 'path';
 import routes from '../routes/routes';
-import {useLogger, createLogRequestLifecycle} from '../api-server';
-import {runSocketServer, ISpinalIOMiddleware} from 'spinal-organ-api-pubsub';
+import { useLogger, createLogRequestLifecycle } from '../api-server';
+import { runSocketServer, ISpinalIOMiddleware } from 'spinal-organ-api-pubsub';
+export * from '../routes/geographicContext/viewInfo_func';
 
 function initApiServer(
   app: Application,
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   log_body = false
 ) {
-  app.use(fileUpload({createParentPath: true}));
+  app.use(fileUpload({ createParentPath: true }));
   // app.use(logRequestLifecycle);
   app.use(createLogRequestLifecycle(log_body));
   //useLogger(app, log_body);
@@ -62,7 +63,7 @@ export async function runServerRest(
 ) {
   initApiServer(app, spinalAPIMiddleware, log_body);
   const io = await runSocketServer(server, spinalIOMiddleware);
-  return {app, io};
+  return { app, io };
 }
 
 export * from '../interfaces';

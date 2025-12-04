@@ -28,7 +28,7 @@ const api_server_1 = require("./api-server");
 const spinalAPIMiddleware_1 = require("./spinalAPIMiddleware");
 const swagger_1 = require("./swagger");
 const spinal_lib_organ_monitoring_1 = require("spinal-lib-organ-monitoring");
-const axios_1 = require("axios");
+const viewInfo_func_1 = require("./routes/geographicContext/viewInfo_func");
 function Requests(logger) {
     async function initSpinalHub() {
         const spinalAPIMiddleware = spinalAPIMiddleware_1.default.getInstance();
@@ -52,25 +52,24 @@ function Requests(logger) {
             const spinalAPIMiddleware = await initSpinalHub();
             const api = initApiServer(spinalAPIMiddleware);
             const port = config_1.default.api.port;
+            // Automatic API route call logic
+            const preloadViewInfoEnabled = process.env.PRELOAD_VIEW_INFO;
+            if (preloadViewInfoEnabled) {
+                try {
+                    console.log('START PRELOAD VIEW_INFO');
+                    const response = await (0, viewInfo_func_1.viewInfo_func)(spinalAPIMiddleware, 'any');
+                    console.log(`RESPONSE :`, response.code);
+                }
+                catch (err) {
+                    console.error(`Error calling preloadViewInfo:`, err.message);
+                }
+            }
             const server = api.listen(port, async () => {
                 spinal_lib_organ_monitoring_1.default.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME, process.env.ORGAN_TYPE, process.env.SPINALHUB_IP, parseInt(process.env.REQUESTS_PORT));
                 console.log(`\nApi server is listening at 0.0.0.0:${port}`);
                 console.log(`  openapi :\thttp://localhost:${port}/docs/swagger.json`);
                 console.log(`  swagger-ui :\thttp://localhost:${port}/spinalcom-api-docs`);
                 console.log(`  redoc :\thttp://localhost:${port}/spinalcom-api-redoc-docs`);
-                // Automatic API route call logic
-                const autoCallRoute = process.env.AUTO_CALL_ROUTE;
-                if (autoCallRoute) {
-                    const url = `http://localhost:${port}${autoCallRoute}`;
-                    console.log(`AUTOMATIC CALL : ${url}`);
-                    try {
-                        const response = await axios_1.default.post(url);
-                        console.log(`RESPONSE :`, response.status);
-                    }
-                    catch (err) {
-                        console.error(`Error calling auto route:`, err.message);
-                    }
-                }
             });
             spinalAPIMiddleware_1.default.getInstance().runSocketServer(server);
         },

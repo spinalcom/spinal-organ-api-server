@@ -212,7 +212,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./geographicContext/getEquipmentPositionNodeMultiple')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/getRoomPositionNode')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/getRoomPositionNodeMultiple')(logger, app, spinalAPIMiddleware);
-    require('./geographicContext/viewInfo')(logger, app, spinalAPIMiddleware);
+    require('./geographicContext/viewInfo').default(logger, app, spinalAPIMiddleware);
     // calendar & Event
     require('./calendar/EventContext/listEventContext')(logger, app, spinalAPIMiddleware);
     require('./calendar/EventContext/EventContextTree')(logger, app, spinalAPIMiddleware);
