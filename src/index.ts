@@ -27,7 +27,7 @@ import APIServer from './api-server';
 import SpinalAPIMiddleware from './spinalAPIMiddleware';
 import { getSwaggerDocs, initSwagger } from './swagger';
 import ConfigFile from 'spinal-lib-organ-monitoring';
-import axios from 'axios';
+import { viewInfo_func } from './routes/geographicContext/viewInfo_func';
 
 function Requests(logger) {
   async function initSpinalHub() {
@@ -57,6 +57,19 @@ function Requests(logger) {
       const spinalAPIMiddleware = await initSpinalHub();
       const api = initApiServer(spinalAPIMiddleware);
       const port = config.api.port;
+
+      // Automatic API route call logic
+      const preloadViewInfoEnabled = process.env.PRELOAD_VIEW_INFO;
+      if (preloadViewInfoEnabled) {
+        try {
+          console.log('START PRELOAD VIEW_INFO');
+          const response = await viewInfo_func(spinalAPIMiddleware, 'any');
+          console.log(`RESPONSE :`, response.code);
+        } catch (err) {
+          console.error(`Error calling preloadViewInfo:`, err.message);
+        }
+      }
+
       const server = api.listen(port, async () => {
         if (!process.env.DISABLE_MONITORING) {
           ConfigFile.init(
@@ -75,19 +88,6 @@ function Requests(logger) {
         console.log(
           `  redoc :\thttp://localhost:${port}/spinalcom-api-redoc-docs`
         );
-
-        // Automatic API route call logic
-        const autoCallRoute = process.env.AUTO_CALL_ROUTE;
-        if (autoCallRoute) {
-          const url = `http://localhost:${port}${autoCallRoute}`;
-          console.log(`AUTOMATIC CALL : ${url}`);
-          try {
-            const response = await axios.post(url);
-            console.log(`RESPONSE :`, response.status);
-          } catch (err) {
-            console.error(`Error calling auto route:`, err.message);
-          }
-        }
       });
 
       return SpinalAPIMiddleware.getInstance().runSocketServer(server);

@@ -644,7 +644,7 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     spinalAPIMiddleware
   );
 
-  require('./geographicContext/viewInfo')(logger, app, spinalAPIMiddleware);
+  require('./geographicContext/viewInfo').default(logger, app, spinalAPIMiddleware);
   require('./geographicContext/viewInfo2')(logger, app, spinalAPIMiddleware);
 
   // calendar & Event

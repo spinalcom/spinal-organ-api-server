@@ -31,6 +31,7 @@ import * as path from 'path';
 import routes from '../routes/routes';
 import {useLogger, createLogRequestLifecycle} from '../api-server';
 import {runSocketServer, ISpinalIOMiddleware} from 'spinal-organ-api-pubsub';
+export * from "../routes/geographicContext/viewInfo_func";
 
 function initApiServer(
   app: Application,

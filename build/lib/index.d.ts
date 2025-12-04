@@ -3,6 +3,7 @@ import { Application } from 'express';
 import { Server } from 'http';
 import { ISpinalAPIMiddleware } from '../interfaces';
 import { ISpinalIOMiddleware } from 'spinal-organ-api-pubsub';
+export * from "../routes/geographicContext/viewInfo_func";
 export declare function runServerRest(server: Server, app: Application, spinalAPIMiddleware: ISpinalAPIMiddleware, spinalIOMiddleware: ISpinalIOMiddleware, log_body?: boolean): Promise<{
     app: Application;
     io: any;

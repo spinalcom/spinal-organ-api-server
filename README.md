@@ -56,14 +56,13 @@ SPINAL_DTWIN_PATH="xxxxxxxxxxxxxxxxx"         # Path to the digital twin exemple
 
 ORGAN_NAME="xxxxxxxxxx"                       # Name of the organ. Used by monitoring platform and ecosystem. If possible make the name obvious which platform/client it belongs to. For exemple : ClientName-Api-Server | no need to add the port and spinalhub port in the name, as they are added automatically
 ORGAN_TYPE="api-server"                       # You can keep this as is. Used by monitoring platform to categorize the organs.
-AUTO_CALL_ROUTE="/api/v1/route"               # OPTIONAL |  Route that will be called right after the start ( main used for viewInfo)
+PRELOAD_VIEW_INFO="1"                         # OPTIONAL | call a viewInfo before starting to listen to preload the spatial
 ```
 
 you can disable monitoring if you add the `DISABLE_MONITORING` in the .env file
 
 ```bash
 DISABLE_MONITORING="true"                     # If not Commented will not enable monitoring
-
 ```
 
 ## Running the API Server
@@ -74,11 +73,15 @@ npm run start
 pm2 start ecosystem.config.js
 ```
 
-If you want to run the api server in cluster mode, you can add the following .env variables:
+The ecosystem.config is setup to run in cluster mode with `1` instance, if you want to change the number of instances, add in the .env `PM2_INSTANCES=` a `number` or `max` to use the maximum of threads of the computer.
 
 ```bash
-PM2_MODE="cluster"  # fork or cluster
 PM2_INSTANCES=2
 ```
 
-Per default, the api server will run in fork mode with 1 instance. You can change this by modifying the PM2_MODE and PM2_INSTANCES variables in the .env file.
+After it's launched in pm2 you can change the number of instances via
+
+```bash
+pm2 scale <process_name_in_pm2> <number_of_instances>
+# ex: pm2 scale spinal-api-server-8816-8810 3
+```

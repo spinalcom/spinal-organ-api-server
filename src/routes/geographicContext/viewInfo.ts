@@ -21,209 +21,24 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-// import spinalAPIMiddleware from '../../spinalAPIMiddleware';
-import * as express from 'express';
-import {
-  SpinalNode,
-  SpinalGraphService,
-  SpinalContext,
-} from 'spinal-env-viewer-graph-service';
 
-import {
-  GEOGRAPHIC_TYPES_ORDER,
-  CONTEXT_TYPE,
-  SITE_TYPE,
-  BUILDING_TYPE,
-  FLOOR_TYPE,
-  ZONE_TYPE,
-  ROOM_TYPE,
-  REFERENCE_TYPE,
-  EQUIPMENT_TYPE,
-  SITE_RELATION,
-  BUILDING_RELATION,
-  FLOOR_RELATION,
-  ZONE_RELATION,
-  ROOM_RELATION,
-  EQUIPMENT_RELATION,
-  REFERENCE_RELATION,
-} from 'spinal-env-viewer-context-geographic-service/build/constants';
-import {
-  TRelationMap,
-  visitNodesWithTypeRelation,
-} from '../../utilities/visitNodesWithTypeRelation';
+import type { Response, Request, Express } from 'express';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 import { getProfileId } from '../../utilities/requestUtilities';
+import {
+  viewInfo_func,
+  type IViewInfoBody,
+  type IViewInfoRes,
+} from './viewInfo_func';
 
-const all_GeoType: string[] = GEOGRAPHIC_TYPES_ORDER.concat(CONTEXT_TYPE);
-/**
- * @interface IViewInfoBody
- */
-interface IViewInfoBody {
-  /**
-   * node root of the request
-   * @type {(number[] | number)}
-   * @memberof IViewInfoBody
-   */
-  dynamicId: number | number[];
+type ViweInfoRes = Response<string | IViewInfoRes[], IViewInfoBody>;
+type ViweInfoReq = Request<never, IViewInfoRes[] | string, IViewInfoBody>;
 
-  /**
-   * get infos from the floors references : floors, walls, windows, doors...
-   * Default to false
-   * @type {boolean}
-   * @memberof IViewInfoBody
-   */
-  floorRef?: boolean;
-  /**
-   * get infos from the rooms references : floor(s)
-   * Default to true
-   * @type {boolean}
-   * @memberof IViewInfoBody
-   */
-  roomRef?: boolean;
-  /**
-   * get infos from the equipements
-   * Default to false
-   * @type {boolean}
-   * @memberof IViewInfoBody
-   */
-  equipements?: boolean;
-}
-interface IViewInfoRes {
-  dynamicId: number;
-  data: IViewInfoItemRes[];
-}
-
-interface IViewInfoItemRes {
-  bimFileId: string;
-  dbIds: number[];
-  dynamicIds: number[];
-}
-interface IViewInfoTmpRes {
-  bimFileId: string;
-  dbIds: Array<number>;
-  dynamicIds: Array<number>;
-}
-
-type ViweInfoRes = express.Response<string | IViewInfoRes[], IViewInfoBody>;
-type ViweInfoReq = express.Request<
-  never,
-  IViewInfoRes[] | string,
-  IViewInfoBody
->;
-enum EError {
-  BAD_REQ_NO_DYN_ID,
-  BAD_REQ_BAD_DYN_ID,
-  NO_CONTEXT_GEO_FOUND,
-}
-function createErrorObj(
-  code: number,
-  message: string
-): { code: number; message: string } {
-  return { code, message };
-}
-
-type ErrorsRecord = { [Error in EError]: ReturnType<typeof createErrorObj> };
-const ErrorsRecord: ErrorsRecord = {
-  [EError.BAD_REQ_NO_DYN_ID]: createErrorObj(
-    400,
-    'no dynamicId found in body request'
-  ),
-  [EError.BAD_REQ_BAD_DYN_ID]: createErrorObj(
-    400,
-    'bad dynamicIds in body request'
-  ),
-  [EError.NO_CONTEXT_GEO_FOUND]: createErrorObj(
-    500,
-    'no Spatial context found'
-  ),
-};
-
-function errorHandler(res: ViweInfoRes, error: EError) {
-  const e = ErrorsRecord[error];
-  res.status(e.code).send(e.message);
-}
-
-module.exports = function (
+export default function (
   logger,
-  app: express.Express,
+  app: Express,
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
-  async function getRootNodes(
-    dynIds: number | number[],
-    profileId: string
-  ): Promise<SpinalNode[]> {
-    const ids = Array.isArray(dynIds) ? dynIds : [dynIds];
-    const proms = ids.map((dynId) => {
-      return { dynId, prom: spinalAPIMiddleware.load(dynId, profileId) };
-    });
-    const result: SpinalNode[] = [];
-    for (const prom of proms) {
-      try {
-        const d = await prom.prom;
-        if (
-          d instanceof SpinalNode &&
-          all_GeoType.includes(d.info.type.get())
-        ) {
-          result.push(d);
-        }
-      } catch (e) {
-        console.error(`Error load, dynId = ${prom.dynId}`);
-      }
-    }
-    return result;
-  }
-
-  function getRelationListFromOption(
-    options: Required<IViewInfoBody>
-  ): TRelationMap {
-    const baseRelation: string[] = [
-      SITE_RELATION,
-      BUILDING_RELATION,
-      FLOOR_RELATION,
-      ZONE_RELATION,
-      ROOM_RELATION,
-    ];
-    const floor = options.floorRef
-      ? baseRelation.concat([REFERENCE_RELATION])
-      : baseRelation;
-    const room = baseRelation.concat();
-    if (options.roomRef) room.push(`${REFERENCE_RELATION}.ROOM`);
-    if (options.equipements) room.push(EQUIPMENT_RELATION);
-    return {
-      [CONTEXT_TYPE]: baseRelation,
-      [SITE_TYPE]: baseRelation,
-      [BUILDING_TYPE]: baseRelation,
-      [FLOOR_TYPE]: floor,
-      [ZONE_TYPE]: baseRelation,
-      [ROOM_TYPE]: room,
-    };
-  }
-
-  function pushResBody(
-    resBody: IViewInfoTmpRes[],
-    bimFileId: string,
-    dbId: number,
-    dynamicId: number
-  ): void {
-    let found = false;
-    if (dbId === -1) return;
-    for (const item of resBody) {
-      if (item.bimFileId === bimFileId) {
-        found = true;
-        item.dbIds.push(dbId);
-        item.dynamicIds.push(dynamicId);
-        break;
-      }
-    }
-    if (found === false) {
-      resBody.push({
-        bimFileId,
-        dbIds:  [dbId],
-        dynamicIds : [dynamicId],
-      });
-    }
-  }
-
   /**
    * @swagger
    * /api/v1/geographicContext/viewInfo:
@@ -290,85 +105,33 @@ module.exports = function (
    */
   app.post(
     '/api/v1/geographicContext/viewInfo',
-    async (req: ViweInfoReq, res: ViweInfoRes): Promise<any> => {
-      const body = req.body;
-      const profilId = getProfileId(req);
-      const options: Required<IViewInfoBody> = {
-        dynamicId: body.dynamicId,
-        floorRef: body.floorRef || false,
-        roomRef: body.roomRef || true,
-        equipements: body.equipements || false,
-      };
-
-      if (!options.dynamicId) {
-        //get dynamicId of building
-        const graph = await spinalAPIMiddleware.getProfileGraph(profilId);
-        const contexts = await graph.getChildren("hasContext");
-        const geographicContexts = contexts.filter(el => el.getType().get() === "geographicContext");
-        const buildings = await geographicContexts[0].getChildren("hasGeographicBuilding");
-        const building = buildings[0];
-        options.dynamicId=building._server_id;
-        options.floorRef=true;
-        options.roomRef=true;
-        options.equipements=true;
-        //return errorHandler(res, EError.BAD_REQ_NO_DYN_ID);
-      }
-      // getRootNode
+    async (req: ViweInfoReq, res: ViweInfoRes): Promise<void> => {
       try {
-        const nodes = await getRootNodes(options.dynamicId, profilId);
-        if (nodes.length === 0)
-          return errorHandler(res, EError.BAD_REQ_BAD_DYN_ID);
-
-        
-        // getRelationListFromOption
-        const relations = getRelationListFromOption(options);
-        // visitChildren
-        const resBody: IViewInfoRes[] = [];
-        let totalVisited = 0;
-  
-        const intervalId = setInterval(() => {
-          console.log(`[viewInfo] Processed nodes so far: ${totalVisited}`);
-        }, 5000); 
-
-        try {
-          for (const node of nodes) {
-            const item: IViewInfoTmpRes[] = [];
-            for await (const n of visitNodesWithTypeRelation(node, relations)) {
-              totalVisited++;
-              if (
-                n.info.type.get() === REFERENCE_TYPE ||
-                n.info.type.get() === EQUIPMENT_TYPE
-              ) {
-                
-                const bimFileId = n.info.bimFileId.get();
-                const dbId = n.info.dbid.get();
-                const dynamicId = n._server_id;
-                if (bimFileId && dbId) pushResBody(item, bimFileId, dbId, dynamicId);
-              }
-            }
-            resBody.push({
-              dynamicId: node._server_id,
-              data: item.map((it: IViewInfoTmpRes): IViewInfoItemRes => {
-                return {
-                  bimFileId: it.bimFileId,
-                  dbIds: Array.from(it.dbIds),
-                  dynamicIds: Array.from(it.dynamicIds)
-                };
-              }),
-            });
-          }
-        } finally {
-          console.log(
-            `[viewInfo] Processed nodes: ${totalVisited}, finished`)
-          clearInterval(intervalId);
-        }
-        const sizeRes = Array.isArray(options.dynamicId)
-          ? options.dynamicId.length
-          : 1;
-        return res.status(resBody.length === sizeRes ? 200 : 206).json(resBody);
-      } catch (e) {
-        return res.status(500).send(e.message);
+        const body = req.body;
+        const profilId = getProfileId(req);
+        const options: Required<IViewInfoBody> = {
+          dynamicId: body.dynamicId,
+          floorRef: body.floorRef || false,
+          roomRef: body.roomRef || true,
+          equipements: body.equipements || false,
+        };
+        const result = await viewInfo_func(
+          spinalAPIMiddleware,
+          profilId,
+          options
+        );
+        if (result.dataType === 'text')
+          res.status(result.code).send(result.data);
+        else if (result.dataType === 'json')
+          res.status(result.code).json(result.data);
+      } catch (error) {
+        logger?.error?.(
+          `Error in viewInfo route: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+        res.status(500).send('Internal server error');
       }
     }
   );
-};
+}
