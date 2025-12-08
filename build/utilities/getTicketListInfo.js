@@ -37,18 +37,13 @@ async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId, incl
             }
         });
         const ticketNodeInfo = await (0, spinal_service_ticket_1.getTicketInfo)(ticket);
+        const { contextId, processId, stepId, ...restTicketNodeInfo } = ticketNodeInfo;
         const info = {
             dynamicId: ticket._server_id,
             staticId: ticket.getId().get(),
             name: ticket.getName().get(),
             type: ticket.getType().get(),
-            priority: Number(ticketNodeInfo.priority) ?? 1,
-            creationDate: Number(ticketNodeInfo.creationDate) || NaN,
-            userName: ticketNodeInfo.username || ticketNodeInfo.user || '',
-            gmaoId: ticketNodeInfo.gmaoId ?? '',
-            gmaoDateCreation: ticketNodeInfo.gmaoDateCreation ?? '',
-            description: ticketNodeInfo.description ?? '',
-            declarer_id: ticketNodeInfo.declarer_id ?? '',
+            ...restTicketNodeInfo,
             process: _process === undefined
                 ? ''
                 : {
