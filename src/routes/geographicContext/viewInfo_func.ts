@@ -261,7 +261,11 @@ function getRelationListFromOption(
     ? baseRelation.concat([REFERENCE_RELATION])
     : baseRelation;
   const room = baseRelation.concat();
-  if (options.roomRef) room.push(`${REFERENCE_RELATION}.ROOM`);
+
+  if (options.roomRef) {
+    room.push(`${REFERENCE_RELATION}.ROOM`);
+    room.push(`${REFERENCE_RELATION}`);
+  };
   if (options.equipements) room.push(EQUIPMENT_RELATION);
   return {
     [CONTEXT_TYPE]: baseRelation,
