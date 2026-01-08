@@ -136,43 +136,40 @@ module.exports = function (
 
 
 async function updateCurrentValue(node: SpinalNode<any>, nodeInfo, newValue){
-  const dataType = nodeInfo.dataType?.get();
+  // const dataType = nodeInfo.dataType?.get();
   const isCp = nodeInfo.saveTimeSeries ? true : false;
-  if (!dataType)
-    throw {
-      code: 400,
-      message:
-        'The node has no dataType ( The node is probably not a BmsEndpoint )',
-    };
-  console.log('The node is a control point :', isCp);
+  // if (!dataType)
+  //   throw {
+  //     code: 400,
+  //     message:
+  //       'The node has no dataType ( The node is probably not a BmsEndpoint )',
+  //   };
+  // if (dataType === 'Boolean' && typeof newValue !== 'boolean') {
+  //   throw { code: 400, message: 'The new value should be a boolean' };
+  // }
+  // if (dataType === 'Enum' && typeof newValue !== 'string') {
+  //   throw { code: 400, message: 'The new value should be a string' };
+  // }
 
-  if (dataType === 'Boolean' && typeof newValue !== 'boolean') {
-    throw { code: 400, message: 'The new value should be a boolean' };
-  }
-  if (dataType === 'Enum' && typeof newValue !== 'string') {
-    throw { code: 400, message: 'The new value should be a string' };
-  }
-
-  if (isCp && dataType === 'Enum') {
-    const authorizedValues = await getAuthorizedValuesByProfile(
-      node,
-      newValue
-    );
-    if (
-      authorizedValues.length > 0 &&
-      !authorizedValues.includes(newValue)
-    ) {
-      throw {
-        code: 400,
-        message:
-          'The new value is not authorized. Authorized values : ' +
-          authorizedValues.join(' | '),
-      };
-    }
-  }
+  // if (isCp && dataType === 'Enum') {
+  //   const authorizedValues = await getAuthorizedValuesByProfile(
+  //     node,
+  //     newValue
+  //   );
+  //   if (
+  //     authorizedValues.length > 0 &&
+  //     !authorizedValues.includes(newValue)
+  //   ) {
+  //     throw {
+  //       code: 400,
+  //       message:
+  //         'The new value is not authorized. Authorized values : ' +
+  //         authorizedValues.join(' | '),
+  //     };
+  //   }
+  // }
   if (
-    typeof newValue === 'number' &&
-    TIMESERIES_DATA_TYPES.includes(dataType)
+    typeof newValue === 'number'
   ) {
     if ((isCp && nodeInfo.saveTimeSeries.get()) || !isCp) {
       const timeseries =
@@ -182,7 +179,6 @@ async function updateCurrentValue(node: SpinalNode<any>, nodeInfo, newValue){
       await timeseries.push(newValue);
     }
   }
-
   nodeInfo.currentValue.set(newValue);
   node.info.directModificationDate.set(Date.now());
   return { NewValue: nodeInfo.currentValue.get() };
