@@ -61,47 +61,6 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         }
       });
 
-    //   SpinalGraphService._addNode(contextNode);
-    //   const analytics = await spinalAnalyticNodeManagerService.getAllAnalytics(contextNode.getId().get());
-    //   const analyticDetails = [];
-    //   for ( const analyticInfo of analytics ){
-
-    //     // Config node
-    //     const analyticConfig = await spinalAnalyticNodeManagerService.getConfig(analyticInfo.id.get()); 
-    //     const analyticNode = SpinalGraphService.getRealNode(analyticInfo.id.get());
-    //     const analyticConfigAttributes = await spinalAnalyticNodeManagerService.getAllCategoriesAndAttributesFromNode(analyticConfig.id.get());
-
-    //     // Tracking method node 
-    //     const analyticTrackingMethodInfo = await spinalAnalyticNodeManagerService.getTrackingMethod(analyticInfo.id.get());
-
-    //     // Anchor node 
-    //     const analyticAnchorInfo = await spinalAnalyticNodeManagerService.getFollowedEntity(analyticInfo.id.get());
-    //     const analyticAnchorNode = SpinalGraphService.getRealNode(analyticAnchorInfo.id.get());
-    //     const inputAttributes = await spinalAnalyticNodeManagerService.getAllCategoriesAndAttributesFromNode(analyticTrackingMethodInfo.id.get());
-        
-
-    //     analyticDetails.push({
-    //       id: analyticNode._server_id,
-    //       name: analyticNode.getName().get(),
-    //       type: analyticNode.getType().get(),
-    //       config: analyticConfigAttributes,
-    //       inputs : inputAttributes,
-    //       anchor: {
-    //         id: analyticAnchorNode._server_id,
-    //         name: analyticAnchorNode.getName().get(),
-    //         type: analyticAnchorNode.getType().get()
-    //       }
-    //     });
-    //     }
-
-    //   return res.json({
-    //     data: analyticDetails,
-    //     meta: {
-    //       count : analyticDetails.length,
-    //       analysisModuleVersion : VERSION
-    //     }
-    //   });
-
     } catch (error: any) {
       if (error?.code && error?.message) {
         return res.status(error.code).send(error.message);

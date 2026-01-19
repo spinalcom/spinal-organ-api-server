@@ -51,28 +51,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const analytics = await spinal_model_analysis_1.spinalAnalyticNodeManagerService.getAllAnalytics(contextNode.getId().get());
             const analyticDetails = [];
             for (const analyticInfo of analytics) {
-                // Config node
-                const analyticConfig = await spinal_model_analysis_1.spinalAnalyticNodeManagerService.getConfig(analyticInfo.id.get());
-                const analyticNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(analyticInfo.id.get());
-                const analyticConfigAttributes = await spinal_model_analysis_1.spinalAnalyticNodeManagerService.getAllCategoriesAndAttributesFromNode(analyticConfig.id.get());
-                // Tracking method node 
-                const analyticTrackingMethodInfo = await spinal_model_analysis_1.spinalAnalyticNodeManagerService.getTrackingMethod(analyticInfo.id.get());
-                // Anchor node 
-                const analyticAnchorInfo = await spinal_model_analysis_1.spinalAnalyticNodeManagerService.getFollowedEntity(analyticInfo.id.get());
-                const analyticAnchorNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(analyticAnchorInfo.id.get());
-                const inputAttributes = await spinal_model_analysis_1.spinalAnalyticNodeManagerService.getAllCategoriesAndAttributesFromNode(analyticTrackingMethodInfo.id.get());
-                analyticDetails.push({
-                    id: analyticNode._server_id,
-                    name: analyticNode.getName().get(),
-                    type: analyticNode.getType().get(),
-                    config: analyticConfigAttributes,
-                    inputs: inputAttributes,
-                    anchor: {
-                        id: analyticAnchorNode._server_id,
-                        name: analyticAnchorNode.getName().get(),
-                        type: analyticAnchorNode.getType().get()
-                    }
-                });
+                const analyticDetail = await spinal_model_analysis_1.spinalAnalyticNodeManagerService.getAnalyticDetails(analyticInfo.id.get());
+                analyticDetails.push(analyticDetail);
             }
             return res.json({
                 data: analyticDetails,
