@@ -1131,6 +1131,39 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   // Analytics
   require('./analytics/roomResume')(logger, app, spinalAPIMiddleware);
 
+  require('./analysis/global/getInputTypes')(logger, app, spinalAPIMiddleware);
+  require('./analysis/global/getTriggerTypes')(logger, app, spinalAPIMiddleware);
+  require('./analysis/global/getAlgorithms')(logger, app, spinalAPIMiddleware);
+  require('./analysis/contexts/createContext')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  
+  require('./analysis/contexts/getContexts')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+
+  require('./analysis/contexts/getContext')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+
+  require('./analysis/contexts/getAnalytics')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+
+  require('./analysis/analytics/getAnalytic')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+
   // command
   require('./command/roomListCommandEnable')(logger, app, spinalAPIMiddleware);
   require('./command/roomCommandLight')(logger, app, spinalAPIMiddleware);

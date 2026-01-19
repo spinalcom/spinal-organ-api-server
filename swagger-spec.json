@@ -13050,6 +13050,435 @@
         }
       }
     },
+    "/api/v1/analysis/analytics/{analyticId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Get a specific analytic by its ID",
+        "description": "Retrieves information about a specific analytic node by its ID",
+        "tags": [
+          "Analysis"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analyticId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ID of the analytic to retrieve"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics for the analytic successfully retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Analytics information for the analytic"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "analysisModuleVersion": {
+                          "type": "string",
+                          "description": "Version of spinal-model-analysis used"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/analysis/contexts": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Create an analysis context",
+        "description": "Creates a new analysis context node and returns its information",
+        "tags": [
+          "Analysis"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "contextName"
+                ],
+                "properties": {
+                  "contextName": {
+                    "type": "string",
+                    "description": "Name of the analysis context to create",
+                    "example": "Energy Analysis"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Analysis context successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Created analysis context node information"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "analysisModuleVersion": {
+                          "type": "string",
+                          "description": "Version of spinal-model-analysis used"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Get analysis contexts",
+        "description": "Retrieves analysis contexts, optionally filtered by name",
+        "tags": [
+          "Analysis"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "name",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter contexts by name (partial match by default)"
+          },
+          {
+            "in": "query",
+            "name": "exact",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "If true, matches context name exactly"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analysis contexts successfully retrieved"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/analysis/contexts/{contextId}/analytics": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Get analytics for a specific analysis context",
+        "description": "Retrieves information about all analytics associated with a specific analysis context node by its ID",
+        "tags": [
+          "Analysis"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ID of the analysis context"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics for the analysis context successfully retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Analytics information for the analysis context"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "analysisModuleVersion": {
+                          "type": "string",
+                          "description": "Version of spinal-model-analysis used"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/analysis/contexts/{contextId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Get analysis context by ID",
+        "description": "Retrieves information about a specific analysis context node by its ID",
+        "tags": [
+          "Analysis"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ID of the analysis context to retrieve"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analysis context successfully retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Analysis context node information"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "analysisModuleVersion": {
+                          "type": "string",
+                          "description": "Version of spinal-model-analysis used"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/analysis/algorithms": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns a list of algorithm for analysis",
+        "summary": "Gets analysis algorithms",
+        "tags": [
+          "Analysis"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer"
+                        },
+                        "analysisModuleVersion": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/analysis/inputTypes": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns a list of input type strings for analysis",
+        "summary": "Gets analysis input types",
+        "tags": [
+          "Analysis"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer"
+                        },
+                        "analysisModuleVersion": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/analysis/triggerTypes": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns a list of trigger type strings for analysis",
+        "summary": "Gets analysis trigger types",
+        "tags": [
+          "Analysis"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer"
+                        },
+                        "analysisModuleVersion": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/analytics/room/{id}/status/{option}": {
       "get": {
         "security": [

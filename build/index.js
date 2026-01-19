@@ -66,6 +66,7 @@ function Requests(logger) {
             }
             const server = api.listen(port, async () => {
                 if (!process.env.DISABLE_MONITORING) {
+                    console.log("Monitoring service is enabled");
                     spinal_lib_organ_monitoring_1.default.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME, process.env.ORGAN_TYPE, process.env.SPINALHUB_IP, parseInt(process.env.REQUESTS_PORT));
                 }
                 console.log(`\nApi server is listening at 0.0.0.0:${port}`);

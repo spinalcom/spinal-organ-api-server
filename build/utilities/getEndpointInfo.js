@@ -68,7 +68,7 @@ async function getEndpointsInfoFormat2(spinalAPIMiddleware, profilId, dynamicId)
     const endpoints = await spinal_env_viewer_graph_service_1.SpinalGraphService.findNodesByType(node.getId().get(), BMS_ENDPOINT_RELATIONS, spinal_model_bmsnetwork_1.SpinalBmsEndpoint.nodeTypeName);
     for (const endpoint of endpoints) {
         const element = await endpoint.element.load();
-        const currentValue = element.currentValue.get();
+        const currentValue = element.currentValue?.get();
         const unit = element.unit?.get();
         const info = {
             dynamicId: endpoint._server_id,

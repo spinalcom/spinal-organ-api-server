@@ -72,6 +72,7 @@ function Requests(logger) {
 
       const server = api.listen(port, async () => {
         if (!process.env.DISABLE_MONITORING) {
+          console.log("Monitoring service is enabled");
           ConfigFile.init(
             spinalAPIMiddleware.conn,
             process.env.ORGAN_NAME,
