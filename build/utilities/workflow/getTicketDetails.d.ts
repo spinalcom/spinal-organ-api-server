@@ -1,22 +1,22 @@
 import type { ISpinalAPIMiddleware } from '../../interfaces/ISpinalAPIMiddleware';
-declare function getTicketDetails(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, ticketId: number): Promise<{
+declare function getTicketDetails(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, ticketId: number, includeAttachedItems?: boolean): Promise<{
     dynamicId: number;
     staticId: string;
     name: string;
     type: string;
     priority: number;
     creationDate: number;
-    description: string;
-    declarer_id: string;
+    description: any;
+    declarer_id: any;
     elementSelected: string | {
-        dynamicId: number;
-        staticId: string;
-        name: string;
-        type: string;
+        dynamicId: any;
+        staticId: any;
+        name: any;
+        type: any;
     };
-    userName: string;
-    gmaoId: string;
-    gmaoDateCreation: string;
+    userName: any;
+    gmaoId: any;
+    gmaoDateCreation: any;
     process: string | {
         dynamicId: number;
         staticId: string;
@@ -33,14 +33,6 @@ declare function getTicketDetails(spinalAPIMiddleware: ISpinalAPIMiddleware, pro
     };
     workflowId: number;
     workflowName: string;
-    annotation_list: any[];
-    file_list: any[];
-    log_list: {
-        userName: any;
-        date: any;
-        event: string;
-        ticketStaticId: string;
-    }[];
 }>;
 export { getTicketDetails };
 export default getTicketDetails;

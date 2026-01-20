@@ -22,19 +22,12 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
+import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import * as express from 'express';
-import { Room } from '../interfacesGeoContext';
 import { serviceTicketPersonalized } from 'spinal-service-ticket';
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import { LOGS_EVENTS } from 'spinal-service-ticket/dist/Constants';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { getTicketDetails } from '../../../utilities/workflow/getTicketDetails';
 
 module.exports = function (
   logger,
@@ -78,7 +71,8 @@ module.exports = function (
       await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);
       const equipement = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10), profileId
+        parseInt(req.params.id, 10),
+        profileId
       );
       //@ts-ignore
       SpinalGraphService._addNode(equipement);
@@ -87,169 +81,21 @@ module.exports = function (
         const ticketList = await serviceTicketPersonalized.getTicketsFromNode(
           equipement.getId().get()
         );
-
-        for (let index = 0; index < ticketList.length; index++) {
-          const realNodeTicket = SpinalGraphService.getRealNode(
-            ticketList[index].id
+        const chunkSize = 50;
+        for (let i = 0; i < ticketList.length; i += chunkSize) {
+          const chunk = ticketList.slice(i, i + chunkSize);
+          const promises = chunk.map((ticket) =>
+            getTicketDetails(spinalAPIMiddleware, profileId, ticket.id)
           );
-          //context && workflow
-          const workflow = SpinalGraphService.getRealNode(
-            realNodeTicket.getContextIds()[0]
-          );
-
-          //Step
-          const _step = await realNodeTicket
-            .getParents('SpinalSystemServiceTicketHasTicket')
-            .then((steps) => {
-              for (const step of steps) {
-                if (
-                  step.getType().get() === 'SpinalSystemServiceTicketTypeStep'
-                ) {
-                  return step;
-                }
-              }
-            });
-
-          const _process = await _step
-            .getParents('SpinalSystemServiceTicketHasStep')
-            .then((processes) => {
-              for (const process of processes) {
-                if (process.getType().get() === 'SpinalServiceTicketProcess') {
-                  return process;
-                }
-              }
-            });
-
-          // Notes
-          const notes = await serviceDocumentation.getNotes(realNodeTicket);
-          const _notes = [];
-          for (const note of notes) {
-            const infoNote = {
-              userName: note.element.username.get(),
-              date: note.element.date.get(),
-              type: note.element.type.get(),
-              message: note.element.message.get(),
-            };
-            _notes.push(infoNote);
-          }
-
-          // Files
-          const _files = [];
-          const fileNode = (await realNodeTicket.getChildren('hasFiles'))[0];
-          if (fileNode) {
-            const filesfromElement = await fileNode.element.load();
-            for (let index = 0; index < filesfromElement.length; index++) {
-              const infoFiles = {
-                dynamicId: filesfromElement[index]._server_id,
-                Name: filesfromElement[index].name.get(),
-              };
-              _files.push(infoFiles);
-            }
-          }
-
-          // Logs
-          async function formatEvent(log) {
-            let texte = '';
-            if (log.event == LOGS_EVENTS.creation) {
-              texte = 'created';
-            } else if (log.event == LOGS_EVENTS.archived) {
-              texte = 'archived';
-            } else if (log.event == LOGS_EVENTS.unarchive) {
-              texte = 'unarchived';
-            } else {
-              const promises = log.steps.map((el) =>
-                SpinalGraphService.getNodeAsync(el)
-              );
-              texte = await Promise.all(promises).then((result) => {
-                //@ts-ignore
-                const step1 = result[0].name.get();
-                //@ts-ignore
-                const step2 = result[1].name.get();
-                const pre = log.event == LOGS_EVENTS.moveToNext ? true : false;
-                return pre
-                  ? `Passed from ${step1} to ${step2}`
-                  : `Backward from ${step1} to ${step2}`;
-              });
-            }
-            return texte;
-          }
-
-          const logs = await serviceTicketPersonalized.getLogs(
-            realNodeTicket.getId().get()
-          );
-
-          const _logs = [];
-          for (const log of logs) {
-            const infoLogs = {
-              userName: log.user.name,
-              date: log.creationDate,
-              event: await formatEvent(log),
-              ticketStaticId: log.ticketId,
-            };
-            _logs.push(infoLogs);
-          }
-
-          const info = {
-            dynamicId: realNodeTicket._server_id,
-            staticId: realNodeTicket.getId().get(),
-            name: realNodeTicket.getName().get(),
-            type: realNodeTicket.getType().get(),
-            priority: realNodeTicket.info.priority.get(),
-            creationDate: realNodeTicket.info.creationDate.get(),
-            description:
-              realNodeTicket.info.description == undefined
-                ? ''
-                : realNodeTicket.info.description.get(),
-            declarer_id:
-              realNodeTicket.info.declarer_id == undefined
-                ? ''
-                : realNodeTicket.info.declarer_id.get(),
-            userName:
-              realNodeTicket.info.user == undefined
-                ? ''
-                : realNodeTicket.info.user.name.get(),
-            gmaoId:
-              realNodeTicket.info.gmaoId == undefined
-                ? ''
-                : realNodeTicket.info.gmaoId.get(),
-            gmaoDateCreation:
-              realNodeTicket.info.gmaoDateCreation == undefined
-                ? ''
-                : realNodeTicket.info.gmaoDateCreation.get(),
-            process:
-              _process === undefined
-                ? ''
-                : {
-                  dynamicId: _process._server_id,
-                  staticId: _process.getId().get(),
-                  name: _process.getName().get(),
-                  type: _process.getType().get(),
-                },
-            step:
-              _step === undefined
-                ? ''
-                : {
-                  dynamicId: _step._server_id,
-                  staticId: _step.getId().get(),
-                  name: _step.getName().get(),
-                  type: _step.getType().get(),
-                  color: _step.info.color.get(),
-                  order: _step.info.order.get(),
-                },
-            workflowId: workflow?._server_id,
-            workflowName: workflow?.getName().get(),
-            annotation_list: _notes,
-            file_list: _files,
-            log_list: _logs,
-          };
-          nodes.push(info);
+          const results = await Promise.all(promises);
+          nodes.push(...results);
         }
       } else {
         res.status(400).send('node is not of type BIMObject');
       }
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
       res.status(400).send('ko');
     }
     res.json(nodes);

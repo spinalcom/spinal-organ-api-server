@@ -42,7 +42,8 @@ import { loadAndValidateNode } from '../loadAndValidateNode';
 async function getTicketDetails(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string,
-  ticketId: number
+  ticketId: number,
+  includeAttachedItems = true
 ) {
   await spinalAPIMiddleware.getGraph();
   const { contextNode, processNode, stepNode, ticketNode } =
@@ -50,14 +51,16 @@ async function getTicketDetails(
   if (!contextNode || !processNode || !stepNode || !ticketNode) {
     throw new Error('Failed to retrieve ticket node tree');
   }
-  const [noteNodes, filesNotes, logRes, elementSelected, ticketNodeInfo] =
-    await Promise.all([
+  const proms: any = [getNodeFromTicket(ticketNode), getTicketInfo(ticketNode)];
+  if (includeAttachedItems) {
+    proms.push(
       getTicketNoteNodes(ticketNode),
       getTicketFiles(ticketNode),
-      getTicketLogDetails(ticketNode, processNode, contextNode),
-      getNodeFromTicket(ticketNode),
-      getTicketInfo(ticketNode),
-    ]);
+      getTicketLogDetails(ticketNode, processNode, contextNode)
+    );
+  }
+  const elementSelected = await proms[0];
+  const ticketNodeInfo = await proms[1];
 
   const info = {
     dynamicId: ticketNode._server_id,
@@ -102,10 +105,12 @@ async function getTicketDetails(
           },
     workflowId: contextNode?._server_id,
     workflowName: contextNode?.info.name.get(),
-    annotation_list: noteNodes,
-    file_list: filesNotes,
-    log_list: logRes,
   };
+  if (includeAttachedItems) {
+    info['note_list'] = await proms[2];
+    info['file_list'] = await proms[3];
+    info['log_list'] = await proms[4];
+  }
   return info;
 }
 

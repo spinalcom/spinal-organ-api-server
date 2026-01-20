@@ -45,6 +45,7 @@ const routes_1 = require("../routes/routes");
 const api_server_1 = require("../api-server");
 const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
 __exportStar(require("../routes/geographicContext/viewInfo_func"), exports);
+__exportStar(require("../preloadingScript/preloadingScript"), exports);
 function initApiServer(app, spinalAPIMiddleware, log_body = false) {
     app.use(fileUpload({ createParentPath: true }));
     // app.use(logRequestLifecycle);

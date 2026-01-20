@@ -45,7 +45,7 @@ spinalcom-utils i
 
 You must have a .env file at the root of the project with the following variables :
 
-```bash
+````bash
 SPINAL_USER_ID=XXX
 SPINAL_PASSWORD="XXXXXXXXXXX"
 SPINALHUB_IP=XXXXXXXX
@@ -56,14 +56,13 @@ SPINAL_DTWIN_PATH="xxxxxxxxxxxxxxxxx"         # Path to the digital twin exemple
 
 ORGAN_NAME="xxxxxxxxxx"                       # Name of the organ. Used by monitoring platform and ecosystem. If possible make the name obvious which platform/client it belongs to. For exemple : ClientName-Api-Server | no need to add the port and spinalhub port in the name, as they are added automatically
 ORGAN_TYPE="api-server"                       # You can keep this as is. Used by monitoring platform to categorize the organs.
-PRELOAD_VIEW_INFO="1"                         # OPTIONAL | call a viewInfo before starting to listen to preload the spatial
-```
+PRELOAD_SCRIPT="1"                         # OPTIONAL | if set to "1"; call a preloading data script before starting to listen, fill the preload_config.js file```
 
 you can disable monitoring if you add the `DISABLE_MONITORING` in the .env file
 
 ```bash
 DISABLE_MONITORING="true"                     # If not Commented will not enable monitoring
-```
+````
 
 ## Running the API Server
 

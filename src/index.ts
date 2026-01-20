@@ -27,7 +27,8 @@ import APIServer from './api-server';
 import SpinalAPIMiddleware from './spinalAPIMiddleware';
 import { getSwaggerDocs, initSwagger } from './swagger';
 import ConfigFile from 'spinal-lib-organ-monitoring';
-import { viewInfo_func } from './routes/geographicContext/viewInfo_func';
+import { preloadingScript } from './preloadingScript/preloadingScript';
+const preload_config = require('../preload_config');
 
 function Requests(logger) {
   async function initSpinalHub() {
@@ -59,12 +60,10 @@ function Requests(logger) {
       const port = config.api.port;
 
       // Automatic API route call logic
-      const preloadViewInfoEnabled = process.env.PRELOAD_VIEW_INFO;
+      const preloadViewInfoEnabled = process.env.PRELOAD_SCRIPT === '1';
       if (preloadViewInfoEnabled) {
         try {
-          console.log('START PRELOAD VIEW_INFO');
-          const response = await viewInfo_func(spinalAPIMiddleware, 'any');
-          console.log(`RESPONSE :`, response.code);
+          await preloadingScript(spinalAPIMiddleware, 'any', preload_config);
         } catch (err) {
           console.error(`Error calling preloadViewInfo:`, err.message);
         }
@@ -72,7 +71,7 @@ function Requests(logger) {
 
       const server = api.listen(port, async () => {
         if (!process.env.DISABLE_MONITORING) {
-          console.log("Monitoring service is enabled");
+          console.log('Monitoring service is enabled');
           ConfigFile.init(
             spinalAPIMiddleware.conn,
             process.env.ORGAN_NAME,
