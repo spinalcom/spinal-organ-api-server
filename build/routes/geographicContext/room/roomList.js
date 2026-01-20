@@ -75,7 +75,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     categories
                 };
             }));
-            return res.send(nodes);
+            return res.status(200).send(nodes);
         }
         catch (error) {
             console.error(error);

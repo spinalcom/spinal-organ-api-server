@@ -88,7 +88,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           };
         })
       );
-      return res.send(nodes);
+      return res.status(200).send(nodes);
     } catch (error) {
       console.error(error);
       if (error.code && error.message) return res.status(error.code).send(error.message);
