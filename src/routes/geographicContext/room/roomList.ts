@@ -31,6 +31,7 @@ import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-servi
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { attributeService } from 'spinal-env-viewer-plugin-documentation-service';
 
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
@@ -68,90 +69,52 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   app.get("/api/v1/floor/:id/room_list", async (req, res, next) => {
 
-    const nodes = [];
     try {
       const profileId = getProfileId(req);
       const floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
-      SpinalGraphService._addNode(floor)
-      const { spec } = req.query;
-
-
+      SpinalGraphService._addNode(floor);
       const rooms = await floor.getChildren("hasGeographicRoom")
-      for (const room of rooms) {
-        var info;
-        const categories = await room.getChildren(NODE_TO_CATEGORY_RELATION);
+      const nodes = await Promise.all(
+        rooms.map(async (room) => {
+          const categories = await getSpinalCategoriesAndAttributes(room);
 
-        if (spec === "archipel") {
-
-          for (const category of categories) {
-            if (category.getName().get() === "default") {
-              var attributs = (await category.element.load()).get();
-              for (const attr of attributs) {
-                if (attr.label === "showOccupant") {
-                  if (attr.value === true || attr.value === "true") {
-
-                    info = {
-                      dynamicId: room._server_id,
-                      staticId: room.getId().get(),
-                      name: room.getName().get(),
-                      type: room.getType().get(),
-                      aliasOccupant: showInfo("aliasOccupant", attributs),
-                      idOccupant: showInfo("idOccupant", attributs),
-                      bureauOccupant: showInfo("bureauOccupant", attributs),
-                      showOccupant: showInfo("showOccupant", attributs),
-
-                    }
-                    nodes.push(info);
-                  }
-                }
-              }
-
-            }
-          }
-
-        } else {
-          const categoriesTab = [];
-          for (const category of categories) {
-            var attributs = (await category.element.load()).get();
-            const catInfo = {
-              dynamicId: category._server_id,
-              staticId: category.getId().get(),
-              name: category.getName().get(),
-              type: category.getType().get(),
-              attributs: attributs
-            }
-            categoriesTab.push(catInfo)
-          }
-          info = {
+          return {
             dynamicId: room._server_id,
             staticId: room.getId().get(),
             name: room.getName().get(),
             type: room.getType().get(),
-            categories: categoriesTab
+            categories
           };
-          nodes.push(info);
-        }
-      }
-
-      function showInfo(name, attributes) {
-        for (const attr of attributes) {
-          if (attr.label === name) {
-            return attr.value
-          }
-        }
-      }
-
+        })
+      );
+      return res.send(nodes);
     } catch (error) {
       console.error(error);
       if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send("list of room is not loaded");
+      res.status(400).send("An error occurred while retrieving the room list and their attributes.");
     }
 
-    res.send(nodes);
 
   });
 };
 
+
+async function getSpinalCategoriesAndAttributes(node: SpinalNode<any>) {
+  const categories = await node.getChildren(NODE_TO_CATEGORY_RELATION);
+  return Promise.all(
+    categories.map(async (category) => {
+      const attributes = (await category.element.load()).get();
+
+      return {
+        dynamicId: category._server_id,
+        staticId: category.getId().get(),
+        name: category.getName().get(),
+        type: category.getType().get(),
+        attributs: attributes
+      };
+    })
+  );
+}
 
 

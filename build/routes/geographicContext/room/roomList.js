@@ -59,79 +59,43 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *         description: Bad request
     */
     app.get("/api/v1/floor/:id/room_list", async (req, res, next) => {
-        const nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(floor);
-            const { spec } = req.query;
             const rooms = await floor.getChildren("hasGeographicRoom");
-            for (const room of rooms) {
-                var info;
-                const categories = await room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
-                if (spec === "archipel") {
-                    for (const category of categories) {
-                        if (category.getName().get() === "default") {
-                            var attributs = (await category.element.load()).get();
-                            for (const attr of attributs) {
-                                if (attr.label === "showOccupant") {
-                                    if (attr.value === true || attr.value === "true") {
-                                        info = {
-                                            dynamicId: room._server_id,
-                                            staticId: room.getId().get(),
-                                            name: room.getName().get(),
-                                            type: room.getType().get(),
-                                            aliasOccupant: showInfo("aliasOccupant", attributs),
-                                            idOccupant: showInfo("idOccupant", attributs),
-                                            bureauOccupant: showInfo("bureauOccupant", attributs),
-                                            showOccupant: showInfo("showOccupant", attributs),
-                                        };
-                                        nodes.push(info);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                else {
-                    const categoriesTab = [];
-                    for (const category of categories) {
-                        var attributs = (await category.element.load()).get();
-                        const catInfo = {
-                            dynamicId: category._server_id,
-                            staticId: category.getId().get(),
-                            name: category.getName().get(),
-                            type: category.getType().get(),
-                            attributs: attributs
-                        };
-                        categoriesTab.push(catInfo);
-                    }
-                    info = {
-                        dynamicId: room._server_id,
-                        staticId: room.getId().get(),
-                        name: room.getName().get(),
-                        type: room.getType().get(),
-                        categories: categoriesTab
-                    };
-                    nodes.push(info);
-                }
-            }
-            function showInfo(name, attributes) {
-                for (const attr of attributes) {
-                    if (attr.label === name) {
-                        return attr.value;
-                    }
-                }
-            }
+            const nodes = await Promise.all(rooms.map(async (room) => {
+                const categories = await getSpinalCategoriesAndAttributes(room);
+                return {
+                    dynamicId: room._server_id,
+                    staticId: room.getId().get(),
+                    name: room.getName().get(),
+                    type: room.getType().get(),
+                    categories
+                };
+            }));
+            return res.send(nodes);
         }
         catch (error) {
             console.error(error);
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send("list of room is not loaded");
+            res.status(400).send("An error occurred while retrieving the room list and their attributes.");
         }
-        res.send(nodes);
     });
 };
+async function getSpinalCategoriesAndAttributes(node) {
+    const categories = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+    return Promise.all(categories.map(async (category) => {
+        const attributes = (await category.element.load()).get();
+        return {
+            dynamicId: category._server_id,
+            staticId: category.getId().get(),
+            name: category.getName().get(),
+            type: category.getType().get(),
+            attributs: attributes
+        };
+    }));
+}
 //# sourceMappingURL=roomList.js.map
