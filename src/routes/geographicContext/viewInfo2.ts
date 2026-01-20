@@ -211,13 +211,21 @@ module.exports = function (
       const relations = getRelationListFromOption(options);
 
       // FLATTENED STRUCTURE
-      const flatNodes: Array<{
-        dynamicId: number;
+      // const flatNodes: Array<{
+      //   dynamicId: number;
+      //   parentId: number | null;
+      //   dbId: number | null;
+      //   bimFileAlias: number | null;
+      //   type: string;
+      // }> = [];
+
+      const nodes: Record<number, {
         parentId: number | null;
+        children: number[];
         dbId: number | null;
         bimFileAlias: number | null;
         type: string;
-      }> = [];
+      }> = {};
 
       // BIM alias dictionary
       const bimFileAlias: Record<string, number> = {};
@@ -234,8 +242,9 @@ module.exports = function (
       for (const root of roots) {
         for await (const { node, parent } of visitNodesWithParent(root, relations)) {
 
-          const type = node.info.type.get();
           const dynamicId = node._server_id;
+          const parentId = parent ? parent._server_id : null;
+          const type = node.info.type.get();
 
           let dbId = null;
           let alias = null;
@@ -245,20 +254,38 @@ module.exports = function (
             alias = getAlias(node.info.bimFileId.get());
           }
 
-          flatNodes.push({
-            dynamicId,
-            parentId: parent ? parent._server_id : null,
-            dbId,
-            bimFileAlias: alias,
-            type
-          });
+          // Ensure current node exists
+          if (!nodes[dynamicId]) {
+            nodes[dynamicId] = {
+              parentId,
+              children: [],
+              dbId,
+              bimFileAlias: alias,
+              type
+            };
+          }
+
+          // Ensure parent exists & register child
+          if (parentId !== null) {
+            if (!nodes[parentId]) {
+              nodes[parentId] = {
+                parentId: null,
+                children: [],
+                dbId: null,
+                bimFileAlias: null,
+                type: parent!.info.type.get()
+              };
+            }
+
+            nodes[parentId].children.push(dynamicId);
+          }
         }
       }
 
-      // RETURN FLAT RESULT
+
       return res.json({
         bimFileAlias,
-        nodes: flatNodes
+        nodes
       });
     }
   );

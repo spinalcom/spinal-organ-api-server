@@ -13107,6 +13107,118 @@
         }
       }
     },
+    "/api/v1/analysis/contexts/{contextId}/analytics": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Create analytic for a specific analysis context",
+        "description": "Creates new analytic associated with a specific analysis context node by its ID",
+        "tags": [
+          "Analysis"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ID of the analysis context"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytic for the analysis context successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Analytic information for the analysis context"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "analysisModuleVersion": {
+                          "type": "string",
+                          "description": "Version of spinal-model-analysis used"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Get analytics for a specific analysis context",
+        "description": "Retrieves information about all analytics associated with a specific analysis context node by its ID",
+        "tags": [
+          "Analysis"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "ID of the analysis context"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics for the analysis context successfully retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "Analytics information for the analysis context"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "analysisModuleVersion": {
+                          "type": "string",
+                          "description": "Version of spinal-model-analysis used"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/analysis/contexts": {
       "post": {
         "security": [
@@ -13208,63 +13320,6 @@
         "responses": {
           "200": {
             "description": "Analysis contexts successfully retrieved"
-          },
-          "400": {
-            "description": "Bad request"
-          }
-        }
-      }
-    },
-    "/api/v1/analysis/contexts/{contextId}/analytics": {
-      "get": {
-        "security": [
-          {
-            "bearerAuth": [
-              "readOnly"
-            ]
-          }
-        ],
-        "summary": "Get analytics for a specific analysis context",
-        "description": "Retrieves information about all analytics associated with a specific analysis context node by its ID",
-        "tags": [
-          "Analysis"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "contextId",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "ID of the analysis context"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Analytics for the analysis context successfully retrieved",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "description": "Analytics information for the analysis context"
-                    },
-                    "meta": {
-                      "type": "object",
-                      "properties": {
-                        "analysisModuleVersion": {
-                          "type": "string",
-                          "description": "Version of spinal-model-analysis used"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
           },
           "400": {
             "description": "Bad request"
