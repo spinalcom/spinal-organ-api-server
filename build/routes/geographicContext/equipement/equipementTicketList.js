@@ -93,91 +93,23 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             }
                         }
                     });
-                    // Notes
-                    const notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(realNodeTicket);
-                    const _notes = [];
-                    for (const note of notes) {
-                        const infoNote = {
-                            userName: note.element.username.get(),
-                            date: note.element.date.get(),
-                            type: note.element.type.get(),
-                            message: note.element.message.get(),
-                        };
-                        _notes.push(infoNote);
-                    }
-                    // Files
-                    const _files = [];
-                    const fileNode = (await realNodeTicket.getChildren('hasFiles'))[0];
-                    if (fileNode) {
-                        const filesfromElement = await fileNode.element.load();
-                        for (let index = 0; index < filesfromElement.length; index++) {
-                            const infoFiles = {
-                                dynamicId: filesfromElement[index]._server_id,
-                                Name: filesfromElement[index].name.get(),
-                            };
-                            _files.push(infoFiles);
-                        }
-                    }
-                    // Logs
-                    async function formatEvent(log) {
-                        let texte = '';
-                        if (log.event == Constants_1.LOGS_EVENTS.creation) {
-                            texte = 'created';
-                        }
-                        else if (log.event == Constants_1.LOGS_EVENTS.archived) {
-                            texte = 'archived';
-                        }
-                        else if (log.event == Constants_1.LOGS_EVENTS.unarchive) {
-                            texte = 'unarchived';
-                        }
-                        else {
-                            const promises = log.steps.map((el) => spinal_env_viewer_graph_service_1.SpinalGraphService.getNodeAsync(el));
-                            texte = await Promise.all(promises).then((result) => {
-                                //@ts-ignore
-                                const step1 = result[0].name.get();
-                                //@ts-ignore
-                                const step2 = result[1].name.get();
-                                const pre = log.event == Constants_1.LOGS_EVENTS.moveToNext ? true : false;
-                                return pre
-                                    ? `Passed from ${step1} to ${step2}`
-                                    : `Backward from ${step1} to ${step2}`;
-                            });
-                        }
-                        return texte;
-                    }
-                    const logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(realNodeTicket.getId().get());
-                    const _logs = [];
-                    for (const log of logs) {
-                        const infoLogs = {
-                            userName: log.user.name,
-                            date: log.creationDate,
-                            event: await formatEvent(log),
-                            ticketStaticId: log.ticketId,
-                        };
-                        _logs.push(infoLogs);
-                    }
+                    const [notesResult, filesResult, logsResult] = await Promise.allSettled([
+                        fetchTicketNotes(realNodeTicket),
+                        getFilesFromNode(realNodeTicket),
+                        getTicketLogs(realNodeTicket),
+                    ]);
                     const info = {
                         dynamicId: realNodeTicket._server_id,
                         staticId: realNodeTicket.getId().get(),
                         name: realNodeTicket.getName().get(),
                         type: realNodeTicket.getType().get(),
-                        priority: realNodeTicket.info.priority.get(),
-                        creationDate: realNodeTicket.info.creationDate.get(),
-                        description: realNodeTicket.info.description == undefined
-                            ? ''
-                            : realNodeTicket.info.description.get(),
-                        declarer_id: realNodeTicket.info.declarer_id == undefined
-                            ? ''
-                            : realNodeTicket.info.declarer_id.get(),
-                        userName: realNodeTicket.info.user == undefined
-                            ? ''
-                            : realNodeTicket.info.user.name.get(),
-                        gmaoId: realNodeTicket.info.gmaoId == undefined
-                            ? ''
-                            : realNodeTicket.info.gmaoId.get(),
-                        gmaoDateCreation: realNodeTicket.info.gmaoDateCreation == undefined
-                            ? ''
-                            : realNodeTicket.info.gmaoDateCreation.get(),
+                        priority: realNodeTicket.info.priority?.get(),
+                        creationDate: realNodeTicket.info.creationDate?.get() ?? '',
+                        userName: realNodeTicket.info.user?.name?.get() ?? '',
+                        gmaoId: realNodeTicket.info.gmaoId?.get() ?? '',
+                        gmaoDateCreation: realNodeTicket.info.gmaoDateCreation?.get() ?? '',
+                        description: realNodeTicket.info.description?.get() ?? '',
+                        declarer_id: realNodeTicket.info.declarer_id?.get() ?? '',
                         process: _process === undefined
                             ? ''
                             : {
@@ -198,9 +130,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             },
                         workflowId: workflow?._server_id,
                         workflowName: workflow?.getName().get(),
-                        annotation_list: _notes,
-                        file_list: _files,
-                        log_list: _logs,
+                        annotation_list: notesResult.status === 'fulfilled' ? notesResult.value : [],
+                        file_list: filesResult.status === 'fulfilled' ? filesResult.value : [],
+                        log_list: logsResult.status === 'fulfilled' ? logsResult.value : [],
                     };
                     nodes.push(info);
                 }
@@ -217,4 +149,70 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         res.json(nodes);
     });
 };
+async function fetchTicketNotes(ticket) {
+    const notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(ticket);
+    const _notes = [];
+    for (const note of notes) {
+        const infoNote = {
+            userName: note.element.username?.get(),
+            date: note.element.date?.get(),
+            type: note.element.type?.get(),
+            message: note.element.message?.get(),
+        };
+        _notes.push(infoNote);
+    }
+    return _notes;
+}
+async function getTicketLogs(ticket) {
+    const _logs = [];
+    const logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(ticket.getId().get());
+    for (const log of logs) {
+        const infoLogs = {
+            userName: log.user.name,
+            date: log.creationDate,
+            event: formatEvent(log),
+            ticketStaticId: log.ticketId,
+        };
+        _logs.push(infoLogs);
+    }
+    return _logs;
+}
+async function getFilesFromNode(ticket) {
+    const _files = [];
+    const fileNode = (await ticket.getChildren('hasFiles'))[0];
+    if (fileNode) {
+        const filesfromElement = await fileNode.element.load();
+        for (let index = 0; index < filesfromElement.length; index++) {
+            const infoFiles = {
+                dynamicId: filesfromElement[index]._server_id,
+                Name: filesfromElement[index].name.get(),
+            };
+            _files.push(infoFiles);
+        }
+    }
+    return _files;
+}
+function formatEvent(log) {
+    if (log.event == Constants_1.LOGS_EVENTS.creation) {
+        return 'created';
+    }
+    else if (log.event == Constants_1.LOGS_EVENTS.archived) {
+        return 'archived';
+    }
+    else if (log.event == Constants_1.LOGS_EVENTS.unarchive) {
+        return 'unarchived';
+    }
+    else {
+        if (log.steps.length < 2)
+            return 'unknown event';
+        const step1 = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(log.steps[0])?.info.name.get() ||
+            'unknown step';
+        const step2 = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(log.steps[1])?.info.name.get() ||
+            'unknown step';
+        const pre = log.event == Constants_1.LOGS_EVENTS.moveToNext ? true : false;
+        return pre
+            ? `Passed from ${step1} to ${step2}`
+            : `Backward from ${step1} to ${step2}`;
+    }
+}
 //# sourceMappingURL=equipementTicketList.js.map

@@ -29,7 +29,8 @@ import { getSwaggerDocs, initSwagger } from './swagger';
 import ConfigFile from 'spinal-lib-organ-monitoring';
 import { spinalGraphUtils } from 'spinal-organ-api-pubsub';
 import { viewInfo_func } from './routes/geographicContext/viewInfo_func';
-
+import { preloadingScript } from './preloadingScript/preloadingScript';
+const preload_config = require('../preload_config');
 function Requests(logger) {
   async function initSpinalHub() {
     const spinalAPIMiddleware = SpinalAPIMiddleware.getInstance();
@@ -60,12 +61,10 @@ function Requests(logger) {
       const port = config.api.port;
 
       // Automatic API route call logic
-      const preloadViewInfoEnabled = process.env.PRELOAD_VIEW_INFO;
+      const preloadViewInfoEnabled = process.env.PRELOAD_SCRIPT === '1';
       if (preloadViewInfoEnabled) {
         try {
-          console.log('START PRELOAD VIEW_INFO');
-          const response = await viewInfo_func(spinalAPIMiddleware, 'any');
-          console.log(`RESPONSE :`, response.code);
+          await preloadingScript(spinalAPIMiddleware, 'any', preload_config);
         } catch (err) {
           console.error(`Error calling preloadViewInfo:`, err.message);
         }

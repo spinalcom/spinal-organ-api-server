@@ -40,7 +40,7 @@ interface IViewInfoItemRes {
     dbIds: number[];
     dynamicIds: number[];
 }
-export declare function viewInfo_func(spinalAPIMiddleware: ISpinalAPIMiddleware, profilId: string, options?: IViewInfoBody | object): Promise<{
+export declare function viewInfo_func(spinalAPIMiddleware: ISpinalAPIMiddleware, profilId: string, options?: IViewInfoBody | object, progressCallBack?: (totalVisited: number) => void): Promise<{
     code: number;
     dataType: 'text';
     data: string;

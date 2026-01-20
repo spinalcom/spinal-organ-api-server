@@ -28,7 +28,8 @@ const api_server_1 = require("./api-server");
 const spinalAPIMiddleware_1 = require("./spinalAPIMiddleware");
 const swagger_1 = require("./swagger");
 const spinal_lib_organ_monitoring_1 = require("spinal-lib-organ-monitoring");
-const viewInfo_func_1 = require("./routes/geographicContext/viewInfo_func");
+const preloadingScript_1 = require("./preloadingScript/preloadingScript");
+const preload_config = require('../preload_config');
 function Requests(logger) {
     async function initSpinalHub() {
         const spinalAPIMiddleware = spinalAPIMiddleware_1.default.getInstance();
@@ -53,12 +54,10 @@ function Requests(logger) {
             const api = initApiServer(spinalAPIMiddleware);
             const port = config_1.default.api.port;
             // Automatic API route call logic
-            const preloadViewInfoEnabled = process.env.PRELOAD_VIEW_INFO;
+            const preloadViewInfoEnabled = process.env.PRELOAD_SCRIPT === '1';
             if (preloadViewInfoEnabled) {
                 try {
-                    console.log('START PRELOAD VIEW_INFO');
-                    const response = await (0, viewInfo_func_1.viewInfo_func)(spinalAPIMiddleware, 'any');
-                    console.log(`RESPONSE :`, response.code);
+                    await (0, preloadingScript_1.preloadingScript)(spinalAPIMiddleware, 'any', preload_config);
                 }
                 catch (err) {
                     console.error(`Error calling preloadViewInfo:`, err.message);

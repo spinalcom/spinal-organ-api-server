@@ -55,7 +55,7 @@ REQUESTS_PORT="XXXX"                          # Port on which the server will li
 SPINAL_DTWIN_PATH="xxxxxxxxxxxxxxxxx"         # Path to the digital twin exemple : /__users__/admin/SmartBuilding
 ORGAN_NAME="xxxxxxxxxx"                       # Name of the organ. Used by monitoring platform and ecosystem. If possible make the name obvious which platform/client it belongs to. For exemple : ClientName-Api-Server | no need to add the port and spinalhub port in the name, as they are added automatically
 ORGAN_TYPE="api-server"                       # You can keep this as is. Used by monitoring platform to categorize the organs.
-PRELOAD_VIEW_INFO="1"                         # OPTIONAL | call a viewInfo before starting to listen to preload the spatial
+PRELOAD_SCRIPT="1"                         # OPTIONAL | if set to "1"; call a preloading data script before starting to listen, fill the preload_config.js file
 ```
 
 ## Running the API Server

@@ -1,4 +1,27 @@
 "use strict";
+/*
+ * Copyright 2026 SpinalCom - www.spinalcom.com
+ *
+ * This file is part of SpinalCore.
+ *
+ * Please read all of the following terms and conditions
+ * of the Software license Agreement ("Agreement")
+ * carefully.
+ *
+ * This Agreement is a legally binding contract between
+ * the Licensee (as defined below) and SpinalCom that
+ * sets forth the terms and conditions that govern your
+ * use of the Program. By installing and/or using the
+ * Program, you agree to abide by all the terms and
+ * conditions stated or referenced herein.
+ *
+ * If you do not agree to abide by these terms and
+ * conditions, do not demonstrate your acceptance and do
+ * not install or use the Program.
+ * You should have received a copy of the license along
+ * with this file. If not, see
+ * <http://resources.spinalcom.com/licenses.pdf>.
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getTicketDetails = void 0;
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
@@ -63,35 +86,13 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
         }
     }
     // Logs
-    async function formatEvent(log) {
-        let texte = '';
-        if (log.event == Constants_1.LOGS_EVENTS.creation) {
-            texte = 'created';
-        }
-        else if (log.event == Constants_1.LOGS_EVENTS.archived) {
-            texte = 'archived';
-        }
-        else if (log.event == Constants_1.LOGS_EVENTS.unarchive) {
-            texte = 'unarchived';
-        }
-        else {
-            const result = log.steps.map((el) => spinal_env_viewer_graph_service_1.SpinalGraphService.getNode(el));
-            const step1 = result[0]?.name.get();
-            const step2 = result[1]?.name.get();
-            const pre = log.event == Constants_1.LOGS_EVENTS.moveToNext ? true : false;
-            texte = pre
-                ? `Passed from ${step1} to ${step2}`
-                : `Backward from ${step1} to ${step2}`;
-        }
-        return texte;
-    }
     const logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(_ticket.getId().get());
     const _logs = [];
     for (const log of logs) {
         const infoLogs = {
             userName: log.user.name,
             date: log.creationDate,
-            event: await formatEvent(log),
+            event: formatEvent(log),
             ticketStaticId: log.ticketId,
         };
         _logs.push(infoLogs);
@@ -123,7 +124,9 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
                 name: elementSelected.getName().get(),
                 type: elementSelected.getType().get(),
             },
-        userName: _ticket.info.user?.name?.get() || _ticket.info.user?.username?.get() || '',
+        userName: _ticket.info.user?.name?.get() ||
+            _ticket.info.user?.username?.get() ||
+            '',
         gmaoId: _ticket.info.gmaoId?.get() || '',
         gmaoDateCreation: _ticket.info.gmaoDateCreation?.get() || '',
         process: _process === undefined
@@ -153,5 +156,28 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
     return info;
 }
 exports.getTicketDetails = getTicketDetails;
+function formatEvent(log) {
+    if (log.event == Constants_1.LOGS_EVENTS.creation) {
+        return 'created';
+    }
+    else if (log.event == Constants_1.LOGS_EVENTS.archived) {
+        return 'archived';
+    }
+    else if (log.event == Constants_1.LOGS_EVENTS.unarchive) {
+        return 'unarchived';
+    }
+    else {
+        if (log.steps.length < 2)
+            return 'unknown event';
+        const step1 = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(log.steps[0])?.info.name.get() ||
+            'unknown step';
+        const step2 = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(log.steps[1])?.info.name.get() ||
+            'unknown step';
+        const pre = log.event == Constants_1.LOGS_EVENTS.moveToNext ? true : false;
+        return pre
+            ? `Passed from ${step1} to ${step2}`
+            : `Backward from ${step1} to ${step2}`;
+    }
+}
 exports.default = getTicketDetails;
 //# sourceMappingURL=getTicketDetails.js.map

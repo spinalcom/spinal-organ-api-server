@@ -42,7 +42,9 @@ const ErrorsRecord = {
     [EError.BAD_REQ_BAD_DYN_ID]: createErrorObj(400, 'bad dynamicIds in body request'),
     [EError.NO_CONTEXT_GEO_FOUND]: createErrorObj(500, 'no Spatial context found'),
 };
-async function viewInfo_func(spinalAPIMiddleware, profilId, options = {}) {
+async function viewInfo_func(spinalAPIMiddleware, profilId, options = {}, progressCallBack = () => {
+    /* do nothing */
+}) {
     if (!options.dynamicId) {
         //get dynamicId of building
         const graph = await spinalAPIMiddleware.getProfileGraph(profilId);
@@ -67,7 +69,7 @@ async function viewInfo_func(spinalAPIMiddleware, profilId, options = {}) {
         const resBody = [];
         let totalVisited = 0;
         const intervalId = setInterval(() => {
-            console.log(`[viewInfo] Processed nodes so far: ${totalVisited}`);
+            progressCallBack(totalVisited);
         }, 5000);
         try {
             for (const node of nodes) {
@@ -96,7 +98,7 @@ async function viewInfo_func(spinalAPIMiddleware, profilId, options = {}) {
             }
         }
         finally {
-            console.log(`[viewInfo] Processed nodes: ${totalVisited}, finished`);
+            progressCallBack(totalVisited);
             clearInterval(intervalId);
         }
         const sizeRes = Array.isArray(opts.dynamicId) ? opts.dynamicId.length : 1;

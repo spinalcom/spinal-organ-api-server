@@ -128,7 +128,10 @@ const ErrorsRecord: ErrorsRecord = {
 export async function viewInfo_func(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profilId: string,
-  options: IViewInfoBody | object = {}
+  options: IViewInfoBody | object = {},
+  progressCallBack: (totalVisited: number) => void = () => {
+    /* do nothing */
+  }
 ): Promise<
   | {
       code: number;
@@ -172,9 +175,8 @@ export async function viewInfo_func(
     // visitChildren
     const resBody: IViewInfoRes[] = [];
     let totalVisited = 0;
-
     const intervalId = setInterval(() => {
-      console.log(`[viewInfo] Processed nodes so far: ${totalVisited}`);
+      progressCallBack(totalVisited);
     }, 5000);
     try {
       for (const node of nodes) {
@@ -204,7 +206,7 @@ export async function viewInfo_func(
         });
       }
     } finally {
-      console.log(`[viewInfo] Processed nodes: ${totalVisited}, finished`);
+      progressCallBack(totalVisited);
       clearInterval(intervalId);
     }
     const sizeRes = Array.isArray(opts.dynamicId) ? opts.dynamicId.length : 1;
