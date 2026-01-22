@@ -22,59 +22,61 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { Room } from '../interfacesGeoContext'
 import { SpinalNode } from 'spinal-model-graph';
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
-import { attributeService } from 'spinal-env-viewer-plugin-documentation-service';
 
-
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
- * @swagger
- * /api/v1/floor/{id}/room_list:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: Return list of room
- *     summary: Gets a list of room
- *     tags:
- *      - Geographic Context
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *               type: array
- *               items: 
- *                $ref: '#/components/schemas/Room'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/floor/{id}/room_list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: Return list of room
+   *     summary: Gets a list of room
+   *     tags:
+   *      - Geographic Context
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/Room'
+   *       400:
+   *         description: Bad request
+   */
 
-  app.get("/api/v1/floor/:id/room_list", async (req, res, next) => {
-
+  app.get('/api/v1/floor/:id/room_list', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      const floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const floor = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10),
+        profileId
+      );
       //@ts-ignore
       SpinalGraphService._addNode(floor);
-      const rooms = await floor.getChildren("hasGeographicRoom")
+      const rooms = await floor.getChildren('hasGeographicRoom');
       const nodes = await Promise.all(
         rooms.map(async (room) => {
           const categories = await getSpinalCategoriesAndAttributes(room);
@@ -84,21 +86,23 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
             staticId: room.getId().get(),
             name: room.getName().get(),
             type: room.getType().get(),
-            categories
+            categories,
           };
         })
       );
       return res.status(200).send(nodes);
     } catch (error) {
       console.error(error);
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send("An error occurred while retrieving the room list and their attributes.");
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
+      res
+        .status(400)
+        .send(
+          'An error occurred while retrieving the room list and their attributes.'
+        );
     }
-
-
   });
 };
-
 
 async function getSpinalCategoriesAndAttributes(node: SpinalNode<any>) {
   const categories = await node.getChildren(NODE_TO_CATEGORY_RELATION);
@@ -111,10 +115,8 @@ async function getSpinalCategoriesAndAttributes(node: SpinalNode<any>) {
         staticId: category.getId().get(),
         name: category.getName().get(),
         type: category.getType().get(),
-        attributs: attributes
+        attributs: attributes,
       };
     })
   );
 }
-
-

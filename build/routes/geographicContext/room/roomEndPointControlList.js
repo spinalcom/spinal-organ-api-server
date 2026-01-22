@@ -29,49 +29,53 @@ const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/room/{id}/control_endpoint_list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return list of control endpoint
-   *     summary: Gets a list of control endpoint
-   *     tags:
-   *      - Geographic Context
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/EndPointRoom'
-   *       400:
-   *         description: Bad request
-   */
-    app.get("/api/v1/room/:id/control_endpoint_list", async (req, res, next) => {
+     * @swagger
+     * /api/v1/room/{id}/control_endpoint_list:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     description: Return list of control endpoint
+     *     summary: Gets a list of control endpoint
+     *     tags:
+     *      - Geographic Context
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                $ref: '#/components/schemas/EndPointRoom'
+     *       400:
+     *         description: Bad request
+     */
+    app.get('/api/v1/room/:id/control_endpoint_list', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
-            if (!(room.getType().get() === "geographicRoom")) {
-                res.status(400).send("node is not of type geographicRoom");
+            if (!(room.getType().get() === 'geographicRoom')) {
+                res.status(400).send('node is not of type geographicRoom');
             }
-            const profils = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(room.getId().get(), [spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP]);
+            const profils = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(room.getId().get(), [
+                spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP,
+            ]);
             const promises = profils.map(async (profile) => {
-                const result = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(profile.id.get(), [spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName]);
-                const endpoints = await result.map(async (endpoint) => {
+                const result = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(profile.id.get(), [
+                    spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName,
+                ]);
+                const endpoints = result.map(async (endpoint) => {
                     const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(endpoint.id.get());
                     const element = await endpoint.element.load();
                     const currentValue = element.currentValue.get();
@@ -84,10 +88,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         type: element.type.get(),
                         currentValue: currentValue,
                         unit: unit,
-                        saveTimeSeries: saveTimeSeries
+                        saveTimeSeries: saveTimeSeries,
                     };
                 });
-                return { profileName: profile.name.get(), endpoints: await Promise.all(endpoints) };
+                return {
+                    profileName: profile.name.get(),
+                    endpoints: await Promise.all(endpoints),
+                };
             });
             const allNodes = await Promise.all(promises);
             res.send(allNodes);
@@ -96,7 +103,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             console.error(error);
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send("list of endpoints is not loaded");
+            res.status(400).send('list of endpoints is not loaded');
         }
     });
 };

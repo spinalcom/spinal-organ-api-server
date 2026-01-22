@@ -27,58 +27,58 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/room/{id}/read:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: read room
-   *     summary: Gets room
-   *     tags:
-   *       - Geographic Context
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/Room'
-   *       400:
-   *         description: Bad request
-    */
-    app.get("/api/v1/room/:id/read", async (req, res, next) => {
+     * @swagger
+     * /api/v1/room/{id}/read:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     description: read room
+     *     summary: Gets room
+     *     tags:
+     *       - Geographic Context
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/Room'
+     *       400:
+     *         description: Bad request
+     */
+    app.get('/api/v1/room/:id/read', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
-            if (room.getType().get() === "geographicRoom") {
-                var info = {
+            if (room.getType().get() === 'geographicRoom') {
+                const info = {
                     dynamicId: room._server_id,
                     staticId: room.getId().get(),
                     name: room.getName().get(),
-                    type: room.getType().get()
+                    type: room.getType().get(),
                 };
+                return res.json(info);
             }
             else {
-                res.status(400).send("node is not of type geographic room");
+                return res.status(400).send('node is not of type geographic room');
             }
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(500).send(error.message);
+            return res.status(500).send(error.message);
         }
-        res.json(info);
     });
 };
 //# sourceMappingURL=readRoom.js.map

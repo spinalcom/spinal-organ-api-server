@@ -64,8 +64,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
-            if (room.getType().get() === "geographicRoom") {
-                var _notes = [];
+            if (room.getType().get() === 'geographicRoom') {
+                const _notes = [];
                 const notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(room);
                 for (const note of notes) {
                     const infoNote = {
@@ -75,17 +75,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     };
                     _notes.push(infoNote);
                 }
+                return res.json(_notes);
             }
             else {
-                res.status(400).send("node is not of type geographic room");
+                return res.status(400).send('node is not of type geographic room');
             }
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(500).send(error.message);
+            return res.status(500).send(error.message);
         }
-        res.json(_notes);
     });
 };
 //# sourceMappingURL=roomNotes.js.map

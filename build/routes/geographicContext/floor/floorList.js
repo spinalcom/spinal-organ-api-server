@@ -50,90 +50,43 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Bad request
      */
     app.get('/api/v1/floor/list', async (req, res, next) => {
-        const nodes = [];
         try {
-            const { spec } = req.query;
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
-            const contexts = await graph.getChildren("hasContext");
+            const contexts = await graph.getChildren('hasContext');
             // var geographicContexts = await SpinalGraphService.getContextWithType("geographicContext");
-            const geographicContexts = contexts.filter(el => el.getType().get() === "geographicContext");
-            const buildings = await geographicContexts[0].getChildren("hasGeographicBuilding");
-            const floors = await buildings[0].getChildren("hasGeographicFloor");
-            for (const floor of floors) {
-                var info;
+            const geographicContext = contexts.find((el) => el.getType().get() === 'geographicContext');
+            const buildings = (await geographicContext?.getChildren('hasGeographicBuilding')) || [];
+            const floors = (await buildings[0]?.getChildren('hasGeographicFloor')) || [];
+            const infoFloors = floors.map(async (floor) => {
                 const categories = await floor.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
-                if (spec === "archipel") {
-                    for (const category of categories) {
-                        if (category.getName().get() === "default") {
-                            var attributs = (await category.element.load()).get();
-                            for (const attr of attributs) {
-                                if (attr.label === "showOccupant") {
-                                    if (attr.value === true || attr.value === "true") {
-                                        info = {
-                                            dynamicId: floor._server_id,
-                                            staticId: floor.getId().get(),
-                                            name: floor.getName().get(),
-                                            type: floor.getType().get(),
-                                            aliasOccupant: showInfo("aliasOccupant", attributs),
-                                            idOccupant: showInfo("idOccupant", attributs),
-                                            bureauOccupant: showInfo("bureauOccupant", attributs),
-                                            showOccupant: showInfo("showOccupant", attributs),
-                                        };
-                                        nodes.push(info);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                else {
-                    const categoriesTab = [];
-                    for (const category of categories) {
-                        var attributs = (await category.element.load()).get();
-                        const catInfo = {
-                            dynamicId: category._server_id,
-                            staticId: category.getId().get(),
-                            name: category.getName().get(),
-                            type: category.getType().get(),
-                            attributs: attributs
-                        };
-                        categoriesTab.push(catInfo);
-                    }
-                    info = {
-                        dynamicId: floor._server_id,
-                        staticId: floor.getId().get(),
-                        name: floor.getName().get(),
-                        type: floor.getType().get(),
-                        categories: categoriesTab
+                const categoriesTabProm = categories.map(async (category) => {
+                    const attributs = (await category.element.load()).get();
+                    return {
+                        dynamicId: category._server_id,
+                        staticId: category.getId().get(),
+                        name: category.getName().get(),
+                        type: category.getType().get(),
+                        attributs: attributs,
                     };
-                    nodes.push(info);
-                }
-            }
-            // for (const child of floors) {
-            //   let info: Floor = {
-            //     dynamicId: child._server_id,
-            //     staticId: child.getId().get(),
-            //     name: child.getName().get(),
-            //     type: child.getType().get()
-            //   };
-            //   nodes.push(info);
-            // }
-            function showInfo(name, attributes) {
-                for (const attr of attributes) {
-                    if (attr.label === name) {
-                        return attr.value;
-                    }
-                }
-            }
+                });
+                const categoriesTab = await Promise.all(categoriesTabProm);
+                return {
+                    dynamicId: floor._server_id,
+                    staticId: floor.getId().get(),
+                    name: floor.getName().get(),
+                    type: floor.getType().get(),
+                    categories: categoriesTab,
+                };
+            });
+            res.send(await Promise.all(infoFloors));
         }
         catch (error) {
             console.error(error);
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send("list of floor is not loaded");
+            res.status(400).send('list of floor is not loaded');
         }
-        res.send(nodes);
     });
 };
 //# sourceMappingURL=floorList.js.map

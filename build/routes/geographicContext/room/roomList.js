@@ -28,43 +28,43 @@ const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/floor/{id}/room_list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return list of room
-   *     summary: Gets a list of room
-   *     tags:
-   *      - Geographic Context
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/Room'
-   *       400:
-   *         description: Bad request
-    */
-    app.get("/api/v1/floor/:id/room_list", async (req, res, next) => {
+     * @swagger
+     * /api/v1/floor/{id}/room_list:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     description: Return list of room
+     *     summary: Gets a list of room
+     *     tags:
+     *      - Geographic Context
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                $ref: '#/components/schemas/Room'
+     *       400:
+     *         description: Bad request
+     */
+    app.get('/api/v1/floor/:id/room_list', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(floor);
-            const rooms = await floor.getChildren("hasGeographicRoom");
+            const rooms = await floor.getChildren('hasGeographicRoom');
             const nodes = await Promise.all(rooms.map(async (room) => {
                 const categories = await getSpinalCategoriesAndAttributes(room);
                 return {
@@ -72,7 +72,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     staticId: room.getId().get(),
                     name: room.getName().get(),
                     type: room.getType().get(),
-                    categories
+                    categories,
                 };
             }));
             return res.status(200).send(nodes);
@@ -81,7 +81,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             console.error(error);
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send("An error occurred while retrieving the room list and their attributes.");
+            res
+                .status(400)
+                .send('An error occurred while retrieving the room list and their attributes.');
         }
     });
 };
@@ -94,7 +96,7 @@ async function getSpinalCategoriesAndAttributes(node) {
             staticId: category.getId().get(),
             name: category.getName().get(),
             type: category.getType().get(),
-            attributs: attributes
+            attributs: attributes,
         };
     }));
 }

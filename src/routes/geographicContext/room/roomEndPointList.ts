@@ -24,83 +24,93 @@
 
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { EndPointRoom } from '../interfacesGeoContext'
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { EndPointRoom } from '../interfacesGeoContext';
+import {
+  SpinalContext,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
- * @swagger
- * /api/v1/room/{id}/endpoint_list:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: Return list of endpoint
- *     summary: Gets a list of endpoint
- *     tags:
- *      - Geographic Context
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *               type: array
- *               items: 
- *                $ref: '#/components/schemas/EndPointRoom'
- *       400:
- *         description: Bad request
- */
+   * @swagger
+   * /api/v1/room/{id}/endpoint_list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: Return list of endpoint
+   *     summary: Gets a list of endpoint
+   *     tags:
+   *      - Geographic Context
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/EndPointRoom'
+   *       400:
+   *         description: Bad request
+   */
 
-
-
-  app.get("/api/v1/room/:id/endpoint_list", async (req, res, next) => {
-
+  app.get('/api/v1/room/:id/endpoint_list', async (req, res, next) => {
     const nodes = [];
     try {
       const profileId = getProfileId(req);
-      const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const room = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10),
+        profileId
+      );
       // @ts-ignore
       SpinalGraphService._addNode(room);
-      if (room.getType().get() === "geographicRoom") {
+      if (room.getType().get() === 'geographicRoom') {
+        const endpoints = await room.getChildren([
+          'hasEndPoint',
+          SpinalBmsEndpoint.relationName,
+        ]);
 
-        const endpoints = await room.getChildren(["hasEndPoint", SpinalBmsEndpoint.relationName]);
-
-        for (const endpoint of endpoints) {
-          const element = await endpoint.element.load()
+        const endpointPromises = endpoints.map(async (endpoint) => {
+          const element = await endpoint.element.load();
           const currentValue = element.currentValue.get();
           const unit = element.unit.get();
-          const info: EndPointRoom = {
+          return {
             dynamicId: endpoint._server_id,
             staticId: endpoint.getId().get(),
             name: endpoint.getName().get(),
             type: endpoint.getType().get(),
             currentValue: currentValue,
-            unit: unit
-          };
-          nodes.push(info);
-        }
+            unit: unit,
+          } as EndPointRoom;
+        });
+
+        const resolvedEndpoints = await Promise.all(endpointPromises);
+        nodes.push(...resolvedEndpoints);
       } else {
-        res.status(400).send("node is not of type geographic room");
+        res.status(400).send('node is not of type geographic room');
       }
-
-
     } catch (error) {
       console.error(error);
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send("list of endpoints is not loaded");
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
+      res.status(400).send('list of endpoints is not loaded');
     }
     res.send(nodes);
   });
-}
+};
