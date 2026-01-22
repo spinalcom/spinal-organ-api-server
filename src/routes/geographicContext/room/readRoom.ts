@@ -24,67 +24,74 @@
 
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { Room } from '../interfacesGeoContext'
-import { SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { Room } from '../interfacesGeoContext';
+import {
+  SpinalNode,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
- * @swagger
- * /api/v1/room/{id}/read:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: read room 
- *     summary: Gets room
- *     tags:
- *       - Geographic Context
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *                $ref: '#/components/schemas/Room'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/room/{id}/read:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: read room
+   *     summary: Gets room
+   *     tags:
+   *       - Geographic Context
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/Room'
+   *       400:
+   *         description: Bad request
+   */
 
-  app.get("/api/v1/room/:id/read", async (req, res, next) => {
+  app.get('/api/v1/room/:id/read', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
 
-      const room: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const room: SpinalNode<any> = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10),
+        profileId
+      );
       //@ts-ignore
-      SpinalGraphService._addNode(room)
-      if (room.getType().get() === "geographicRoom") {
-        var info: Room = {
+      SpinalGraphService._addNode(room);
+      if (room.getType().get() === 'geographicRoom') {
+        const info: Room = {
           dynamicId: room._server_id,
           staticId: room.getId().get(),
           name: room.getName().get(),
-          type: room.getType().get()
-        }
+          type: room.getType().get(),
+        };
+        return res.json(info);
       } else {
-        res.status(400).send("node is not of type geographic room");
+        return res.status(400).send('node is not of type geographic room');
       }
-
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(500).send(error.message);
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
+      return res.status(500).send(error.message);
     }
-    res.json(info);
   });
-}
+};

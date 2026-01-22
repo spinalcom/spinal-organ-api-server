@@ -23,17 +23,20 @@
  */
 
 import {
-  SpinalContext,
   SpinalNode,
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
-import { Note } from '../interfacesGeoContext'
+import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
+import { Note } from '../interfacesGeoContext';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/room/{id}/notes:
@@ -68,14 +71,15 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.get('/api/v1/room/:id/notes', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      const room: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10), profileId
+      const room: SpinalNode = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10),
+        profileId
       );
       //@ts-ignore
-      SpinalGraphService._addNode(room)
-      if (room.getType().get() === "geographicRoom") {
-        var _notes = []
-        const notes = await serviceDocumentation.getNotes(room)
+      SpinalGraphService._addNode(room);
+      if (room.getType().get() === 'geographicRoom') {
+        const _notes = [];
+        const notes = await serviceDocumentation.getNotes(room);
         for (const note of notes) {
           const infoNote: Note = {
             date: parseInt(note.element.date.get()),
@@ -84,14 +88,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           };
           _notes.push(infoNote);
         }
+        return res.json(_notes);
       } else {
-        res.status(400).send("node is not of type geographic room");
+        return res.status(400).send('node is not of type geographic room');
       }
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(500).send(error.message);
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
+      return res.status(500).send(error.message);
     }
-    res.json(_notes);
-  })
-}
+  });
+};

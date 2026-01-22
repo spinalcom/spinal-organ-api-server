@@ -22,136 +22,101 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { Room } from '../interfacesGeoContext'
 import { SpinalNode } from 'spinal-model-graph';
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
- * @swagger
- * /api/v1/floor/{id}/room_list:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: Return list of room
- *     summary: Gets a list of room
- *     tags:
- *      - Geographic Context
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *               type: array
- *               items: 
- *                $ref: '#/components/schemas/Room'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/floor/{id}/room_list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: Return list of room
+   *     summary: Gets a list of room
+   *     tags:
+   *      - Geographic Context
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/Room'
+   *       400:
+   *         description: Bad request
+   */
 
-  app.get("/api/v1/floor/:id/room_list", async (req, res, next) => {
-
-    const nodes = [];
+  app.get('/api/v1/floor/:id/room_list', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      const floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const floor = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10),
+        profileId
+      );
       //@ts-ignore
-      SpinalGraphService._addNode(floor)
-      const { spec } = req.query;
+      SpinalGraphService._addNode(floor);
+      const rooms = await floor.getChildren('hasGeographicRoom');
+      const nodes = await Promise.all(
+        rooms.map(async (room) => {
+          const categories = await getSpinalCategoriesAndAttributes(room);
 
-
-      const rooms = await floor.getChildren("hasGeographicRoom")
-      for (const room of rooms) {
-        var info;
-        const categories = await room.getChildren(NODE_TO_CATEGORY_RELATION);
-
-        if (spec === "archipel") {
-
-          for (const category of categories) {
-            if (category.getName().get() === "default") {
-              var attributs = (await category.element.load()).get();
-              for (const attr of attributs) {
-                if (attr.label === "showOccupant") {
-                  if (attr.value === true || attr.value === "true") {
-
-                    info = {
-                      dynamicId: room._server_id,
-                      staticId: room.getId().get(),
-                      name: room.getName().get(),
-                      type: room.getType().get(),
-                      aliasOccupant: showInfo("aliasOccupant", attributs),
-                      idOccupant: showInfo("idOccupant", attributs),
-                      bureauOccupant: showInfo("bureauOccupant", attributs),
-                      showOccupant: showInfo("showOccupant", attributs),
-
-                    }
-                    nodes.push(info);
-                  }
-                }
-              }
-
-            }
-          }
-
-        } else {
-          const categoriesTab = [];
-          for (const category of categories) {
-            var attributs = (await category.element.load()).get();
-            const catInfo = {
-              dynamicId: category._server_id,
-              staticId: category.getId().get(),
-              name: category.getName().get(),
-              type: category.getType().get(),
-              attributs: attributs
-            }
-            categoriesTab.push(catInfo)
-          }
-          info = {
+          return {
             dynamicId: room._server_id,
             staticId: room.getId().get(),
             name: room.getName().get(),
             type: room.getType().get(),
-            categories: categoriesTab
+            categories,
           };
-          nodes.push(info);
-        }
-      }
-
-      function showInfo(name, attributes) {
-        for (const attr of attributes) {
-          if (attr.label === name) {
-            return attr.value
-          }
-        }
-      }
-
+        })
+      );
+      return res.status(200).send(nodes);
     } catch (error) {
       console.error(error);
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send("list of room is not loaded");
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
+      res
+        .status(400)
+        .send(
+          'An error occurred while retrieving the room list and their attributes.'
+        );
     }
-
-    res.send(nodes);
-
   });
 };
 
+async function getSpinalCategoriesAndAttributes(node: SpinalNode<any>) {
+  const categories = await node.getChildren(NODE_TO_CATEGORY_RELATION);
+  return Promise.all(
+    categories.map(async (category) => {
+      const attributes = (await category.element.load()).get();
 
-
+      return {
+        dynamicId: category._server_id,
+        staticId: category.getId().get(),
+        name: category.getName().get(),
+        type: category.getType().get(),
+        attributs: attributes,
+      };
+    })
+  );
+}
