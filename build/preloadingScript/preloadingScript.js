@@ -29,6 +29,7 @@ const viewInfo_func_1 = require("../routes/geographicContext/viewInfo_func");
 const getStaticDetailsInfo_1 = require("../utilities/getStaticDetailsInfo");
 const getTicketListInfo_1 = require("../utilities/getTicketListInfo");
 const getNodeInfo_1 = require("../utilities/getNodeInfo");
+const getTicketDetails_1 = require("../utilities/getTicketDetails");
 const BUILDING_TYPE = 'geographicBuilding';
 const FLOOR_TYPE = 'geographicFloor';
 const ROOM_TYPE = 'geographicRoom';
@@ -72,8 +73,7 @@ async function preloadingScript(spinalAPIMiddleware, profileId, scriptOptions) {
         for (let i = 0; i < scriptOptions.runTicketLists.length; i += chunkSize) {
             const chunk = scriptOptions.runTicketLists.slice(i, i + chunkSize);
             statusMsg = `ticketListDetails : processing chunk starting at index ${i} to ${i + chunkSize - 1} of ${scriptOptions.runTicketLists.length}.`;
-            console.log('msg', statusMsg);
-            await Promise.allSettled(chunk.map((server_id) => processTicketList(spinalAPIMiddleware, profileId, server_id)));
+            await processTicketList(spinalAPIMiddleware, profileId, chunk);
         }
     }
     const endingTime = Date.now();
@@ -81,8 +81,19 @@ async function preloadingScript(spinalAPIMiddleware, profileId, scriptOptions) {
     console.log(`--- Preloading Script ended at : ${new Date(endingTime).toLocaleString()} , total time ${endingTime - startingTime} ms ---`);
 }
 exports.preloadingScript = preloadingScript;
-async function processTicketList(spinalAPIMiddleware, profileId, server_id) {
-    await (0, getTicketListInfo_1.getTicketListInfo)(spinalAPIMiddleware, profileId, server_id);
+async function processTicketList(spinalAPIMiddleware, profileId, server_ids) {
+    const promises = server_ids.map(async (server_id) => {
+        const node = await spinalAPIMiddleware.load(server_id, profileId);
+        const ticketList = await node.getChildren('SpinalSystemServiceTicketHasTicket');
+        return ticketList.map((ticket) => ticket?._server_id);
+    });
+    const ticketIdsArrays = await Promise.all(promises);
+    const uniqueTicketIds = Array.from(new Set(ticketIdsArrays.flat()));
+    const proms = uniqueTicketIds.map(async (server_id) => {
+        if (server_id)
+            await (0, getTicketDetails_1.getTicketDetails)(spinalAPIMiddleware, profileId, server_id);
+    });
+    await Promise.allSettled(proms);
 }
 async function processStaticDetails(spinalAPIMiddleware, profileId, server_id) {
     const node = await spinalAPIMiddleware.load(server_id, profileId);

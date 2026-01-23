@@ -60,53 +60,13 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
     }
     //Context
     const contextRealNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(_ticket.getContextIds()[0]);
-    // Notes
-    const notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(_ticket);
-    const _notes = [];
-    for (const note of notes) {
-        const infoNote = {
-            userName: note.element.username === undefined ? '' : note.element.username.get(),
-            date: note.element.date.get(),
-            type: note.element.type.get(),
-            message: note.element.message.get(),
-        };
-        _notes.push(infoNote);
-    }
-    // Files
-    const _files = [];
-    const fileNode = (await _ticket.getChildren('hasFiles'))[0];
-    if (fileNode) {
-        const filesfromElement = await fileNode.element.load();
-        for (let index = 0; index < filesfromElement.length; index++) {
-            const infoFiles = {
-                dynamicId: filesfromElement[index]._server_id,
-                Name: filesfromElement[index].name.get(),
-            };
-            _files.push(infoFiles);
-        }
-    }
-    // Logs
-    const logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(_ticket.getId().get());
-    const _logs = [];
-    for (const log of logs) {
-        const infoLogs = {
-            userName: log.user.name,
-            date: log.creationDate,
-            event: formatEvent(log),
-            ticketStaticId: log.ticketId,
-        };
-        _logs.push(infoLogs);
-    }
-    // element Selected
-    let elementSelected;
-    const parentsTicket = await _ticket.getParents('SpinalSystemServiceTicketHasTicket');
-    for (const parent of parentsTicket) {
-        if (!['SpinalSystemServiceTicketTypeStep', 'analyticOutputs'].includes(parent.getType().get())) {
-            //@ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(parent);
-            elementSelected = parent;
-        }
-    }
+    // Execute all async operations concurrently
+    const [_notes, _files, _logs, elementSelected] = await Promise.all([
+        getTicketNotes(_ticket),
+        getTicketFiles(_ticket),
+        getTicketLog(_ticket),
+        getElementSelectedTicket(_ticket),
+    ]);
     const info = {
         dynamicId: _ticket._server_id,
         staticId: _ticket.getId().get(),
@@ -156,6 +116,61 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId) {
     return info;
 }
 exports.getTicketDetails = getTicketDetails;
+async function getElementSelectedTicket(_ticket) {
+    let elementSelected = undefined;
+    const parentsTicket = await _ticket.getParents('SpinalSystemServiceTicketHasTicket');
+    for (const parent of parentsTicket) {
+        if (!['SpinalSystemServiceTicketTypeStep', 'analyticOutputs'].includes(parent.getType().get())) {
+            //@ts-ignore
+            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(parent);
+            elementSelected = parent;
+        }
+    }
+    return elementSelected;
+}
+async function getTicketNotes(_ticket) {
+    const notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(_ticket);
+    const _notes = [];
+    for (const note of notes) {
+        const infoNote = {
+            userName: note.element.username === undefined ? '' : note.element.username.get(),
+            date: note.element.date.get(),
+            type: note.element.type.get(),
+            message: note.element.message.get(),
+        };
+        _notes.push(infoNote);
+    }
+    return _notes;
+}
+async function getTicketFiles(_ticket) {
+    const _files = [];
+    const fileNode = (await _ticket.getChildren('hasFiles'))[0];
+    if (fileNode) {
+        const filesfromElement = await fileNode.element.load();
+        for (let index = 0; index < filesfromElement.length; index++) {
+            const infoFiles = {
+                dynamicId: filesfromElement[index]._server_id,
+                Name: filesfromElement[index].name.get(),
+            };
+            _files.push(infoFiles);
+        }
+    }
+    return _files;
+}
+async function getTicketLog(_ticket) {
+    const _logs = [];
+    const logs = await spinal_service_ticket_1.serviceTicketPersonalized.getLogs(_ticket.getId().get());
+    for (const log of logs) {
+        const infoLogs = {
+            userName: log.user.name,
+            date: log.creationDate,
+            event: formatEvent(log),
+            ticketStaticId: log.ticketId,
+        };
+        _logs.push(infoLogs);
+    }
+    return _logs;
+}
 function formatEvent(log) {
     if (log.event == Constants_1.LOGS_EVENTS.creation) {
         return 'created';

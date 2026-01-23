@@ -33,6 +33,7 @@ import {
 } from '../utilities/getStaticDetailsInfo';
 import { getTicketListInfo } from '../utilities/getTicketListInfo';
 import { getNodeInfo } from '../utilities/getNodeInfo';
+import { getTicketDetails } from '../utilities/getTicketDetails';
 
 export interface IPreloadingScript {
   runViewInfo: boolean;
@@ -125,11 +126,7 @@ export async function preloadingScript(
       statusMsg = `ticketListDetails : processing chunk starting at index ${i} to ${
         i + chunkSize - 1
       } of ${scriptOptions.runTicketLists.length}.`;
-      await Promise.allSettled(
-        chunk.map((server_id) =>
-          processTicketList(spinalAPIMiddleware, profileId, server_id)
-        )
-      );
+      await processTicketList(spinalAPIMiddleware, profileId, chunk);
     }
   }
   const endingTime = Date.now();
@@ -143,9 +140,25 @@ export async function preloadingScript(
 async function processTicketList(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string,
-  server_id: number
+  server_ids: number[]
 ): Promise<void> {
-  await getTicketListInfo(spinalAPIMiddleware, profileId, server_id);
+  const promises = server_ids.map(async (server_id) => {
+    const node: SpinalNode = await spinalAPIMiddleware.load(
+      server_id,
+      profileId
+    );
+    const ticketList = await node.getChildren(
+      'SpinalSystemServiceTicketHasTicket'
+    );
+    return ticketList.map((ticket) => ticket?._server_id);
+  });
+  const ticketIdsArrays = await Promise.all(promises);
+  const uniqueTicketIds = Array.from(new Set(ticketIdsArrays.flat()));
+  const proms = uniqueTicketIds.map(async (server_id) => {
+    if (server_id)
+      await getTicketDetails(spinalAPIMiddleware, profileId, server_id);
+  });
+  await Promise.allSettled(proms);
 }
 
 async function processStaticDetails(

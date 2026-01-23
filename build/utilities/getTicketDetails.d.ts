@@ -35,7 +35,12 @@ declare function getTicketDetails(spinalAPIMiddleware: ISpinalAPIMiddleware, pro
     workflowName: string;
     annotation_list: any[];
     file_list: any[];
-    log_list: any[];
+    log_list: {
+        userName: string;
+        date: number;
+        event: string;
+        ticketStaticId: string;
+    }[];
 }>;
 export { getTicketDetails };
 export default getTicketDetails;
