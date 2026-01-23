@@ -27,7 +27,7 @@ module.exports = {
   // array of server_id to preload static details + ticket list details
   runStaticDetails: [
   ],
-  // array of server_id (STEP) to preload ticket list details
+  // array of server_id (STEP) to preload ticket; do a getchildren then a getTicketDetails
   runTicketLists: [
   ],
 };
