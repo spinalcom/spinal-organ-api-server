@@ -157,7 +157,7 @@ async function processTicketList(
   const uniqueTicketIds = Array.from(new Set(ticketIds));
   const proms = uniqueTicketIds.map(async (server_id) => {
     if (server_id)
-      await getTicketDetails(spinalAPIMiddleware, profileId, server_id, false);
+      await getTicketDetails(spinalAPIMiddleware, profileId, server_id, true);
   });
   await Promise.allSettled(proms);
 }

@@ -92,7 +92,7 @@ async function processTicketList(spinalAPIMiddleware, profileId, server_ids) {
     const uniqueTicketIds = Array.from(new Set(ticketIds));
     const proms = uniqueTicketIds.map(async (server_id) => {
         if (server_id)
-            await (0, getTicketDetails_1.getTicketDetails)(spinalAPIMiddleware, profileId, server_id, false);
+            await (0, getTicketDetails_1.getTicketDetails)(spinalAPIMiddleware, profileId, server_id, true);
     });
     await Promise.allSettled(proms);
 }
