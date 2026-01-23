@@ -125,7 +125,6 @@ export async function preloadingScript(
       statusMsg = `ticketListDetails : processing chunk starting at index ${i} to ${
         i + chunkSize - 1
       } of ${scriptOptions.runTicketLists.length}.`;
-      console.log('msg', statusMsg);
       await Promise.allSettled(
         chunk.map((server_id) =>
           processTicketList(spinalAPIMiddleware, profileId, server_id)
