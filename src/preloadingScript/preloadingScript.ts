@@ -33,7 +33,7 @@ import {
 } from '../utilities/getStaticDetailsInfo';
 import { getTicketListInfo } from '../utilities/getTicketListInfo';
 import { getNodeInfo } from '../utilities/getNodeInfo';
-import { getTicketDetails } from 'src/utilities/workflow/getTicketDetails';
+import { getTicketDetails } from '../utilities/workflow/getTicketDetails';
 
 export interface IPreloadingScript {
   runViewInfo: boolean;
@@ -105,9 +105,8 @@ export async function preloadingScript(
     console.log('START PRELOAD STATIC DETAILS');
     for (let i = 0; i < scriptOptions.runStaticDetails.length; i += chunkSize) {
       const chunk = scriptOptions.runStaticDetails.slice(i, i + chunkSize);
-      statusMsg = `staticDetails : processing chunk starting at index ${i} to ${
-        i + chunkSize - 1
-      } of ${scriptOptions.runStaticDetails.length}.`;
+      statusMsg = `staticDetails : processing chunk starting at index ${i} to ${i + chunkSize - 1
+        } of ${scriptOptions.runStaticDetails.length}.`;
       await Promise.allSettled(
         chunk.map((server_id) =>
           processStaticDetails(spinalAPIMiddleware, profileId, server_id)
@@ -123,9 +122,8 @@ export async function preloadingScript(
     console.log('START PRELOAD TICKET LIST DETAILS');
     for (let i = 0; i < scriptOptions.runTicketLists.length; i += chunkSize) {
       const chunk = scriptOptions.runTicketLists.slice(i, i + chunkSize);
-      statusMsg = `ticketListDetails : processing chunk starting at index ${i} to ${
-        i + chunkSize - 1
-      } of ${scriptOptions.runTicketLists.length}.`;
+      statusMsg = `ticketListDetails : processing chunk starting at index ${i} to ${i + chunkSize - 1
+        } of ${scriptOptions.runTicketLists.length}.`;
       await processTicketList(spinalAPIMiddleware, profileId, chunk);
     }
   }
