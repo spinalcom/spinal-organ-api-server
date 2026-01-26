@@ -22,6 +22,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         schema:
      *           type: string
      *           description: ID of the analysis context
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *
      *     responses:
      *       200:
      *         description: Analytic for the analysis context successfully created
@@ -46,12 +53,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const contextId = req.params.contextId;
+            const requestAnalyticDetails = req.body;
             const contextNode = await spinalAPIMiddleware.load(parseInt(contextId, 10), profileId);
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(contextNode);
+            const anchorNode = await spinalAPIMiddleware.load(parseInt(requestAnalyticDetails.anchor.id, 10), profileId);
+            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(anchorNode);
+            requestAnalyticDetails.anchor.id = anchorNode.getId().get();
+            const analyticDetails = await spinal_model_analysis_1.spinalAnalyticNodeManagerService.createAnalytic(requestAnalyticDetails, contextNode);
             return res.json({
-                data: "WORK IN PROGRESS",
+                data: analyticDetails,
                 meta: {
-                    count: 0,
                     analysisModuleVersion: spinal_model_analysis_1.VERSION
                 }
             });

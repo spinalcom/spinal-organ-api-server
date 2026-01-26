@@ -66,7 +66,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const info = await getRoomStaticDetailsInfo(
         spinalAPIMiddleware,
         profileId,
-        parseInt(req.params.id,10)
+        parseInt(req.params.id, 10)
       );
       return res.json(info);
     } catch (error) {

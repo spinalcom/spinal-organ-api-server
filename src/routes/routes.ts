@@ -256,7 +256,7 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     spinalAPIMiddleware
   );
 
-  
+
 
   //endPoints routes
   require('./IoTNetwork/IoTNetworkContext/IoTNetworkList')(
@@ -1139,7 +1139,7 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
-  
+
   require('./analysis/contexts/getContexts')(
     logger,
     app,
@@ -1158,12 +1158,17 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     spinalAPIMiddleware
   );
 
-  require('./analysis/analytics/getAnalytic')(
+  require('./analysis/contexts/createAnalytics')(
     logger,
     app,
     spinalAPIMiddleware
   );
 
+  require('./analysis/analytics/getAnalytic')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   // command
   require('./command/roomListCommandEnable')(logger, app, spinalAPIMiddleware);
   require('./command/roomCommandLight')(logger, app, spinalAPIMiddleware);
