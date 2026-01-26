@@ -39,6 +39,18 @@ import { SpinalNode, SpinalContext } from 'spinal-model-graph';
 import { SpinalLogTicketInterface } from 'spinal-models-ticket';
 import { loadAndValidateNode } from '../loadAndValidateNode';
 
+function getPriorityNumber(priority: string): number { // compatibility with old tickets
+  switch (priority.toLowerCase()) {
+    case 'occasionally':
+      return 0;
+    case 'normal':
+      return 1;
+    case 'urgent':
+      return 2;
+    default:
+      return Number(priority) ?? 1;
+  }
+}
 async function getTicketDetails(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string,
@@ -67,7 +79,7 @@ async function getTicketDetails(
     staticId: ticketNode.info.id.get(),
     name: ticketNode.info.name.get(),
     type: ticketNode.info.type.get(),
-    priority: Number(ticketNodeInfo.priority) ?? 1,
+    priority: getPriorityNumber(ticketNodeInfo.priority),
     creationDate: Number(ticketNodeInfo.creationDate) || NaN,
     description: ticketNodeInfo.description || '',
     declarer_id: ticketNodeInfo.declarer_id || '',
@@ -75,11 +87,11 @@ async function getTicketDetails(
       elementSelected === undefined
         ? ''
         : {
-            dynamicId: elementSelected._server_id,
-            staticId: elementSelected.info.id.get(),
-            name: elementSelected.info.name.get(),
-            type: elementSelected.info.type.get(),
-          },
+          dynamicId: elementSelected._server_id,
+          staticId: elementSelected.info.id.get(),
+          name: elementSelected.info.name.get(),
+          type: elementSelected.info.type.get(),
+        },
     userName: ticketNodeInfo.username || ticketNodeInfo.user || '',
     gmaoId: ticketNodeInfo.gmaoId || '',
     gmaoDateCreation: ticketNodeInfo.gmaoDateCreation || '',
@@ -87,22 +99,22 @@ async function getTicketDetails(
       processNode === undefined
         ? ''
         : {
-            dynamicId: processNode._server_id,
-            staticId: processNode.info.id.get(),
-            name: processNode.info.name.get(),
-            type: processNode.info.type.get(),
-          },
+          dynamicId: processNode._server_id,
+          staticId: processNode.info.id.get(),
+          name: processNode.info.name.get(),
+          type: processNode.info.type.get(),
+        },
     step:
       stepNode === undefined
         ? ''
         : {
-            dynamicId: stepNode._server_id,
-            staticId: stepNode.info.id.get(),
-            name: stepNode.info.name.get(),
-            type: stepNode.info.type.get(),
-            color: stepNode.info.color.get(),
-            order: stepNode.info.order.get(),
-          },
+          dynamicId: stepNode._server_id,
+          staticId: stepNode.info.id.get(),
+          name: stepNode.info.name.get(),
+          type: stepNode.info.type.get(),
+          color: stepNode.info.color.get(),
+          order: stepNode.info.order.get(),
+        },
     workflowId: contextNode?._server_id,
     workflowName: contextNode?.info.name.get(),
   };

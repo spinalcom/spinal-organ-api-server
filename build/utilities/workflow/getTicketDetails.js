@@ -27,6 +27,18 @@ exports.getTicketDetails = void 0;
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const loadAndValidateNode_1 = require("../loadAndValidateNode");
+function getPriorityNumber(priority) {
+    switch (priority.toLowerCase()) {
+        case 'occasionally':
+            return 0;
+        case 'normal':
+            return 1;
+        case 'urgent':
+            return 2;
+        default:
+            return Number(priority) ?? 1;
+    }
+}
 async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includeAttachedItems = true) {
     await spinalAPIMiddleware.getGraph();
     const { contextNode, processNode, stepNode, ticketNode } = await getTicketNodeTree(ticketId, profileId, spinalAPIMiddleware);
@@ -44,7 +56,7 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includ
         staticId: ticketNode.info.id.get(),
         name: ticketNode.info.name.get(),
         type: ticketNode.info.type.get(),
-        priority: Number(ticketNodeInfo.priority) ?? 1,
+        priority: getPriorityNumber(ticketNodeInfo.priority),
         creationDate: Number(ticketNodeInfo.creationDate) || NaN,
         description: ticketNodeInfo.description || '',
         declarer_id: ticketNodeInfo.declarer_id || '',
