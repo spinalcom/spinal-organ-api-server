@@ -18,7 +18,7 @@ async function getControlEndpointsInfo(spinalAPIMiddleware, profilId, dynamicId,
             const childrens_list = (0, corseChildrenAndParentNode_1.childrensNode)(realNode);
             const hasTimeSeries = childrens_list.some(child => child.name === "hasTimeSeries");
             const element = await endpoint.element.load();
-            const currentValue = element.currentValue.get();
+            const currentValue = element.currentValue?.get();
             const unit = element.unit?.get();
             const saveTimeSeries = element.saveTimeSeries?.get();
             let controlValue = undefined;
@@ -44,7 +44,7 @@ async function getControlEndpointsInfo(spinalAPIMiddleware, profilId, dynamicId,
                 hasTimeSeries: hasTimeSeries,
                 controlValue: controlValue,
                 timeseriesRetentionDays: timeSeriesMaxDay,
-                lastUpdate: realNode.info.directModificationDate.get()
+                lastUpdate: realNode.info?.directModificationDate?.get()
             };
         });
         return { dynamicId: dynamicId, profileName: profile.name.get(), endpoints: await Promise.all(endpoints) };

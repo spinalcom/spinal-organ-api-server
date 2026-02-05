@@ -25,7 +25,7 @@ async function getControlEndpointsInfo
       const childrens_list: Relation[] = childrensNode(realNode);
       const hasTimeSeries = childrens_list.some(child => child.name === "hasTimeSeries");
       const element = await endpoint.element.load()
-      const currentValue = element.currentValue.get();
+      const currentValue = element.currentValue?.get();
       const unit = element.unit?.get();
       const saveTimeSeries = element.saveTimeSeries?.get();
       let controlValue = undefined;
@@ -51,7 +51,7 @@ async function getControlEndpointsInfo
         hasTimeSeries: hasTimeSeries,
         controlValue: controlValue,
         timeseriesRetentionDays: timeSeriesMaxDay,
-        lastUpdate: realNode.info.directModificationDate.get()
+        lastUpdate: realNode.info?.directModificationDate?.get()
 
       };
     })
