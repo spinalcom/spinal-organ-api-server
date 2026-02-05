@@ -8,7 +8,7 @@ async function getAttributeListInfo(
   profileId: string,
   dynamicId: number
 ): Promise<NodeAttribut[]> {
-  const node: SpinalNode = await spinalAPIMiddleware.load(dynamicId,profileId);
+  const node: SpinalNode = await spinalAPIMiddleware.load(dynamicId, profileId);
   const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
 
   const attributesPromises = childrens.map(

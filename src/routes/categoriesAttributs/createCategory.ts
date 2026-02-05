@@ -29,6 +29,7 @@ import * as express from 'express';
 import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
+import { awaitSync } from '../../utilities/awaitSync';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
@@ -64,9 +65,20 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  *     responses:
  *       200:
  *         description: Created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   description: The name of the created category
+ *                 id:
+ *                   type: string
+ *                   description: The server ID of the created category node
  *       400:
- *         description:  Bad request
-  */
+ *         description: Bad request
+ */
 
   app.post("/api/v1/node/:id/category/create", async (req, res, next) => {
 
@@ -74,12 +86,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const profileId = getProfileId(req);
       const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
       const categoryName = req.body.categoryName
-      serviceDocumentation.addCategoryAttribute(node, categoryName);
+      const category = await serviceDocumentation.addCategoryAttribute(node, categoryName);
+      await awaitSync(category.node)
+      res.status(200).json({
+        name: category.nameCat,
+        id: category.node._server_id
+      });
     } catch (error) {
 
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }
-    res.json();
   })
 }

@@ -25,6 +25,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const requestUtilities_1 = require("../../utilities/requestUtilities");
+const awaitSync_1 = require("../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
    * @swagger
@@ -58,22 +59,37 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *     responses:
    *       200:
    *         description: Created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 name:
+   *                   type: string
+   *                   description: The name of the created category
+   *                 id:
+   *                   type: string
+   *                   description: The server ID of the created category node
    *       400:
-   *         description:  Bad request
-    */
+   *         description: Bad request
+   */
     app.post("/api/v1/node/:id/category/create", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             const categoryName = req.body.categoryName;
-            spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addCategoryAttribute(node, categoryName);
+            const category = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addCategoryAttribute(node, categoryName);
+            await (0, awaitSync_1.awaitSync)(category.node);
+            res.status(200).json({
+                name: category.nameCat,
+                id: category.node._server_id
+            });
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
             res.status(500).send(error.message);
         }
-        res.json();
     });
 };
 //# sourceMappingURL=createCategory.js.map

@@ -28,6 +28,7 @@ const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist
 // import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const requestUtilities_1 = require("../../utilities/requestUtilities");
+const awaitSync_1 = require("../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
   * @swagger
@@ -84,7 +85,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const node = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
-            let test = false;
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             const category = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
@@ -97,23 +97,24 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
             for (const children of childrens) {
                 if (children.getId().get() === category.getId().get()) {
-                    test = true;
-                    const created = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addAttributeByCategoryName(node, category.getName().get(), attributeLabel, attributeValue, attributeType, attributeUnit);
-                    if (created === undefined) {
-                        return res.status(400).send("not found");
+                    const createdAttribute = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addAttributeByCategoryName(node, category.getName().get(), attributeLabel, attributeValue, attributeType, attributeUnit);
+                    if (createdAttribute === undefined) {
+                        return res.status(400).send("Creation failed");
                     }
+                    await (0, awaitSync_1.awaitSync)(createdAttribute);
+                    return res.status(200).json({
+                        name: attributeLabel,
+                        id: createdAttribute._server_id
+                    });
                 }
             }
-            if (test === false) {
-                return res.status(400).send("this category does not belong to this node");
-            }
+            return res.status(400).send("Category not found in the node categories list");
         }
         catch (error) {
             if (error.code)
                 return res.status(error.code).send({ message: error.message });
             return res.status(400).send(error.message);
         }
-        res.json();
     });
 };
 //# sourceMappingURL=createAttribut.js.map

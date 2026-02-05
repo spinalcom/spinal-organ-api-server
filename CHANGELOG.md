@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 13-10-2025 -> v1.1.5
+- Create category attribute and create attribute return dynamicId
+- node/id/control_endpoint_list has an option for more details
+
 ## 13-10-2025 -> v1.1.0
 - Added routes /context/:idContext/node/:idNode/parents to get parents of a node in a context based on specific relations. Also added /context/{id}/node/parents_multiple for multiple nodes.
 - Merge with dev-ticket-service-ticket branch + fixes

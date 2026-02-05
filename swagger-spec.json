@@ -2721,6 +2721,15 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "in": "query",
+            "name": "includeDetails",
+            "description": "include detailed endpoint information",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -3132,7 +3141,24 @@
         },
         "responses": {
           "200": {
-            "description": "Created successfully"
+            "description": "Created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the created category"
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "The server ID of the created category node"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request"

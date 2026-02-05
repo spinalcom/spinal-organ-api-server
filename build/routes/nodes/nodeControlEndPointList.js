@@ -23,10 +23,8 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const spinal_env_viewer_plugin_control_endpoint_service_1 = require("spinal-env-viewer-plugin-control-endpoint-service");
-const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
 const requestUtilities_1 = require("../../utilities/requestUtilities");
+const getControlEndpointsInfo_1 = require("../../utilities/getControlEndpointsInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
   * @swagger
@@ -47,6 +45,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
   *        schema:
   *          type: integer
   *          format: int64
+  *      - in: query
+  *        name: includeDetails
+  *        description: include detailed endpoint information
+  *        required: false
+  *        schema:
+  *          type: boolean
   *     responses:
   *       200:
   *         description: Success
@@ -61,34 +65,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    */
     app.get("/api/v1/node/:id/control_endpoint_list", async (req, res, next) => {
         try {
+            const includeDetails = req.query.includeDetails === 'true';
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            // @ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
-            const profils = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(room.getId().get(), [spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP]);
-            const promises = profils.map(async (profile) => {
-                // var result = await spinalControlPointService.getEndpointsNodeLinked(room.getId().get(), profile.id.get())
-                const result = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(profile.id.get(), [spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName]);
-                const endpoints = await result.map(async (endpoint) => {
-                    const realNode = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(endpoint.id.get());
-                    const element = await endpoint.element.load();
-                    const currentValue = element.currentValue.get();
-                    const unit = element.unit?.get();
-                    const saveTimeSeries = element.saveTimeSeries?.get();
-                    return {
-                        dynamicId: realNode._server_id,
-                        staticId: endpoint.id.get(),
-                        name: element.name.get(),
-                        type: element.type.get(),
-                        currentValue: currentValue,
-                        unit: unit,
-                        saveTimeSeries: saveTimeSeries
-                    };
-                });
-                return { profileName: profile.name.get(), endpoints: await Promise.all(endpoints) };
-            });
-            const allNodes = await Promise.all(promises);
-            res.send(allNodes);
+            const endpointsInfo = await (0, getControlEndpointsInfo_1.getControlEndpointsInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10), includeDetails);
+            return res.status(200).send(endpointsInfo);
         }
         catch (error) {
             if (error.code && error.message)

@@ -29,6 +29,7 @@ import { spinalControlPointService } from 'spinal-env-viewer-plugin-control-endp
 import { SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
+import { getControlEndpointsInfo } from '../../utilities/getControlEndpointsInfo';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
@@ -50,6 +51,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 *        schema:
 *          type: integer
 *          format: int64
+*      - in: query
+*        name: includeDetails
+*        description: include detailed endpoint information
+*        required: false
+*        schema:
+*          type: boolean
 *     responses:
 *       200:
 *         description: Success
@@ -68,35 +75,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.get("/api/v1/node/:id/control_endpoint_list", async (req, res, next) => {
 
     try {
+      const includeDetails = req.query.includeDetails === 'true';
       const profileId = getProfileId(req);
-      const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      // @ts-ignore
-      SpinalGraphService._addNode(room);
-      const profils = await SpinalGraphService.getChildren(room.getId().get(), [spinalControlPointService.ROOM_TO_CONTROL_GROUP])
-      const promises = profils.map(async (profile) => {
 
-        // var result = await spinalControlPointService.getEndpointsNodeLinked(room.getId().get(), profile.id.get())
-        const result = await SpinalGraphService.getChildren(profile.id.get(), [SpinalBmsEndpoint.relationName])
-        const endpoints = await result.map(async (endpoint) => {
-          const realNode = SpinalGraphService.getRealNode(endpoint.id.get())
-          const element = await endpoint.element.load()
-          const currentValue = element.currentValue.get();
-          const unit = element.unit?.get();
-          const saveTimeSeries = element.saveTimeSeries?.get();
-          return {
-            dynamicId: realNode._server_id,
-            staticId: endpoint.id.get(),
-            name: element.name.get(),
-            type: element.type.get(),
-            currentValue: currentValue,
-            unit: unit,
-            saveTimeSeries: saveTimeSeries
-          };
-        })
-        return { profileName: profile.name.get(), endpoints: await Promise.all(endpoints) }
-      })
-      const allNodes = await Promise.all(promises)
-      res.send(allNodes);
+      const endpointsInfo = await getControlEndpointsInfo(
+        spinalAPIMiddleware,
+        profileId,
+        parseInt(req.params.id, 10),
+        includeDetails
+      )
+      return res.status(200).send(endpointsInfo);
 
 
     } catch (error) {

@@ -30,6 +30,7 @@ import * as express from 'express';
 
 import { ISpinalAPIMiddleware } from '../../interfaces';
 import { getProfileId } from "../../utilities/requestUtilities";
+import { awaitSync } from '../../utilities/awaitSync';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
@@ -90,7 +91,6 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const profileId = getProfileId(req);
 
       const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
-      let test = false
       //@ts-ignore
       SpinalGraphService._addNode(node)
       const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
@@ -105,20 +105,24 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
       for (const children of childrens) {
         if (children.getId().get() === category.getId().get()) {
-          test = true;
-          const created = await serviceDocumentation.addAttributeByCategoryName(node, category.getName().get(), attributeLabel, attributeValue, attributeType, attributeUnit);
-          if (created === undefined) {
-            return res.status(400).send("not found");
+          const createdAttribute = await serviceDocumentation.addAttributeByCategoryName(node, category.getName().get(), attributeLabel, attributeValue, attributeType, attributeUnit);
+          if (createdAttribute === undefined) {
+            return res.status(400).send("Creation failed");
           }
+          await awaitSync(createdAttribute);
+          return res.status(200).json({
+            name: attributeLabel,
+            id: createdAttribute._server_id
+          });
+
         }
+
       }
-      if (test === false) {
-        return res.status(400).send("this category does not belong to this node");
-      }
+      return res.status(400).send("Category not found in the node categories list");
     } catch (error) {
       if (error.code) return res.status(error.code).send({ message: error.message });
       return res.status(400).send(error.message);
     }
-    res.json();
+
   })
 }
