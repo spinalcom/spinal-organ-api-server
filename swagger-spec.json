@@ -2675,6 +2675,15 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "in": "query",
+            "name": "includeDetails",
+            "description": "include detailed endpoint information",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {

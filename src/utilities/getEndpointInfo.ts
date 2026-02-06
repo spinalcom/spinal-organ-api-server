@@ -26,70 +26,97 @@ import type { SpinalNode } from 'spinal-model-graph';
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { ISpinalAPIMiddleware } from '../interfaces';
 import { EndPointNode } from '../routes/nodes/interfacesNodes'
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
+import { attributeService, serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import { SpinalBmsEndpoint, SpinalBmsDevice, SpinalBmsEndpointGroup } from "spinal-model-bmsnetwork";
+import { childrensNode } from './corseChildrenAndParentNode'
+import { Relation } from '../routes/nodes/interfacesNodes'
 const BMS_ENDPOINT_RELATIONS = ["hasEndPoint", SpinalBmsDevice.relationName, SpinalBmsEndpoint.relationName, SpinalBmsEndpointGroup.relationName];
 
 async function getEndpointsInfo(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
-  profilId : string,
+  profilId: string,
   dynamicId: number,
-): Promise<EndPointNode [] | undefined> {
-    const nodes: EndPointNode[] = [];
-    spinalAPIMiddleware.getGraph();
-      const node: SpinalNode = await spinalAPIMiddleware.load(dynamicId,profilId);
-      // @ts-ignore
-      SpinalGraphService._addNode(node);
-      const endpoints = await SpinalGraphService.findNodesByType(node.getId().get(), BMS_ENDPOINT_RELATIONS, SpinalBmsEndpoint.nodeTypeName)
-      for (const endpoint of endpoints) {
-        const element = await endpoint.element.load();
-        const currentValue = element.currentValue.get();
-        const unit = element.unit?.get();
-        let saveTimeSeries = element.saveTimeSeries?.get();
-        if(!saveTimeSeries){
-          // look for it through documentation
-          const allAttributes = await serviceDocumentation.getAllAttributes(endpoint);
-          saveTimeSeries = allAttributes.find((attr) => attr.label.get() === 'timeSeries maxDay') !== undefined;
-        }
+  includeDetails = false
 
+): Promise<EndPointNode[] | undefined> {
+  const nodes: EndPointNode[] = [];
+  spinalAPIMiddleware.getGraph();
+  const node: SpinalNode = await spinalAPIMiddleware.load(dynamicId, profilId);
+  // @ts-ignore
+  SpinalGraphService._addNode(node);
+  const endpoints = await SpinalGraphService.findNodesByType(node.getId().get(), BMS_ENDPOINT_RELATIONS, SpinalBmsEndpoint.nodeTypeName)
+  for (const endpoint of endpoints) {
+    //const realNode = SpinalGraphService.getRealNode(endpoint.id.get())
 
+    const element = await endpoint.element.load();
+    const currentValue = element.currentValue.get();
+    const unit = element.unit?.get();
+    let saveTimeSeries = element.saveTimeSeries?.get();
 
-        const info: EndPointNode = {
-          dynamicId: endpoint._server_id,
-          staticId: endpoint.getId().get(),
-          name: endpoint.getName().get(),
-          type: endpoint.getType().get(),
-          currentValue: currentValue,
-          unit: unit,
-          saveTimeSeries: saveTimeSeries
-        };
-        nodes.push(info);
+    const childrens_list: Relation[] = childrensNode(endpoint);
+    const hasTimeSeries = childrens_list.some(child => child.name === "hasTimeSeries");
+    let controlValue = undefined;
+    let timeSeriesMaxDay = undefined;
+
+    if (includeDetails) {
+      const controlValueAttribute = await attributeService.findAttributesByLabel(endpoint, "controlValue");
+      const maxDayAttribute = await attributeService.findAttributesByLabel(endpoint, "timeSeries maxDay");
+      if (controlValueAttribute) {
+        controlValue = controlValueAttribute.value.get();
+      }
+      if (maxDayAttribute) {
+        timeSeriesMaxDay = maxDayAttribute.value.get();
+      }
+      if (!saveTimeSeries) {
+        saveTimeSeries = maxDayAttribute ? 1 : 0;
+      }
     }
-    return nodes;
+
+    const info: any = {
+      dynamicId: endpoint._server_id,
+      staticId: endpoint.getId().get(),
+      name: endpoint.getName().get(),
+      type: endpoint.getType().get(),
+      currentValue: currentValue,
+      unit: unit,
+      saveTimeSeries: saveTimeSeries,
+      hasTimeSeries: hasTimeSeries,
+      timeseriesRetentionDays: timeSeriesMaxDay,
+      controlValue: controlValue,
+      lastUpdate: endpoint.info?.directModificationDate?.get()
+
+    };
+    nodes.push(info);
+  }
+  return nodes;
 }
 
-async function getEndpointsInfoFormat2(spinalAPIMiddleware: ISpinalAPIMiddleware, profilId : string, dynamicId: number): Promise<EndPointNode [] | undefined> {
+async function getEndpointsInfoFormat2(
+  spinalAPIMiddleware: ISpinalAPIMiddleware,
+  profilId: string,
+  dynamicId: number
+): Promise<EndPointNode[] | undefined> {
   const nodes: EndPointNode[] = [];
-    spinalAPIMiddleware.getGraph();
-      const node: SpinalNode = await spinalAPIMiddleware.load(dynamicId,profilId);
-      // @ts-ignore
-      SpinalGraphService._addNode(node);
-      const endpoints = await SpinalGraphService.findNodesByType(node.getId().get(), BMS_ENDPOINT_RELATIONS, SpinalBmsEndpoint.nodeTypeName)
-      for (const endpoint of endpoints) {
-        const element = await endpoint.element.load();
-        const currentValue = element.currentValue?.get();
-        const unit = element.unit?.get();
-        const info: EndPointNode = {
-          dynamicId: endpoint._server_id,
-          staticId: endpoint.getId().get(),
-          name: endpoint.getName().get(),
-          type: endpoint.getType().get(),
-          value: currentValue,
-          unit: unit,
-        };
-        nodes.push(info);
-    }
-    return nodes;
+  spinalAPIMiddleware.getGraph();
+  const node: SpinalNode = await spinalAPIMiddleware.load(dynamicId, profilId);
+  // @ts-ignore
+  SpinalGraphService._addNode(node);
+  const endpoints = await SpinalGraphService.findNodesByType(node.getId().get(), BMS_ENDPOINT_RELATIONS, SpinalBmsEndpoint.nodeTypeName)
+  for (const endpoint of endpoints) {
+    const element = await endpoint.element.load();
+    const currentValue = element.currentValue?.get();
+    const unit = element.unit?.get();
+    const info: EndPointNode = {
+      dynamicId: endpoint._server_id,
+      staticId: endpoint.getId().get(),
+      name: endpoint.getName().get(),
+      type: endpoint.getType().get(),
+      value: currentValue,
+      unit: unit,
+    };
+    nodes.push(info);
+  }
+  return nodes;
 }
 
 export { getEndpointsInfo, getEndpointsInfoFormat2 };

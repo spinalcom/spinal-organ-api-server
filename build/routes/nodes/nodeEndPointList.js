@@ -45,6 +45,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *        schema:
      *          type: integer
      *          format: int64
+     *      - in: query
+     *        name: includeDetails
+     *        description: include detailed endpoint information
+     *        required: false
+     *        schema:
+     *          type: boolean
      *     responses:
      *       200:
      *         description: Success
@@ -59,9 +65,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      */
     app.get("/api/v1/node/:id/endpoint_list", async (req, res, next) => {
         let nodes = [];
+        const includeDetails = req.query.includeDetails === 'true';
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            nodes = await (0, getEndpointInfo_1.getEndpointsInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+            nodes = await (0, getEndpointInfo_1.getEndpointsInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10), includeDetails);
         }
         catch (error) {
             if (error.code && error.message)
