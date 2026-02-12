@@ -49,7 +49,7 @@ async function getEndpointsInfo(
     //const realNode = SpinalGraphService.getRealNode(endpoint.id.get())
 
     const element = await endpoint.element.load();
-    const currentValue = element.currentValue.get();
+    const currentValue = element.currentValue?.get();
     const unit = element.unit?.get();
     let saveTimeSeries = element.saveTimeSeries?.get();
 
