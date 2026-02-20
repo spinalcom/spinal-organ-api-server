@@ -77,13 +77,18 @@ module.exports = function (
    */
   app.post('/api/v1/ticket/read_details_multiple', async (req, res) => {
     try {
-      const ids: number[] = req.body;
+      let ids: number[] = req.body;
 
       if (!Array.isArray(ids)) {
         return res.status(400).send('Expected an array of IDs.');
       }
 
       // check if the array is only numbers or string of numbers
+      ids = ids.filter(
+        (id) => typeof id === 'number' || (typeof id === 'string' && !isNaN(Number(id)))
+      );
+
+
       if (
         !ids.every(
           (id) =>
