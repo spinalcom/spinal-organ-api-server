@@ -5,7 +5,7 @@ declare function getTicketDetails(spinalAPIMiddleware: ISpinalAPIMiddleware, pro
     name: string;
     type: string;
     priority: number;
-    creationDate: number;
+    creationDate: any;
     elementSelected: string | {
         dynamicId: any;
         staticId: any;

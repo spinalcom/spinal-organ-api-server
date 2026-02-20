@@ -84,7 +84,7 @@ async function getTicketDetails(
     name: ticketNode.info.name.get(),
     type: ticketNode.info.type.get(),
     priority: getPriorityNumber(ticketNodeInfo.priority),
-    creationDate: Number(ticketNodeInfo.creationDate) || NaN,
+    creationDate: ticketNode.info.creationDate?.get() || Number(ticketNodeInfo.creationDate) || NaN,
     elementSelected:
       elementSelected === undefined
         ? ''
