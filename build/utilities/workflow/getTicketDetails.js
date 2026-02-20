@@ -51,6 +51,9 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includ
     }
     const elementSelected = await proms[0];
     const ticketNodeInfo = await proms[1];
+    const allAttributes = await spinal_env_viewer_plugin_documentation_service_1.attributeService.getAllAttributes(ticketNode);
+    // list of attributes to include even if they are empty : description, declarer_id, username, gmaoId, gmaoDateCreation
+    // const allAttributesObject = allAttributes.map(attr => ({ [attr.label.get()]: attr.value.get() }));
     const info = {
         dynamicId: ticketNode._server_id,
         staticId: ticketNode.info.id.get(),
@@ -58,8 +61,6 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includ
         type: ticketNode.info.type.get(),
         priority: getPriorityNumber(ticketNodeInfo.priority),
         creationDate: Number(ticketNodeInfo.creationDate) || NaN,
-        description: ticketNodeInfo.description || '',
-        declarer_id: ticketNodeInfo.declarer_id || '',
         elementSelected: elementSelected === undefined
             ? ''
             : {
@@ -68,9 +69,6 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includ
                 name: elementSelected.info.name.get(),
                 type: elementSelected.info.type.get(),
             },
-        userName: ticketNodeInfo.username || ticketNodeInfo.user || '',
-        gmaoId: ticketNodeInfo.gmaoId || '',
-        gmaoDateCreation: ticketNodeInfo.gmaoDateCreation || '',
         process: processNode === undefined
             ? ''
             : {
@@ -92,6 +90,56 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includ
         workflowId: contextNode?._server_id,
         workflowName: contextNode?.info.name.get(),
     };
+    for (const attr of allAttributes) {
+        const label = attr.label.get();
+        if (!info[label]) {
+            info[label] = attr.value.get();
+        }
+    }
+    // const info = {
+    //   dynamicId: ticketNode._server_id,
+    //   staticId: ticketNode.info.id.get(),
+    //   name: ticketNode.info.name.get(),
+    //   type: ticketNode.info.type.get(),
+    //   priority: getPriorityNumber(ticketNodeInfo.priority),
+    //   creationDate: Number(ticketNodeInfo.creationDate) || NaN,
+    //   description: ticketNodeInfo.description || '',
+    //   declarer_id: ticketNodeInfo.declarer_id || '',
+    //   elementSelected:
+    //     elementSelected === undefined
+    //       ? ''
+    //       : {
+    //         dynamicId: elementSelected._server_id,
+    //         staticId: elementSelected.info.id.get(),
+    //         name: elementSelected.info.name.get(),
+    //         type: elementSelected.info.type.get(),
+    //       },
+    //   userName: ticketNodeInfo.username || ticketNodeInfo.user || '',
+    //   gmaoId: ticketNodeInfo.gmaoId || '',
+    //   gmaoDateCreation: ticketNodeInfo.gmaoDateCreation || '',
+    //   process:
+    //     processNode === undefined
+    //       ? ''
+    //       : {
+    //         dynamicId: processNode._server_id,
+    //         staticId: processNode.info.id.get(),
+    //         name: processNode.info.name.get(),
+    //         type: processNode.info.type.get(),
+    //       },
+    //   step:
+    //     stepNode === undefined
+    //       ? ''
+    //       : {
+    //         dynamicId: stepNode._server_id,
+    //         staticId: stepNode.info.id.get(),
+    //         name: stepNode.info.name.get(),
+    //         type: stepNode.info.type.get(),
+    //         color: stepNode.info.color.get(),
+    //         order: stepNode.info.order.get(),
+    //       },
+    //   workflowId: contextNode?._server_id,
+    //   workflowName: contextNode?.info.name.get(),
+    // };
     if (includeAttachedItems) {
         info['note_list'] = await proms[2];
         info['file_list'] = await proms[3];

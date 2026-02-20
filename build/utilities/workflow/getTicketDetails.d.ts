@@ -6,17 +6,12 @@ declare function getTicketDetails(spinalAPIMiddleware: ISpinalAPIMiddleware, pro
     type: string;
     priority: number;
     creationDate: number;
-    description: any;
-    declarer_id: any;
     elementSelected: string | {
         dynamicId: any;
         staticId: any;
         name: any;
         type: any;
     };
-    userName: any;
-    gmaoId: any;
-    gmaoDateCreation: any;
     process: string | {
         dynamicId: number;
         staticId: string;
