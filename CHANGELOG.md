@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 20-02-2026 -> v1.1.7
+- BimObjectUtils.ts -> parentsNode now skips parent relations that are broken
+
 ## 06-02-2026 -> v1.1.6
 - node/id/endpoint_list has an option for more details
 

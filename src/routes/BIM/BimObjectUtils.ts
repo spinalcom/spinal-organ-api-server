@@ -40,7 +40,7 @@ module.exports = class BimObjectUtils {
   constructor() { }
   static getInstance(spinalAPIMiddleware: ISpinalAPIMiddleware) {
     this.spinalAPIMiddleware = spinalAPIMiddleware;
-    
+
     return typeof BimObjectUtils.instance !== 'undefined'
       ? BimObjectUtils.instance
       : (BimObjectUtils.instance = new BimObjectUtils());
@@ -121,7 +121,7 @@ module.exports = class BimObjectUtils {
   async getBimObjectsInfo(
     bimFileId: string | number,
     dbids: number[]
-  ): Promise<IBimObjectsInfo> {
+  ): Promise<any> {
     const bimFileNode = await this.getBimFile(bimFileId);
     if (!bimFileNode)
       return {
@@ -200,6 +200,9 @@ module.exports = class BimObjectUtils {
     let res: IRelationListItem[] = [];
     for (const [, ptrList] of parents) {
       for (let i = 0; i < ptrList.length; i++) {
+        if (!ptrList[i].pointedId) {
+          continue;
+        }
         auxtab.push(ptrList[i].load());
       }
     }
