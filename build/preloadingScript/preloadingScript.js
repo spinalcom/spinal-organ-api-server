@@ -51,13 +51,35 @@ async function preloadingScript(spinalAPIMiddleware, profileId, scriptOptions) {
         const elapsedTime = Date.now() - startingTime;
         console.log('[Preloading Script] %d ms -- %s', elapsedTime, statusMsg);
     }, 5000);
-    if (scriptOptions.runViewInfo) {
+    if (Array.isArray(scriptOptions.runViewInfo) &&
+        scriptOptions.runViewInfo.length > 0) {
         console.log('START PRELOAD VIEW INFO');
-        statusMsg = `viewInfo : visited 0 nodes.`;
-        await (0, viewInfo_func_1.viewInfo_func)(spinalAPIMiddleware, profileId, {}, (totalVisited) => {
-            statusMsg = `viewInfo : visited ${totalVisited} nodes.`;
-        });
+        for (let i = 0; i < scriptOptions.runViewInfo.length; i += 1) {
+            console.log(`Preloading viewInfo for server_id ${scriptOptions.runViewInfo[i]}`);
+            statusMsg = `viewInfo : visited 0 nodes.`;
+            const viewInfoObject = {
+                dynamicId: scriptOptions.runViewInfo[i],
+                floorRef: true,
+                roomRef: true,
+                equipements: true
+            };
+            await (0, viewInfo_func_1.viewInfo_func)(spinalAPIMiddleware, profileId, viewInfoObject, (totalVisited) => {
+                statusMsg = `viewInfo : visited ${totalVisited} nodes.`;
+            });
+        }
     }
+    // if (scriptOptions.runViewInfo) {
+    //   console.log('START PRELOAD VIEW INFO');
+    //   statusMsg = `viewInfo : visited 0 nodes.`;
+    //   await viewInfo_func(
+    //     spinalAPIMiddleware,
+    //     profileId,
+    //     {},
+    //     (totalVisited: number) => {
+    //       statusMsg = `viewInfo : visited ${totalVisited} nodes.`;
+    //     }
+    //   );
+    // }
     if (Array.isArray(scriptOptions.runStaticDetails) &&
         scriptOptions.runStaticDetails.length > 0) {
         console.log('START PRELOAD STATIC DETAILS');
