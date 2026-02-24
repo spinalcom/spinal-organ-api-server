@@ -49,8 +49,8 @@ function getPriorityNumber(priority: string): number { // compatibility with old
       return 1;
     case 'urgent':
       return 2;
-    // These three cases are for old tickets created by Spinalcom
-    default: {
+    // These three cases are for old tickets created by Spinalcom with mission
+    default: { // All future tickets should have number parsable prioirity, but in case of tickets with unparsable priority, we default to 0
       const parsedPriority = Number(normalizedPriority);
       return Number.isFinite(parsedPriority) ? parsedPriority : 0;
     }
