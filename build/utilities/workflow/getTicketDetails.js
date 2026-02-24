@@ -28,6 +28,9 @@ const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-vie
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const loadAndValidateNode_1 = require("../loadAndValidateNode");
 function getPriorityNumber(priority) {
+    console.log('getPriorityNumber called with priority:', priority);
+    if (!priority)
+        return 0;
     switch (priority.toLowerCase()) {
         case 'occasionally':
             return 0;
@@ -36,7 +39,7 @@ function getPriorityNumber(priority) {
         case 'urgent':
             return 2;
         default:
-            return Number(priority) ?? 1;
+            return Number(priority);
     }
 }
 async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includeAttachedItems = true) {
@@ -92,7 +95,7 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includ
     };
     for (const attr of allAttributes) {
         const label = attr.label.get();
-        if (!info[label]) {
+        if (info[label] === undefined) {
             info[label] = attr.value.get();
         }
     }

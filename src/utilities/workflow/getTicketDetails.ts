@@ -40,6 +40,8 @@ import { SpinalLogTicketInterface } from 'spinal-models-ticket';
 import { loadAndValidateNode } from '../loadAndValidateNode';
 
 function getPriorityNumber(priority: string): number { // compatibility with old tickets
+  console.log('getPriorityNumber called with priority:', priority);
+  if (!priority) return 0;
   switch (priority.toLowerCase()) {
     case 'occasionally':
       return 0;
@@ -48,7 +50,7 @@ function getPriorityNumber(priority: string): number { // compatibility with old
     case 'urgent':
       return 2;
     default:
-      return Number(priority) ?? 1;
+      return Number(priority);
   }
 }
 async function getTicketDetails(
@@ -120,7 +122,7 @@ async function getTicketDetails(
 
   for (const attr of allAttributes) {
     const label = attr.label.get();
-    if (!info[label]) {
+    if (info[label] === undefined) {
       info[label] = attr.value.get();
     }
   }
