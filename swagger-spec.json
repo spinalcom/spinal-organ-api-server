@@ -16239,8 +16239,14 @@
                   "context": {
                     "type": "string"
                   },
+                  "contextId": {
+                    "type": "integer"
+                  },
                   "category": {
                     "type": "string"
+                  },
+                  "categoryId": {
+                    "type": "integer"
                   },
                   "groups": {
                     "type": "array",
@@ -16248,6 +16254,13 @@
                       "type": "string"
                     },
                     "description": "Optional list of group names"
+                  },
+                  "groupIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    },
+                    "description": "Optional list of group dynamic IDs"
                   }
                 }
               }
@@ -16889,8 +16902,14 @@
                   "context": {
                     "type": "string"
                   },
+                  "contextId": {
+                    "type": "integer"
+                  },
                   "category": {
                     "type": "string"
+                  },
+                  "categoryId": {
+                    "type": "integer"
                   },
                   "groups": {
                     "type": "array",
@@ -16898,6 +16917,13 @@
                       "type": "string"
                     },
                     "description": "Optional list of group names"
+                  },
+                  "groupIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    },
+                    "description": "Optional list of group dynamic IDs"
                   }
                 }
               }

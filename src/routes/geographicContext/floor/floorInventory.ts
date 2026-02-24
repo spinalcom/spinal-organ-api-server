@@ -32,6 +32,12 @@ module.exports = function (
   app: express.Express,
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
+  const parseOptionalId = (value: any): number | undefined => {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value))) return Number(value);
+    return undefined;
+  };
+
   /**
    * @swagger
    * /api/v1/floor/{id}/inventory:
@@ -79,13 +85,22 @@ module.exports = function (
    *             properties:
    *               context:
    *                 type: string
+   *               contextId:
+   *                 type: integer
    *               category:
    *                 type: string
+   *               categoryId:
+   *                 type: integer
    *               groups:
    *                 type: array
    *                 items:
    *                   type: string
    *                 description: Optional list of group names
+   *               groupIds:
+   *                 type: array
+   *                 items:
+   *                   type: integer
+   *                 description: Optional list of group dynamic IDs
    *     responses:
    *       200:
    *         description: Success
@@ -98,29 +113,30 @@ module.exports = function (
    */
   app.post("/api/v1/floor/:id/inventory", async (req, res, next) => {
     try {
-        const profileId = getProfileId(req);
-        const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
-        const contexts = await graph.getChildren("hasContext");
-        const groupContext = contexts.find(e => e.getName().get() === req.body.context);
-        if (!groupContext) throw { code: 400, message: "context not found" };
+      const profileId = getProfileId(req);
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
+      const contexts = await graph.getChildren("hasContext");
+      const contextId = parseOptionalId(req.body.contextId);
+      const groupContext = contexts.find(e => contextId !== undefined ? e._server_id === contextId : e.getName().get() === req.body.context);
+      if (!groupContext) throw { code: 400, message: "context not found" };
 
-        const includePosition = req.query.includePosition === "true" || false;
-        const includeArea = req.query.includeArea === "true" || false;
-        const onlyDynamicId = req.query.onlyDynamicId === "true" || false;
+      const includePosition = req.query.includePosition === "true" || false;
+      const includeArea = req.query.includeArea === "true" || false;
+      const onlyDynamicId = req.query.onlyDynamicId === "true" || false;
 
-        const reqInfo = {
-          ...req.body,
-          includePosition,
-          includeArea,
-          onlyDynamicId,
-        }
+      const reqInfo = {
+        ...req.body,
+        includePosition,
+        includeArea,
+        onlyDynamicId,
+      }
 
-        const inventory = await getFloorInventory(spinalAPIMiddleware,profileId,groupContext, parseInt(req.params.id, 10), reqInfo);
-        return res.json(inventory);
+      const inventory = await getFloorInventory(spinalAPIMiddleware, profileId, groupContext, parseInt(req.params.id, 10), reqInfo);
+      return res.json(inventory);
     } catch (error) {
-        if (error.code && error.message) return res.status(error.code).send(error.message);
-        return res.status(400).send(error.message || "ko");
+      if (error.code && error.message) return res.status(error.code).send(error.message);
+      return res.status(400).send(error.message || "ko");
     }
-});
+  });
 
 };

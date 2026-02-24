@@ -3,6 +3,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getRoomInventory = exports.getFloorInventory = void 0;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+function parseOptionalId(value) {
+    if (typeof value === "number" && Number.isFinite(value))
+        return value;
+    if (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value)))
+        return Number(value);
+    return undefined;
+}
+function parseOptionalIds(values) {
+    if (!Array.isArray(values))
+        return undefined;
+    const ids = values.map(parseOptionalId).filter((id) => id !== undefined);
+    return ids.length > 0 ? ids : undefined;
+}
 async function getRoomInventory(spinalAPIMiddleware, profileId, groupContext, dynamicId, reqInfo) {
     const room = await spinalAPIMiddleware.load(dynamicId, profileId);
     //@ts-ignore
@@ -63,10 +76,15 @@ async function cleanEmptyParentRelations(node) {
     console.log("** Done **");
 }
 async function classifyItemsByGroup(itemList, groupContext, reqInfo, mapAdditionalInfo) {
+    const groupIds = parseOptionalIds(reqInfo.groupIds);
+    const categoryId = parseOptionalId(reqInfo.categoryId);
     const res = [];
     for (const item of itemList) {
         let parentGroups = groupContext.getType().get() === 'geographicRoomGroupContext' ? await item.getParents("groupHasgeographicRoom") : await item.getParents("groupHasBIMObject");
-        if (reqInfo.groups && reqInfo.groups.length > 0) {
+        if (groupIds && groupIds.length > 0) {
+            parentGroups = parentGroups.filter(e => groupIds.includes(e._server_id));
+        }
+        else if (reqInfo.groups && reqInfo.groups.length > 0) {
             parentGroups = parentGroups.filter(e => reqInfo.groups.includes(e.getName().get()));
         }
         for (const parentGroup of parentGroups) {
@@ -74,7 +92,9 @@ async function classifyItemsByGroup(itemList, groupContext, reqInfo, mapAddition
                 continue;
             }
             const parentCategories = await parentGroup.getParents("hasGroup");
-            const parentCategory = parentCategories.find(e => e.getName().get() === reqInfo.category);
+            const parentCategory = categoryId !== undefined
+                ? parentCategories.find(e => e._server_id === categoryId)
+                : parentCategories.find(e => e.getName().get() === reqInfo.category);
             if (!parentCategory)
                 continue; // if the category is not the one user requested, skip
             if (!res.find(e => e.name === parentGroup.getName().get())) {

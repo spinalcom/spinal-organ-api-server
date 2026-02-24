@@ -1,22 +1,45 @@
 import { ISpinalAPIMiddleware } from '../interfaces';
 import {
-  SpinalNode,
-  SpinalGraphService,
+    SpinalNode,
+    SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
 
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 
+type InventoryRequestInfo = {
+    context?: string;
+    contextId?: number;
+    category?: string;
+    categoryId?: number;
+    groups?: string[];
+    groupIds?: number[];
+    includePosition?: boolean;
+    includeArea?: boolean;
+    onlyDynamicId?: boolean;
+};
+
+function parseOptionalId(value: any): number | undefined {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value))) return Number(value);
+    return undefined;
+}
+
+function parseOptionalIds(values: any): number[] | undefined {
+    if (!Array.isArray(values)) return undefined;
+    const ids = values.map(parseOptionalId).filter((id): id is number => id !== undefined);
+    return ids.length > 0 ? ids : undefined;
+}
 
 
 async function getRoomInventory(
-  spinalAPIMiddleware: ISpinalAPIMiddleware,
-  profileId: string,
-  groupContext : SpinalNode<any>,
-  dynamicId: number,
-  reqInfo: { context: string, category : string , includePosition?: boolean, onlyDynamicId?: boolean }
-  ) {
+    spinalAPIMiddleware: ISpinalAPIMiddleware,
+    profileId: string,
+    groupContext: SpinalNode<any>,
+    dynamicId: number,
+    reqInfo: InventoryRequestInfo
+) {
 
-    const room: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
+    const room: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId, profileId);
     //@ts-ignore
     SpinalGraphService._addNode(room);
     if (room.getType().get() !== "geographicRoom") {
@@ -25,27 +48,27 @@ async function getRoomInventory(
 
     const mapAdditionalInfo = new Map();
 
-    if(groupContext.getType().get() !== 'BIMObjectGroupContext'){
+    if (groupContext.getType().get() !== 'BIMObjectGroupContext') {
         throw new Error("groupContext is not of type BIMObjectGroupContext");
-    }    
+    }
 
-    const equipmentList : any[] =  await room.getChildren("hasBimObject");
-   
-    
+    const equipmentList: any[] = await room.getChildren("hasBimObject");
 
-    const classifiedItems =  await classifyItemsByGroup(equipmentList, groupContext, reqInfo , mapAdditionalInfo);
+
+
+    const classifiedItems = await classifyItemsByGroup(equipmentList, groupContext, reqInfo, mapAdditionalInfo);
     return classifiedItems;
 }
 
 async function getFloorInventory(
-  spinalAPIMiddleware: ISpinalAPIMiddleware,
-  profileId: string,
-  groupContext : SpinalNode<any>,
-  dynamicId: number,
-  reqInfo: { context: string, category : string , includePosition?: boolean, includeArea?: boolean, onlyDynamicId?: boolean }
-  ) {
+    spinalAPIMiddleware: ISpinalAPIMiddleware,
+    profileId: string,
+    groupContext: SpinalNode<any>,
+    dynamicId: number,
+    reqInfo: InventoryRequestInfo
+) {
 
-    const floor: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
+    const floor: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId, profileId);
     //@ts-ignore
     SpinalGraphService._addNode(floor);
     if (floor.getType().get() !== "geographicFloor") {
@@ -56,70 +79,77 @@ async function getFloorInventory(
 
     const rooms = await floor.getChildren("hasGeographicRoom");
 
-    if(groupContext.getType().get() === 'geographicRoomGroupContext'){
+    if (groupContext.getType().get() === 'geographicRoomGroupContext') {
         reqInfo.includePosition = false; // safety check
-        return await classifyItemsByGroup(rooms, groupContext, reqInfo , mapAdditionalInfo);
+        return await classifyItemsByGroup(rooms, groupContext, reqInfo, mapAdditionalInfo);
     }
 
     reqInfo.includeArea = false; // safety check
 
-    
 
-    const equipmentList : any[] = [];
 
-    for(const room of rooms){
+    const equipmentList: any[] = [];
+
+    for (const room of rooms) {
         const equipments = await room.getChildren("hasBimObject");
-        for(const equipment of equipments){
+        for (const equipment of equipments) {
             const additionalInfo = {};
             additionalInfo['room'] = {
                 dynamicId: room._server_id,
                 name: room.getName().get()
             };
-            mapAdditionalInfo.set(equipment._server_id,additionalInfo);
+            mapAdditionalInfo.set(equipment._server_id, additionalInfo);
         }
         equipmentList.push(...equipments)
-   
+
     }
 
-    const classifiedItems =  await classifyItemsByGroup(equipmentList, groupContext, reqInfo , mapAdditionalInfo);
+    const classifiedItems = await classifyItemsByGroup(equipmentList, groupContext, reqInfo, mapAdditionalInfo);
     return classifiedItems;
 
 }
 
-async function cleanEmptyParentRelations(node : SpinalNode<any>){
-    const par =  node.parents['groupHasBIMObject'];
-    for ( const pointeur of par ) {     
-        try {         
-        await (await pointeur.ptr.load()).parent.ptr.load()     
-        }     
-        
-        catch(e) {
-                  node._removeParent(pointeur)
-         } }    
-        console.log("** Done **")
+async function cleanEmptyParentRelations(node: SpinalNode<any>) {
+    const par = node.parents['groupHasBIMObject'];
+    for (const pointeur of par) {
+        try {
+            await (await pointeur.ptr.load()).parent.ptr.load()
+        }
+
+        catch (e) {
+            node._removeParent(pointeur)
+        }
+    }
+    console.log("** Done **")
 }
 
-async function classifyItemsByGroup(itemList : SpinalNode<any>[], groupContext : SpinalNode<any>, reqInfo : any, mapAdditionalInfo){
-    const res=[];
-    for( const item of itemList){
+async function classifyItemsByGroup(itemList: SpinalNode<any>[], groupContext: SpinalNode<any>, reqInfo: any, mapAdditionalInfo) {
+    const groupIds = parseOptionalIds(reqInfo.groupIds);
+    const categoryId = parseOptionalId(reqInfo.categoryId);
+    const res = [];
+    for (const item of itemList) {
         let parentGroups = groupContext.getType().get() === 'geographicRoomGroupContext' ? await item.getParents("groupHasgeographicRoom") : await item.getParents("groupHasBIMObject");
-        if(reqInfo.groups && reqInfo.groups.length >0) {
+        if (groupIds && groupIds.length > 0) {
+            parentGroups = parentGroups.filter(e => groupIds.includes(e._server_id));
+        } else if (reqInfo.groups && reqInfo.groups.length > 0) {
             parentGroups = parentGroups.filter(e => reqInfo.groups.includes(e.getName().get()));
         }
-        for ( const parentGroup of parentGroups) {
-            if(!parentGroup.belongsToContext(groupContext)){ // if the group does not belong to the context skip
+        for (const parentGroup of parentGroups) {
+            if (!parentGroup.belongsToContext(groupContext)) { // if the group does not belong to the context skip
                 continue;
             }
             const parentCategories = await parentGroup.getParents("hasGroup")
-            const parentCategory = parentCategories.find(e => e.getName().get() === reqInfo.category);
-            if(!parentCategory) continue; // if the category is not the one user requested, skip
-            if(!res.find(e=> e.name === parentGroup.getName().get())){
+            const parentCategory = categoryId !== undefined
+                ? parentCategories.find(e => e._server_id === categoryId)
+                : parentCategories.find(e => e.getName().get() === reqInfo.category);
+            if (!parentCategory) continue; // if the category is not the one user requested, skip
+            if (!res.find(e => e.name === parentGroup.getName().get())) {
                 res.push({
                     name: parentGroup.getName().get(),
                     dynamicId: parentGroup._server_id,
                     type: parentGroup.getType().get(),
-                    color : parentGroup.info.color?.get(),
-                    icon : parentGroup.info.icon?.get(),
+                    color: parentGroup.info.color?.get(),
+                    icon: parentGroup.info.icon?.get(),
                     groupItems: []
                 })
             }
@@ -128,12 +158,12 @@ async function classifyItemsByGroup(itemList : SpinalNode<any>[], groupContext :
             const position = reqInfo.includePosition ? await getCoordinate(item) : undefined;
             const area = reqInfo.includeArea ? await getArea(item) : undefined;
             group.groupItems.push({
-                ...getDetail(item,reqInfo),
+                ...getDetail(item, reqInfo),
                 ...additionalInfo,
                 position,
                 area
             });
-            
+
 
         }
     }
@@ -141,34 +171,34 @@ async function classifyItemsByGroup(itemList : SpinalNode<any>[], groupContext :
     return res;
 }
 
-async function getCoordinate(equipment : SpinalNode<any>){
-    const coordinate = await serviceDocumentation.findOneAttributeInCategory(equipment, 'Spatial','XYZ center')
-    if(coordinate === -1) return { x: null, y: null, z :null};
+async function getCoordinate(equipment: SpinalNode<any>) {
+    const coordinate = await serviceDocumentation.findOneAttributeInCategory(equipment, 'Spatial', 'XYZ center')
+    if (coordinate === -1) return { x: null, y: null, z: null };
 
-    const [x, y, z] = (coordinate.value.get()as string).split(';').map(Number);
+    const [x, y, z] = (coordinate.value.get() as string).split(';').map(Number);
     return { x, y, z };
-            
+
 }
 
-function getDetail(obj : SpinalNode<any>, reqInfo? : any){
+function getDetail(obj: SpinalNode<any>, reqInfo?: any) {
     const infoObject = {
         staticId: reqInfo.onlyDynamicId ? undefined : obj.getId().get(),
         dynamicId: obj._server_id,
         name: reqInfo.onlyDynamicId ? undefined : obj.getName().get(),
-        type:  reqInfo.onlyDynamicId ? undefined :obj.getType().get(),
-        dbid :  reqInfo.onlyDynamicId ? undefined :obj.info.dbid?.get(),
-        bimFileId:  reqInfo.onlyDynamicId ? undefined :obj.info.bimFileId?.get(),
-        color:  reqInfo.onlyDynamicId ? undefined :obj.info.color?.get()
+        type: reqInfo.onlyDynamicId ? undefined : obj.getType().get(),
+        dbid: reqInfo.onlyDynamicId ? undefined : obj.info.dbid?.get(),
+        bimFileId: reqInfo.onlyDynamicId ? undefined : obj.info.bimFileId?.get(),
+        color: reqInfo.onlyDynamicId ? undefined : obj.info.color?.get()
     };
     return infoObject;
 }
 
-async function getArea(room : SpinalNode<any>){
-    const areaAttribute = await serviceDocumentation.findOneAttributeInCategory(room, 'Spatial','area')
-    if(areaAttribute === -1) return null;
+async function getArea(room: SpinalNode<any>) {
+    const areaAttribute = await serviceDocumentation.findOneAttributeInCategory(room, 'Spatial', 'area')
+    if (areaAttribute === -1) return null;
 
     const area = areaAttribute.value.get();
     return area;
 }
 
-export { getFloorInventory , getRoomInventory };
+export { getFloorInventory, getRoomInventory };

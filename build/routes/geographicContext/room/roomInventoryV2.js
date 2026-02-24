@@ -26,6 +26,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getInventory_1 = require("../../../utilities/getInventory");
 module.exports = function (logger, app, spinalAPIMiddleware) {
+    const parseOptionalId = (value) => {
+        if (typeof value === "number" && Number.isFinite(value))
+            return value;
+        if (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value)))
+            return Number(value);
+        return undefined;
+    };
     /**
      * @swagger
      * /api/v1/room/{id}/inventory:
@@ -67,13 +74,22 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               context:
      *                 type: string
+     *               contextId:
+     *                 type: integer
      *               category:
      *                 type: string
+     *               categoryId:
+     *                 type: integer
      *               groups:
      *                 type: array
      *                 items:
      *                   type: string
      *                 description: Optional list of group names
+     *               groupIds:
+     *                 type: array
+     *                 items:
+     *                   type: integer
+     *                 description: Optional list of group dynamic IDs
      *     responses:
      *       200:
      *         description: Success
@@ -89,7 +105,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
             const contexts = await graph.getChildren("hasContext");
-            const groupContext = contexts.find(e => e.getName().get() === req.body.context);
+            const contextId = parseOptionalId(req.body.contextId);
+            const groupContext = contexts.find(e => contextId !== undefined ? e._server_id === contextId : e.getName().get() === req.body.context);
             if (!groupContext)
                 throw { code: 400, message: "context not found" };
             const includePosition = req.query.includePosition === "true" || false;
