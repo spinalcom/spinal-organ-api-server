@@ -39,18 +39,21 @@ import { SpinalNode, SpinalContext } from 'spinal-model-graph';
 import { SpinalLogTicketInterface } from 'spinal-models-ticket';
 import { loadAndValidateNode } from '../loadAndValidateNode';
 
-function getPriorityNumber(priority: string): number { // compatibility with old tickets
-  console.log('getPriorityNumber called with priority:', priority);
-  if (!priority) return 0;
-  switch (priority.toLowerCase()) {
+function getPriorityNumber(priority: string): number { // compatibility with old tickets by spinalcom
+  if (!priority) return 0; // default to 0 if priority is undefined or empty
+  const normalizedPriority = String(priority).trim().toLowerCase();
+  switch (normalizedPriority) {
     case 'occasionally':
       return 0;
     case 'normal':
       return 1;
     case 'urgent':
       return 2;
-    default:
-      return Number(priority);
+    // These three cases are for old tickets created by Spinalcom
+    default: {
+      const parsedPriority = Number(normalizedPriority);
+      return Number.isFinite(parsedPriority) ? parsedPriority : 0;
+    }
   }
 }
 async function getTicketDetails(
