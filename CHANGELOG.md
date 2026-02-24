@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 24-02-2026 -> v1.1.8
+- Floor inventory and room inventory now also accept IDs for context category and group
+- getBIMObjectInfo correctly skips broken parent relations ( it was skipping all parents )
+
 ## 20-02-2026 -> v1.1.7
 - BimObjectUtils.ts -> parentsNode now skips parent relations that are broken
 

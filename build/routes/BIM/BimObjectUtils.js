@@ -168,7 +168,7 @@ module.exports = (_a = class BimObjectUtils {
             let res = [];
             for (const [, ptrList] of parents) {
                 for (let i = 0; i < ptrList.length; i++) {
-                    if (!ptrList[i].pointedId) {
+                    if (!ptrList[i].info.pointedId?.get()) {
                         continue;
                     }
                     auxtab.push(ptrList[i].load());
