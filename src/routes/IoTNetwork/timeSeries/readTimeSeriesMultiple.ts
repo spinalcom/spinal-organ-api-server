@@ -26,6 +26,15 @@ import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 import { verifDate } from '../../../utilities/dateFunctions';
 import { getTimeSeriesData } from '../../../utilities/getTimeSeriesData';
+import {
+  computeAggregation,
+  computeTimeWeightedMean,
+  computeBucketedAggregation,
+  toTimestamp,
+  parseAggregationParam,
+  parseBucketParam,
+  VALID_OPS,
+} from '../../../utilities/aggregationUtils';
 
 import * as express from 'express';
 
@@ -75,6 +84,27 @@ module.exports = function (
    *        schema:
    *          type: string
    *          enum: [false, true]
+   *      - in: query
+   *        name: aggregation
+   *        description: >
+   *          Comma-separated list of aggregation operations to apply on each endpoint's data.
+   *          Supported values: sum, min, max, avg, twavg, time_weighted_avg, all.
+   *          Use 'all' to get sum, min, max, avg and twavg at once.
+   *          If not provided, raw time series data is returned for each endpoint.
+   *        required: false
+   *        schema:
+   *          type: string
+   *          example: "min,max,avg,twavg"
+   *      - in: query
+   *        name: bucket
+   *        description: >
+   *          Split the interval into sub-intervals of the given size and compute
+   *          the requested aggregations per bucket. If no aggregation is specified,
+   *          defaults to twavg. Supported formats: 1h, 1d, 1w, 1M.
+   *        required: false
+   *        schema:
+   *          type: string
+   *          example: "1h"
    *     responses:
    *       200:
    *         description: Success - All time series data fetched
@@ -119,6 +149,24 @@ module.exports = function (
           end: verifDate(req.params.end),
         };
         const includeLastBeforeStart = req.query.valueAtBegin == "true" ? true : false;
+
+        // Parse aggregation parameter
+        const { normalizedOps, basicOps, needsTwavg } = parseAggregationParam(
+          req.query.aggregation as string
+        );
+
+        // Parse bucket parameter
+        const bucketMs = parseBucketParam(req.query.bucket as string);
+
+        if (req.query.aggregation && !normalizedOps && !bucketMs) {
+          return res.status(400).send(
+            `Invalid aggregation parameter. Supported values: ${VALID_OPS.join(', ')}, all`
+          );
+        }
+
+        const intervalStart = toTimestamp(timeSeriesIntervalDate.start);
+        const intervalEnd = toTimestamp(timeSeriesIntervalDate.end);
+
         // Map each id to a promise
         const promises = ids.map((id) =>
           getTimeSeriesData(spinalAPIMiddleware,profileId ,id, timeSeriesIntervalDate,includeLastBeforeStart)
@@ -128,7 +176,31 @@ module.exports = function (
 
         const finalResults = settledResults.map((result, index) => {
           if (result.status === 'fulfilled') {
-            return { dynamicId: ids[index], timeseries: result.value };
+            const datas = result.value;
+
+            // Bucketed mode
+            if (bucketMs) {
+              // Parse aggregation ops; default to twavg only when no aggregation specified
+              const bucketOps = normalizedOps
+                ? { basicOps, needsTwavg }
+                : { basicOps: [] as string[], needsTwavg: true };
+
+              const buckets = computeBucketedAggregation(
+                datas, intervalStart, intervalEnd, bucketMs,
+                bucketOps.basicOps, bucketOps.needsTwavg
+              );
+              return { dynamicId: ids[index], buckets };
+            }
+
+            if (normalizedOps) {
+              const aggregationResult = computeAggregation(datas, basicOps);
+              if (needsTwavg) {
+                aggregationResult.twavg = computeTimeWeightedMean(datas, intervalStart, intervalEnd);
+              }
+              return { dynamicId: ids[index], ...aggregationResult };
+            }
+
+            return { dynamicId: ids[index], timeseries: datas };
           } else {
             console.error(`Error with id ${ids[index]}: ${result.reason}`);
             return {

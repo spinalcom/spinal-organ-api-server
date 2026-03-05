@@ -24,14 +24,22 @@
 
 import { SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service'
 import spinalServiceTimeSeries from '../spinalTimeSeries'
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import { verifDate } from "../../../utilities/dateFunctions";
+import {
+  computeAggregation,
+  computeTimeWeightedMean,
+  computeBucketedAggregation,
+  toTimestamp,
+  parseAggregationParam,
+  parseBucketParam,
+  VALID_OPS,
+} from '../../../utilities/aggregationUtils';
 
 import * as express from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {  /**
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
  * @swagger
  * /api/v1/endpoint/{id}/timeSeries/read/{begin}/{end}:
@@ -39,7 +47,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  *     security:
  *       - bearerAuth:
  *         - readOnly
- *     description: get time series 
+ *     description: get time series
  *     summary: get time series
  *     tags:
  *       - IoTNetwork & Time Series
@@ -70,13 +78,51 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  *        schema:
  *          type: string
  *          enum: [false, true]
+ *      - in: query
+ *        name: aggregation
+ *        description: >
+ *          Comma-separated list of aggregation operations to apply on the data.
+ *          Supported values: sum, min, max, avg, twavg, time_weighted_avg, all.
+ *          Use 'all' to get sum, min, max, and avg at once.
+ *          If not provided, raw time series data is returned.
+ *        required: false
+ *        schema:
+ *          type: string
+ *          example: "sum,min,max,avg"
+ *      - in: query
+ *        name: bucket
+ *        description: >
+ *          Split the interval into sub-intervals of the given size and compute
+ *          the requested aggregations per bucket. If no aggregation is specified,
+ *          defaults to twavg. Supported formats: 1h, 1d, 1w, 1M.
+ *        required: false
+ *        schema:
+ *          type: string
+ *          example: "1h"
  *     responses:
  *       200:
  *         description: Success
  *         content:
  *           application/json:
  *             schema:
- *                $ref: '#/components/schemas/Timeserie'
+ *               oneOf:
+ *                 - $ref: '#/components/schemas/Timeserie'
+ *                 - type: object
+ *                   properties:
+ *                     sum:
+ *                       type: number
+ *                       nullable: true
+ *                     min:
+ *                       type: number
+ *                       nullable: true
+ *                     max:
+ *                       type: number
+ *                       nullable: true
+ *                     avg:
+ *                       type: number
+ *                       nullable: true
+ *                     count:
+ *                       type: integer
  *       400:
  *         description: Bad request
   */
@@ -97,8 +143,49 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           start: verifDate(req.params.begin),
           end: verifDate(req.params.end)
         }
+        const intervalStart = toTimestamp(timeSeriesIntervalDate.start);
+        const intervalEnd = toTimestamp(timeSeriesIntervalDate.end);
         const includeLastBeforeStart = req.query.valueAtBegin == "true" ? true : false;
         const datas = await spinalServiceTimeSeries().getData(node.getId().get(), timeSeriesIntervalDate, includeLastBeforeStart)
+
+        const aggregationParam = req.query.aggregation as string;
+        const bucketMs = parseBucketParam(req.query.bucket as string);
+
+        if (bucketMs) {
+          // Parse aggregation ops; default to twavg only when no aggregation specified
+          const { normalizedOps, basicOps, needsTwavg } = aggregationParam
+            ? parseAggregationParam(aggregationParam)
+            : { normalizedOps: ['twavg'], basicOps: [] as string[], needsTwavg: true };
+
+          if (aggregationParam && !normalizedOps) {
+            return res.status(400).send(
+              `Invalid aggregation parameter. Supported values: ${VALID_OPS.join(', ')}, all`
+            );
+          }
+
+          const buckets = computeBucketedAggregation(
+            datas, intervalStart, intervalEnd, bucketMs, basicOps, needsTwavg
+          );
+          return res.json({ dynamicId: parseInt(req.params.id, 10), buckets });
+        }
+
+        if (aggregationParam) {
+          const { normalizedOps, basicOps, needsTwavg } = parseAggregationParam(aggregationParam);
+
+          if (!normalizedOps) {
+            return res.status(400).send(
+              `Invalid aggregation parameter. Supported values: ${VALID_OPS.join(', ')}, all`
+            );
+          }
+
+          const aggregationResult = computeAggregation(datas, basicOps);
+
+          if (needsTwavg) {
+            aggregationResult.twavg = computeTimeWeightedMean(datas, intervalStart, intervalEnd);
+          }
+          return res.json(aggregationResult);
+        }
+
         return res.json(datas);
       }
 
@@ -109,7 +196,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         return res.status(400).send(error)
       }
     }
-    
+
   })
 
 }

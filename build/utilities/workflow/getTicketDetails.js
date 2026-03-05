@@ -28,18 +28,21 @@ const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-vie
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const loadAndValidateNode_1 = require("../loadAndValidateNode");
 function getPriorityNumber(priority) {
-    console.log('getPriorityNumber called with priority:', priority);
     if (!priority)
-        return 0;
-    switch (priority.toLowerCase()) {
+        return 0; // default to 0 if priority is undefined or empty
+    const normalizedPriority = String(priority).trim().toLowerCase();
+    switch (normalizedPriority) {
         case 'occasionally':
             return 0;
         case 'normal':
             return 1;
         case 'urgent':
             return 2;
-        default:
-            return Number(priority);
+        // These three cases are for old tickets created by Spinalcom with mission
+        default: { // All future tickets should have number parsable prioirity, but in case of tickets with unparsable priority, we default to 0
+            const parsedPriority = Number(normalizedPriority);
+            return Number.isFinite(parsedPriority) ? parsedPriority : 0;
+        }
     }
 }
 async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includeAttachedItems = true) {

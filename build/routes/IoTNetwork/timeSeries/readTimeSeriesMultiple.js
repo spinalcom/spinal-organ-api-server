@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const dateFunctions_1 = require("../../../utilities/dateFunctions");
 const getTimeSeriesData_1 = require("../../../utilities/getTimeSeriesData");
+const aggregationUtils_1 = require("../../../utilities/aggregationUtils");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -67,6 +68,27 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *        schema:
      *          type: string
      *          enum: [false, true]
+     *      - in: query
+     *        name: aggregation
+     *        description: >
+     *          Comma-separated list of aggregation operations to apply on each endpoint's data.
+     *          Supported values: sum, min, max, avg, twavg, time_weighted_avg, all.
+     *          Use 'all' to get sum, min, max, avg and twavg at once.
+     *          If not provided, raw time series data is returned for each endpoint.
+     *        required: false
+     *        schema:
+     *          type: string
+     *          example: "min,max,avg,twavg"
+     *      - in: query
+     *        name: bucket
+     *        description: >
+     *          Split the interval into sub-intervals of the given size and compute
+     *          the requested aggregations per bucket. If no aggregation is specified,
+     *          defaults to twavg. Supported formats: 1h, 1d, 1w, 1M.
+     *        required: false
+     *        schema:
+     *          type: string
+     *          example: "1h"
      *     responses:
      *       200:
      *         description: Success - All time series data fetched
@@ -105,12 +127,38 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 end: (0, dateFunctions_1.verifDate)(req.params.end),
             };
             const includeLastBeforeStart = req.query.valueAtBegin == "true" ? true : false;
+            // Parse aggregation parameter
+            const { normalizedOps, basicOps, needsTwavg } = (0, aggregationUtils_1.parseAggregationParam)(req.query.aggregation);
+            // Parse bucket parameter
+            const bucketMs = (0, aggregationUtils_1.parseBucketParam)(req.query.bucket);
+            if (req.query.aggregation && !normalizedOps && !bucketMs) {
+                return res.status(400).send(`Invalid aggregation parameter. Supported values: ${aggregationUtils_1.VALID_OPS.join(', ')}, all`);
+            }
+            const intervalStart = (0, aggregationUtils_1.toTimestamp)(timeSeriesIntervalDate.start);
+            const intervalEnd = (0, aggregationUtils_1.toTimestamp)(timeSeriesIntervalDate.end);
             // Map each id to a promise
             const promises = ids.map((id) => (0, getTimeSeriesData_1.getTimeSeriesData)(spinalAPIMiddleware, profileId, id, timeSeriesIntervalDate, includeLastBeforeStart));
             const settledResults = await Promise.allSettled(promises);
             const finalResults = settledResults.map((result, index) => {
                 if (result.status === 'fulfilled') {
-                    return { dynamicId: ids[index], timeseries: result.value };
+                    const datas = result.value;
+                    // Bucketed mode
+                    if (bucketMs) {
+                        // Parse aggregation ops; default to twavg only when no aggregation specified
+                        const bucketOps = normalizedOps
+                            ? { basicOps, needsTwavg }
+                            : { basicOps: [], needsTwavg: true };
+                        const buckets = (0, aggregationUtils_1.computeBucketedAggregation)(datas, intervalStart, intervalEnd, bucketMs, bucketOps.basicOps, bucketOps.needsTwavg);
+                        return { dynamicId: ids[index], buckets };
+                    }
+                    if (normalizedOps) {
+                        const aggregationResult = (0, aggregationUtils_1.computeAggregation)(datas, basicOps);
+                        if (needsTwavg) {
+                            aggregationResult.twavg = (0, aggregationUtils_1.computeTimeWeightedMean)(datas, intervalStart, intervalEnd);
+                        }
+                        return { dynamicId: ids[index], ...aggregationResult };
+                    }
+                    return { dynamicId: ids[index], timeseries: datas };
                 }
                 else {
                     console.error(`Error with id ${ids[index]}: ${result.reason}`);
