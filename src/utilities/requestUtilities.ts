@@ -24,6 +24,31 @@
 
 import * as express from 'express';
 
+export const MULTIPLE_ROUTE_IDS_LIMIT = parseInt(
+  process.env.MULTIPLE_ROUTE_IDS_LIMIT || '1000',
+  10
+);
+export const MULTIPLE_TIMESERIES_IDS_LIMIT = parseInt(
+  process.env.MULTIPLE_TIMESERIES_IDS_LIMIT || '1000',
+  10
+);
+
 export function getProfileId(req: express.Request): string {
-    return (<any>req).profileId;
+  return (<any>req).profileId;
+}
+
+export function validateArrayRequestLimit(
+  items: unknown,
+  itemLabel = 'IDs',
+  limit = MULTIPLE_ROUTE_IDS_LIMIT
+): string | null {
+  if (!Array.isArray(items)) {
+    return `Expected an array of ${itemLabel}.`;
+  }
+
+  if (items.length > limit) {
+    return `Too many ${itemLabel.toLowerCase()} provided. Maximum allowed is ${limit}.`;
+  }
+
+  return null;
 }

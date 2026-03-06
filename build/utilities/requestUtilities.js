@@ -23,9 +23,21 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProfileId = void 0;
+exports.validateArrayRequestLimit = exports.getProfileId = exports.MULTIPLE_TIMESERIES_IDS_LIMIT = exports.MULTIPLE_ROUTE_IDS_LIMIT = void 0;
+exports.MULTIPLE_ROUTE_IDS_LIMIT = parseInt(process.env.MULTIPLE_ROUTE_IDS_LIMIT || '1000', 10);
+exports.MULTIPLE_TIMESERIES_IDS_LIMIT = parseInt(process.env.MULTIPLE_TIMESERIES_IDS_LIMIT || '1000', 10);
 function getProfileId(req) {
     return req.profileId;
 }
 exports.getProfileId = getProfileId;
+function validateArrayRequestLimit(items, itemLabel = 'IDs', limit = exports.MULTIPLE_ROUTE_IDS_LIMIT) {
+    if (!Array.isArray(items)) {
+        return `Expected an array of ${itemLabel}.`;
+    }
+    if (items.length > limit) {
+        return `Too many ${itemLabel.toLowerCase()} provided. Maximum allowed is ${limit}.`;
+    }
+    return null;
+}
+exports.validateArrayRequestLimit = validateArrayRequestLimit;
 //# sourceMappingURL=requestUtilities.js.map

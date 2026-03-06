@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { getProfileId } from '../../../utilities/requestUtilities';
+import { getProfileId, validateArrayRequestLimit } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 import * as express from 'express';
 import { getEquipmentStaticDetailsInfo } from '../../../utilities/getStaticDetailsInfo';
@@ -79,8 +79,9 @@ app.post('/api/v1/equipment/read_static_details_multiple', async (req, res, next
     const profileId = getProfileId(req);
     const dynamicIds = req.body;
 
-    if (!Array.isArray(dynamicIds)) {
-      return res.status(400).send('Expected an array of dynamic IDs');
+    const validationError = validateArrayRequestLimit(dynamicIds, 'dynamic IDs');
+    if (validationError) {
+      return res.status(400).send(validationError);
     }
 
     // Map each dynamicId to a promise
@@ -109,4 +110,3 @@ app.post('/api/v1/equipment/read_static_details_multiple', async (req, res, next
   }
 });
 };
-

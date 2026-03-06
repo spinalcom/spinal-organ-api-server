@@ -79,10 +79,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const nodes = req.body;
-            if (!Array.isArray(nodes)) {
-                return res
-                    .status(400)
-                    .send('Invalid relations format; an array is expected');
+            const validationError = (0, requestUtilities_1.validateArrayRequestLimit)(nodes, 'items');
+            if (validationError) {
+                return res.status(400).send(validationError);
             }
             const promises = nodes.map(async (node) => {
                 const parents = await (0, getParentNodesInfo_1.getParentNodesInfo)(spinalAPIMiddleware, profileId, node.dynamicId, node.relations);

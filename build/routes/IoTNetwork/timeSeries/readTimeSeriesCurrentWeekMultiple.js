@@ -73,8 +73,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const ids = req.body; // Directly using the body as the array of IDs
-            if (!Array.isArray(ids)) {
-                return res.status(400).send('Expected an array of IDs.');
+            const validationError = (0, requestUtilities_1.validateArrayRequestLimit)(ids, 'IDs', requestUtilities_1.MULTIPLE_TIMESERIES_IDS_LIMIT);
+            if (validationError) {
+                return res.status(400).send(validationError);
             }
             const timeSeriesIntervalDate = (0, spinalTimeSeries_1.default)().getDateFromLastDays(7);
             // Map each id to a promise

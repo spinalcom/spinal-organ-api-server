@@ -87,8 +87,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const ids = req.body;
-            if (!Array.isArray(ids)) {
-                return res.status(400).send('Expected an array of IDs.');
+            const validationError = (0, requestUtilities_1.validateArrayRequestLimit)(ids);
+            if (validationError) {
+                return res.status(400).send(validationError);
             }
             const promises = ids.map(id => (0, getEventListInfo_1.getEventListInfo)(spinalAPIMiddleware, profileId, id).then(events => ({ dynamicId: id, events })));
             const settledResults = await Promise.allSettled(promises);

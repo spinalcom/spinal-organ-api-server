@@ -24,7 +24,7 @@
 
 import * as express from 'express';
 
-import { getProfileId } from '../../utilities/requestUtilities';
+import { getProfileId, validateArrayRequestLimit } from '../../utilities/requestUtilities';
 import { getEventListInfo } from '../../utilities/getEventListInfo';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 
@@ -94,8 +94,9 @@ app.post('/api/v1/node/event_list_multiple', async (req, res, next) => {
       await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);
       const ids: number[] = req.body;
-      if (!Array.isArray(ids)) {
-          return res.status(400).send('Expected an array of IDs.');
+      const validationError = validateArrayRequestLimit(ids);
+      if (validationError) {
+          return res.status(400).send(validationError);
       }
 
       const promises = ids.map(id => getEventListInfo(spinalAPIMiddleware,profileId, id).then(events => ({dynamicId: id, events})));

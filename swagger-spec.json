@@ -7152,6 +7152,22 @@
         "tags": [
           "Workflow & ticket"
         ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "regular",
+                "fast"
+              ],
+              "default": "regular"
+            },
+            "description": "Ticket creation mode. `regular` keeps the current full synchronous behavior. `fast` uses the new fast path."
+          }
+        ],
         "requestBody": {
           "description": "For the two parameters *workflow* and *process* you can use either the dynamicId or the name. To associate the ticket with an element, please fill in the dynamicId parameter",
           "required": true,
@@ -7194,11 +7210,6 @@
                     "type": "integer",
                     "description": "The node's target dynamicId"
                   },
-                  "nodeStaticId": {
-                    "type": "string",
-                    "deprecated": true,
-                    "description": "(deprecated) The node's target staticId"
-                  },
                   "name": {
                     "type": "string",
                     "description": "The ticket's name"
@@ -7216,10 +7227,12 @@
                     "type": "string"
                   },
                   "declarer_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Optional - The declarer's identifier"
                   },
                   "images": {
                     "type": "array",
+                    "description": "Optional - Array of images to attach to the ticket",
                     "items": {
                       "type": "object",
                       "properties": {
@@ -7232,6 +7245,23 @@
                         "comments": {
                           "type": "string"
                         }
+                      }
+                    }
+                  },
+                  "additionalAttributes": {
+                    "type": "object",
+                    "description": "Optional - Custom attributes organized by category",
+                    "additionalProperties": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "example": {
+                      "categoryName1": {
+                        "attributeName1": "value1",
+                        "attributeName2": "value2"
+                      },
+                      "categoryName2": {
+                        "attributeName3": "value3"
                       }
                     }
                   }

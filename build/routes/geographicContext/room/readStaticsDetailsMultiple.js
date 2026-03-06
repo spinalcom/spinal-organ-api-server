@@ -72,8 +72,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const dynamicIds = req.body;
-            if (!Array.isArray(dynamicIds)) {
-                return res.status(400).send('Expected an array of dynamic IDs');
+            const validationError = (0, requestUtilities_1.validateArrayRequestLimit)(dynamicIds, 'dynamic IDs');
+            if (validationError) {
+                return res.status(400).send(validationError);
             }
             // Map each dynamicId to a promise
             const promises = dynamicIds.map(dynamicId => (0, getStaticDetailsInfo_1.getRoomStaticDetailsInfo)(spinalAPIMiddleware, profileId, dynamicId));

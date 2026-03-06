@@ -73,8 +73,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const ids = req.body;
-            if (!Array.isArray(ids)) {
-                return res.status(400).send('Expected an array of IDs.');
+            const validationError = (0, requestUtilities_1.validateArrayRequestLimit)(ids);
+            if (validationError) {
+                return res.status(400).send(validationError);
             }
             // Map each id to a promise
             const promises = ids.map((id) => (0, getTicketEntityInfo_1.getTicketEntityInfo)(spinalAPIMiddleware, profileId, id));

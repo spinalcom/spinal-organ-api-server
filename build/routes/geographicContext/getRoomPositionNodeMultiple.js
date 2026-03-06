@@ -74,8 +74,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const spatialContextId = (await (0, getSpatialContext_1.getSpatialContext)(spinalAPIMiddleware, profileId)).getId().get();
             const ids = req.body;
-            if (!Array.isArray(ids)) {
-                return res.status(400).send("Expected an array of IDs.");
+            const validationError = (0, requestUtilities_1.validateArrayRequestLimit)(ids);
+            if (validationError) {
+                return res.status(400).send(validationError);
             }
             // Map each id to a promise
             const promises = ids.map(id => (0, getPosition_1.getRoomPosition)(spinalAPIMiddleware, profileId, spatialContextId, id));

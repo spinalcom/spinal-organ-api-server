@@ -24,7 +24,7 @@
 
 import type { ISpinalAPIMiddleware } from '../../../interfaces/ISpinalAPIMiddleware';
 import * as express from 'express';
-import { getProfileId } from '../../../utilities/requestUtilities';
+import { getProfileId, validateArrayRequestLimit } from '../../../utilities/requestUtilities';
 import { getTicketEntityInfo } from '../../../utilities/workflow/getTicketEntityInfo';
 
 module.exports = function (
@@ -79,8 +79,9 @@ module.exports = function (
     try {
       const profileId = getProfileId(req);
       const ids: number[] = req.body;
-      if (!Array.isArray(ids)) {
-        return res.status(400).send('Expected an array of IDs.');
+      const validationError = validateArrayRequestLimit(ids);
+      if (validationError) {
+        return res.status(400).send(validationError);
       }
 
       // Map each id to a promise

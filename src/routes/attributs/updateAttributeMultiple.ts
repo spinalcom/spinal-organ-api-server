@@ -34,7 +34,7 @@ import { NodeAttributeUpdate } from './interfacesAttributs';
 import * as express from 'express';
 
 import { ISpinalAPIMiddleware } from '../../interfaces';
-import { getProfileId } from "../../utilities/requestUtilities";
+import { getProfileId, validateArrayRequestLimit } from "../../utilities/requestUtilities";
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
@@ -68,6 +68,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       try {
         const profileId = getProfileId(req);
         const nodes : NodeAttributeUpdate [] = req.body;
+        const validationError = validateArrayRequestLimit(nodes, 'items');
+        if (validationError) {
+          return res.status(400).send(validationError);
+        }
         for(const nodeUpdate of nodes) {
           const node: SpinalNode<any> = await spinalAPIMiddleware.load(nodeUpdate.dynamicId, profileId);
           for(const categoryUpdate of nodeUpdate.categories) {

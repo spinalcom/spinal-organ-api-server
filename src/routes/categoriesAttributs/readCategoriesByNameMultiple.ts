@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 import { ISpinalAPIMiddleware } from '../../interfaces';
-import { getProfileId } from '../../utilities/requestUtilities';
+import { getProfileId, validateArrayRequestLimit } from '../../utilities/requestUtilities';
 import * as express from 'express';
 import { getCategoryNamesInfo } from '../../utilities/getCategoryNameInfo';
 
@@ -91,8 +91,9 @@ module.exports = function (
         const profileId = getProfileId(req);
         const requestInfo : [{dynamicId: number, categoryNames : string[]}] = req.body;
 
-        if (!Array.isArray(requestInfo)) {
-          return res.status(400).send('Invalid format; An array is expected.');
+        const validationError = validateArrayRequestLimit(requestInfo, 'items');
+        if (validationError) {
+          return res.status(400).send(validationError);
         }
 
         // Map each id to a promise

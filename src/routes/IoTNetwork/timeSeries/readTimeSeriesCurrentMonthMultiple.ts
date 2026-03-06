@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 import spinalServiceTimeSeries from '../spinalTimeSeries';
-import { getProfileId } from '../../../utilities/requestUtilities';
+import { getProfileId, MULTIPLE_TIMESERIES_IDS_LIMIT, validateArrayRequestLimit } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 import { getTimeSeriesData } from '../../../utilities/getTimeSeriesData';
 import * as express from 'express';
@@ -81,8 +81,9 @@ module.exports = function (
       try {
         const profileId = getProfileId(req);
         const ids: number[] = req.body; // Directly using the body as the array of IDs
-        if (!Array.isArray(ids)) {
-          return res.status(400).send('Expected an array of IDs.');
+        const validationError = validateArrayRequestLimit(ids, 'IDs', MULTIPLE_TIMESERIES_IDS_LIMIT);
+        if (validationError) {
+          return res.status(400).send(validationError);
         }
         const timeSeriesIntervalDate =
           spinalServiceTimeSeries().getDateFromLastDays(31);

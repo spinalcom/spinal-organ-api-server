@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { getProfileId } from '../../../utilities/requestUtilities';
+import { getProfileId, MULTIPLE_TIMESERIES_IDS_LIMIT, validateArrayRequestLimit } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 import { verifDate } from '../../../utilities/dateFunctions';
 import { getTimeSeriesData } from '../../../utilities/getTimeSeriesData';
@@ -104,8 +104,9 @@ module.exports = function (
       try {
         const profileId = getProfileId(req);
         const ids = req.body;
-        if (!Array.isArray(ids)) {
-          return res.status(400).send('Expected an array of IDs.');
+        const validationError = validateArrayRequestLimit(ids, 'IDs', MULTIPLE_TIMESERIES_IDS_LIMIT);
+        if (validationError) {
+          return res.status(400).send(validationError);
         }
         if (
           verifDate(req.params.begin) === 1 ||
@@ -121,7 +122,7 @@ module.exports = function (
         const includeLastBeforeStart = req.query.valueAtBegin == "true" ? true : false;
         // Map each id to a promise
         const promises = ids.map((id) =>
-          getTimeSeriesData(spinalAPIMiddleware,profileId ,id, timeSeriesIntervalDate,includeLastBeforeStart)
+          getTimeSeriesData(spinalAPIMiddleware, profileId, id, timeSeriesIntervalDate, includeLastBeforeStart)
         );
 
         const settledResults = await Promise.allSettled(promises);

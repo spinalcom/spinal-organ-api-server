@@ -23,7 +23,7 @@
  */
 
 import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import { getProfileId } from '../../../utilities/requestUtilities';
+import { getProfileId, validateArrayRequestLimit } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 import * as express from 'express';
 
@@ -78,8 +78,9 @@ app.post("/api/v1/endpoint/read_multiple", async (req, res, next) => {
       const profileId = getProfileId(req);
       const ids: number[] = req.body;
 
-      if (!Array.isArray(ids)) {
-          return res.status(400).send("Expected an array of IDs.");
+      const validationError = validateArrayRequestLimit(ids);
+      if (validationError) {
+          return res.status(400).send(validationError);
       }
 
       // Map each id to a promise

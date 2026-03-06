@@ -72,8 +72,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post('/api/v1/ticket/read_details_multiple', async (req, res) => {
         try {
             let ids = req.body;
-            if (!Array.isArray(ids)) {
-                return res.status(400).send('Expected an array of IDs.');
+            const validationError = (0, requestUtilities_1.validateArrayRequestLimit)(ids);
+            if (validationError) {
+                return res.status(400).send(validationError);
             }
             // check if the array is only numbers or string of numbers
             ids = ids.filter((id) => typeof id === 'number' || (typeof id === 'string' && !isNaN(Number(id))));

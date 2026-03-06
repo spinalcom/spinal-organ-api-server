@@ -23,7 +23,7 @@
  */
 
 import * as express from 'express';
-import { getProfileId } from '../../utilities/requestUtilities';
+import { getProfileId, validateArrayRequestLimit } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 import { getRoomPosition } from '../../utilities/getPosition';
 import { getSpatialContext } from '../../utilities/getSpatialContext';
@@ -78,8 +78,9 @@ app.post("/api/v1/room/get_position_multiple", async (req, res, next) => {
         const spatialContextId = (await getSpatialContext(spinalAPIMiddleware,profileId)).getId().get();
         const ids = req.body;
   
-        if (!Array.isArray(ids)) {
-            return res.status(400).send("Expected an array of IDs.");
+        const validationError = validateArrayRequestLimit(ids);
+        if (validationError) {
+            return res.status(400).send(validationError);
         }
   
         // Map each id to a promise

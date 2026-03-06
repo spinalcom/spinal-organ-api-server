@@ -93,8 +93,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const ids = req.body;
-            if (!Array.isArray(ids)) {
-                return res.status(400).send('Expected an array of IDs.');
+            const validationError = (0, requestUtilities_1.validateArrayRequestLimit)(ids, 'IDs', requestUtilities_1.MULTIPLE_TIMESERIES_IDS_LIMIT);
+            if (validationError) {
+                return res.status(400).send(validationError);
             }
             if ((0, dateFunctions_1.verifDate)(req.params.begin) === 1 ||
                 (0, dateFunctions_1.verifDate)(req.params.end) === 1) {

@@ -23,7 +23,7 @@
  */
 
 import { ISpinalAPIMiddleware } from '../../interfaces';
-import { getProfileId } from '../../utilities/requestUtilities';
+import { getProfileId, validateArrayRequestLimit } from '../../utilities/requestUtilities';
 import * as express from 'express';
 import { getParentNodesInfo } from '../../utilities/getParentNodesInfo';
 module.exports = function (
@@ -94,10 +94,9 @@ module.exports = function (
       const contextId = req.params.id;
       const nodes: [{ dynamicId: number; relations: string[] }] = req.body;
 
-      if (!Array.isArray(nodes)) {
-        return res
-          .status(400)
-          .send('Invalid relations format; an array is expected');
+      const validationError = validateArrayRequestLimit(nodes, 'items');
+      if (validationError) {
+        return res.status(400).send(validationError);
       }
 
       const promises = nodes.map(async (node) => {

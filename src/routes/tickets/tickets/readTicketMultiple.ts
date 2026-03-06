@@ -24,7 +24,7 @@
 
 import { getTicketDetails } from '../../../utilities/workflow/getTicketDetails';
 import * as express from 'express';
-import { getProfileId } from '../../../utilities/requestUtilities';
+import { getProfileId, validateArrayRequestLimit } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (
@@ -79,8 +79,9 @@ module.exports = function (
     try {
       let ids: number[] = req.body;
 
-      if (!Array.isArray(ids)) {
-        return res.status(400).send('Expected an array of IDs.');
+      const validationError = validateArrayRequestLimit(ids);
+      if (validationError) {
+        return res.status(400).send(validationError);
       }
 
       // check if the array is only numbers or string of numbers

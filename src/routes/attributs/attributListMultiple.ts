@@ -25,7 +25,7 @@
 import * as express from 'express';
 import { getAttributeListInfo } from '../../utilities/getAttributeListInfo'
 import { ISpinalAPIMiddleware } from '../../interfaces';
-import { getProfileId } from "../../utilities/requestUtilities";
+import { getProfileId, validateArrayRequestLimit } from "../../utilities/requestUtilities";
 module.exports = function (
   logger,
   app: express.Express,
@@ -91,8 +91,9 @@ app.post('/api/v1/node/attribute_list_multiple', async (req, res, next) => {
   try {
     const profileId = getProfileId(req);
     const ids: number[] = req.body;
-    if (!Array.isArray(ids)) {
-        return res.status(400).send("Expected an array of IDs.");
+    const validationError = validateArrayRequestLimit(ids);
+    if (validationError) {
+        return res.status(400).send(validationError);
     }
 
     const promises = ids.map(id => getAttributeListInfo(spinalAPIMiddleware,profileId, id).then(attributes => ({ dynamicId: id, categoryAttributes: attributes })));
@@ -122,5 +123,4 @@ app.post('/api/v1/node/attribute_list_multiple', async (req, res, next) => {
 });
 
 };
-
 

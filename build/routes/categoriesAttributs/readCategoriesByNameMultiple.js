@@ -59,8 +59,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const requestInfo = req.body;
-            if (!Array.isArray(requestInfo)) {
-                return res.status(400).send('Invalid format; An array is expected.');
+            const validationError = (0, requestUtilities_1.validateArrayRequestLimit)(requestInfo, 'items');
+            if (validationError) {
+                return res.status(400).send(validationError);
             }
             // Map each id to a promise
             const promises = requestInfo.map(async (obj) => {

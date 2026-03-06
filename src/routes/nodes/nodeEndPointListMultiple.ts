@@ -26,7 +26,7 @@ import { ISpinalAPIMiddleware } from '../../interfaces';
 import * as express from 'express';
 import { EndPointNode } from './interfacesNodes';
 import { getEndpointsInfo } from '../../utilities/getEndpointInfo';
-import { getProfileId } from '../../utilities/requestUtilities';
+import { getProfileId, validateArrayRequestLimit } from '../../utilities/requestUtilities';
 
 module.exports = function (
   logger,
@@ -80,8 +80,9 @@ app.post('/api/v1/node/endpoint_list_multiple', async (req, res, next) => {
   try {
       const profileId = getProfileId(req);
       const ids: number[] = req.body;
-      if (!Array.isArray(ids)) {
-          return res.status(400).send('Expected an array of IDs.');
+      const validationError = validateArrayRequestLimit(ids);
+      if (validationError) {
+          return res.status(400).send(validationError);
       }
 
       const promises = ids.map(id => getEndpointsInfo(spinalAPIMiddleware,profileId, id).then(endpoints => ({dynamicId: id, endpoints})));

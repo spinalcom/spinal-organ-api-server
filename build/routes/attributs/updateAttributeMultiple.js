@@ -54,6 +54,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const nodes = req.body;
+            const validationError = (0, requestUtilities_1.validateArrayRequestLimit)(nodes, 'items');
+            if (validationError) {
+                return res.status(400).send(validationError);
+            }
             for (const nodeUpdate of nodes) {
                 const node = await spinalAPIMiddleware.load(nodeUpdate.dynamicId, profileId);
                 for (const categoryUpdate of nodeUpdate.categories) {
