@@ -4,7 +4,7 @@
 - Added MULTIPLE_ROUTE_IDS_LIMIT and MULTIPLE_TIMESERIES_IDS_LIMIT in .env to limit the number of ids provided in "multiple" routes ( if not provided , defaults to 1000)
 - Modified create_ticket to have two modes , the new one is fast mode with fast node creation and response with the bulk of the work in background
 - Modified create_ticket to add files without adding note
-- Modified create_tciket to be able to add addtionalAttributes to the ticket.
+- Modified create_ticket to be able to add addtionalAttributes to the ticket.
 
 ## 24-02-2026 -> v1.1.8
 - Floor inventory and room inventory now also accept IDs for context category and group
