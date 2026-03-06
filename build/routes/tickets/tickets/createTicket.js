@@ -27,6 +27,7 @@ const spinal_core_connectorjs_type_1 = require("spinal-core-connectorjs_type");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+const spinal_env_viewer_plugin_documentation_service_2 = require("spinal-env-viewer-plugin-documentation-service");
 const awaitSync_1 = require("../../../utilities/awaitSync");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getSpatialContext_1 = require("../../../utilities/getSpatialContext");
@@ -337,7 +338,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             };
             try {
                 const imageBufferData = processImageBase64(image.value);
-                await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addFileAsNote(ticketNode, { name: image.name, buffer: imageBufferData }, user);
+                await spinal_env_viewer_plugin_documentation_service_2.FileExplorer.uploadFiles(ticketNode, { name: image.name, buffer: imageBufferData });
+                // await serviceDocumentation.addFileAsNote( // BAD PERFORMANCE, ADDING NOTES TURNED OUT TO BE VERY COSTLY BECAUSE THEY ARE ALL STORED IN SAME SPACE :c 
+                //   ticketNode,
+                //   { name: image.name, buffer: imageBufferData },
+                //   user
+                // );
             }
             catch (error) {
                 errorImages.push(image.name);
@@ -361,13 +367,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
  * Helper function to process base64 image string, stripping data URL prefix if present.
  */
 function processImageBase64(base64Image) {
-    if (base64Image.startsWith('data:image/')) {
-        const indexOfComma = base64Image.indexOf(',');
-        if (indexOfComma !== -1) {
-            base64Image = base64Image.slice(indexOfComma + 1);
-        }
+    // check if data base64
+    if (/^data:image\/\w+;base64,/.test(base64Image) === true) {
+        const imageData = base64Image.replace(/^data:image\/\w+;base64,/, '');
+        const imageBufferData = Buffer.from(imageData, 'base64');
+        return imageBufferData;
     }
-    return Buffer.from(base64Image, 'base64');
 }
 async function purgeEmptyChildren(targetNode) {
     // load the SpinalRelation children list

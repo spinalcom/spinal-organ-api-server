@@ -39,6 +39,7 @@ import {
   TICKET_CONTEXT_TYPE,
 } from 'spinal-service-ticket';
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
+import { FileExplorer } from 'spinal-env-viewer-plugin-documentation-service';
 import { awaitSync } from '../../../utilities/awaitSync';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { getSpatialContext } from '../../../utilities/getSpatialContext';
@@ -484,11 +485,12 @@ module.exports = function (
       };
       try {
         const imageBufferData = processImageBase64(image.value as string);
-        await serviceDocumentation.addFileAsNote(
-          ticketNode,
-          { name: image.name, buffer: imageBufferData },
-          user
-        );
+        await FileExplorer.uploadFiles(ticketNode, { name: image.name, buffer: imageBufferData });
+        // await serviceDocumentation.addFileAsNote( // BAD PERFORMANCE, ADDING NOTES TURNED OUT TO BE VERY COSTLY BECAUSE THEY ARE ALL STORED IN SAME SPACE :c 
+        //   ticketNode,
+        //   { name: image.name, buffer: imageBufferData },
+        //   user
+        // );
       } catch (error) {
         errorImages.push(image.name);
       }
@@ -521,13 +523,17 @@ module.exports = function (
  * Helper function to process base64 image string, stripping data URL prefix if present.
  */
 function processImageBase64(base64Image: string): Buffer {
-  if (base64Image.startsWith('data:image/')) {
-    const indexOfComma = base64Image.indexOf(',');
-    if (indexOfComma !== -1) {
-      base64Image = base64Image.slice(indexOfComma + 1);
-    }
+  // check if data base64
+  if (/^data:image\/\w+;base64,/.test(base64Image) === true) {
+    const imageData = base64Image.replace(
+      /^data:image\/\w+;base64,/,
+      ''
+    );
+    const imageBufferData = Buffer.from(imageData, 'base64');
+    return imageBufferData;
+
+
   }
-  return Buffer.from(base64Image, 'base64');
 }
 
 async function purgeEmptyChildren(targetNode: SpinalNode) {
