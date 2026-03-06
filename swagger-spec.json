@@ -6038,11 +6038,11 @@
           {
             "in": "query",
             "name": "bucket",
-            "description": "Split the interval into sub-intervals of the given size and compute the requested aggregations per bucket. If no aggregation is specified, defaults to twavg. Supported formats: 1h, 1d, 1w, 1M.\n",
+            "description": "Split the interval into sub-intervals of the given size and compute the requested aggregations per bucket. If no aggregation is specified, defaults to twavg. Supported formats: hour, day, week, month.\n",
             "required": false,
             "schema": {
               "type": "string",
-              "example": "1h"
+              "example": "hour"
             }
           }
         ],
@@ -17880,11 +17880,11 @@
           {
             "in": "query",
             "name": "bucket",
-            "description": "Split the interval into sub-intervals of the given size and compute the requested aggregations per bucket. If no aggregation is specified, defaults to twavg. Supported formats: 1h, 1d, 1w, 1M.\n",
+            "description": "Split the interval into sub-intervals of the given size and compute the requested aggregations per bucket. If no aggregation is specified, defaults to twavg. Supported formats: hour, day, week, month.\n",
             "required": false,
             "schema": {
               "type": "string",
-              "example": "1h"
+              "example": "hour"
             }
           }
         ],

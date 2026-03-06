@@ -146,31 +146,26 @@ export interface BucketResult {
   start: string;
   end: string;
   count: number;
-  [key: string]: string | number | null;
+  noData: boolean;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 /**
  * Parse the ?bucket query parameter and return the bucket size in milliseconds.
- * Supported formats: "1h", "1d", "1w", "1M" (case-insensitive).
+ * Supported formats: "hour", "day", "week", "month" (case-insensitive).
  * Returns null if the parameter is absent or invalid.
  */
 export function parseBucketParam(bucket: string | undefined): number | null {
   if (!bucket) return null;
-  const match = bucket.trim().match(/^(\d+)([hdwM])$/i);
-  if (!match) return null;
+  const unit = bucket.trim().toLowerCase();
 
-  const value = parseInt(match[1], 10);
-  const unit = match[2];
-
-  switch (unit.toLowerCase()) {
-    case 'h': return value * 60 * 60 * 1000;
-    case 'd': return value * 24 * 60 * 60 * 1000;
-    case 'w': return value * 7 * 24 * 60 * 60 * 1000;
-    default: break;
+  switch (unit) {
+    case 'hour':  return 60 * 60 * 1000;
+    case 'day':   return 24 * 60 * 60 * 1000;
+    case 'week':  return 7 * 24 * 60 * 60 * 1000;
+    case 'month': return 30 * 24 * 60 * 60 * 1000; // ~30 days approximation
+    default:      return null;
   }
-  // 'M' is case-sensitive (uppercase) to distinguish from minutes
-  if (unit === 'M') return value * 30 * 24 * 60 * 60 * 1000; // ~30 days approximation
-  return null;
 }
 
 /**
@@ -221,23 +216,33 @@ export function computeBucketedAggregation(
     // Points strictly inside this bucket (for basic aggregations)
     const bucketPoints = sorted.filter(p => p.date > bucketStart && p.date <= bucketEnd);
 
+    const hasData = bucketPoints.length > 0;
+
     const entry: BucketResult = {
       start: new Date(bucketStart).toISOString(),
       end: new Date(bucketEnd).toISOString(),
       count: bucketPoints.length,
+      noData: !hasData,
     };
 
-    // Basic aggregations (sum, min, max, avg)
+    // Basic aggregations (sum, min, max, avg) — null when no real data
     if (basicOps.length > 0) {
-      const agg = computeAggregation(bucketPoints, basicOps);
-      for (const op of basicOps) {
-        entry[op] = agg[op] ?? null;
+      if (hasData) {
+        const agg = computeAggregation(bucketPoints, basicOps);
+        for (const op of basicOps) {
+          entry[op] = agg[op] ?? null;
+        }
+      } else {
+        for (const op of basicOps) {
+          entry[op] = null;
+        }
       }
     }
 
-    // Time-weighted average (uses full sorted array for carry-forward)
     if (needsTwavg) {
-      entry.twavg = computeTimeWeightedMean(sorted, bucketStart, bucketEnd);
+      entry.twavg = hasData
+        ? computeTimeWeightedMean(sorted, bucketStart, bucketEnd)
+        : null;
     }
 
     results.push(entry);

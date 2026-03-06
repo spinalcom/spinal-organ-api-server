@@ -100,11 +100,11 @@ module.exports = function (
    *        description: >
    *          Split the interval into sub-intervals of the given size and compute
    *          the requested aggregations per bucket. If no aggregation is specified,
-   *          defaults to twavg. Supported formats: 1h, 1d, 1w, 1M.
+   *          defaults to twavg. Supported formats: hour, day, week, month.
    *        required: false
    *        schema:
    *          type: string
-   *          example: "1h"
+   *          example: "hour"
    *     responses:
    *       200:
    *         description: Success - All time series data fetched
@@ -150,12 +150,10 @@ module.exports = function (
         };
         const includeLastBeforeStart = req.query.valueAtBegin == "true" ? true : false;
 
-        // Parse aggregation parameter
         const { normalizedOps, basicOps, needsTwavg } = parseAggregationParam(
           req.query.aggregation as string
         );
 
-        // Parse bucket parameter
         const bucketMs = parseBucketParam(req.query.bucket as string);
 
         if (req.query.aggregation && !normalizedOps && !bucketMs) {
@@ -167,7 +165,6 @@ module.exports = function (
         const intervalStart = toTimestamp(timeSeriesIntervalDate.start);
         const intervalEnd = toTimestamp(timeSeriesIntervalDate.end);
 
-        // Map each id to a promise
         const promises = ids.map((id) =>
           getTimeSeriesData(spinalAPIMiddleware,profileId ,id, timeSeriesIntervalDate,includeLastBeforeStart)
         );
@@ -178,9 +175,7 @@ module.exports = function (
           if (result.status === 'fulfilled') {
             const datas = result.value;
 
-            // Bucketed mode
             if (bucketMs) {
-              // Parse aggregation ops; default to twavg only when no aggregation specified
               const bucketOps = normalizedOps
                 ? { basicOps, needsTwavg }
                 : { basicOps: [] as string[], needsTwavg: true };

@@ -94,11 +94,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  *        description: >
  *          Split the interval into sub-intervals of the given size and compute
  *          the requested aggregations per bucket. If no aggregation is specified,
- *          defaults to twavg. Supported formats: 1h, 1d, 1w, 1M.
+ *          defaults to twavg. Supported formats: hour, day, week, month.
  *        required: false
  *        schema:
  *          type: string
- *          example: "1h"
+ *          example: "hour"
  *     responses:
  *       200:
  *         description: Success
@@ -152,7 +152,6 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         const bucketMs = parseBucketParam(req.query.bucket as string);
 
         if (bucketMs) {
-          // Parse aggregation ops; default to twavg only when no aggregation specified
           const { normalizedOps, basicOps, needsTwavg } = aggregationParam
             ? parseAggregationParam(aggregationParam)
             : { normalizedOps: ['twavg'], basicOps: [] as string[], needsTwavg: true };

@@ -83,11 +83,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
    *        description: >
    *          Split the interval into sub-intervals of the given size and compute
    *          the requested aggregations per bucket. If no aggregation is specified,
-   *          defaults to twavg. Supported formats: 1h, 1d, 1w, 1M.
+   *          defaults to twavg. Supported formats: hour, day, week, month.
    *        required: false
    *        schema:
    *          type: string
-   *          example: "1h"
+   *          example: "hour"
    *     responses:
    *       200:
    *         description: Success

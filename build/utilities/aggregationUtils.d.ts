@@ -18,11 +18,12 @@ export interface BucketResult {
     start: string;
     end: string;
     count: number;
-    [key: string]: string | number | null;
+    noData: boolean;
+    [key: string]: string | number | boolean | null | undefined;
 }
 /**
  * Parse the ?bucket query parameter and return the bucket size in milliseconds.
- * Supported formats: "1h", "1d", "1w", "1M" (case-insensitive).
+ * Supported formats: "hour", "day", "week", "month" (case-insensitive).
  * Returns null if the parameter is absent or invalid.
  */
 export declare function parseBucketParam(bucket: string | undefined): number | null;
