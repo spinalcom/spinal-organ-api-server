@@ -96,7 +96,7 @@ module.exports = function (
     try {
       const profileId = getProfileId(req);
       const nodetypes = ["geographicRoom", "BIMObject", "BIMObjectGroup", "geographicRoomGroup", "geographicFloor"];
-      const controlPointTypes = ["COMMAND_BLIND", "COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE"];
+      const controlPointTypes = ["COMMAND_BLIND", "COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE", "COMMAND_VENTILATION"];
       const paramContext = req.body.context;
       const nodes = req.body.propertyReference;
       let context: SpinalContext<any>;
@@ -104,7 +104,7 @@ module.exports = function (
 
 
       for (const node of nodes) {
-        if(isNumeric(node.dynamicId)) { // If dynamicId is not empty and looks like a number, load the node by dynamicId
+        if (isNumeric(node.dynamicId)) { // If dynamicId is not empty and looks like a number, load the node by dynamicId
           _node = await spinalAPIMiddleware.load(parseInt(node.dynamicId, 10), profileId);
         } else if (node.staticId.length !== 0) { // If staticId is not empty, load the node by staticId
           console.log("node.staticId", node.staticId);
@@ -115,7 +115,7 @@ module.exports = function (
             context = await spinalAPIMiddleware.load(
               parseInt(paramContext, 10), profileId
             );
-          } 
+          }
           else {
             context = await loadContextByStaticId(paramContext);
             if (!context) {
@@ -127,18 +127,18 @@ module.exports = function (
           if (!node) {
             return res.status(400).send('Node could not be found');
           }
-          
+
         }
 
 
-        
-        if(!nodetypes.includes(_node.getType().get())) {
+
+        if (!nodetypes.includes(_node.getType().get())) {
           console.error(`Node with dynamicId ${node.dynamicId} is not of type authorized... Skipping it`);
           continue;
         }
 
         for (const command of node.keys) {
-          if(!controlPointTypes.includes(command.key)){
+          if (!controlPointTypes.includes(command.key)) {
             console.error(`Command key ${command.key} is not of type authorized... Skipping it`);
             continue;
           }
@@ -170,7 +170,7 @@ module.exports = function (
 };
 
 
-async function loadContextByStaticId (contextStaticId : string) {
+async function loadContextByStaticId(contextStaticId: string) {
   if (SpinalGraphService.getRealNode(contextStaticId)) {
     return SpinalGraphService.getRealNode(contextStaticId);
   } else if (SpinalGraphService.getContext(contextStaticId)) {
@@ -179,7 +179,7 @@ async function loadContextByStaticId (contextStaticId : string) {
   return undefined;
 }
 
-async function loadNodeByStaticId (nodeStaticId : string , context: SpinalContext<any>) {
+async function loadNodeByStaticId(nodeStaticId: string, context: SpinalContext<any>) {
   let resultNode = SpinalGraphService.getRealNode(
     nodeStaticId
   );
@@ -192,7 +192,7 @@ async function loadNodeByStaticId (nodeStaticId : string , context: SpinalContex
       (n) => n.getId().get() === nodeStaticId
     );
   }
- return resultNode;
+  return resultNode;
 }
 
 function isNumeric(str) {

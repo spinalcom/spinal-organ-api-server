@@ -83,7 +83,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const nodetypes = ["geographicRoom", "BIMObject", "BIMObjectGroup", "geographicRoomGroup", "geographicFloor"];
-            const controlPointTypes = ["COMMAND_BLIND", "COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE"];
+            const controlPointTypes = ["COMMAND_BLIND", "COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE", "COMMAND_VENTILATION"];
             const paramContext = req.body.context;
             const nodes = req.body.propertyReference;
             let context;
