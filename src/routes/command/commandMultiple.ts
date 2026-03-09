@@ -96,7 +96,7 @@ module.exports = function (
     try {
       const profileId = getProfileId(req);
       const nodetypes = ["geographicRoom", "BIMObject", "BIMObjectGroup", "geographicRoomGroup", "geographicFloor"];
-      const controlPointTypes = ["COMMAND_BLIND", "COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE", "COMMAND_VENTILATION"];
+      // const controlPointTypes = ["COMMAND_BLIND", "COMMAND_BLIND_ROTATION", "COMMAND_LIGHT", "COMMAND_TEMPERATURE", "COMMAND_VENTILATION"];
       const paramContext = req.body.context;
       const nodes = req.body.propertyReference;
       let context: SpinalContext<any>;
@@ -138,10 +138,10 @@ module.exports = function (
         }
 
         for (const command of node.keys) {
-          if (!controlPointTypes.includes(command.key)) {
-            console.error(`Command key ${command.key} is not of type authorized... Skipping it`);
-            continue;
-          }
+          // if (!controlPointTypes.includes(command.key)) {
+          //   console.error(`Command key ${command.key} is not of type authorized... Skipping it`);
+          //   continue;
+          // }
           const controlPoints = await _node.getChildren('hasControlPoints');
           for (const controlPoint of controlPoints) {
             if (controlPoint.getName().get() === "Command") { // Name of cp profile 
