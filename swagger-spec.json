@@ -6024,6 +6024,26 @@
                 true
               ]
             }
+          },
+          {
+            "in": "query",
+            "name": "aggregation",
+            "description": "Comma-separated list of aggregation operations to apply on the data. Supported values: sum, min, max, avg, twavg, time_weighted_avg, all. Use 'all' to get sum, min, max, avg and twavg at once. If not provided, raw time series data is returned.\n",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "sum,min,max,avg"
+            }
+          },
+          {
+            "in": "query",
+            "name": "bucket",
+            "description": "Split the interval into sub-intervals of the given size and compute the requested aggregations per bucket. If no aggregation is specified, defaults to twavg. Supported formats: hour, day, week, month.\n",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "hour"
+            }
           }
         ],
         "responses": {
@@ -6032,7 +6052,35 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Timeserie"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/Timeserie"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "sum": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "min": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "max": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "avg": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "count": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
@@ -17847,6 +17895,26 @@
                 false,
                 true
               ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "aggregation",
+            "description": "Comma-separated list of aggregation operations to apply on each endpoint's data. Supported values: sum, min, max, avg, twavg, time_weighted_avg, all. Use 'all' to get sum, min, max, avg and twavg at once. If not provided, raw time series data is returned for each endpoint.\n",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "min,max,avg,twavg"
+            }
+          },
+          {
+            "in": "query",
+            "name": "bucket",
+            "description": "Split the interval into sub-intervals of the given size and compute the requested aggregations per bucket. If no aggregation is specified, defaults to twavg. Supported formats: hour, day, week, month.\n",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "hour"
             }
           }
         ],
