@@ -260,7 +260,7 @@ module.exports = function (
           let dbId = null;
           let alias = null;
 
-          if (type === REFERENCE_TYPE || type === EQUIPMENT_TYPE) {
+          if (type === REFERENCE_TYPE || type === EQUIPMENT_TYPE || type === 'roomRef' || type === 'floorRef') {
             dbId = node.info.dbid.get();
             alias = getAlias(node.info.bimFileId.get());
           }

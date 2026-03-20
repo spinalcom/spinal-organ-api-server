@@ -194,7 +194,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 }
                 let dbId = null;
                 let alias = null;
-                if (type === constants_1.REFERENCE_TYPE || type === constants_1.EQUIPMENT_TYPE) {
+                if (type === constants_1.REFERENCE_TYPE || type === constants_1.EQUIPMENT_TYPE || type === 'roomRef' || type === 'floorRef') {
                     dbId = node.info.dbid.get();
                     alias = getAlias(node.info.bimFileId.get());
                 }
