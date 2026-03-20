@@ -32,16 +32,16 @@ import { getProfileId } from '../../utilities/requestUtilities';
 const all_GeoType: string[] = GEOGRAPHIC_TYPES_ORDER.concat(CONTEXT_TYPE);
 
 /**
- * BFS traversal returning node + parent
+ * BFS traversal returning node + parent + relation used
  */
 async function* visitNodesWithParent(
   root: SpinalNode,
   relationMap: TRelationMap
-): AsyncGenerator<{ node: SpinalNode, parent: SpinalNode | null }> {
+): AsyncGenerator<{ node: SpinalNode, parent: SpinalNode | null, relation: string | RegExp | null }> {
 
   const seen = new Set([root]);
-  const queue: Array<{ node: SpinalNode, parent: SpinalNode | null }> = [
-    { node: root, parent: null }
+  const queue: Array<{ node: SpinalNode, parent: SpinalNode | null, relation: string | RegExp | null }> = [
+    { node: root, parent: null, relation: null }
   ];
 
   while (queue.length) {
@@ -54,11 +54,15 @@ async function* visitNodesWithParent(
     const relations = relationMap[type];
     if (!relations) continue;
 
-    const children = await node.getChildren(relations);
-    for (const child of children) {
-      if (!seen.has(child)) {
-        seen.add(child);
-        queue.push({ node: child, parent: node });
+    // Iterate relations individually to track which relation led to each child
+    const relArray = Array.isArray(relations) ? relations : [relations];
+    for (const rel of relArray) {
+      const children = await node.getChildren([rel]);
+      for (const child of children) {
+        if (!seen.has(child)) {
+          seen.add(child);
+          queue.push({ node: child, parent: node, relation: rel });
+        }
       }
     }
   }
@@ -240,11 +244,18 @@ module.exports = function (
 
       // TRAVERSE EACH ROOT
       for (const root of roots) {
-        for await (const { node, parent } of visitNodesWithParent(root, relations)) {
+        for await (const { node, parent, relation } of visitNodesWithParent(root, relations)) {
 
           const dynamicId = node._server_id;
           const parentId = parent ? parent._server_id : null;
-          const type = node.info.type.get();
+          let type = node.info.type.get();
+
+          // Override type for BIM objects reached via reference relations
+          if (relation === `${REFERENCE_RELATION}.ROOM`) {
+            type = 'roomRef'; // Room reference objects
+          } else if (relation === REFERENCE_RELATION && parent?.info.type.get() === FLOOR_TYPE) {
+            type = 'floorRef'; // Floor reference objects
+          }
 
           let dbId = null;
           let alias = null;
