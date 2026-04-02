@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 02-04-2026 -> v1.1.10
+- Floor inventory now supports includePosition on rooms 
+
 ## 06-03-2026 -> v1.1.9
 - Added MULTIPLE_ROUTE_IDS_LIMIT and MULTIPLE_TIMESERIES_IDS_LIMIT in .env to limit the number of ids provided in "multiple" routes ( if not provided , defaults to 1000)
 - Modified create_ticket to have two modes , the new one is fast mode with fast node creation and response with the bulk of the work in background

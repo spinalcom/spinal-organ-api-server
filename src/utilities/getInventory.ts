@@ -80,11 +80,10 @@ async function getFloorInventory(
     const rooms = await floor.getChildren("hasGeographicRoom");
 
     if (groupContext.getType().get() === 'geographicRoomGroupContext') {
-        reqInfo.includePosition = false; // safety check
         return await classifyItemsByGroup(rooms, groupContext, reqInfo, mapAdditionalInfo);
     }
 
-    reqInfo.includeArea = false; // safety check
+    reqInfo.includeArea = false; // safety check , area is only relevant for rooms
 
 
 
