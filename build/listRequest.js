@@ -1,6 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getListRequest = void 0;
 /*
  * Copyright 2021 SpinalCom - www.spinalcom.com
  *
@@ -24,80 +22,91 @@ exports.getListRequest = void 0;
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-const path = require("path");
-// import arrayOfRequests from "./absfiles"
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getListRequest = void 0;
 const arrayOfRequests = require("../finalList");
+const path_1 = require("path");
+const fs_1 = require("fs");
+function getListRequest() {
+    const routeDir = (0, path_1.join)(__dirname, '..', 'src', 'routes');
+    const absfiles = walkSync(routeDir);
+    const orderCat = [
+        'contexts',
+        'nodes',
+        'categoriesAttributs',
+        'attributs',
+        'geographicContext',
+        'IoTNetwork',
+        'tickets',
+        'notes',
+        'calendar',
+        'groupContext',
+        'roomGroup',
+        'equipementGroup',
+        'endpointGroup',
+        'Nomenclature Group',
+        'Analytics',
+        'Command',
+        'BIM',
+    ];
+    absfiles.sort((a, b) => {
+        return getIndexCat(a, orderCat) - getIndexCat(b, orderCat);
+    });
+    const doNotMatch = [];
+    for (let i = 0; i < absfiles.length; i++) {
+        if (arrayOfRequests.indexOf(absfiles[i]) == -1) {
+            doNotMatch.push(absfiles[i]);
+        }
+    }
+    const MatchList = arrayOfRequests.concat(doNotMatch);
+    // check if arrayOfRequests is exactly the same as MatchList
+    if (!isSameArray(arrayOfRequests, MatchList)) {
+        (0, fs_1.writeFile)('finalList.js', 'module.exports = ' + JSON.stringify(MatchList, null, 2), function (err) {
+            if (err) {
+                console.error('Error writing finalList.js:', err);
+            }
+        });
+    }
+    const mapList = MatchList.map((el) => {
+        return (0, path_1.resolve)(__dirname, el);
+    });
+    return mapList;
+}
+exports.getListRequest = getListRequest;
+function isSameArray(arr1, arr2) {
+    if (arr1.length !== arr2.length)
+        return false;
+    for (let i = 0; i < arr1.length; i++) {
+        if (arr1[i] !== arr2[i])
+            return false;
+    }
+    return true;
+}
 // List all files in a directory in Node.js recursively in a synchronous fashion
-const walkSync = function (dir, filelist) {
-    var path = path || require('path');
-    var fs = fs || require('fs'), files = fs.readdirSync(dir);
-    filelist = filelist || [];
+function walkSync(dir, filelist = []) {
+    const files = (0, fs_1.readdirSync)(dir);
     files.forEach(function (file) {
-        if (fs.statSync(path.join(dir, file)).isDirectory()) {
-            filelist = walkSync(path.join(dir, file), filelist);
+        if ((0, fs_1.statSync)((0, path_1.join)(dir, file)).isDirectory()) {
+            filelist = walkSync((0, path_1.join)(dir, file), filelist);
         }
         else {
-            filelist.push(path.relative(__dirname, path.join(dir, file)));
+            const relativePath = (0, path_1.relative)(__dirname, (0, path_1.join)(dir, file));
+            filelist.push(relativePath);
         }
     });
     return filelist;
-};
-const routeDir = path.join(__dirname, "..", "src", 'routes');
-const absfiles = walkSync(routeDir);
-const orderCat = [
-    "contexts",
-    "nodes",
-    "categoriesAttributs",
-    "attributs",
-    "geographicContext",
-    "IoTNetwork",
-    "tickets",
-    "notes",
-    "calendar",
-    "groupContext",
-    "roomGroup",
-    "equipementGroup",
-    "endpointGroup",
-    "Nomenclature Group",
-    "Analytics",
-    "Command",
-    "BIM"
-];
-function getCat(filePath) {
-    const dir = filePath.split(path.sep);
+}
+function getCategoryInFilePath(filePath) {
+    const dir = filePath.split(path_1.sep);
     for (let idx = 0; idx < dir.length; idx++) {
         if (dir[idx] === 'routes')
             return dir[idx + 1];
     }
 }
-function getIndexCat(filePath) {
-    const dir = getCat(filePath);
+function getIndexCat(filePath, orderCat) {
+    const dir = getCategoryInFilePath(filePath);
     if (!dir)
         return 9999;
     return orderCat.indexOf(dir);
 }
-absfiles.sort((a, b) => {
-    return getIndexCat(a) - getIndexCat(b);
-});
-const doNotMatch = [];
-let MatchList = [];
-for (let i = 0; i < absfiles.length; i++) {
-    if (arrayOfRequests.indexOf(absfiles[i]) == -1) {
-        doNotMatch.push(absfiles[i]);
-    }
-}
-MatchList = arrayOfRequests.concat(doNotMatch);
-function getListRequest() {
-    require('fs').writeFile('../finalList.js', 'module.exports = ' +
-        JSON.stringify(MatchList, null, 2), function (err) {
-        if (err) {
-            console.error('Crap happens');
-        }
-    });
-    const mapList = MatchList.map((el) => {
-        return path.resolve(__dirname, el);
-    });
-    return mapList;
-}
-exports.getListRequest = getListRequest;
 //# sourceMappingURL=listRequest.js.map

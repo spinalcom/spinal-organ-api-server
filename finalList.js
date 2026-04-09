@@ -1,27 +1,3 @@
-/*
- * Copyright 2021 SpinalCom - www.spinalcom.com
- *
- * This file is part of SpinalCore.
- *
- * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
- * carefully.
- *
- * This Agreement is a legally binding contract between
- * the Licensee (as defined below) and SpinalCom that
- * sets forth the terms and conditions that govern your
- * use of the Program. By installing and/or using the
- * Program, you agree to abide by all the terms and
- * conditions stated or referenced herein.
- *
- * If you do not agree to abide by these terms and
- * conditions, do not demonstrate your acceptance and do
- * not install or use the Program.
- * You should have received a copy of the license along
- * with this file. If not, see
- * <http://resources.spinalcom.com/licenses.pdf>.
- */
-
 module.exports = [
   "../src/routes/contexts/contextList.ts",
   "../src/routes/contexts/contextTree.ts",
@@ -263,4 +239,118 @@ module.exports = [
   "../src/routes/notes/getNotes.ts",
   "../src/routes/notes/interfacesNotes.ts",
   "../src/routes/geographicContext/getPositionNode.ts",
-];
+  "../src/routes/analysis/analytics/deleteAnalytic.ts",
+  "../src/routes/analysis/analytics/executeAnalytic.ts",
+  "../src/routes/analysis/analytics/getAnalytic.ts",
+  "../src/routes/analysis/analytics/modifyAnalytic.ts",
+  "../src/routes/analysis/analytics/patchAnalytic.ts",
+  "../src/routes/analysis/analytics/simulateAnalytic.ts",
+  "../src/routes/analysis/contexts/createAnalytics.ts",
+  "../src/routes/analysis/contexts/createContext.ts",
+  "../src/routes/analysis/contexts/deleteContext.ts",
+  "../src/routes/analysis/contexts/getAnalytics.ts",
+  "../src/routes/analysis/contexts/getContext.ts",
+  "../src/routes/analysis/contexts/getContexts.ts",
+  "../src/routes/analysis/contexts/modifyContext.ts",
+  "../src/routes/analysis/global/getAlgorithms.ts",
+  "../src/routes/analysis/global/getInputTypes.ts",
+  "../src/routes/analysis/global/getTriggerTypes.ts",
+  "../src/routes/analytics/roomResume.ts",
+  "../src/routes/command/commandMultiple.ts",
+  "../src/routes/command/interfacesCommand.ts",
+  "../src/routes/command/roomCommandBlind.ts",
+  "../src/routes/command/roomCommandBlindSetValue.ts",
+  "../src/routes/command/roomCommandLight.ts",
+  "../src/routes/command/roomCommandLightSetValue.ts",
+  "../src/routes/command/roomCommandTemp.ts",
+  "../src/routes/command/roomCommandTempSetValue.ts",
+  "../src/routes/command/roomListCommandEnable.ts",
+  "../src/routes/health/healthStatus.ts",
+  "../src/routes/health/interfacesHealth.ts",
+  "../src/routes/health/organStatus.ts",
+  "../src/routes/health/testTimeout.ts",
+  "../src/routes/nomenclatureGroup/interfacesGroupContexts.ts",
+  "../src/routes/nomenclatureGroup/nomenclature/createNomenclatureProfile.ts",
+  "../src/routes/nomenclatureGroup/nomenclature/deleteNomenclatureProfile.ts",
+  "../src/routes/nomenclatureGroup/nomenclature/listProfiles.ts",
+  "../src/routes/nomenclatureGroup/nomenclature/readNomenclatureProfile.ts",
+  "../src/routes/nomenclatureGroup/nomenclature/updateNomenclatureProfile.ts",
+  "../src/routes/user/context/createUserContext.ts",
+  "../src/routes/user/interface.ts",
+  "../src/routes/contexts/contextFindNodeByDate.ts",
+  "../src/routes/nodes/nodeChildren.ts",
+  "../src/routes/nodes/nodeChildrenInContextSpecificRelations.ts",
+  "../src/routes/nodes/nodeChildrenInContextSpecificRelationsMultiple.ts",
+  "../src/routes/nodes/nodeChildrenSpecificRelations.ts",
+  "../src/routes/nodes/nodeChildrenSpecificRelationsMultiple.ts",
+  "../src/routes/nodes/nodeContextPosition.ts",
+  "../src/routes/nodes/nodeControlEndPointListMultiple.ts",
+  "../src/routes/nodes/nodeCreate.ts",
+  "../src/routes/nodes/nodeDelete.ts",
+  "../src/routes/nodes/nodeDeleteFile.ts",
+  "../src/routes/nodes/nodeDeleteSmart.ts",
+  "../src/routes/nodes/nodeEndPointListMultiple.ts",
+  "../src/routes/nodes/nodeEventListMultiple.ts",
+  "../src/routes/nodes/nodeParentInContextSpecificRelations.ts",
+  "../src/routes/nodes/nodeParentInContextSpecificRelationsMultiple.ts",
+  "../src/routes/nodes/nodeParents.ts",
+  "../src/routes/nodes/nodeParentsSpecificRelations.ts",
+  "../src/routes/nodes/nodeParentsSpecificRelationsMultiple.ts",
+  "../src/routes/nodes/nodeReadControlEndpoint.ts",
+  "../src/routes/nodes/nodeTicketListMultiple.ts",
+  "../src/routes/nodes/readNodeMultiple.ts",
+  "../src/routes/nodes/testUploadFileBase64.ts",
+  "../src/routes/categoriesAttributs/interfacesCategoriesAttribute.ts",
+  "../src/routes/categoriesAttributs/readCategoriesByNameMultiple.ts",
+  "../src/routes/categoriesAttributs/readCategoryByNameMultiple.ts",
+  "../src/routes/attributs/attributListMultiple.ts",
+  "../src/routes/attributs/updateAttributeMultiple.ts",
+  "../src/routes/geographicContext/building/buildingReferenceObjectsList.ts",
+  "../src/routes/geographicContext/building/readStaticDetails.ts",
+  "../src/routes/geographicContext/equipement/readEquipmentStaticDetails.ts",
+  "../src/routes/geographicContext/equipement/readEquipmentStaticDetailsMultiple.ts",
+  "../src/routes/geographicContext/floor/floorInventory.ts",
+  "../src/routes/geographicContext/floor/readStaticDetails.ts",
+  "../src/routes/geographicContext/getEquipmentPositionNode.ts",
+  "../src/routes/geographicContext/getEquipmentPositionNodeMultiple.ts",
+  "../src/routes/geographicContext/getRoomPositionNode.ts",
+  "../src/routes/geographicContext/getRoomPositionNodeMultiple.ts",
+  "../src/routes/geographicContext/room/readRoomDetailsMultiple.ts",
+  "../src/routes/geographicContext/room/readStaticsDetails.ts",
+  "../src/routes/geographicContext/room/readStaticsDetailsMultiple.ts",
+  "../src/routes/geographicContext/room/roomEquipementListMultiple.ts",
+  "../src/routes/geographicContext/room/roomInventory.ts",
+  "../src/routes/geographicContext/room/roomInventoryMultiple.ts",
+  "../src/routes/geographicContext/room/roomInventoryV2.ts",
+  "../src/routes/geographicContext/room/roomReferenceObjectsListMultiple.ts",
+  "../src/routes/geographicContext/viewInfo.ts",
+  "../src/routes/geographicContext/viewInfo2.ts",
+  "../src/routes/geographicContext/viewInfo_func.ts",
+  "../src/routes/IoTNetwork/endPoint/readEndPointCurrentValueMultiple.ts",
+  "../src/routes/IoTNetwork/timeSeries/bulkInsertTimeSeries.ts",
+  "../src/routes/IoTNetwork/timeSeries/readTimeSeriesCurrentDayMultiple.ts",
+  "../src/routes/IoTNetwork/timeSeries/readTimeSeriesCurrentMonthMultiple.ts",
+  "../src/routes/IoTNetwork/timeSeries/readTimeSeriesCurrentWeekMultiple.ts",
+  "../src/routes/IoTNetwork/timeSeries/readTimeSeriesCurrentYearMultiple.ts",
+  "../src/routes/IoTNetwork/timeSeries/readTimeSeriesFromLast24HMultiple.ts",
+  "../src/routes/IoTNetwork/timeSeries/readTimeSeriesMultiple.ts",
+  "../src/routes/tickets/tickets/readTicketMultiple.ts",
+  "../src/routes/tickets/tickets/ticketCreateEvent.ts",
+  "../src/routes/tickets/tickets/ticketEventList.ts",
+  "../src/routes/tickets/tickets/ticketFindEntityMultiple.ts",
+  "../src/routes/tickets/tickets/ticketMoveToStep.ts",
+  "../src/routes/tickets/tickets/ticketUpdate.ts",
+  "../src/routes/calendar/Events/eventList.ts",
+  "../src/routes/calendar/Events/readEventMultiple.ts",
+  "../src/routes/groupContext/elementOfGroup/elementListOfGroup.ts",
+  "../src/routes/roomGroup/room/addRoomList.ts",
+  "../src/routes/roomGroup/room/deleteRoomFromGroup.ts",
+  "../src/routes/roomGroup/room/listRoom.ts",
+  "../src/routes/equipementGroup/equipement/addEquipementList.ts",
+  "../src/routes/equipementGroup/equipement/deleteEquipementFromGroup.ts",
+  "../src/routes/equipementGroup/equipement/equipementList.ts",
+  "../src/routes/endpointGroup/endpoint/addEndPointList.ts",
+  "../src/routes/endpointGroup/endpoint/deleteEndPointList.ts",
+  "../src/routes/endpointGroup/endpoint/endpointList.ts",
+  "../src/routes/BIM/bimFileContext.ts"
+]
