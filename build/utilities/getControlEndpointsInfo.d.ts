@@ -1,4 +1,4 @@
-import { ISpinalAPIMiddleware } from '../interfaces';
+import type { ISpinalAPIMiddleware } from '../interfaces';
 declare function getControlEndpointsInfo(spinalAPIMiddleware: ISpinalAPIMiddleware, profilId: string, dynamicId: number, includeDetails?: boolean): Promise<{
     dynamicId: number;
     profileName: any;

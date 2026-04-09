@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import type { BasicNode } from '../nodes/interfacesNodes';
+import type { BasicNode } from '../interface/BasicNode';
 
 export interface User {
   dynamicId: number;

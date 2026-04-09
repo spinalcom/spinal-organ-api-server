@@ -23,56 +23,56 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+const fs_1 = require("fs");
+const stream_1 = require("stream");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/node/convert_base_64:
-   *   post:
-   *     security:
-   *       - bearerAuth:
-   *         - read
-   *     description: Find node object in a specific context
-   *     summary: Gets Node
-   *     tags:
-   *       - Nodes
-   *     requestBody:
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - imageString
-   *             properties:
-   *               imageString:
-   *                 type: string
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/Node'
-   *       400:
-   *         description: Bad request
-    */
-    app.post("/api/v1/node/convert_base_64", async (req, res, next) => {
+     * @swagger
+     * /api/v1/node/convert_base_64:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - read
+     *     description: Find node object in a specific context
+     *     summary: Gets Node
+     *     tags:
+     *       - Nodes
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - imageString
+     *             properties:
+     *               imageString:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/Node'
+     *       400:
+     *         description: Bad request
+     */
+    app.post('/api/v1/node/convert_base_64', async (req, res, next) => {
         try {
-            const fs = require('fs');
             const base64 = req.body.imageString;
-            const data = base64.replace(/^data:image\/\w+;base64,/, "");
-            const ReadableData = require('stream').Readable;
+            const data = base64.replace(/^data:image\/\w+;base64,/, '');
             const imageBufferData = Buffer.from(data, 'base64');
-            const streamObj = new ReadableData();
+            const streamObj = new stream_1.Readable();
             streamObj.push(imageBufferData);
             streamObj.push(null);
-            streamObj.pipe(fs.createWriteStream('testImage1.jpg'));
+            streamObj.pipe((0, fs_1.createWriteStream)('testImage1.jpg'));
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
             res.status(500).send(error.message);
         }
-        res.json("convert string to image with succes");
+        res.json('convert string to image with succes');
     });
 };
 //# sourceMappingURL=testUploadFileBase64.js.map

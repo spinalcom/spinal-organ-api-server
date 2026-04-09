@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2026 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -22,26 +22,27 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
+import type { BasicNode } from './BasicNode';
+
 /**
-* @swagger
-* components:
-*   schemas:
-*     CategoriesAttribute:
-*       type: "object"
-*       properties:
-*         dynamicId:
-*           type: "integer"
-*         staticId:
-*           type: "string"
-*         name:
-*           type: "string"
-*         type:
-*           type: "string"
+ * @swagger
+ * components:
+ *   schemas:
+ *     BasicNodeMultiple:
+ *       type: "object"
+ *       required:
+ *         - dynamicId
+ *         - nodes
+ *       properties:
+ *         dynamicId:
+ *           type: "integer"
+ *         nodes:
+ *           type: "array"
+ *           items:
+ *             $ref: "#/components/schemas/BasicNode"
  */
 
-export interface CategoriesAttribute {
-  dynamicId: number,
-  staticId: string,
-  name: string,
-  type: string
+export interface BasicNodeMultiple {
+  dynamicId: number;
+  nodes: BasicNode[];
 }

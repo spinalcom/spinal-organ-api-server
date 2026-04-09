@@ -27,22 +27,22 @@ exports.swaggerOption = void 0;
 const listRequest_1 = require("../listRequest");
 exports.swaggerOption = {
     swaggerDefinition: {
-        openapi: "3.0.1",
+        openapi: '3.0.1',
         info: {
             // API informations (required)
             title: 'SpinalCore Graph API',
             version: '1.0.0',
-            description: "Welcome to the reference documentation for the Spinalcore Digital Twin REST API! </br></br>To learn about the common use cases and concept of Spinalcore REST APIs, check out our resource center  (https://resourcecenter.fr.spinalcom.com/ressources-d%C3%A9veloppeur).</br></br>In addition to Spinalcore API Reference, we also provide complete documentation for integrator that need to install and implement Spinalcore Digital Twin Operating System on their built environment (https://resourcecenter.fr.spinalcom.com/ressources-int%C3%A9grateur)",
-            termsOfService: "",
+            description: 'Welcome to the reference documentation for the Spinalcore Digital Twin REST API! </br></br>To learn about the common use cases and concept of Spinalcore REST APIs, check out our resource center  (https://resourcecenter.fr.spinalcom.com/ressources-d%C3%A9veloppeur).</br></br>In addition to Spinalcore API Reference, we also provide complete documentation for integrator that need to install and implement Spinalcore Digital Twin Operating System on their built environment (https://resourcecenter.fr.spinalcom.com/ressources-int%C3%A9grateur)',
+            termsOfService: 'http://resources.spinalcom.com/licenses.pdf',
             contact: {
-                email: "developers@spinalcom.com"
+                email: 'developers@spinalcom.com',
             },
-            "x-logo": {
-                "url": "/logo.png"
+            'x-logo': {
+                url: '/logo.png',
             },
-            "x-preferred": true,
-            "x-providerName": "spinalcom.com",
-            "x-unofficialSpec": true
+            'x-preferred': true,
+            'x-providerName': 'spinalcom.com',
+            'x-unofficialSpec': true,
         },
         components: {
             securitySchemes: {
@@ -59,17 +59,19 @@ exports.swaggerOption = {
                 //     }
                 // },
                 bearerAuth: {
-                    type: "http",
-                    scheme: "bearer",
-                    bearerFormat: "JWT"
-                }
-            }
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                },
+            },
         },
-        tags: [{
-                name: "Pub/Sub",
-                description: "pubsub api documentation is available at <a>https://resourcecenter.fr.spinalcom.com/ressources-développeur/api-sdk-principes/api-pubsub</a>"
-            }],
+        tags: [
+            {
+                name: 'Pub/Sub',
+                description: 'pubsub api documentation is available at <a>https://resourcecenter.fr.spinalcom.com/ressources-développeur/api-sdk-principes/api-pubsub</a>',
+            },
+        ],
     },
-    apis: (0, listRequest_1.getListRequest)()
+    apis: (0, listRequest_1.getListRequest)(),
 };
 //# sourceMappingURL=swaggerOption.js.map

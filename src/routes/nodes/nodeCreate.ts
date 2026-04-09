@@ -23,13 +23,13 @@
  */
 
 import * as express from 'express';
-import { CreateNode } from './interfacesNodes';
+import { CreateNode } from '../interface/CreateNode';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 import {
   SpinalGraphService,
   SpinalNode,
-  SpinalContext
+  SpinalContext,
 } from 'spinal-env-viewer-graph-service';
 module.exports = function (
   logger,
@@ -85,18 +85,29 @@ module.exports = function (
       SpinalGraphService._addNode(parent);
       if (addInContext && contextId !== undefined) {
         const context: SpinalContext<any> = await spinalAPIMiddleware.load(
-            contextId,
-            profileId
+          contextId,
+          profileId
         );
-        await SpinalGraphService.addChildInContext(parent.info.id.get(),node,context.info.id.get(),parentToChildRelationName,parentToChildRelationType);
+        await SpinalGraphService.addChildInContext(
+          parent.info.id.get(),
+          node,
+          context.info.id.get(),
+          parentToChildRelationName,
+          parentToChildRelationType
+        );
       } else {
-        await SpinalGraphService.addChild(parent.info.id.get(), node, parentToChildRelationName, parentToChildRelationType);
+        await SpinalGraphService.addChild(
+          parent.info.id.get(),
+          node,
+          parentToChildRelationName,
+          parentToChildRelationType
+        );
       }
       const realNode = SpinalGraphService.getRealNode(node);
       let serverId = realNode._server_id;
       let count = 5;
-      while (serverId === undefined && count >= 0){
-        await new Promise(resolve => setTimeout(resolve, 100));
+      while (serverId === undefined && count >= 0) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
         serverId = realNode._server_id;
         count--;
       }
@@ -106,9 +117,8 @@ module.exports = function (
         name: realNode.getName().get(),
         type: realNode.getType().get(),
       };
-      
-      return res.status(201).json(info);
 
+      return res.status(201).json(info);
     } catch (error) {
       if (error.code && error.message)
         return res.status(error.code).send(error.message);

@@ -23,13 +23,13 @@
  */
 
 import * as express from 'express';
-import { CreateNode } from './interfacesNodes';
+import { CreateNode } from '../interface/CreateNode';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 import {
   SpinalGraphService,
   SpinalNode,
-  SpinalContext
+  SpinalContext,
 } from 'spinal-env-viewer-graph-service';
 module.exports = function (
   logger,
@@ -43,7 +43,7 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Delete a node 
+   *     description: Delete a node
    *     summary: Delete a node
    *     tags:
    *       - Nodes
@@ -66,12 +66,14 @@ module.exports = function (
     try {
       const profileId = getProfileId(req);
       const nodeId = req.params.id;
-      const node : SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(nodeId, 10), profileId);
+      const node: SpinalNode<any> = await spinalAPIMiddleware.load(
+        parseInt(nodeId, 10),
+        profileId
+      );
       SpinalGraphService._addNode(node);
       await SpinalGraphService.removeFromGraph(node.getId().get());
-      
-      return res.status(204).send("Node successfully deleted");
 
+      return res.status(204).send('Node successfully deleted');
     } catch (error) {
       if (error.code && error.message)
         return res.status(error.code).send(error.message);

@@ -32,7 +32,7 @@ import {
   type Pbr,
 } from 'spinal-core-connectorjs';
 import type { SpinalGraph } from 'spinal-model-graph';
-import type { IConfig } from 'src/interfaces';
+import type { IConfig } from './interfaces';
 import type { ISpinalAPIMiddleware } from './interfaces/ISpinalAPIMiddleware';
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { runSocketServer } from 'spinal-organ-api-pubsub';
@@ -43,7 +43,7 @@ import { SpinalIOMiddleware } from './spinalIOMiddleware';
 import { Server as SocketServer } from 'socket.io';
 
 class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
-  static instance: SpinalAPIMiddleware = null;
+  static instance: SpinalAPIMiddleware | null = null;
   loadedPtr: Map<number, Model> = new Map();
   conn: FileSystem;
   iteratorGraph: AsyncGenerator<SpinalGraph>;

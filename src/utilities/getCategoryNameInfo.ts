@@ -1,6 +1,6 @@
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import { ISpinalAPIMiddleware } from '../interfaces';
-import { CategoriesAttribute } from '../routes/categoriesAttributs/interfacesCategoriesAttribute';
+import { CategoriesAttribute } from '../routes/attributs/CategoriesAttribute';
 import { SpinalNode } from 'spinal-model-graph';
 
 async function getCategoryNameInfo(
@@ -9,7 +9,10 @@ async function getCategoryNameInfo(
   dynamicId: number,
   categoryName: string
 ) {
-  const node: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
+  const node: SpinalNode<any> = await spinalAPIMiddleware.load(
+    dynamicId,
+    profileId
+  );
   const result = await serviceDocumentation._categoryExist(node, categoryName);
   if (result === undefined) {
     throw new Error('category not found in node');
@@ -29,7 +32,10 @@ async function getCategoryNamesInfo(
   dynamicId: number,
   categoryNames: string[]
 ) {
-  const node: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
+  const node: SpinalNode<any> = await spinalAPIMiddleware.load(
+    dynamicId,
+    profileId
+  );
   const result = [];
   for (const categoryName of categoryNames) {
     const categoryNode = await serviceDocumentation._categoryExist(

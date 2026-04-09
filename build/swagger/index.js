@@ -24,8 +24,8 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initSwagger = exports.getSwaggerDocs = void 0;
-const fs = require("fs");
-const path = require("path");
+const fs_1 = require("fs");
+const path_1 = require("path");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJSDoc = require("swagger-jsdoc");
 const swaggerOption_1 = require("./swaggerOption");
@@ -38,6 +38,14 @@ const swaggerUiOpts = {
     swaggerOptions: swaggerOption_1.swaggerOption,
     customCss: '.topbar-wrapper img {content: url(/logo.png);} .swagger-ui .topbar {background: #dbdbdb;}',
 };
+if (process.env.WRITE_SWAGGER_START === 'true') {
+    // DEBUG: Write the generated swagger docs to a file for debugging purposes
+    (0, fs_1.writeFile)((0, path_1.resolve)(__dirname, '../../swagger-spec.json'), JSON.stringify(swaggerDocs, null, 2), (err) => {
+        if (err) {
+            return console.error(err);
+        }
+    });
+}
 const getSwaggerDocs = () => {
     return swaggerDocs;
 };
@@ -46,7 +54,7 @@ function initSwagger(api) {
     api.use('/swagger-spec', (req, res) => {
         res.json(swaggerDocs);
     });
-    fs.writeFile(path.resolve(__dirname, '../../swagger-spec.json'), JSON.stringify(swaggerDocs, null, 2), (err) => {
+    (0, fs_1.writeFile)((0, path_1.resolve)(__dirname, '../../swagger-spec.json'), JSON.stringify(swaggerDocs, null, 2), (err) => {
         if (err) {
             return console.error(err);
         }

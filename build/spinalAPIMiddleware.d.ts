@@ -2,12 +2,12 @@
 import { Server } from 'http';
 import { FileSystem, type Model, type Ptr, File, type Pbr } from 'spinal-core-connectorjs';
 import type { SpinalGraph } from 'spinal-model-graph';
-import type { IConfig } from 'src/interfaces';
+import type { IConfig } from './interfaces';
 import type { ISpinalAPIMiddleware } from './interfaces/ISpinalAPIMiddleware';
 import { SpinalIOMiddleware } from './spinalIOMiddleware';
 import { Server as SocketServer } from 'socket.io';
 declare class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
-    static instance: SpinalAPIMiddleware;
+    static instance: SpinalAPIMiddleware | null;
     loadedPtr: Map<number, Model>;
     conn: FileSystem;
     iteratorGraph: AsyncGenerator<SpinalGraph>;

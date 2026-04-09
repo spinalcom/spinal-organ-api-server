@@ -4,7 +4,7 @@
     "title": "SpinalCore Graph API",
     "version": "1.0.0",
     "description": "Welcome to the reference documentation for the Spinalcore Digital Twin REST API! </br></br>To learn about the common use cases and concept of Spinalcore REST APIs, check out our resource center  (https://resourcecenter.fr.spinalcom.com/ressources-d%C3%A9veloppeur).</br></br>In addition to Spinalcore API Reference, we also provide complete documentation for integrator that need to install and implement Spinalcore Digital Twin Operating System on their built environment (https://resourcecenter.fr.spinalcom.com/ressources-int%C3%A9grateur)",
-    "termsOfService": "",
+    "termsOfService": "http://resources.spinalcom.com/licenses.pdf",
     "contact": {
       "email": "developers@spinalcom.com"
     },
@@ -175,295 +175,6 @@
         "type": "array",
         "items": {
           "type": "string"
-        }
-      },
-      "Node": {
-        "type": "object",
-        "properties": {
-          "dynamicId": {
-            "type": "integer"
-          },
-          "staticId": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          },
-          "children_relation_list": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Relation"
-            }
-          }
-        }
-      },
-      "BasicNode": {
-        "type": "object",
-        "properties": {
-          "dynamicId": {
-            "type": "integer"
-          },
-          "staticId": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          }
-        }
-      },
-      "BasicNodeMultiple": {
-        "type": "object",
-        "properties": {
-          "dynamicId": {
-            "type": "integer"
-          },
-          "nodes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/BasicNode"
-            }
-          }
-        }
-      },
-      "Relation": {
-        "type": "object",
-        "properties": {
-          "dynamicId": {
-            "type": "integer"
-          },
-          "staticId": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "children_number": {
-            "type": "integer"
-          }
-        }
-      },
-      "EndPointNode": {
-        "type": "object",
-        "properties": {
-          "dynamicId": {
-            "type": "integer"
-          },
-          "staticId": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          },
-          "currentValue": {
-            "type": "integer"
-          }
-        }
-      },
-      "EndPointNodeWithId": {
-        "type": "object",
-        "properties": {
-          "dynamicId": {
-            "type": "integer"
-          },
-          "endpoints": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EndPointNode"
-            }
-          }
-        }
-      },
-      "CreateNode": {
-        "type": "object",
-        "properties": {
-          "parentId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "The dynamic ID of the parent node"
-          },
-          "parentToChildRelationName": {
-            "type": "string",
-            "description": "The name of the relation between the parent and the child"
-          },
-          "parentToChildRelationType": {
-            "type": "string",
-            "description": "The type of the relation between the parent and the child",
-            "enum": [
-              "PtrLst",
-              "LstPtr",
-              "Ref"
-            ]
-          },
-          "addInContext": {
-            "type": "boolean",
-            "description": "If true the node will be added in the context of the parent node else it will just be added as a child"
-          },
-          "contextId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Required if 'addInContext' is true. The ID of the context to add the node to."
-          },
-          "name": {
-            "type": "string",
-            "description": "The name of the node"
-          },
-          "type": {
-            "type": "string",
-            "description": "The type of the node"
-          },
-          "additionalProperties": {
-            "type": "string",
-            "description": "Any additional properties"
-          }
-        },
-        "required": [
-          "parentId",
-          "parentToChildRelationName",
-          "parentToChildRelationType",
-          "addInContext",
-          "name",
-          "type"
-        ]
-      },
-      "NodeAttribut": {
-        "type": "object",
-        "properties": {
-          "dynamicId": {
-            "type": "integer"
-          },
-          "staticId": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          },
-          "attributs": {
-            "type": "array",
-            "items": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/Attributs"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "Attributs": {
-        "type": "object",
-        "properties": {
-          "label": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
-          },
-          "date": {
-            "type": "integer"
-          },
-          "type": {
-            "type": "integer"
-          },
-          "unit": {
-            "type": "integer"
-          }
-        }
-      },
-      "AttributeUpdate": {
-        "type": "object",
-        "required": [
-          "attributeLabel",
-          "attributeNewValue"
-        ],
-        "properties": {
-          "attributeLabel": {
-            "type": "string",
-            "description": "The label of the attribute to update."
-          },
-          "attributeNewValue": {
-            "description": "The new value for the attribute, which can be a string, number, or boolean.",
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "boolean"
-              }
-            ]
-          }
-        }
-      },
-      "CategoryAttributeUpdate": {
-        "type": "object",
-        "required": [
-          "categoryName",
-          "attributes"
-        ],
-        "properties": {
-          "categoryName": {
-            "type": "string",
-            "description": "Name of the category to which the attributes belong."
-          },
-          "attributes": {
-            "type": "array",
-            "description": "List of attribute updates within the category.",
-            "items": {
-              "$ref": "#/components/schemas/AttributeUpdate"
-            }
-          }
-        }
-      },
-      "NodeAttributeUpdate": {
-        "type": "object",
-        "required": [
-          "dynamicId",
-          "categories"
-        ],
-        "properties": {
-          "dynamicId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Unique identifier for the node, typically used as a dynamic reference."
-          },
-          "categories": {
-            "type": "array",
-            "description": "Array of categories with attributes to update for the node.",
-            "items": {
-              "$ref": "#/components/schemas/CategoryAttributeUpdate"
-            }
-          }
-        }
-      },
-      "AttributeUpdateResponse": {
-        "type": "object",
-        "properties": {
-          "dynamicId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Unique identifier for the node."
-          },
-          "categories": {
-            "type": "array",
-            "description": "Array of categories with attributes that were updated for the node.",
-            "items": {
-              "$ref": "#/components/schemas/CategoryAttributeUpdate"
-            }
-          }
         }
       },
       "Building": {
@@ -1474,6 +1185,38 @@
           }
         }
       },
+      "BasicNode": {
+        "type": "object",
+        "required": [
+          "dynamicId",
+          "staticId",
+          "name",
+          "type"
+        ],
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "bimFileId": {
+            "type": "string"
+          },
+          "dbid": {
+            "type": "integer"
+          }
+        }
+      },
       "Process": {
         "type": "object",
         "properties": {
@@ -2028,6 +1771,111 @@
           }
         }
       },
+      "AttributeUpdate": {
+        "type": "object",
+        "required": [
+          "attributeLabel",
+          "attributeNewValue"
+        ],
+        "properties": {
+          "attributeLabel": {
+            "type": "string",
+            "description": "The label of the attribute to update."
+          },
+          "attributeNewValue": {
+            "description": "The new value for the attribute, must be a string.",
+            "type": "string"
+          }
+        }
+      },
+      "Attributs": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "date": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "integer"
+          },
+          "unit": {
+            "type": "integer"
+          }
+        }
+      },
+      "CategoryAttributeUpdate": {
+        "type": "object",
+        "required": [
+          "categoryName",
+          "attributes"
+        ],
+        "properties": {
+          "categoryName": {
+            "type": "string",
+            "description": "Name of the category to which the attributes belong."
+          },
+          "attributes": {
+            "type": "array",
+            "description": "List of attribute updates within the category.",
+            "items": {
+              "$ref": "#/components/schemas/AttributeUpdate"
+            }
+          }
+        }
+      },
+      "NodeAttribut": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "attributs": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Attributs"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "NodeAttributeUpdate": {
+        "type": "object",
+        "required": [
+          "dynamicId",
+          "categories"
+        ],
+        "properties": {
+          "dynamicId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the node, typically used as a dynamic reference."
+          },
+          "categories": {
+            "type": "array",
+            "description": "Array of categories with attributes to update for the node.",
+            "items": {
+              "$ref": "#/components/schemas/CategoryAttributeUpdate"
+            }
+          }
+        }
+      },
       "CategoriesAttribute": {
         "type": "object",
         "properties": {
@@ -2042,6 +1890,168 @@
           },
           "type": {
             "type": "string"
+          }
+        }
+      },
+      "CategoriesAttributeMultiple": {
+        "type": "object",
+        "required": [
+          "dynamicId",
+          "nodes"
+        ],
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoriesAttribute"
+            }
+          }
+        }
+      },
+      "BasicNodeMultiple": {
+        "type": "object",
+        "required": [
+          "dynamicId",
+          "nodes"
+        ],
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BasicNode"
+            }
+          }
+        }
+      },
+      "CreateNode": {
+        "type": "object",
+        "properties": {
+          "parentId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The dynamic ID of the parent node"
+          },
+          "parentToChildRelationName": {
+            "type": "string",
+            "description": "The name of the relation between the parent and the child"
+          },
+          "parentToChildRelationType": {
+            "type": "string",
+            "description": "The type of the relation between the parent and the child",
+            "enum": [
+              "PtrLst",
+              "LstPtr",
+              "Ref"
+            ]
+          },
+          "addInContext": {
+            "type": "boolean",
+            "description": "If true the node will be added in the context of the parent node else it will just be added as a child"
+          },
+          "contextId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Required if 'addInContext' is true. The ID of the context to add the node to."
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the node"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the node"
+          }
+        },
+        "additionalProperties": {
+          "type": "string",
+          "description": "Any additional properties"
+        },
+        "required": [
+          "parentId",
+          "parentToChildRelationName",
+          "parentToChildRelationType",
+          "addInContext",
+          "name",
+          "type"
+        ]
+      },
+      "EndPointNode": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "currentValue": {
+            "type": "integer"
+          }
+        }
+      },
+      "EndPointNodeMultiple": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EndPointNode"
+            }
+          }
+        }
+      },
+      "Node": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "children_relation_list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Relation"
+            }
+          }
+        }
+      },
+      "Relation": {
+        "type": "object",
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "children_number": {
+            "type": "integer"
           }
         }
       }
@@ -3623,8 +3633,8 @@
             ]
           }
         ],
-        "description": "Create attribute",
-        "summary": "create an attribute",
+        "description": "Update attribute",
+        "summary": "update an attribute",
         "tags": [
           "Node Attributs"
         ],
@@ -3689,7 +3699,17 @@
         },
         "responses": {
           "200": {
-            "description": "Create Successfully"
+            "description": "Update Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NodeAttribut"
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request"
@@ -3706,8 +3726,8 @@
             ]
           }
         ],
-        "description": "Create attribute",
-        "summary": "create an attribute",
+        "description": "Delete attribute",
+        "summary": "delete an attribute",
         "tags": [
           "Node Attributs"
         ],
@@ -3743,7 +3763,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Create Successfully"
+            "description": "Delete Successfully"
           },
           "400": {
             "description": "Bad request"
@@ -14292,6 +14312,73 @@
         }
       }
     },
+    "/api/v1/user/context": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "description": "create a user context",
+        "summary": "create a user context",
+        "tags": [
+          "User Context"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nameWorkflow"
+                ],
+                "properties": {
+                  "nameWorkflow": {
+                    "type": "string",
+                    "description": "name of the workflow"
+                  },
+                  "steps": {
+                    "type": "array",
+                    "description": "optionnal default steps that will be created in the workflow process, steps start at order 1",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "name",
+                        "order"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "name of the step"
+                        },
+                        "color": {
+                          "type": "string",
+                          "description": "color of the step"
+                        },
+                        "order": {
+                          "type": "integer",
+                          "description": "order of the step, starts at 1"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Create Successfully"
+          },
+          "400": {
+            "description": "create not Successfully"
+          }
+        }
+      }
+    },
     "/api/v1/find_node_in_context_by_date": {
       "post": {
         "security": [
@@ -15011,7 +15098,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/EndPointNodeWithId"
+                    "$ref": "#/components/schemas/EndPointNodeMultiple"
                   }
                 }
               }
@@ -15026,7 +15113,7 @@
                   "items": {
                     "oneOf": [
                       {
-                        "$ref": "#/components/schemas/EndPointNodeWithId"
+                        "$ref": "#/components/schemas/EndPointNodeMultiple"
                       },
                       {
                         "$ref": "#/components/schemas/Error"
@@ -15813,7 +15900,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/CategoriesAttributesMultiple"
+                    "$ref": "#/components/schemas/CategoriesAttributeMultiple"
                   }
                 }
               }
@@ -15828,7 +15915,7 @@
                   "items": {
                     "oneOf": [
                       {
-                        "$ref": "#/components/schemas/CategoriesAttributesMultiple"
+                        "$ref": "#/components/schemas/CategoriesAttributeMultiple"
                       },
                       {
                         "$ref": "#/components/schemas/Error"

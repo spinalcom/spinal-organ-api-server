@@ -22,13 +22,18 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { ISpinalAPIMiddleware } from '../../interfaces';
-import { getProfileId, validateArrayRequestLimit } from '../../utilities/requestUtilities';
-import * as express from 'express';
+import {
+  getProfileId,
+  validateArrayRequestLimit,
+} from '../../utilities/requestUtilities';
 import { getChildrenNodesInfo } from '../../utilities/getChildrenNodesInfo';
+import type { Express } from 'express';
+import type { ISpinalAPIMiddleware } from '../../interfaces';
+import type { BasicNodeMultiple } from "../interface/BasicNodeMultiple";
+
 module.exports = function (
-  logger,
-  app: express.Express,
+  logger: any,
+  app: Express,
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
@@ -99,13 +104,13 @@ module.exports = function (
         return res.status(400).send(validationError);
       }
 
-      const promises = nodes.map(async (node) => {
+      const promises = nodes.map(async (node): Promise<BasicNodeMultiple> => {
         const children = await getChildrenNodesInfo(
           spinalAPIMiddleware,
           profileId,
           node.dynamicId,
           node.relations,
-          parseInt(contextId,10)
+          parseInt(contextId, 10)
         );
         return {
           dynamicId: node.dynamicId,
@@ -137,7 +142,7 @@ module.exports = function (
         return res.status(206).json(finalResults);
       }
       return res.status(200).json(finalResults);
-    } catch (error) {
+    } catch (error: any) {
       if (error.code && error.message)
         return res.status(error.code).send(error.message);
       res.status(400).send('An error occurred while fetching children.');

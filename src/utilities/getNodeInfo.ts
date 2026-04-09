@@ -23,42 +23,46 @@
  */
 
 import type { SpinalNode } from 'spinal-model-graph';
-import { ISpinalAPIMiddleware } from '../interfaces';
-import { Node, Relation } from '../routes/nodes/interfacesNodes'
-import { childrensNode, parentsNode } from './corseChildrenAndParentNode'
+import type { ISpinalAPIMiddleware } from '../interfaces';
+import type { Relation } from '../routes/interface/Relation';
+import type { Node } from '../routes/interface/Node';
+import { childrensNode, parentsNode } from './corseChildrenAndParentNode';
 async function getNodeInfo(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string,
   dynamicId: number,
-  includeChildrenRelations ?: boolean,
-  includeParentRelations ?: boolean
+  includeChildrenRelations?: boolean,
+  includeParentRelations?: boolean
 ): Promise<Node | undefined> {
-    const node: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId,profileId);
+  const node: SpinalNode<any> = await spinalAPIMiddleware.load(
+    dynamicId,
+    profileId
+  );
 
-    let childrens_list : Relation[] = [];
-    let parents_list : Relation[] = [];
+  let childrens_list: Relation[] = [];
+  let parents_list: Relation[] = [];
 
-    if (includeChildrenRelations) {
-      childrens_list = childrensNode(node);
-    }
+  if (includeChildrenRelations) {
+    childrens_list = childrensNode(node);
+  }
 
-    if (includeParentRelations) {
-      parents_list = await parentsNode(node);
-    }
+  if (includeParentRelations) {
+    parents_list = await parentsNode(node);
+  }
 
-    const info: Node = {
-        dynamicId: node._server_id,
-        staticId: node.getId().get(),
-        name: node.getName().get(),
-        type: node.getType().get(),
-        color : node.info.color?.get(),
-        dbid: node.info.dbid?.get(),
-        bimFileId: node.info.bimFileId?.get(),
-        icon: node.info.icon?.get(),
-        children_relation_list: childrens_list,
-        parent_relation_list: parents_list
-    }
-    return info;
+  const info: Node = {
+    dynamicId: node._server_id,
+    staticId: node.getId().get(),
+    name: node.getName().get(),
+    type: node.getType().get(),
+    color: node.info.color?.get(),
+    dbid: node.info.dbid?.get(),
+    bimFileId: node.info.bimFileId?.get(),
+    icon: node.info.icon?.get(),
+    children_relation_list: childrens_list,
+    parent_relation_list: parents_list,
+  };
+  return info;
 }
 
 export { getNodeInfo };

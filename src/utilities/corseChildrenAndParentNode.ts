@@ -22,58 +22,47 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalNode } from "spinal-model-graph";
-import { Relation } from '../routes/nodes/interfacesNodes'
-
-
+import type { SpinalNode } from 'spinal-model-graph';
+import type { Relation } from '../routes/interface/Relation';
 
 function childrensNode(node: SpinalNode<any>): Relation[] {
   const childs = node.children;
-  const res = []
+  const res: Relation[] = [];
   // childrens relation course
   for (const [relationTypeName, relationTypeMap] of childs) {
     for (const [relationName, relation] of relationTypeMap) {
-      const child = {
-        dynamicId: relation._server_id,
+      const child: Relation = {
+        dynamicId: relation._server_id!,
         staticId: relation.getId().get(),
         name: relation.getName().get(),
-        children_number: relation.getNbChildren()
-      }
-      res.push(child)
-
+        children_number: relation.getNbChildren(),
+      };
+      res.push(child);
     }
   }
   return res;
 }
-
 
 async function parentsNode(node: SpinalNode<any>): Promise<Relation[]> {
   const parents = node.parents;
   const auxtab = [];
-  let res = []
+  let res: Relation[] = [];
   for (const [, ptrList] of parents) {
     for (let i = 0; i < ptrList.length; i++) {
-      auxtab.push(ptrList[i].load())
+      auxtab.push(ptrList[i].load());
     }
   }
   res = await Promise.all(auxtab).then((values) => {
     return values.map((node) => {
-      return { dynamicId: node._server_id, staticId: node.getId().get(), name: node.getName().get(), children_number: node.getNbChildren() }
-    })
-  })
+      return {
+        dynamicId: node._server_id,
+        staticId: node.getId().get(),
+        name: node.getName().get(),
+        children_number: node.getNbChildren(),
+      };
+    });
+  });
   return res;
-
 }
 
-// async function classifyByTypeInContext(req, res) {
-//   const [contextNode, startingNode] = await Promise.all([SpinalAPIMiddleware.load(req.params.contextId), SpinalAPIMiddleware.load(req.params.nodeId)])
-//   const result = new Set()
-
-//   await startingNode.findInContext(contextNode, (node) => {
-//     result.add(node.info.type.get())
-//     return false;
-//   })
-//   return Array.from(result);
-// }
 export { childrensNode, parentsNode };
-

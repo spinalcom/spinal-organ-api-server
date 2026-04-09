@@ -22,78 +22,89 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 // import spinalAPIMiddleware from '../../spinalAPIMiddleware';
-import * as express from 'express';
-import { childrensNode, parentsNode } from '../../utilities/corseChildrenAndParentNode'
-import { Node } from './interfacesNodes'
+import type { Express } from 'express';
+import {
+  childrensNode,
+  parentsNode,
+} from '../../utilities/corseChildrenAndParentNode';
+import type { Node } from '../interface/Node';
 import {
   SpinalRelationLstPtr,
   SpinalRelationPtrLst,
-  SpinalRelationRef
-} from 'spinal-model-graph'
+  SpinalRelationRef,
+} from 'spinal-model-graph';
 import { getProfileId } from '../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../interfaces';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+import type { ISpinalAPIMiddleware } from '../../interfaces';
+module.exports = function (
+  logger: any,
+  app: Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
-  * @swagger
-  * /api/v1/relation/{id}/children_node:
-  *   get:
-  *     security:
-  *       - bearerAuth:
-  *         - readOnly
-  *     description: Return cildrens of relation node
-  *     summary: Get childrens of relation with given ID node
-  *     tags:
-  *       - Nodes
-  *     parameters:
-  *      - in: path
-  *        name: id
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *     responses:
-  *       200:
-  *         description: Success
-  *         content:
-  *           application/json:
-  *             schema:
-  *               type: array
-  *               items:
-  *                $ref: '#/components/schemas/Node'
-  *       400:
-  *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/relation/{id}/children_node:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: Return cildrens of relation node
+   *     summary: Get childrens of relation with given ID node
+   *     tags:
+   *       - Nodes
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/Node'
+   *       400:
+   *         description: Bad request
+   */
 
-  app.get("/api/v1/relation/:id/children_node", async (req, res, next) => {
-
+  app.get('/api/v1/relation/:id/children_node', async (req, res, next) => {
     try {
       let nodes;
       var node_list = [];
       const profileId = getProfileId(req);
-      const relation = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const relation = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10),
+        profileId
+      );
 
-      if (relation instanceof SpinalRelationLstPtr || relation instanceof SpinalRelationPtrLst || relation instanceof SpinalRelationRef) {
+      if (
+        relation instanceof SpinalRelationLstPtr ||
+        relation instanceof SpinalRelationPtrLst ||
+        relation instanceof SpinalRelationRef
+      ) {
         nodes = await relation.getChildren();
         for (let index = 0; index < nodes.length; index++) {
           const children_node = childrensNode(nodes[index]);
           const parent_node = await parentsNode(nodes[index]);
           const info: Node = {
-            dynamicId: nodes[index]._server_id,
+            dynamicId: nodes[index]._server_id!,
             staticId: nodes[index].getId().get(),
             name: nodes[index].getName().get(),
             type: nodes[index].getType().get(),
             children_relation_list: children_node,
-            parent_relation_list: parent_node
-
+            parent_relation_list: parent_node,
           };
           node_list.push(info);
         }
       }
-    } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
+    } catch (error: any) {
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }
     res.json(node_list);

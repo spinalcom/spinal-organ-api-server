@@ -73,7 +73,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             let serverId = realNode._server_id;
             let count = 5;
             while (serverId === undefined && count >= 0) {
-                await new Promise(resolve => setTimeout(resolve, 100));
+                await new Promise((resolve) => setTimeout(resolve, 100));
                 serverId = realNode._server_id;
                 count--;
             }

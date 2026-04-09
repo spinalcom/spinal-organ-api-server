@@ -25,7 +25,7 @@
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 // import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import { CategoriesAttribute } from './interfacesCategoriesAttribute';
+import { CategoriesAttribute } from '../attributs/CategoriesAttribute';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 

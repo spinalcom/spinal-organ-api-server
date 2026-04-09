@@ -1,4 +1,4 @@
-import type { BasicNode } from '../nodes/interfacesNodes';
+import type { BasicNode } from '../interface/BasicNode';
 export interface User {
     dynamicId: number;
     staticId: string;

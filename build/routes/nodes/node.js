@@ -27,35 +27,35 @@ const getNodeInfo_1 = require("../../utilities/getNodeInfo");
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/node/{id}/read:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return node object with parent and children relation
-   *     summary: Gets Node
-   *     tags:
-   *       - Nodes
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/Node'
-   *       400:
-   *         description: Bad request
-    */
-    app.get("/api/v1/node/:id/read", async (req, res, next) => {
+     * @swagger
+     * /api/v1/node/{id}/read:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     description: Return node object with parent and children relation
+     *     summary: Gets Node
+     *     tags:
+     *       - Nodes
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/Node'
+     *       400:
+     *         description: Bad request
+     */
+    app.get('/api/v1/node/:id/read', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const info = await (0, getNodeInfo_1.getNodeInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));

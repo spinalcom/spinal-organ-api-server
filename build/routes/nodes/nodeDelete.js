@@ -58,7 +58,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const node = await spinalAPIMiddleware.load(parseInt(nodeId, 10), profileId);
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             await spinal_env_viewer_graph_service_1.SpinalGraphService.removeFromGraph(node.getId().get());
-            return res.status(204).send("Node successfully deleted");
+            return res.status(204).send('Node successfully deleted');
         }
         catch (error) {
             if (error.code && error.message)

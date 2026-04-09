@@ -357,5 +357,15 @@ module.exports = [
   "../src/routes/interface/Attributs.ts",
   "../src/routes/interface/CategoryAttributeUpdate.ts",
   "../src/routes/interface/NodeAttribut.ts",
-  "../src/routes/interface/NodeAttributeUpdate.ts"
-];
+  "../src/routes/interface/NodeAttributeUpdate.ts",
+  "../src/routes/interface/CategoriesAttributesMultiple.ts",
+  "../src/routes/attributs/CategoriesAttribute.ts",
+  "../src/routes/interface/CategoriesAttributeMultiple.ts",
+  "../src/routes/interface/BasicNode.ts",
+  "../src/routes/interface/BasicNodeMultiple.ts",
+  "../src/routes/interface/CreateNode.ts",
+  "../src/routes/interface/EndPointNode.ts",
+  "../src/routes/interface/EndPointNodeMultiple.ts",
+  "../src/routes/interface/Node.ts",
+  "../src/routes/interface/Relation.ts"
+]

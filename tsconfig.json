@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
-    "baseUrl": "./",
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": false,
-    "target": "es2020",
+    "target": "es2021",
     "module": "commonjs",
-    "outDir": "build",
-    "typeRoots": ["node_modules/@types", "src/types", "jest"],
+    "rootDir": "./src",
+    "outDir": "./build",
     "declaration": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "skipLibCheck": true,
   },
-  "include": ["src/**/*.ts", "tests/**/*"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*.ts",
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

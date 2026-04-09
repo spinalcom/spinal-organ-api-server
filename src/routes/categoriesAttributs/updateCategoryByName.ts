@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
  *
@@ -26,13 +25,16 @@
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 // import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import { CategoriesAttribute } from './interfacesCategoriesAttribute'
+import { CategoriesAttribute } from '../attributs/CategoriesAttribute';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { SpinalNode } from 'spinal-model-graph';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/node/{nodeId}/categoryByName/{categoryName}/update:
@@ -74,23 +76,32 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *         description: Bad request
    */
 
-  app.put("/api/v1/node/:nodeId/categoryByName/:categoryName/update", async (req, res, next) => {
-    try {
-      const profileId = getProfileId(req);
-      const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId)
-      const result = await serviceDocumentation._categoryExist(node, req.params.categoryName);
-      const newCatgoryName = req.body.categoryName
+  app.put(
+    '/api/v1/node/:nodeId/categoryByName/:categoryName/update',
+    async (req, res, next) => {
+      try {
+        const profileId = getProfileId(req);
+        const node: SpinalNode<any> = await spinalAPIMiddleware.load(
+          parseInt(req.params.nodeId, 10),
+          profileId
+        );
+        const result = await serviceDocumentation._categoryExist(
+          node,
+          req.params.categoryName
+        );
+        const newCatgoryName = req.body.categoryName;
 
-      if (result === undefined) {
-        res.status(400).send("category not found in node")
-      } else {
-        result.getName().set(newCatgoryName)
+        if (result === undefined) {
+          res.status(400).send('category not found in node');
+        } else {
+          result.getName().set(newCatgoryName);
+        }
+      } catch (error) {
+        if (error.code && error.message)
+          return res.status(error.code).send(error.message);
+        res.status(500).send(error.message);
       }
-    } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(500).send(error.message);
+      res.json();
     }
-    res.json();
-  })
-}
+  );
+};

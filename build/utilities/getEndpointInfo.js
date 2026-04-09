@@ -28,7 +28,12 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
 const corseChildrenAndParentNode_1 = require("./corseChildrenAndParentNode");
-const BMS_ENDPOINT_RELATIONS = ["hasEndPoint", spinal_model_bmsnetwork_1.SpinalBmsDevice.relationName, spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName, spinal_model_bmsnetwork_1.SpinalBmsEndpointGroup.relationName];
+const BMS_ENDPOINT_RELATIONS = [
+    'hasEndPoint',
+    spinal_model_bmsnetwork_1.SpinalBmsDevice.relationName,
+    spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName,
+    spinal_model_bmsnetwork_1.SpinalBmsEndpointGroup.relationName,
+];
 async function getEndpointsInfo(spinalAPIMiddleware, profilId, dynamicId, includeDetails = false) {
     const nodes = [];
     spinalAPIMiddleware.getGraph();
@@ -43,12 +48,12 @@ async function getEndpointsInfo(spinalAPIMiddleware, profilId, dynamicId, includ
         const unit = element.unit?.get();
         let saveTimeSeries = element.saveTimeSeries?.get();
         const childrens_list = (0, corseChildrenAndParentNode_1.childrensNode)(endpoint);
-        const hasTimeSeries = childrens_list.some(child => child.name === "hasTimeSeries");
+        const hasTimeSeries = childrens_list.some((child) => child.name === 'hasTimeSeries');
         let controlValue = undefined;
         let timeSeriesMaxDay = undefined;
         if (includeDetails) {
-            const controlValueAttribute = await spinal_env_viewer_plugin_documentation_service_1.attributeService.findAttributesByLabel(endpoint, "controlValue");
-            const maxDayAttribute = await spinal_env_viewer_plugin_documentation_service_1.attributeService.findAttributesByLabel(endpoint, "timeSeries maxDay");
+            const controlValueAttribute = await spinal_env_viewer_plugin_documentation_service_1.attributeService.findAttributesByLabel(endpoint, 'controlValue');
+            const maxDayAttribute = await spinal_env_viewer_plugin_documentation_service_1.attributeService.findAttributesByLabel(endpoint, 'timeSeries maxDay');
             if (controlValueAttribute) {
                 controlValue = controlValueAttribute.value.get();
             }
@@ -70,7 +75,7 @@ async function getEndpointsInfo(spinalAPIMiddleware, profilId, dynamicId, includ
             hasTimeSeries: hasTimeSeries,
             timeseriesRetentionDays: timeSeriesMaxDay,
             controlValue: controlValue,
-            lastUpdate: endpoint.info?.directModificationDate?.get()
+            lastUpdate: endpoint.info?.directModificationDate?.get(),
         };
         nodes.push(info);
     }

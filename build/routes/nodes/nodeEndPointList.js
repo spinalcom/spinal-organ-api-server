@@ -63,7 +63,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get("/api/v1/node/:id/endpoint_list", async (req, res, next) => {
+    app.get('/api/v1/node/:id/endpoint_list', async (req, res, next) => {
         let nodes = [];
         const includeDetails = req.query.includeDetails === 'true';
         try {
@@ -73,7 +73,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send("list of endpoints is not loaded");
+            res.status(400).send('list of endpoints is not loaded');
         }
         res.send(nodes);
     });

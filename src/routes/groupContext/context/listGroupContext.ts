@@ -22,63 +22,70 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { Context } from '../interfacesGroupContexts'
-import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
+import { Context } from '../interfacesGroupContexts';
+import groupManagerService from 'spinal-env-viewer-plugin-group-manager-service';
+import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from 'src/interfaces';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
- * @swagger
- * /api/v1/groupContext/list:
- *   get:
- *     security:
- *       - bearerAuth:
- *         - readOnly
- *     description: Return list of contexts
- *     summary: Gets a list of contexts
- *     tags:
- *      - Group Context
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *               type: array
- *               items: 
- *                $ref: '#/components/schemas/Context'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/groupContext/list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: Return list of contexts
+   *     summary: Gets a list of contexts
+   *     tags:
+   *      - Group Context
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/Context'
+   *       400:
+   *         description: Bad request
+   */
 
-  app.get("/api/v1/groupContext/list", async (req, res, next) => {
-
+  app.get('/api/v1/groupContext/list', async (req, res, next) => {
     const nodes = [];
     try {
       const profilId = getProfileId(req);
       const graph = await spinalAPIMiddleware.getProfileGraph(profilId);
-      const groupContexts = await groupManagerService.getGroupContexts(undefined, graph);
+      const groupContexts = await groupManagerService.getGroupContexts(
+        undefined,
+        graph
+      );
       for (let index = 0; index < groupContexts.length; index++) {
-        const realNode = SpinalGraphService.getRealNode(groupContexts[index].id)
+        const realNode = SpinalGraphService.getRealNode(
+          groupContexts[index].id
+        );
         const info: Context = {
           dynamicId: realNode._server_id,
           staticId: realNode.getId().get(),
           name: realNode.getName().get(),
           type: realNode.getType().get(),
-          color: realNode.info.color?.get()
+          color: realNode.info.color?.get(),
         };
-        nodes.push(info)
+        nodes.push(info);
       }
     } catch (error) {
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      return res.status(400).send("list of group contexts is not loaded");
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
+      return res.status(400).send('list of group contexts is not loaded');
     }
 
     res.send(nodes);
-
   });
 };

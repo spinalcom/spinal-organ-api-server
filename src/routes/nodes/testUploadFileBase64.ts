@@ -22,68 +22,62 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-// import spinalAPIMiddleware from '../../spinalAPIMiddleware';
-import * as express from 'express';
-import { childrensNode, parentsNode } from '../../utilities/corseChildrenAndParentNode'
-import { Node } from './interfacesNodes'
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import { findOneInContext } from '../../utilities/findOneInContext';
-import { ISpinalAPIMiddleware } from '../../interfaces';
+import type { Express } from 'express';
+import type { ISpinalAPIMiddleware } from '../../interfaces';
+import { createWriteStream } from 'fs';
+import { Readable } from 'stream';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+module.exports = function (
+  logger: any,
+  app: Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
- * @swagger
- * /api/v1/node/convert_base_64:
- *   post:
- *     security: 
- *       - bearerAuth: 
- *         - read
- *     description: Find node object in a specific context
- *     summary: Gets Node
- *     tags:
- *       - Nodes
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - imageString
- *             properties:
- *               imageString:
- *                 type: string
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *                $ref: '#/components/schemas/Node'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/node/convert_base_64:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - read
+   *     description: Find node object in a specific context
+   *     summary: Gets Node
+   *     tags:
+   *       - Nodes
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - imageString
+   *             properties:
+   *               imageString:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/Node'
+   *       400:
+   *         description: Bad request
+   */
 
-  app.post("/api/v1/node/convert_base_64", async (req, res, next) => {
+  app.post('/api/v1/node/convert_base_64', async (req, res, next) => {
     try {
-
-
-      const fs = require('fs');
       const base64 = req.body.imageString;
-      const data = base64.replace(/^data:image\/\w+;base64,/, "");
-      const ReadableData = require('stream').Readable
-      const imageBufferData = Buffer.from(data, 'base64')
-      const streamObj = new ReadableData()
-      streamObj.push(imageBufferData)
-      streamObj.push(null)
-      streamObj.pipe(fs.createWriteStream('testImage1.jpg'));
-
-    } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
+      const data = base64.replace(/^data:image\/\w+;base64,/, '');
+      const imageBufferData = Buffer.from(data, 'base64');
+      const streamObj = new Readable();
+      streamObj.push(imageBufferData);
+      streamObj.push(null);
+      streamObj.pipe(createWriteStream('testImage1.jpg'));
+    } catch (error: any) {
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }
-    res.json("convert string to image with succes");
+    res.json('convert string to image with succes');
   });
-}
-
+};

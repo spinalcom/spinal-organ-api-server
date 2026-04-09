@@ -23,7 +23,7 @@
  */
 
 import * as express from 'express';
-import { CreateNode } from './interfacesNodes';
+import { CreateNode } from '../interface/CreateNode';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 import {

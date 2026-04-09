@@ -66,14 +66,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.put("/api/v1/node/:nodeId/categoryByName/:categoryName/update", async (req, res, next) => {
+    app.put('/api/v1/node/:nodeId/categoryByName/:categoryName/update', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
             const result = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation._categoryExist(node, req.params.categoryName);
             const newCatgoryName = req.body.categoryName;
             if (result === undefined) {
-                res.status(400).send("category not found in node");
+                res.status(400).send('category not found in node');
             }
             else {
                 result.getName().set(newCatgoryName);

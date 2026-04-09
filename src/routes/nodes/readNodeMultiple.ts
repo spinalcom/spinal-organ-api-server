@@ -22,16 +22,17 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import * as express from 'express';
 import { getNodeInfo } from '../../utilities/getNodeInfo';
-import { getProfileId, validateArrayRequestLimit } from '../../utilities/requestUtilities';
-import { Node } from './interfacesNodes';
-import { SpinalNode } from 'spinal-model-graph';
-import { ISpinalAPIMiddleware } from '../../interfaces';
+import {
+  getProfileId,
+  validateArrayRequestLimit,
+} from '../../utilities/requestUtilities';
+import type { Express } from 'express';
+import type { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (
-  logger,
-  app: express.Express,
+  logger: any,
+  app: Express,
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
@@ -92,8 +93,10 @@ module.exports = function (
 
   app.post('/api/v1/node/read_multiple', async (req, res, next) => {
     try {
-      const includeChildrenRelations = req.query.includeChildrenRelations !== 'false';
-      const includeParentRelations = req.query.includeParentRelations !== 'false';
+      const includeChildrenRelations =
+        req.query.includeChildrenRelations !== 'false';
+      const includeParentRelations =
+        req.query.includeParentRelations !== 'false';
 
       const profileId = getProfileId(req);
       const ids: number[] = req.body;
@@ -105,7 +108,13 @@ module.exports = function (
 
       // Map each id to a promise
       const promises = ids.map((id) =>
-        getNodeInfo(spinalAPIMiddleware, profileId, id,includeChildrenRelations,includeParentRelations)
+        getNodeInfo(
+          spinalAPIMiddleware,
+          profileId,
+          id,
+          includeChildrenRelations,
+          includeParentRelations
+        )
       );
 
       const settledResults = await Promise.allSettled(promises);
@@ -132,7 +141,7 @@ module.exports = function (
         return res.status(206).json(finalResults); // If any errors, send 206 Partial Content
       }
       return res.status(200).json(finalResults); // If all successful, send 200 OK
-    } catch (error) {
+    } catch (error: any) {
       if (error.code && error.message)
         return res.status(error.code).send(error.message);
       return res

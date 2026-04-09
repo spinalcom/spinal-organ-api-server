@@ -21,75 +21,79 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import { ISpinalAPIMiddleware } from '../../interfaces';
-import { getProfileId, validateArrayRequestLimit } from '../../utilities/requestUtilities';
-import * as express from 'express';
+import {
+  getProfileId,
+  validateArrayRequestLimit,
+} from '../../utilities/requestUtilities';
 import { getCategoryNamesInfo } from '../../utilities/getCategoryNameInfo';
+import type { ISpinalAPIMiddleware } from '../../interfaces';
+import type { Express } from 'express';
 
 module.exports = function (
   logger,
-  app: express.Express,
+  app: Express,
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
- * @swagger
- * /api/v1/node/categoriesByName/read_multiple:
- *   post:
- *     security:
- *       - bearerAuth:
- *         - readOnly
- *     description: Read multiple categories attributes for multiple nodes
- *     summary: Read multiple categories attributes for multiple nodes
- *     tags:
- *      - Node Attribut Categories
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: array
- *             items:
- *               type: object
- *               required:
- *                 - dynamicId
- *                 - categoryNames
- *               properties:
- *                 dynamicId:
- *                   type: integer
- *                   format: int64
- *                 categoryNames:
- *                   type: array
- *                   items:
- *                     type: string
- *     responses:
- *       200:
- *         description: Success - All attribute nodes info fetched
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/CategoriesAttributesMultiple'
- *       206:
- *         description: Partial Content - Some attribute info could not be fetched
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 oneOf:
- *                   - $ref: '#/components/schemas/CategoriesAttributesMultiple'
- *                   - $ref: '#/components/schemas/Error'
- *       400:
- *         description: Bad request
- */
+   * @swagger
+   * /api/v1/node/categoriesByName/read_multiple:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: Read multiple categories attributes for multiple nodes
+   *     summary: Read multiple categories attributes for multiple nodes
+   *     tags:
+   *      - Node Attribut Categories
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: object
+   *               required:
+   *                 - dynamicId
+   *                 - categoryNames
+   *               properties:
+   *                 dynamicId:
+   *                   type: integer
+   *                   format: int64
+   *                 categoryNames:
+   *                   type: array
+   *                   items:
+   *                     type: string
+   *     responses:
+   *       200:
+   *         description: Success - All attribute nodes info fetched
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/CategoriesAttributeMultiple'
+   *       206:
+   *         description: Partial Content - Some attribute info could not be fetched
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 oneOf:
+   *                   - $ref: '#/components/schemas/CategoriesAttributeMultiple'
+   *                   - $ref: '#/components/schemas/Error'
+   *       400:
+   *         description: Bad request
+   */
 
   app.post(
     '/api/v1/node/categoriesByName/read_multiple',
     async (req, res, next) => {
       try {
         const profileId = getProfileId(req);
-        const requestInfo : [{dynamicId: number, categoryNames : string[]}] = req.body;
+        const requestInfo: [{ dynamicId: number; categoryNames: string[] }] =
+          req.body;
 
         const validationError = validateArrayRequestLimit(requestInfo, 'items');
         if (validationError) {
@@ -98,10 +102,14 @@ module.exports = function (
 
         // Map each id to a promise
         const promises = requestInfo.map(async (obj) => {
-            const info = await getCategoryNamesInfo(spinalAPIMiddleware,profileId, obj.dynamicId, obj.categoryNames)
-            return {dynamicId: obj.dynamicId, categoryAttributes:info}
-            }
-        );
+          const info = await getCategoryNamesInfo(
+            spinalAPIMiddleware,
+            profileId,
+            obj.dynamicId,
+            obj.categoryNames
+          );
+          return { dynamicId: obj.dynamicId, categoryAttributes: info };
+        });
 
         const settledResults = await Promise.allSettled(promises);
 
@@ -109,9 +117,11 @@ module.exports = function (
           if (result.status === 'fulfilled') {
             return result.value;
           } else {
-            console.error(`Error with id ${requestInfo[index].dynamicId}: ${result.reason}`);
+            console.error(
+              `Error with id ${requestInfo[index].dynamicId}: ${result.reason}`
+            );
             return {
-              id: requestInfo[index].dynamicId,
+              dynamicId: requestInfo[index].dynamicId,
               error:
                 result.reason?.message ||
                 result.reason ||

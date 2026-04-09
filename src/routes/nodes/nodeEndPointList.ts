@@ -23,12 +23,16 @@
  */
 
 import * as express from 'express';
-import { EndPointNode } from './interfacesNodes';
+import { EndPointNode } from '../interface/EndPointNode';
 import { getEndpointsInfo } from '../../utilities/getEndpointInfo';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/node/{id}/endpoint_list:
@@ -67,10 +71,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *         description: Bad request
    */
 
-
-
-  app.get("/api/v1/node/:id/endpoint_list", async (req, res, next) => {
-
+  app.get('/api/v1/node/:id/endpoint_list', async (req, res, next) => {
     let nodes: EndPointNode[] = [];
     const includeDetails = req.query.includeDetails === 'true';
 
@@ -83,9 +84,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         includeDetails
       );
     } catch (error) {
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send("list of endpoints is not loaded");
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
+      res.status(400).send('list of endpoints is not loaded');
     }
     res.send(nodes);
   });
-}
+};

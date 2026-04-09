@@ -43,7 +43,7 @@ declare function getBuildingStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMid
     type: string;
     attributsList: IAttr[];
     controlEndpoint: INodeControlEndpoint[];
-    endpoints: import("../routes/nodes/interfacesNodes").EndPointNode[];
+    endpoints: import("../routes/interface/EndPointNode").EndPointNode[];
 }>;
 declare function getEquipmentStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, equipementId: number): Promise<{
     dynamicId: number;
@@ -61,7 +61,7 @@ declare function getEquipmentStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMi
     };
     attributsList: IAttr[];
     controlEndpoint: INodeControlEndpoint[];
-    endpoints: import("../routes/nodes/interfacesNodes").EndPointNode[];
+    endpoints: import("../routes/interface/EndPointNode").EndPointNode[];
     groupParents: INodeInfo[];
 }>;
 declare function getFloorStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, floorId: number): Promise<{
@@ -71,7 +71,7 @@ declare function getFloorStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddle
     type: string;
     attributsList: IAttr[];
     controlEndpoint: INodeControlEndpoint[];
-    endpoints: import("../routes/nodes/interfacesNodes").EndPointNode[];
+    endpoints: import("../routes/interface/EndPointNode").EndPointNode[];
 }>;
 declare function getRoomStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, roomId: number): Promise<{
     dynamicId: number;
@@ -83,7 +83,7 @@ declare function getRoomStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddlew
     color: any;
     attributsList: IAttr[];
     controlEndpoint: INodeControlEndpoint[];
-    endpoints: import("../routes/nodes/interfacesNodes").EndPointNode[];
+    endpoints: import("../routes/interface/EndPointNode").EndPointNode[];
     bimObjects: IEquipmentInfo[];
     groupParents: INodeInfo[];
 }>;

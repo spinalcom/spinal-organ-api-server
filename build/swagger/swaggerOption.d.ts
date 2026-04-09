@@ -9,12 +9,12 @@ export declare const swaggerOption: {
             contact: {
                 email: string;
             };
-            "x-logo": {
+            'x-logo': {
                 url: string;
             };
-            "x-preferred": boolean;
-            "x-providerName": string;
-            "x-unofficialSpec": boolean;
+            'x-preferred': boolean;
+            'x-providerName': string;
+            'x-unofficialSpec': boolean;
         };
         components: {
             securitySchemes: {

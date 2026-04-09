@@ -21,78 +21,89 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-// import spinalAPIMiddleware from '../../spinalAPIMiddleware';
-import * as express from 'express';
-import { childrensNode, parentsNode } from '../../utilities/corseChildrenAndParentNode'
-import { Node } from './interfacesNodes'
+
+import {
+  childrensNode,
+  parentsNode,
+} from '../../utilities/corseChildrenAndParentNode';
 import {
   SpinalRelationLstPtr,
   SpinalRelationPtrLst,
-  SpinalRelationRef
-} from 'spinal-model-graph'
+  SpinalRelationRef,
+} from 'spinal-model-graph';
 import { getProfileId } from '../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../interfaces';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+import type { Express } from 'express';
+import type { Node } from '../interface/Node';
+import type { ISpinalAPIMiddleware } from '../../interfaces';
+module.exports = function (
+  logger: any,
+  app: Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
-  * @swagger
-  * /api/v1/relation/{id}/parent_node:
-  *   get:
-  *     security:
-  *       - bearerAuth:
-  *         - readOnly
-  *     description: Return parents of relation node
-  *     summary: Gets parents of relation with given ID node
-  *     tags:
-  *       - Nodes
-  *     parameters:
-  *      - in: path
-  *        name: id
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *     responses:
-  *       200:
-  *         description: Success
-  *         content:
-  *           application/json:
-  *             schema:
-  *               type: array
-  *               items:
-  *                $ref: '#/components/schemas/Node'
-  *       400:
-  *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/relation/{id}/parent_node:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: Return parents of relation node
+   *     summary: Gets parents of relation with given ID node
+   *     tags:
+   *       - Nodes
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/Node'
+   *       400:
+   *         description: Bad request
+   */
 
-
-  app.get("/api/v1/relation/:id/parent_node", async (req, res, next) => {
-
+  app.get('/api/v1/relation/:id/parent_node', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
       let parent;
-      var info: Node;
-      const relation = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const relation = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10),
+        profileId
+      );
 
-      if (relation instanceof SpinalRelationLstPtr || relation instanceof SpinalRelationPtrLst || relation instanceof SpinalRelationRef) {
+      if (
+        relation instanceof SpinalRelationLstPtr ||
+        relation instanceof SpinalRelationPtrLst ||
+        relation instanceof SpinalRelationRef
+      ) {
         parent = await relation.getParent();
         const children_node = childrensNode(parent);
         const parent_node = await parentsNode(parent);
-        info = {
-          dynamicId: parent._server_id,
+        const info = {
+          dynamicId: parent._server_id!,
           staticId: parent.getId().get(),
           name: parent.getName().get(),
           type: parent.getType().get(),
           children_relation_list: children_node,
-          parent_relation_list: parent_node
+          parent_relation_list: parent_node,
         };
+        res.json(info);
       }
-    } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
+    } catch (error: any) {
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }
-    res.json(info);
+    res.status(400).send('ko');
   });
 };

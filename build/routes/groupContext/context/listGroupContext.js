@@ -28,29 +28,29 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/groupContext/list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return list of contexts
-   *     summary: Gets a list of contexts
-   *     tags:
-   *      - Group Context
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/Context'
-   *       400:
-   *         description: Bad request
-    */
-    app.get("/api/v1/groupContext/list", async (req, res, next) => {
+     * @swagger
+     * /api/v1/groupContext/list:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     description: Return list of contexts
+     *     summary: Gets a list of contexts
+     *     tags:
+     *      - Group Context
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                $ref: '#/components/schemas/Context'
+     *       400:
+     *         description: Bad request
+     */
+    app.get('/api/v1/groupContext/list', async (req, res, next) => {
         const nodes = [];
         try {
             const profilId = (0, requestUtilities_1.getProfileId)(req);
@@ -63,7 +63,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     staticId: realNode.getId().get(),
                     name: realNode.getName().get(),
                     type: realNode.getType().get(),
-                    color: realNode.info.color?.get()
+                    color: realNode.info.color?.get(),
                 };
                 nodes.push(info);
             }
@@ -71,7 +71,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            return res.status(400).send("list of group contexts is not loaded");
+            return res.status(400).send('list of group contexts is not loaded');
         }
         res.send(nodes);
     });

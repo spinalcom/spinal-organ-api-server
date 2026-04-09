@@ -34,7 +34,7 @@ function childrensNode(node) {
                 dynamicId: relation._server_id,
                 staticId: relation.getId().get(),
                 name: relation.getName().get(),
-                children_number: relation.getNbChildren()
+                children_number: relation.getNbChildren(),
             };
             res.push(child);
         }
@@ -53,7 +53,12 @@ async function parentsNode(node) {
     }
     res = await Promise.all(auxtab).then((values) => {
         return values.map((node) => {
-            return { dynamicId: node._server_id, staticId: node.getId().get(), name: node.getName().get(), children_number: node.getNbChildren() };
+            return {
+                dynamicId: node._server_id,
+                staticId: node.getId().get(),
+                name: node.getName().get(),
+                children_number: node.getNbChildren(),
+            };
         });
     });
     return res;
