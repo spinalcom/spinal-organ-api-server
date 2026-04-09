@@ -70,13 +70,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get("/api/v1/floor/:id/reference_Objects_list", async (req, res, next) => {
+    app.get('/api/v1/floor/:id/reference_Objects_list', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(floor);
-            const referenceObjets = await floor.getChildren("hasReferenceObject");
+            const referenceObjets = await floor.getChildren('hasReferenceObject');
             const _objects = [];
             let bimFileId;
             for (let index = 0; index < referenceObjets.length; index++) {
@@ -104,7 +104,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             console.error(error);
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send("list of reference_Objects is not loaded");
+            res.status(400).send('list of reference_Objects is not loaded');
         }
         res.send(info);
     });

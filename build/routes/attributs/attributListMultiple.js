@@ -90,7 +90,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (validationError) {
                 return res.status(400).send(validationError);
             }
-            const promises = ids.map(id => (0, getAttributeListInfo_1.getAttributeListInfo)(spinalAPIMiddleware, profileId, id).then(attributes => ({ dynamicId: id, categoryAttributes: attributes })));
+            const promises = ids.map((id) => (0, getAttributeListInfo_1.getAttributeListInfo)(spinalAPIMiddleware, profileId, id).then((attributes) => ({ dynamicId: id, categoryAttributes: attributes })));
             const settledResults = await Promise.allSettled(promises);
             const finalResults = settledResults.map((result, index) => {
                 if (result.status === 'fulfilled') {
@@ -100,11 +100,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     console.error(`Error with id ${ids[index]}: ${result.reason}`);
                     return {
                         dynamicId: ids[index],
-                        error: result.reason?.message || result.reason || "Failed to get Attributes"
+                        error: result.reason?.message ||
+                            result.reason ||
+                            'Failed to get Attributes',
                     };
                 }
             });
-            const isGotError = settledResults.some(result => result.status === 'rejected');
+            const isGotError = settledResults.some((result) => result.status === 'rejected');
             if (isGotError) {
                 return res.status(206).json(finalResults);
             }
@@ -113,7 +115,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         catch (error) {
             if (error.code)
                 return res.status(error.code).send({ message: error.message });
-            return res.status(400).send("An error occurred while fetching attributes list.");
+            return res
+                .status(400)
+                .send('An error occurred while fetching attributes list.');
         }
     });
 };

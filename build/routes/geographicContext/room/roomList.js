@@ -24,7 +24,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
+const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
@@ -88,7 +88,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     });
 };
 async function getSpinalCategoriesAndAttributes(node) {
-    const categories = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+    const categories = await node.getChildren(spinal_env_viewer_plugin_documentation_service_1.NODE_TO_CATEGORY_RELATION);
     return Promise.all(categories.map(async (category) => {
         const attributes = (await category.element.load()).get();
         return {

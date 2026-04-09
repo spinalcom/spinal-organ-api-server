@@ -352,5 +352,10 @@ module.exports = [
   "../src/routes/endpointGroup/endpoint/addEndPointList.ts",
   "../src/routes/endpointGroup/endpoint/deleteEndPointList.ts",
   "../src/routes/endpointGroup/endpoint/endpointList.ts",
-  "../src/routes/BIM/bimFileContext.ts"
-]
+  "../src/routes/BIM/bimFileContext.ts",
+  "../src/routes/interface/AttributeUpdate.ts",
+  "../src/routes/interface/Attributs.ts",
+  "../src/routes/interface/CategoryAttributeUpdate.ts",
+  "../src/routes/interface/NodeAttribut.ts",
+  "../src/routes/interface/NodeAttributeUpdate.ts"
+];

@@ -27,55 +27,55 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/command/floor/{id}/roomList_command_enable:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return list of room command enable
-   *     summary: Gets a list of room command enable
-   *     tags:
-   *      - Command
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/Room'
-   *       400:
-   *         description: Bad request
-    */
-    app.get("/api/v1/command/floor/:id/roomList_command_enable", async (req, res, next) => {
+     * @swagger
+     * /api/v1/command/floor/{id}/roomList_command_enable:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     description: Return list of room command enable
+     *     summary: Gets a list of room command enable
+     *     tags:
+     *      - Command
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                $ref: '#/components/schemas/Room'
+     *       400:
+     *         description: Bad request
+     */
+    app.get('/api/v1/command/floor/:id/roomList_command_enable', async (req, res, next) => {
         const nodes = [];
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const floor = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(floor);
-            const rooms = await floor.getChildren("hasGeographicRoom");
+            const rooms = await floor.getChildren('hasGeographicRoom');
             for (const room of rooms) {
                 var info;
                 const controlPoints = await room.getChildren('hasControlPoints');
                 for (const controlPoint of controlPoints) {
-                    if (controlPoint.getName().get() === "Command") {
+                    if (controlPoint.getName().get() === 'Command') {
                         info = {
                             dynamicId: room._server_id,
                             staticId: room.getId().get(),
                             name: room.getName().get(),
                             type: room.getType().get(),
-                            command: "yes",
+                            command: 'yes',
                         };
                         nodes.push(info);
                     }
@@ -85,7 +85,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send("list of room is not loaded");
+            res.status(400).send('list of room is not loaded');
         }
         res.send(nodes);
     });

@@ -26,7 +26,7 @@
 import * as express from 'express';
 import { SpinalNode } from 'spinal-model-graph';
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
-import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
+import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 

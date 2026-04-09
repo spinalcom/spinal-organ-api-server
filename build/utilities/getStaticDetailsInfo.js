@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getBuildingStaticDetailsInfo = exports.getFloorStaticDetailsInfo = exports.getRoomStaticDetailsInfo = exports.getEquipmentStaticDetailsInfo = void 0;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
+const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const spinal_env_viewer_plugin_control_endpoint_service_1 = require("spinal-env-viewer-plugin-control-endpoint-service");
 const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
 const getEndpointInfo_1 = require("./getEndpointInfo");
@@ -17,7 +17,7 @@ async function getBuildingStaticDetailsInfo(spinalAPIMiddleware, profileId, buil
     //@ts-ignore
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(building);
     if (building.getType().get() === 'geographicBuilding') {
-        const [allNodesControlesEndpoints, allEndpoints, CategorieAttributsList,] = await Promise.all([
+        const [allNodesControlesEndpoints, allEndpoints, CategorieAttributsList] = await Promise.all([
             getNodeControlEndpoints(building),
             (0, getEndpointInfo_1.getEndpointsInfoFormat2)(spinalAPIMiddleware, profileId, buildingId),
             getAttributes(building),
@@ -29,7 +29,7 @@ async function getBuildingStaticDetailsInfo(spinalAPIMiddleware, profileId, buil
             type: building.getType().get(),
             attributsList: CategorieAttributsList,
             controlEndpoint: allNodesControlesEndpoints,
-            endpoints: allEndpoints
+            endpoints: allEndpoints,
         };
         return info;
     }
@@ -52,7 +52,7 @@ async function getEquipmentStaticDetailsInfo(spinalAPIMiddleware, profileId, equ
         let revitCategory = '';
         const revitFamily = '';
         const revitType = '';
-        const categories_bimObjects = await equipment.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+        const categories_bimObjects = await equipment.getChildren(spinal_env_viewer_plugin_documentation_service_1.NODE_TO_CATEGORY_RELATION);
         for (const categorie of categories_bimObjects) {
             if (categorie.getName().get() === 'default') {
                 const attributs_bimObjects = (await categorie.element.load()).get();
@@ -95,7 +95,7 @@ async function getFloorStaticDetailsInfo(spinalAPIMiddleware, profileId, floorId
     //@ts-ignore
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(floor);
     if (floor.getType().get() === 'geographicFloor') {
-        const [allNodesControlesEndpoints, allEndpoints, CategorieAttributsList,] = await Promise.all([
+        const [allNodesControlesEndpoints, allEndpoints, CategorieAttributsList] = await Promise.all([
             getNodeControlEndpoints(floor),
             (0, getEndpointInfo_1.getEndpointsInfoFormat2)(spinalAPIMiddleware, profileId, floorId),
             getAttributes(floor),
@@ -107,7 +107,7 @@ async function getFloorStaticDetailsInfo(spinalAPIMiddleware, profileId, floorId
             type: floor.getType().get(),
             attributsList: CategorieAttributsList,
             controlEndpoint: allNodesControlesEndpoints,
-            endpoints: allEndpoints
+            endpoints: allEndpoints,
         };
         return info;
     }
@@ -191,15 +191,13 @@ async function getEquipmentGroupParent(node) {
 }
 async function getAttributes(room) {
     try {
-        const categories = await room.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+        const categories = await room.getChildren(spinal_env_viewer_plugin_documentation_service_1.NODE_TO_CATEGORY_RELATION);
         const promises = categories.map(async (child) => {
             const attributs = await child.element.load();
             const attributes = [];
             for (const attribute of attributs) {
                 const attrib = attribute.get();
-                attributes.push({ ...attrib,
-                    dynamicId: attribute._server_id
-                });
+                attributes.push({ ...attrib, dynamicId: attribute._server_id });
             }
             return {
                 dynamicId: child._server_id,
@@ -248,9 +246,7 @@ async function getNodeControlEndpoints(node) {
         spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP,
     ]);
     const promises = profils.map(async (profile) => {
-        const result = await profile.getChildren([
-            spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName,
-        ]);
+        const result = await profile.getChildren([spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName]);
         const endpoints = await result.map(async (endpoint) => {
             const element = await endpoint.element.load();
             let category;
@@ -295,7 +291,7 @@ async function getRoomBimObject(room) {
     const revitType = '';
     const promises = bimObjects.map(async (child) => {
         // attributs BIMObject
-        const categories_bimObjects = await child.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+        const categories_bimObjects = await child.getChildren(spinal_env_viewer_plugin_documentation_service_1.NODE_TO_CATEGORY_RELATION);
         for (const categorie of categories_bimObjects) {
             if (categorie.getName().get() === 'default') {
                 const attributs_bimObjects = (await categorie.element.load()).get();

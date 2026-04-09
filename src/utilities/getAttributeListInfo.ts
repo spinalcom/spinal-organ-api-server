@@ -1,5 +1,5 @@
-import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
-import type { NodeAttribut } from '../routes/attributs/interfacesAttributs';
+import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
+import type { NodeAttribut } from 'src/routes/interface/NodeAttribut';
 import type { SpinalNode } from 'spinal-model-graph';
 import { ISpinalAPIMiddleware } from '../interfaces';
 
@@ -21,7 +21,7 @@ async function getAttributeListInfo(
           ...attrib,
           dynamicId: attribute._server_id,
           label: attribute.label.get(),
-          value: attribute.value.get()
+          value: attribute.value.get(),
         });
       }
       return {

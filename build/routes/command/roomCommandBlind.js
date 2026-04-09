@@ -27,35 +27,35 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/command/room/{id}/blind:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return blind state of a room
-   *     summary: Gets blind state of a room
-   *     tags:
-   *      - Command
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/Command'
-   *       400:
-   *         description: Bad request
-    */
-    app.get("/api/v1/command/room/:id/blind", async (req, res, next) => {
+     * @swagger
+     * /api/v1/command/room/{id}/blind:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     description: Return blind state of a room
+     *     summary: Gets blind state of a room
+     *     tags:
+     *      - Command
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/Command'
+     *       400:
+     *         description: Bad request
+     */
+    app.get('/api/v1/command/room/:id/blind', async (req, res, next) => {
         let info;
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
@@ -64,18 +64,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
             const controlPoints = await room.getChildren('hasControlPoints');
             for (const controlPoint of controlPoints) {
-                if (controlPoint.getName().get() === "Command") {
+                if (controlPoint.getName().get() === 'Command') {
                     const bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint');
                     for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
-                        if (bmsEndPoint.getName().get() === "COMMAND_BLIND") {
+                        if (bmsEndPoint.getName().get() === 'COMMAND_BLIND') {
                             // var element = (await bmsEndPoint.element.load()).get();
-                            const element = (await bmsEndPoint.element.load());
+                            const element = await bmsEndPoint.element.load();
                             info = {
                                 dynamicId: room._server_id,
                                 staticId: room.getId().get(),
                                 name: room.getName().get(),
                                 type: room.getType().get(),
-                                currentValue: element.currentValue.get()
+                                currentValue: element.currentValue.get(),
                             };
                         }
                     }
@@ -85,7 +85,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send("list of room is not loaded");
+            res.status(400).send('list of room is not loaded');
         }
         res.send(info);
     });

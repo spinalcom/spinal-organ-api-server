@@ -27,7 +27,7 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const findOneInContext_1 = require("../../utilities/findOneInContext");
 const spinal_core_connectorjs_type_1 = require("spinal-core-connectorjs_type");
 const requestUtilities_1 = require("../../utilities/requestUtilities");
-const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
+const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -146,7 +146,7 @@ async function getTicketInfo(context, _node, spinalAPIMiddleware) {
             }
         }
     });
-    const categories = await _node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+    const categories = await _node.getChildren(spinal_env_viewer_plugin_documentation_service_1.NODE_TO_CATEGORY_RELATION);
     const promise_infoCategories = categories.map(async (categorie) => {
         const attributes = await categorie.element.load();
         const infoCategories = {

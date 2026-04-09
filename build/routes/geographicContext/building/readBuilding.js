@@ -47,16 +47,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get("/api/v1/building/read", async (req, res, next) => {
+    app.get('/api/v1/building/read', async (req, res, next) => {
         try {
             let address;
             let area;
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
-            const contexts = await graph.getChildren("hasContext");
+            const contexts = await graph.getChildren('hasContext');
             // var geographicContexts = await SpinalGraphService.getContextWithType("geographicContext");
-            const geographicContexts = contexts.filter(el => el.getType().get() === "geographicContext");
-            const buildings = await geographicContexts[0].getChildren("hasGeographicBuilding");
+            const geographicContexts = contexts.filter((el) => el.getType().get() === 'geographicContext');
+            const buildings = await geographicContexts[0].getChildren('hasGeographicBuilding');
             const building = buildings[0];
             const addressAttributes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getAttributesByCategory(building, 'Spinal Building Information');
             const spatialAttributes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getAttributesByCategory(building, 'Spatial');
@@ -76,7 +76,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 name: building.getName().get(),
                 type: building.getType().get(),
                 address: address,
-                area: area
+                area: area,
             };
             return res.json(info);
         }

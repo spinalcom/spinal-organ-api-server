@@ -1,5 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
  *
@@ -23,6 +22,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
@@ -69,7 +69,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             res.status(200).send('ok');
         }
         catch (error) {
-            if (error.code)
+            if (error?.code)
                 return res.status(error.code).send({ message: error.message });
             return res.status(400).send('ko');
         }

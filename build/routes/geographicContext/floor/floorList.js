@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
+const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
@@ -59,7 +59,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const buildings = (await geographicContext?.getChildren('hasGeographicBuilding')) || [];
             const floors = (await buildings[0]?.getChildren('hasGeographicFloor')) || [];
             const infoFloors = floors.map(async (floor) => {
-                const categories = await floor.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+                const categories = await floor.getChildren(spinal_env_viewer_plugin_documentation_service_1.NODE_TO_CATEGORY_RELATION);
                 const categoriesTabProm = categories.map(async (category) => {
                     const attributs = (await category.element.load()).get();
                     return {

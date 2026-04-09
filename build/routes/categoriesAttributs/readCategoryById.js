@@ -23,51 +23,51 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
+const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-  * @swagger
-  * /api/v1/node/{nodeId}/categoryById/{categoryId}/read:
-  *   get:
-  *     security:
-  *       - bearerAuth:
-  *         - readOnly
-  *     description: read category attribut in specific node
-  *     summary: read category attribut
-  *     tags:
-  *       - Node Attribut Categories
-  *     parameters:
-  *      - in: path
-  *        name: nodeId
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *      - in: path
-  *        name: categoryId
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *     responses:
-  *       200:
-  *         description: Success
-  *         content:
-  *           application/json:
-  *             schema:
-  *                $ref: '#/components/schemas/CategoriesAttribute'
-  *       400:
-  *         description: Bad request
-    */
-    app.get("/api/v1/node/:nodeId/categoryById/:categoryId/read", async (req, res, next) => {
+     * @swagger
+     * /api/v1/node/{nodeId}/categoryById/{categoryId}/read:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     description: read category attribut in specific node
+     *     summary: read category attribut
+     *     tags:
+     *       - Node Attribut Categories
+     *     parameters:
+     *      - in: path
+     *        name: nodeId
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *      - in: path
+     *        name: categoryId
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/CategoriesAttribute'
+     *       400:
+     *         description: Bad request
+     */
+    app.get('/api/v1/node/:nodeId/categoryById/:categoryId/read', async (req, res, next) => {
         let info;
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId);
-            const childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+            const childrens = await node.getChildren(spinal_env_viewer_plugin_documentation_service_1.NODE_TO_CATEGORY_RELATION);
             const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             for (let index = 0; index < childrens.length; index++) {
                 if (childrens[index] === category) {
@@ -80,7 +80,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 }
             }
             if (Object.keys(info).length === 0) {
-                res.status(400).send("category not found in node");
+                res.status(400).send('category not found in node');
             }
         }
         catch (error) {

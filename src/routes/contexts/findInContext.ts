@@ -38,7 +38,7 @@ import { spinalCore, FileSystem } from 'spinal-core-connectorjs_type';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 import { getTicketDetails } from '../../utilities/workflow/getTicketDetails';
-import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
+import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 
 module.exports = function (
   logger,

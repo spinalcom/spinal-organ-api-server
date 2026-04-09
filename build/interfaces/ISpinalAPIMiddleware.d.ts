@@ -1,5 +1,5 @@
-import { SpinalGraph } from "spinal-model-graph";
-import { IConfig } from "./IConfig";
+import type { SpinalGraph } from 'spinal-model-graph';
+import type { IConfig } from './IConfig';
 export interface ISpinalAPIMiddleware {
     config: IConfig;
     conn: spinal.FileSystem;

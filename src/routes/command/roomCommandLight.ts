@@ -22,89 +22,91 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-
 // import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import { Room } from '../geographicContext/interfacesGeoContext'
+import { Room } from '../geographicContext/interfacesGeoContext';
 import { SpinalNode } from 'spinal-model-graph';
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
-import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
+import {
+  SpinalContext,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
+import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 
-
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
- * @swagger
- * /api/v1/command/room/{id}/light:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: Return light state of a room 
- *     summary: Gets light state of a room
- *     tags:
- *      - Command
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *                $ref: '#/components/schemas/Command'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/command/room/{id}/light:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: Return light state of a room
+   *     summary: Gets light state of a room
+   *     tags:
+   *      - Command
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/Command'
+   *       400:
+   *         description: Bad request
+   */
 
-  app.get("/api/v1/command/room/:id/light", async (req, res, next) => {
-
+  app.get('/api/v1/command/room/:id/light', async (req, res, next) => {
     let info;
     try {
-
       const profileId = getProfileId(req);
-      const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const room = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10),
+        profileId
+      );
       //@ts-ignore
-      SpinalGraphService._addNode(room)
+      SpinalGraphService._addNode(room);
 
       const controlPoints = await room.getChildren('hasControlPoints');
       for (const controlPoint of controlPoints) {
-        if (controlPoint.getName().get() === "Command") {
-          const bmsEndpointsChildControlPoint = await controlPoint.getChildren('hasBmsEndpoint')
+        if (controlPoint.getName().get() === 'Command') {
+          const bmsEndpointsChildControlPoint = await controlPoint.getChildren(
+            'hasBmsEndpoint'
+          );
           for (const bmsEndPoint of bmsEndpointsChildControlPoint) {
-            if (bmsEndPoint.getName().get() === "COMMAND_LIGHT") {
+            if (bmsEndPoint.getName().get() === 'COMMAND_LIGHT') {
               // var element = (await bmsEndPoint.element.load()).get();
-              const element = (await bmsEndPoint.element.load());
+              const element = await bmsEndPoint.element.load();
               info = {
                 dynamicId: room._server_id,
                 staticId: room.getId().get(),
                 name: room.getName().get(),
                 type: room.getType().get(),
-                currentValue: element.currentValue.get()
-              }
+                currentValue: element.currentValue.get(),
+              };
             }
           }
         }
       }
-
-
-
     } catch (error) {
-      if (error.code && error.message) return res.status(error.code).send(error.message)
-      return res.status(400).send("list of room is not loaded");
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
+      return res.status(400).send('list of room is not loaded');
     }
 
     res.send(info);
-
   });
 };
-
-
-

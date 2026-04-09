@@ -22,48 +22,58 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service/dist/Models/constants";
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
+import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
+import {
+  SpinalContext,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { EndPointNodeAttribut } from '../interfacesEndpointAndTimeSeries'
-import { getProfileId } from "../../../utilities/requestUtilities";
-import { ISpinalAPIMiddleware } from "../../../interfaces";
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+import { EndPointNodeAttribut } from '../interfacesEndpointAndTimeSeries';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
- * @swagger
- * /api/v1/endpoint/{id}/attributsList:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: Returns list of attributs of endpoint 
- *     summary: Get list of attributs of endpoint
- *     tags:
- *       - IoTNetwork & Time Series
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *                $ref: '#/components/schemas/EndPointNodeAttribut'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/endpoint/{id}/attributsList:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: Returns list of attributs of endpoint
+   *     summary: Get list of attributs of endpoint
+   *     tags:
+   *       - IoTNetwork & Time Series
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/EndPointNodeAttribut'
+   *       400:
+   *         description: Bad request
+   */
 
-  app.get("/api/v1/endpoint/:id/attributsList", async (req, res, next) => {
+  app.get('/api/v1/endpoint/:id/attributsList', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const node = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10),
+        profileId
+      );
       // @ts-ignore
       SpinalGraphService._addNode(node);
       const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
@@ -81,10 +91,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const json = await Promise.all(prom);
       return res.json(json);
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
       return res.status(500).send(error.message);
     }
-
-  })
-}
+  });
+};

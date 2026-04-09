@@ -21,22 +21,22 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
-// import spinalAPIMiddleware from '../../spinalAPIMiddleware';
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
-import { NodeAttributeUpdate } from './interfacesAttributs';
 
 import * as express from 'express';
-
+import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
+import { SpinalNode } from 'spinal-env-viewer-graph-service';
+import { NodeAttributeUpdate } from '../interface/NodeAttributeUpdate';
 import { ISpinalAPIMiddleware } from '../../interfaces';
-import { getProfileId, validateArrayRequestLimit } from "../../utilities/requestUtilities";
+import {
+  getProfileId,
+  validateArrayRequestLimit,
+} from '../../utilities/requestUtilities';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger: any,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/node/attribute/update_multiple:
@@ -62,35 +62,36 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *         description: Bad request
    */
 
-  app.post(
-    '/api/v1/node/attribute/update_multiple',
-    async (req, res, next) => {
-      try {
-        const profileId = getProfileId(req);
-        const nodes : NodeAttributeUpdate [] = req.body;
-        const validationError = validateArrayRequestLimit(nodes, 'items');
-        if (validationError) {
-          return res.status(400).send(validationError);
-        }
-        for(const nodeUpdate of nodes) {
-          const node: SpinalNode<any> = await spinalAPIMiddleware.load(nodeUpdate.dynamicId, profileId);
-          for(const categoryUpdate of nodeUpdate.categories) {
-            for(const attributeUpdate of categoryUpdate.attributes) {
-              await serviceDocumentation.addAttributeByCategoryName(
-                node,
-                categoryUpdate.categoryName,
-                attributeUpdate.attributeLabel,
-                attributeUpdate.attributeNewValue
-              )
-            }
+  app.post('/api/v1/node/attribute/update_multiple', async (req, res, next) => {
+    try {
+      const profileId = getProfileId(req);
+      const nodes: NodeAttributeUpdate[] = req.body;
+      const validationError = validateArrayRequestLimit(nodes, 'items');
+      if (validationError) {
+        return res.status(400).send(validationError);
+      }
+      for (const nodeUpdate of nodes) {
+        const node: SpinalNode = await spinalAPIMiddleware.load(
+          nodeUpdate.dynamicId,
+          profileId
+        );
+        for (const categoryUpdate of nodeUpdate.categories) {
+          for (const attributeUpdate of categoryUpdate.attributes) {
+            await serviceDocumentation.addAttributeByCategoryName(
+              node,
+              categoryUpdate.categoryName,
+              attributeUpdate.attributeLabel,
+              attributeUpdate.attributeNewValue
+            );
           }
         }
-        res.status(200).send('ok');
-      } catch (error) {
-        if (error.code) return res.status(error.code).send({ message: error.message });
-        return res.status(400).send('ko');
       }
-     // res.json(nodes);
+      res.status(200).send('ok');
+    } catch (error: any) {
+      if (error?.code)
+        return res.status(error.code).send({ message: error.message });
+      return res.status(400).send('ko');
     }
-  );
+    // res.json(nodes);
+  });
 };

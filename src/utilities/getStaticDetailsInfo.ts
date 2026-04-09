@@ -3,10 +3,10 @@ import {
   SpinalNode,
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
-import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
+import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 import { spinalControlPointService } from 'spinal-env-viewer-plugin-control-endpoint-service';
 import { SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
-import { getEndpointsInfo , getEndpointsInfoFormat2} from './getEndpointInfo'
+import { getEndpointsInfo, getEndpointsInfoFormat2 } from './getEndpointInfo';
 
 interface IEquipmentInfo {
   dynamicId: number;
@@ -54,7 +54,6 @@ interface INodeInfo {
   type: string;
 }
 
-
 const ENDPOINT_RELATIONS = [
   'hasBmsEndpoint',
   'hasBmsDevice',
@@ -62,27 +61,25 @@ const ENDPOINT_RELATIONS = [
   'hasEndPoint',
 ];
 
-
 async function getBuildingStaticDetailsInfo(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string,
-  buildingId: number,
+  buildingId: number
 ) {
-  const building: SpinalNode<any> = await spinalAPIMiddleware.load(buildingId,profileId);
-  
+  const building: SpinalNode<any> = await spinalAPIMiddleware.load(
+    buildingId,
+    profileId
+  );
+
   //@ts-ignore
   SpinalGraphService._addNode(building);
   if (building.getType().get() === 'geographicBuilding') {
-    const [
-      allNodesControlesEndpoints,
-      allEndpoints,
-      CategorieAttributsList,
-
-    ] = await Promise.all([
-      getNodeControlEndpoints(building),
-      getEndpointsInfoFormat2(spinalAPIMiddleware,profileId,buildingId),
-      getAttributes(building),
-    ]);
+    const [allNodesControlesEndpoints, allEndpoints, CategorieAttributsList] =
+      await Promise.all([
+        getNodeControlEndpoints(building),
+        getEndpointsInfoFormat2(spinalAPIMiddleware, profileId, buildingId),
+        getAttributes(building),
+      ]);
 
     const info = {
       dynamicId: building._server_id,
@@ -91,7 +88,7 @@ async function getBuildingStaticDetailsInfo(
       type: building.getType().get(),
       attributsList: CategorieAttributsList,
       controlEndpoint: allNodesControlesEndpoints,
-      endpoints: allEndpoints
+      endpoints: allEndpoints,
     };
     return info;
   } else {
@@ -168,23 +165,22 @@ async function getEquipmentStaticDetailsInfo(
 async function getFloorStaticDetailsInfo(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string,
-  floorId: number,
+  floorId: number
 ) {
-  const floor: SpinalNode<any> = await spinalAPIMiddleware.load(floorId,profileId);
-  
+  const floor: SpinalNode<any> = await spinalAPIMiddleware.load(
+    floorId,
+    profileId
+  );
+
   //@ts-ignore
   SpinalGraphService._addNode(floor);
   if (floor.getType().get() === 'geographicFloor') {
-    const [
-      allNodesControlesEndpoints,
-      allEndpoints,
-      CategorieAttributsList,
-
-    ] = await Promise.all([
-      getNodeControlEndpoints(floor),
-      getEndpointsInfoFormat2(spinalAPIMiddleware, profileId, floorId),
-      getAttributes(floor),
-    ]);
+    const [allNodesControlesEndpoints, allEndpoints, CategorieAttributsList] =
+      await Promise.all([
+        getNodeControlEndpoints(floor),
+        getEndpointsInfoFormat2(spinalAPIMiddleware, profileId, floorId),
+        getAttributes(floor),
+      ]);
 
     const info = {
       dynamicId: floor._server_id,
@@ -193,7 +189,7 @@ async function getFloorStaticDetailsInfo(
       type: floor.getType().get(),
       attributsList: CategorieAttributsList,
       controlEndpoint: allNodesControlesEndpoints,
-      endpoints: allEndpoints
+      endpoints: allEndpoints,
     };
     return info;
   } else {
@@ -204,10 +200,13 @@ async function getFloorStaticDetailsInfo(
 async function getRoomStaticDetailsInfo(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string,
-  roomId: number,
+  roomId: number
 ) {
-  const room: SpinalNode<any> = await spinalAPIMiddleware.load(roomId,profileId);
-  
+  const room: SpinalNode<any> = await spinalAPIMiddleware.load(
+    roomId,
+    profileId
+  );
+
   //@ts-ignore
   SpinalGraphService._addNode(room);
   if (room.getType().get() === 'geographicRoom') {
@@ -247,7 +246,7 @@ async function getRoomStaticDetailsInfo(
 
 async function getRoomParent(room: SpinalNode<any>): Promise<INodeInfo[]> {
   //console.log("room",room);
-  const parents = await room.getParents( [
+  const parents = await room.getParents([
     'hasGeographicRoom',
     'groupHasgeographicRoom',
   ]);
@@ -266,7 +265,9 @@ async function getRoomParent(room: SpinalNode<any>): Promise<INodeInfo[]> {
   return groupParents;
 }
 
-async function getEquipmentGroupParent(node: SpinalNode<any>): Promise<INodeInfo[]> {
+async function getEquipmentGroupParent(
+  node: SpinalNode<any>
+): Promise<INodeInfo[]> {
   const parents = await SpinalGraphService.getParents(node.getId().get(), [
     'hasBimObject',
     'groupHasBIMObject',
@@ -296,10 +297,7 @@ async function getAttributes(room: SpinalNode<any>): Promise<IAttr[]> {
       const attributes = [];
       for (const attribute of attributs) {
         const attrib = attribute.get();
-          attributes.push(
-            {...attrib,
-          dynamicId: attribute._server_id
-        });
+        attributes.push({ ...attrib, dynamicId: attribute._server_id });
       }
       return {
         dynamicId: child._server_id,
@@ -353,15 +351,12 @@ async function getEndpoints(node: SpinalNode<any>): Promise<SpinalNode<any>[]> {
 async function getNodeControlEndpoints(
   node: SpinalNode<any>
 ): Promise<INodeControlEndpoint[]> {
-  const profils = await node.getChildren( [
+  const profils = await node.getChildren([
     spinalControlPointService.ROOM_TO_CONTROL_GROUP,
   ]);
   const promises = profils.map(async (profile) => {
-    const result = await profile.getChildren([
-      SpinalBmsEndpoint.relationName,
-    ]);
+    const result = await profile.getChildren([SpinalBmsEndpoint.relationName]);
     const endpoints = await result.map(async (endpoint) => {
-      
       const element = await endpoint.element.load();
       let category: string;
       if (
@@ -446,4 +441,3 @@ export { getEquipmentStaticDetailsInfo };
 export { getRoomStaticDetailsInfo };
 export { getFloorStaticDetailsInfo };
 export { getBuildingStaticDetailsInfo };
-

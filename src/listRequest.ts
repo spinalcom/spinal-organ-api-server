@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import * as arrayOfRequests from '../finalList';
+import * as origList from '../finalList';
 import { relative, join, sep, resolve } from 'path';
 import { readdirSync, statSync, writeFile } from 'fs';
 
@@ -52,6 +52,8 @@ export function getListRequest() {
   absfiles.sort((a, b) => {
     return getIndexCat(a, orderCat) - getIndexCat(b, orderCat);
   });
+
+  const arrayOfRequests = Array.isArray(origList) ? origList : [];
 
   const doNotMatch: string[] = [];
   for (let i = 0; i < absfiles.length; i++) {

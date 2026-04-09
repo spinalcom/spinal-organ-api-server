@@ -23,68 +23,72 @@
  */
 // import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import { NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service/dist/Models/constants";
-import { CategoriesAttribute } from './interfacesCategoriesAttribute'
+import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
+import { CategoriesAttribute } from './interfacesCategoriesAttribute';
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
-* @swagger
-* /api/v1/node/{id}/categoriesList:
-*   get:
-*     security: 
-*       - bearerAuth: 
-*         - readOnly
-*     description: Returns list of categories atrribut
-*     summary: Get list of categories atrribut
-*     tags:
-*       - Node Attribut Categories
-*     parameters:
-*      - in: path
-*        name: id
-*        description: use the dynamic ID
-*        required: true
-*        schema:
-*          type: integer
-*          format: int64
-*     responses:
-*       200:
-*         description: Success
-*         content:
-*           application/json:
-*             schema: 
-*               type: array
-*               items: 
-*                $ref: '#/components/schemas/CategoriesAttribute'
-*       400:
-*         description: Bad request
-  */
+   * @swagger
+   * /api/v1/node/{id}/categoriesList:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: Returns list of categories atrribut
+   *     summary: Get list of categories atrribut
+   *     tags:
+   *       - Node Attribut Categories
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/CategoriesAttribute'
+   *       400:
+   *         description: Bad request
+   */
 
-  app.get("/api/v1/node/:id/categoriesList", async (req, res, next) => {
+  app.get('/api/v1/node/:id/categoriesList', async (req, res, next) => {
     const nodes = [];
 
     try {
       const profileId = getProfileId(req);
-      const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+      const node = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10),
+        profileId
+      );
       const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
       for (const child of childrens) {
         const info: CategoriesAttribute = {
           dynamicId: child._server_id,
           staticId: child.getId().get(),
           name: child.getName().get(),
-          type: child.getType().get()
+          type: child.getType().get(),
         };
         nodes.push(info);
       }
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }
     res.json(nodes);
   });
 };
-
-

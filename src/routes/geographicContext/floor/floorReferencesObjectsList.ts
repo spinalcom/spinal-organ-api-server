@@ -26,13 +26,19 @@
 import * as express from 'express';
 import { Floor } from '../interfacesGeoContext';
 import { SpinalNode } from 'spinal-model-graph';
-import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
+import {
+  SpinalContext,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/floor/{id}/reference_Objects_list:
@@ -78,45 +84,50 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *         description: Bad request
    */
 
-  app.get("/api/v1/floor/:id/reference_Objects_list", async (req, res, next) => {
+  app.get(
+    '/api/v1/floor/:id/reference_Objects_list',
+    async (req, res, next) => {
+      try {
+        const profileId = getProfileId(req);
 
-    try {
-      const profileId = getProfileId(req);
+        const floor: SpinalNode<any> = await spinalAPIMiddleware.load(
+          parseInt(req.params.id, 10),
+          profileId
+        );
+        //@ts-ignore
+        SpinalGraphService._addNode(floor);
+        const referenceObjets = await floor.getChildren('hasReferenceObject');
+        const _objects = [];
+        let bimFileId: string;
+        for (let index = 0; index < referenceObjets.length; index++) {
+          const infoReferencesObject = {
+            dynamicId: referenceObjets[index]._server_id,
+            staticId: referenceObjets[index].getId().get(),
+            name: referenceObjets[index].getName().get(),
+            type: referenceObjets[index].getType().get(),
+            version: referenceObjets[index].info.version.get(),
+            externalId: referenceObjets[index].info.externalId.get(),
+            dbid: referenceObjets[index].info.dbid.get(),
+            bimFileId: referenceObjets[index].info.bimFileId.get(),
+          };
+          _objects.push(infoReferencesObject);
+        }
 
-      const floor: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(floor)
-      const referenceObjets = await floor.getChildren("hasReferenceObject");
-      const _objects = []
-      let bimFileId: string;
-      for (let index = 0; index < referenceObjets.length; index++) {
-        const infoReferencesObject = {
-          dynamicId: referenceObjets[index]._server_id,
-          staticId: referenceObjets[index].getId().get(),
-          name: referenceObjets[index].getName().get(),
-          type: referenceObjets[index].getType().get(),
-          version: referenceObjets[index].info.version.get(),
-          externalId: referenceObjets[index].info.externalId.get(),
-          dbid: referenceObjets[index].info.dbid.get(),
-          bimFileId: referenceObjets[index].info.bimFileId.get(),
+        var info = {
+          dynamicId: floor._server_id,
+          staticId: floor.getId().get(),
+          name: floor.getName().get(),
+          type: floor.getType().get(),
+          infoReferencesObjects: _objects,
         };
-        _objects.push(infoReferencesObject);
+      } catch (error) {
+        console.error(error);
+        if (error.code && error.message)
+          return res.status(error.code).send(error.message);
+        res.status(400).send('list of reference_Objects is not loaded');
       }
 
-      var info = {
-        dynamicId: floor._server_id,
-        staticId: floor.getId().get(),
-        name: floor.getName().get(),
-        type: floor.getType().get(),
-        infoReferencesObjects: _objects,
-      };
-    } catch (error) {
-      console.error(error);
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send("list of reference_Objects is not loaded");
+      res.send(info);
     }
-
-    res.send(info);
-
-  });
+  );
 };

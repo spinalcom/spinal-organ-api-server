@@ -22,79 +22,90 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service/dist/Models/constants";
+import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 // import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 import * as express from 'express';
-import { CategoriesAttribute } from './interfacesCategoriesAttribute'
-import { getProfileId } from "../../utilities/requestUtilities";
-import { ISpinalAPIMiddleware } from "../../interfaces";
+import { CategoriesAttribute } from './interfacesCategoriesAttribute';
+import { getProfileId } from '../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
-* @swagger
-* /api/v1/node/{nodeId}/categoryById/{categoryId}/read:
-*   get:
-*     security: 
-*       - bearerAuth: 
-*         - readOnly
-*     description: read category attribut in specific node
-*     summary: read category attribut
-*     tags:
-*       - Node Attribut Categories
-*     parameters:
-*      - in: path
-*        name: nodeId
-*        description: use the dynamic ID
-*        required: true
-*        schema:
-*          type: integer
-*          format: int64
-*      - in: path
-*        name: categoryId
-*        description: use the dynamic ID
-*        required: true
-*        schema:
-*          type: integer
-*          format: int64
-*     responses:
-*       200:
-*         description: Success
-*         content:
-*           application/json:
-*             schema: 
-*                $ref: '#/components/schemas/CategoriesAttribute'
-*       400:
-*         description: Bad request
-  */
+   * @swagger
+   * /api/v1/node/{nodeId}/categoryById/{categoryId}/read:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: read category attribut in specific node
+   *     summary: read category attribut
+   *     tags:
+   *       - Node Attribut Categories
+   *     parameters:
+   *      - in: path
+   *        name: nodeId
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *      - in: path
+   *        name: categoryId
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/CategoriesAttribute'
+   *       400:
+   *         description: Bad request
+   */
 
-  app.get("/api/v1/node/:nodeId/categoryById/:categoryId/read", async (req, res, next) => {
+  app.get(
+    '/api/v1/node/:nodeId/categoryById/:categoryId/read',
+    async (req, res, next) => {
+      let info: CategoriesAttribute;
+      try {
+        const profileId = getProfileId(req);
+        const node = await spinalAPIMiddleware.load(
+          parseInt(req.params.nodeId, 10),
+          profileId
+        );
+        const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
+        const category = await spinalAPIMiddleware.load(
+          parseInt(req.params.categoryId, 10),
+          profileId
+        );
 
-    let info: CategoriesAttribute;
-    try {
-      const profileId = getProfileId(req);
-      const node = await spinalAPIMiddleware.load(parseInt(req.params.nodeId, 10), profileId)
-      const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION)
-      const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId)
-
-      for (let index = 0; index < childrens.length; index++) {
-        if (childrens[index] === category) {
-          info = {
-            dynamicId: category._server_id,
-            staticId: category.getId().get(),
-            name: category.getName().get(),
-            type: category.getType().get(),
-          };
+        for (let index = 0; index < childrens.length; index++) {
+          if (childrens[index] === category) {
+            info = {
+              dynamicId: category._server_id,
+              staticId: category.getId().get(),
+              name: category.getName().get(),
+              type: category.getType().get(),
+            };
+          }
         }
+        if (Object.keys(info).length === 0) {
+          res.status(400).send('category not found in node');
+        }
+      } catch (error) {
+        if (error.code && error.message)
+          return res.status(error.code).send(error.message);
+        res.status(500).send(error.message);
       }
-      if (Object.keys(info).length === 0) {
-        res.status(400).send("category not found in node");
-      }
-    } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(500).send(error.message);
+      res.json(info);
     }
-    res.json(info);
-  })
-}
+  );
+};

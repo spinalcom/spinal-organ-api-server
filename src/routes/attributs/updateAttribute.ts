@@ -21,22 +21,18 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
-// import spinalAPIMiddleware from '../../spinalAPIMiddleware';
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
-import { NodeAttribut, Attributs } from './interfacesAttributs';
+import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
+import { getProfileId } from '../../utilities/requestUtilities';
+import type { Express } from 'express';
+import type { SpinalNode } from 'spinal-env-viewer-graph-service';
+import type { NodeAttribut } from '../interface/NodeAttribut';
+import type { ISpinalAPIMiddleware } from '../../interfaces';
 
-import * as express from 'express';
-
-import { ISpinalAPIMiddleware } from '../../interfaces';
-import { getProfileId } from "../../utilities/requestUtilities";
-
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger: any,
+  app: Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
    * @swagger
    * /api/v1/node/{idNode}/category/{idCategory}/attribut/{attributName}/update:
@@ -44,8 +40,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *     security:
    *       - bearerAuth:
    *         - read
-   *     description: Create attribute
-   *     summary: create an attribute
+   *     description: Update attribute
+   *     summary: update an attribute
    *     tags:
    *       - Node Attributs
    *     parameters:
@@ -89,7 +85,13 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *                 type: string
    *     responses:
    *       200:
-   *         description: Create Successfully
+   *         description: Update Successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/NodeAttribut'
    *       400:
    *         description: Bad request
    */
@@ -100,12 +102,14 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       try {
         const profileId = getProfileId(req);
 
-        var nodes = [];
-        const node: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.IdNode, 10), profileId
+        const nodes: NodeAttribut[] = [];
+        const node: SpinalNode = await spinalAPIMiddleware.load(
+          parseInt(req.params.IdNode, 10),
+          profileId
         );
-        const category: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.IdCategory, 10), profileId
+        const category: SpinalNode = await spinalAPIMiddleware.load(
+          parseInt(req.params.IdCategory, 10),
+          profileId
         );
         const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
         for (const children of childrens) {
@@ -125,9 +129,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         }
 
         for (const child of childrens) {
-          const attributs = await child.element.load();
+          const attributs = await child.element?.load();
           const info: NodeAttribut = {
-            dynamicId: child._server_id,
+            dynamicId: child._server_id!,
             staticId: child.getId().get(),
             name: child.getName().get(),
             type: child.getType().get(),
@@ -135,11 +139,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           };
           nodes.push(info);
         }
-      } catch (error) {
-        if (error.code) return res.status(error.code).send({ message: error.message });
+        res.json(nodes);
+      } catch (error: any) {
+        if (error?.code)
+          return res.status(error.code).send({ message: error.message });
         return res.status(400).send('ko');
       }
-      res.json(nodes);
     }
   );
 };

@@ -24,7 +24,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getListRequest = void 0;
-const arrayOfRequests = require("../finalList");
+const origList = require("../finalList");
 const path_1 = require("path");
 const fs_1 = require("fs");
 function getListRequest() {
@@ -52,6 +52,7 @@ function getListRequest() {
     absfiles.sort((a, b) => {
         return getIndexCat(a, orderCat) - getIndexCat(b, orderCat);
     });
+    const arrayOfRequests = Array.isArray(origList) ? origList : [];
     const doNotMatch = [];
     for (let i = 0; i < absfiles.length; i++) {
         if (arrayOfRequests.indexOf(absfiles[i]) == -1) {

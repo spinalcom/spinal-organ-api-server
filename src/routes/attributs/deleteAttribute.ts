@@ -21,23 +21,16 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service/dist/Models/constants';
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
-import { NodeAttribut, Attributs } from './interfacesAttributs';
-
-import * as express from 'express';
-import { ISpinalAPIMiddleware } from '../../interfaces';
-import { getProfileId } from "../../utilities/requestUtilities";
+import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
+import { getProfileId } from '../../utilities/requestUtilities';
+import type { SpinalNode } from 'spinal-env-viewer-graph-service';
+import type { Express } from 'express';
+import type { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (
-  logger,
-  app: express.Express,
+  logger: any,
+  app: Express,
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
@@ -47,8 +40,8 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - read
-   *     description: Create attribute
-   *     summary: create an attribute
+   *     description: Delete attribute
+   *     summary: delete an attribute
    *     tags:
    *       - Node Attributs
    *     parameters:
@@ -73,7 +66,7 @@ module.exports = function (
    *           type: string
    *     responses:
    *       200:
-   *         description: Create Successfully
+   *         description: Delete Successfully
    *       400:
    *         description: Bad request
    */
@@ -86,10 +79,12 @@ module.exports = function (
 
         let aux = false;
         const node: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.IdNode, 10), profileId
+          parseInt(req.params.IdNode, 10),
+          profileId
         );
         const category: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(req.params.IdCategory, 10), profileId
+          parseInt(req.params.IdCategory, 10),
+          profileId
         );
         const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
         for (const children of childrens) {
@@ -109,11 +104,12 @@ module.exports = function (
             }
           }
         }
-      } catch (error) {
-        if (error.code) return res.status(error.code).send({ message: error.message });
+      } catch (error: any) {
+        if (error.code)
+          return res.status(error.code).send({ message: error.message });
         return res.status(400).send('ko');
       }
-      res.json();
+      res.status(200).send('ok');
     }
   );
 };

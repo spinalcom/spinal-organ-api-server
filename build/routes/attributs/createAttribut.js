@@ -24,91 +24,91 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
-const constants_1 = require("spinal-env-viewer-plugin-documentation-service/dist/Models/constants");
-// import spinalAPIMiddleware from '../../spinalAPIMiddleware';
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const spinal_env_viewer_plugin_documentation_service_2 = require("spinal-env-viewer-plugin-documentation-service");
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 const awaitSync_1 = require("../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-  * @swagger
-  * /api/v1/node/{idNode}/category/{idCategory}/attribut/create:
-  *   post:
-  *     security:
-  *       - bearerAuth:
-  *         - read
-  *     description: Create attribute
-  *     summary: create an attribute
-  *     tags:
-  *       - Node Attributs
-  *     parameters:
-  *       - in: path
-  *         name: idNode
-  *         description: use the dynamic ID
-  *         required: true
-  *         schema:
-  *           type: integer
-  *           format: int64
-  *       - in: path
-  *         name: idCategory
-  *         description: use the dynamic ID
-  *         required: true
-  *         schema:
-  *           type: integer
-  *           format: int64
-  *     requestBody:
-  *       content:
-  *         application/json:
-  *           schema:
-  *             type: object
-  *             required:
-  *               - attributeLabel
-  *               - attributeValue
-  *               - attributeType
-  *               - attributeUnit
-  *             properties:
-  *               attributeLabel:
-  *                 type: string
-  *               attributeValue:
-  *                 type: string
-  *               attributeType:
-  *                 type: string
-  *               attributeUnit:
-  *                 type: string
-  *     responses:
-  *       200:
-  *         description: Create Successfully
-  *       400:
-  *         description: Bad request
-  */
-    app.post("/api/v1/node/:IdNode/category/:IdCategory/attribut/create", async (req, res, next) => {
+     * @swagger
+     * /api/v1/node/{idNode}/category/{idCategory}/attribut/create:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - read
+     *     description: Create attribute
+     *     summary: create an attribute
+     *     tags:
+     *       - Node Attributs
+     *     parameters:
+     *       - in: path
+     *         name: idNode
+     *         description: use the dynamic ID
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: idCategory
+     *         description: use the dynamic ID
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - attributeLabel
+     *               - attributeValue
+     *               - attributeType
+     *               - attributeUnit
+     *             properties:
+     *               attributeLabel:
+     *                 type: string
+     *               attributeValue:
+     *                 type: string
+     *               attributeType:
+     *                 type: string
+     *               attributeUnit:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: Create Successfully
+     *       400:
+     *         description: Bad request
+     */
+    app.post('/api/v1/node/:IdNode/category/:IdCategory/attribut/create', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const node = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
             //@ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
+            SpinalGraphService._addNode(node);
             const category = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
             //@ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
+            SpinalGraphService._addNode(category);
             const attributeLabel = req.body.attributeLabel;
             const attributeValue = req.body.attributeValue;
             const attributeType = req.body.attributeType;
             const attributeUnit = req.body.attributeUnit;
-            const childrens = await node.getChildren(constants_1.NODE_TO_CATEGORY_RELATION);
+            const childrens = await node.getChildren(spinal_env_viewer_plugin_documentation_service_2.NODE_TO_CATEGORY_RELATION);
             for (const children of childrens) {
                 if (children.getId().get() === category.getId().get()) {
                     const createdAttribute = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addAttributeByCategoryName(node, category.getName().get(), attributeLabel, attributeValue, attributeType, attributeUnit);
                     if (createdAttribute === undefined) {
-                        return res.status(400).send("Creation failed");
+                        return res.status(400).send('Creation failed');
                     }
                     await (0, awaitSync_1.awaitSync)(createdAttribute);
                     return res.status(200).json({
                         name: attributeLabel,
-                        id: createdAttribute._server_id
+                        id: createdAttribute._server_id,
                     });
                 }
             }
-            return res.status(400).send("Category not found in the node categories list");
+            return res
+                .status(400)
+                .send('Category not found in the node categories list');
         }
         catch (error) {
             if (error.code)
