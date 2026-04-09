@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRoomPosition = exports.getEquipmentPosition = void 0;
+exports.getEquipmentPosition = getEquipmentPosition;
+exports.getRoomPosition = getRoomPosition;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 async function getEquipmentPosition(spinalAPIMiddleware, profileId, spatialContextId, dynamicId) {
     const equipment = await spinalAPIMiddleware.load(dynamicId, profileId);
@@ -62,7 +63,6 @@ async function getEquipmentPosition(spinalAPIMiddleware, profileId, spatialConte
         }
     };
 }
-exports.getEquipmentPosition = getEquipmentPosition;
 async function getRoomPosition(spinalAPIMiddleware, profileId, spatialContextId, dynamicId) {
     const room = await spinalAPIMiddleware.load(dynamicId, profileId);
     //@ts-ignore
@@ -103,5 +103,4 @@ async function getRoomPosition(spinalAPIMiddleware, profileId, spatialContextId,
         }
     };
 }
-exports.getRoomPosition = getRoomPosition;
 //# sourceMappingURL=getPosition.js.map

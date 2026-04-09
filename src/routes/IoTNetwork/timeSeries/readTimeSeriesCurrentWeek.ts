@@ -21,15 +21,24 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import { SpinalContext, SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service'
-import spinalServiceTimeSeries from '../spinalTimeSeries'
+import {
+  SpinalContext,
+  SpinalGraphService,
+  SpinalNode,
+} from 'spinal-env-viewer-graph-service';
+import spinalServiceTimeSeries from '../spinalTimeSeries';
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import * as moment from 'moment'
+import moment from 'moment';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {  /**
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
+  /**
 
   /**
 * @swagger
@@ -61,23 +70,29 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
  *         description: Bad request
   */
 
-  app.get("/api/v1/endpoint/:id/timeSeries/readCurrentWeek", async (req, res, next) => {
-
-
-    try {
-      const profileId = getProfileId(req);
-      const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId)
-      // @ts-ignore
-      SpinalGraphService._addNode(node);
-      const timeSeriesIntervalDate = spinalServiceTimeSeries().getDateFromLastDays(7)
-      const datas = await spinalServiceTimeSeries().getData(node.getId().get(), timeSeriesIntervalDate)
-      return res.json(datas);
-    } catch (error) {
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      return res.status(400).send(error.message)
+  app.get(
+    '/api/v1/endpoint/:id/timeSeries/readCurrentWeek',
+    async (req, res, next) => {
+      try {
+        const profileId = getProfileId(req);
+        const node: SpinalNode<any> = await spinalAPIMiddleware.load(
+          parseInt(req.params.id, 10),
+          profileId
+        );
+        // @ts-ignore
+        SpinalGraphService._addNode(node);
+        const timeSeriesIntervalDate =
+          spinalServiceTimeSeries().getDateFromLastDays(7);
+        const datas = await spinalServiceTimeSeries().getData(
+          node.getId().get(),
+          timeSeriesIntervalDate
+        );
+        return res.json(datas);
+      } catch (error) {
+        if (error.code && error.message)
+          return res.status(error.code).send(error.message);
+        return res.status(400).send(error.message);
+      }
     }
-    
-
-  })
-
-}
+  );
+};

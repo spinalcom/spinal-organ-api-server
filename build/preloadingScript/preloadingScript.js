@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.preloadingScript = void 0;
+exports.preloadingScript = preloadingScript;
 const spinal_model_graph_1 = require("spinal-model-graph");
 const viewInfo_func_1 = require("../routes/geographicContext/viewInfo_func");
 const getStaticDetailsInfo_1 = require("../utilities/getStaticDetailsInfo");
@@ -102,7 +102,6 @@ async function preloadingScript(spinalAPIMiddleware, profileId, scriptOptions) {
     clearInterval(intervalId);
     console.log(`--- Preloading Script ended at : ${new Date(endingTime).toLocaleString()} , total time ${endingTime - startingTime} ms ---`);
 }
-exports.preloadingScript = preloadingScript;
 async function processTicketList(spinalAPIMiddleware, profileId, server_ids) {
     const promises = server_ids.map(async (server_id) => {
         const node = await spinalAPIMiddleware.load(server_id, profileId);

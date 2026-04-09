@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRoomDetailsInfo = void 0;
+exports.getRoomDetailsInfo = getRoomDetailsInfo;
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 async function getRoomDetailsInfo(spinalAPIMiddleware, profileId, dynamicId) {
@@ -44,6 +44,5 @@ async function getRoomDetailsInfo(spinalAPIMiddleware, profileId, dynamicId) {
         _bimObjects: _bimObjects,
     };
 }
-exports.getRoomDetailsInfo = getRoomDetailsInfo;
 exports.default = getRoomDetailsInfo;
 //# sourceMappingURL=getRoomDetailsInfo.js.map

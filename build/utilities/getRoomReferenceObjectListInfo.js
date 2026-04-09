@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRoomReferenceObjectsListInfo = void 0;
+exports.getRoomReferenceObjectsListInfo = getRoomReferenceObjectsListInfo;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 async function getRoomReferenceObjectsListInfo(spinalAPIMiddleware, profileId, dynamicId) {
     const room = await spinalAPIMiddleware.load(dynamicId, profileId);
@@ -35,6 +35,5 @@ async function getRoomReferenceObjectsListInfo(spinalAPIMiddleware, profileId, d
         infoReferencesObjects: _objects
     };
 }
-exports.getRoomReferenceObjectsListInfo = getRoomReferenceObjectsListInfo;
 exports.default = getRoomReferenceObjectsListInfo;
 //# sourceMappingURL=getRoomReferenceObjectListInfo.js.map

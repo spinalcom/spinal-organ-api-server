@@ -1196,6 +1196,9 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   require('./health/organStatus')(logger, app, spinalAPIMiddleware);
   require('./health/testTimeout')(logger, app, spinalAPIMiddleware);
 
+  require('./user/context/createUserContext')(logger, app, spinalAPIMiddleware);
+
+
 }
 
 export default routes;

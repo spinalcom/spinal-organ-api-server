@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getChildrenNodesInfo = void 0;
+exports.getChildrenNodesInfo = getChildrenNodesInfo;
 async function getChildrenNodesInfo(spinalAPIMiddleware, profileId, dynamicId, relations, contextId) {
     // if we have a contextId we will get the children in the context.
     // Additionally , if we have relations we will restrict the children to the relations
@@ -55,6 +55,5 @@ async function getChildrenNodesInfo(spinalAPIMiddleware, profileId, dynamicId, r
     }
     return childrenInfo;
 }
-exports.getChildrenNodesInfo = getChildrenNodesInfo;
 exports.default = getChildrenNodesInfo;
 //# sourceMappingURL=getChildrenNodesInfo.js.map

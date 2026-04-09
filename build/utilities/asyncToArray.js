@@ -23,6 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = asyncIteratorToArray;
 var __asyncValues = (this && __asyncValues) || function (o) {
     if (!Symbol.asyncIterator)
         throw new TypeError("Symbol.asyncIterator is not defined.");
@@ -56,5 +57,4 @@ async function asyncIteratorToArray(iterator) {
     }
     return array;
 }
-exports.default = asyncIteratorToArray;
 //# sourceMappingURL=asyncToArray.js.map

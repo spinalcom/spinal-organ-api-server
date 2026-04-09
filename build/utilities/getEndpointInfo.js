@@ -23,7 +23,8 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getEndpointsInfoFormat2 = exports.getEndpointsInfo = void 0;
+exports.getEndpointsInfo = getEndpointsInfo;
+exports.getEndpointsInfoFormat2 = getEndpointsInfoFormat2;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
@@ -81,7 +82,6 @@ async function getEndpointsInfo(spinalAPIMiddleware, profilId, dynamicId, includ
     }
     return nodes;
 }
-exports.getEndpointsInfo = getEndpointsInfo;
 async function getEndpointsInfoFormat2(spinalAPIMiddleware, profilId, dynamicId) {
     const nodes = [];
     spinalAPIMiddleware.getGraph();
@@ -105,6 +105,5 @@ async function getEndpointsInfoFormat2(spinalAPIMiddleware, profilId, dynamicId)
     }
     return nodes;
 }
-exports.getEndpointsInfoFormat2 = getEndpointsInfoFormat2;
 exports.default = getEndpointsInfo;
 //# sourceMappingURL=getEndpointInfo.js.map

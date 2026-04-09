@@ -27,7 +27,7 @@ import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import * as express from 'express';
 import { SpinalEventService, Period } from 'spinal-env-viewer-task-service';
 import { SPINAL_TICKET_SERVICE_TICKET_TYPE } from 'spinal-service-ticket';
-import * as moment from 'moment';
+import moment from 'moment';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 import { awaitSync } from '../../../utilities/awaitSync';

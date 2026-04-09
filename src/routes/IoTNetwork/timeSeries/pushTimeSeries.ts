@@ -22,69 +22,79 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service'
+import {
+  SpinalContext,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
 // const spinalServiceTimeSeries = require('../../spinalTimeSeries')();
-import spinalServiceTimeSeries from '../spinalTimeSeries'
+import spinalServiceTimeSeries from '../spinalTimeSeries';
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import * as moment from 'moment'
+import moment from 'moment';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-
+module.exports = function (
+  logger,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
-  * @swagger
-  * /api/v1/endpoint/{id}/timeSeries/push:
-  *   post:
-  *     security:
-  *       - bearerAuth:
-  *         - read
-  *     description: push new value
-  *     summary: push new value
-  *     tags:
-  *       - IoTNetwork & Time Series
-  *     parameters:
-  *      - in: path
-  *        name: id
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *     requestBody:
-  *       content:
-  *         application/json:
-  *           schema:
-  *             type: object
-  *             required:
-  *               - newValue
-  *             properties:
-  *                newValue:
-  *                 type: number
-  *     responses:
-  *       200:
-  *         description: Create Successfully
-  *       400:
-  *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/endpoint/{id}/timeSeries/push:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - read
+   *     description: push new value
+   *     summary: push new value
+   *     tags:
+   *       - IoTNetwork & Time Series
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - newValue
+   *             properties:
+   *                newValue:
+   *                 type: number
+   *     responses:
+   *       200:
+   *         description: Create Successfully
+   *       400:
+   *         description: Bad request
+   */
 
-  app.post("/api/v1/endpoint/:id/timeSeries/push", async (req, res, next) => {
-
+  app.post('/api/v1/endpoint/:id/timeSeries/push', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-      const node = await spinalAPIMiddleware.load(parseInt(req.params.id), profileId)
+      const node = await spinalAPIMiddleware.load(
+        parseInt(req.params.id),
+        profileId
+      );
       // @ts-ignore
       SpinalGraphService._addNode(node);
-      const timeseries = await spinalServiceTimeSeries().getOrCreateTimeSeries(node.getId().get())
-      await timeseries.push(req.body.newValue)
+      const timeseries = await spinalServiceTimeSeries().getOrCreateTimeSeries(
+        node.getId().get()
+      );
+      await timeseries.push(req.body.newValue);
       return res.status(200).json({
-        newValue: req.body.newValue
+        newValue: req.body.newValue,
       });
     } catch (error) {
-      if (error.code && error.message) return res.status(error.code).send(error.message);
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
 
-      return res.status(400).send(error.message)
+      return res.status(400).send(error.message);
     }
-  })
-
-}
+  });
+};

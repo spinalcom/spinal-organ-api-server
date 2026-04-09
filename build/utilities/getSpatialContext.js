@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSpatialContext = void 0;
+exports.getSpatialContext = getSpatialContext;
 async function getSpatialContext(spinalAPIMiddleware, profileId) {
     const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
     const contexts = await userGraph.getChildren('hasContext');
@@ -33,5 +33,4 @@ async function getSpatialContext(spinalAPIMiddleware, profileId) {
         throw new Error('spatial context not found');
     return spatialContext;
 }
-exports.getSpatialContext = getSpatialContext;
 //# sourceMappingURL=getSpatialContext.js.map

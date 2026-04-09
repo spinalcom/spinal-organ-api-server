@@ -26,8 +26,8 @@ import { Application } from 'express';
 import { Server } from 'http';
 import { initSwagger } from '../swagger';
 import { ISpinalAPIMiddleware } from '../interfaces';
-import * as fileUpload from 'express-fileupload';
-import * as path from 'path';
+import fileUpload from 'express-fileupload';
+import path from 'path';
 import routes from '../routes/routes';
 import { createLogRequestLifecycle } from '../api-server';
 import { runSocketServer, ISpinalIOMiddleware } from 'spinal-organ-api-pubsub';
@@ -63,7 +63,7 @@ export async function runServerRest(
   log_body = false
 ) {
   initApiServer(app, spinalAPIMiddleware, log_body);
-  const io = await runSocketServer(server, spinalIOMiddleware);
+  const io = await runSocketServer(server as any, spinalIOMiddleware);
   return { app, io };
 }
 

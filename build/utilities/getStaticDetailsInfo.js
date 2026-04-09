@@ -1,6 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBuildingStaticDetailsInfo = exports.getFloorStaticDetailsInfo = exports.getRoomStaticDetailsInfo = exports.getEquipmentStaticDetailsInfo = void 0;
+exports.getEquipmentStaticDetailsInfo = getEquipmentStaticDetailsInfo;
+exports.getRoomStaticDetailsInfo = getRoomStaticDetailsInfo;
+exports.getFloorStaticDetailsInfo = getFloorStaticDetailsInfo;
+exports.getBuildingStaticDetailsInfo = getBuildingStaticDetailsInfo;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const spinal_env_viewer_plugin_control_endpoint_service_1 = require("spinal-env-viewer-plugin-control-endpoint-service");
@@ -37,7 +40,6 @@ async function getBuildingStaticDetailsInfo(spinalAPIMiddleware, profileId, buil
         throw 'node is not of type geographic floor';
     }
 }
-exports.getBuildingStaticDetailsInfo = getBuildingStaticDetailsInfo;
 async function getEquipmentStaticDetailsInfo(spinalAPIMiddleware, profileId, equipementId) {
     const equipment = await spinalAPIMiddleware.load(equipementId, profileId);
     //@ts-ignore
@@ -89,7 +91,6 @@ async function getEquipmentStaticDetailsInfo(spinalAPIMiddleware, profileId, equ
         throw 'node is not of type BIMObject';
     }
 }
-exports.getEquipmentStaticDetailsInfo = getEquipmentStaticDetailsInfo;
 async function getFloorStaticDetailsInfo(spinalAPIMiddleware, profileId, floorId) {
     const floor = await spinalAPIMiddleware.load(floorId, profileId);
     //@ts-ignore
@@ -115,7 +116,6 @@ async function getFloorStaticDetailsInfo(spinalAPIMiddleware, profileId, floorId
         throw 'node is not of type geographic floor';
     }
 }
-exports.getFloorStaticDetailsInfo = getFloorStaticDetailsInfo;
 async function getRoomStaticDetailsInfo(spinalAPIMiddleware, profileId, roomId) {
     const room = await spinalAPIMiddleware.load(roomId, profileId);
     //@ts-ignore
@@ -148,7 +148,6 @@ async function getRoomStaticDetailsInfo(spinalAPIMiddleware, profileId, roomId) 
         throw 'node is not of type geographic room';
     }
 }
-exports.getRoomStaticDetailsInfo = getRoomStaticDetailsInfo;
 async function getRoomParent(room) {
     //console.log("room",room);
     const parents = await room.getParents([

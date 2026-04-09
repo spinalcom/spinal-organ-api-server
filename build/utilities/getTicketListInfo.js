@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTicketListInfo = void 0;
+exports.getTicketListInfo = getTicketListInfo;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const getTicketDetails_1 = require("../utilities/workflow/getTicketDetails");
 async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId, includeAttachedItems = false) {
@@ -41,6 +41,5 @@ async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId, incl
     }
     return nodes;
 }
-exports.getTicketListInfo = getTicketListInfo;
 exports.default = getTicketListInfo;
 //# sourceMappingURL=getTicketListInfo.js.map

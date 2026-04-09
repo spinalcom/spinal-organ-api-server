@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRoomInventory = void 0;
+exports.getRoomInventory = getRoomInventory;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 async function getRoomInventory(spinalAPIMiddleware, profileId, dynamicId) {
     const room = await spinalAPIMiddleware.load(dynamicId, profileId);
@@ -41,7 +41,6 @@ async function getRoomInventory(spinalAPIMiddleware, profileId, dynamicId) {
         inventories: inventories
     };
 }
-exports.getRoomInventory = getRoomInventory;
 function getDetail(obj) {
     const infoObject = {
         staticId: obj.getId().get(),

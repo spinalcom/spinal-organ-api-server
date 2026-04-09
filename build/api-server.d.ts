@@ -1,5 +1,4 @@
-/// <reference types="node" />
-import * as express from 'express';
+import express from 'express';
 import type SpinalAPIMiddleware from './spinalAPIMiddleware';
 export declare function createLogRequestLifecycle(log_body: boolean): (req: express.Request, res: express.Response, next: express.NextFunction) => void;
 export declare const morganMiddleware: (req: import("http").IncomingMessage, res: import("http").ServerResponse, callback: (err?: Error) => void) => void;

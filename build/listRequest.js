@@ -22,9 +22,12 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getListRequest = void 0;
-const origList = require("../finalList");
+exports.getListRequest = getListRequest;
+const finalList_1 = __importDefault(require("../finalList"));
 const path_1 = require("path");
 const fs_1 = require("fs");
 function getListRequest() {
@@ -52,7 +55,7 @@ function getListRequest() {
     absfiles.sort((a, b) => {
         return getIndexCat(a, orderCat) - getIndexCat(b, orderCat);
     });
-    const arrayOfRequests = Array.isArray(origList) ? origList : [];
+    const arrayOfRequests = Array.isArray(finalList_1.default) ? finalList_1.default : [];
     const doNotMatch = [];
     for (let i = 0; i < absfiles.length; i++) {
         if (arrayOfRequests.indexOf(absfiles[i]) == -1) {
@@ -73,7 +76,6 @@ function getListRequest() {
     });
     return mapList;
 }
-exports.getListRequest = getListRequest;
 function isSameArray(arr1, arr2) {
     if (arr1.length !== arr2.length)
         return false;

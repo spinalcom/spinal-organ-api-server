@@ -36,25 +36,28 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
 var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.runServerRest = void 0;
+exports.runServerRest = runServerRest;
 const swagger_1 = require("../swagger");
-const fileUpload = require("express-fileupload");
-const path = require("path");
-const routes_1 = require("../routes/routes");
+const express_fileupload_1 = __importDefault(require("express-fileupload"));
+const path_1 = __importDefault(require("path"));
+const routes_1 = __importDefault(require("../routes/routes"));
 const api_server_1 = require("../api-server");
 const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
 __exportStar(require("../routes/geographicContext/viewInfo_func"), exports);
 __exportStar(require("../preloadingScript/preloadingScript"), exports);
 function initApiServer(app, spinalAPIMiddleware, log_body = false) {
-    app.use(fileUpload({ createParentPath: true }));
+    app.use((0, express_fileupload_1.default)({ createParentPath: true }));
     // app.use(logRequestLifecycle);
     app.use((0, api_server_1.createLogRequestLifecycle)(log_body));
     //useLogger(app, log_body);
     (0, swagger_1.initSwagger)(app);
     app.get('/logo.png', (req, res) => {
         res.sendFile('spinalcore.png', {
-            root: path.resolve(__dirname + '../../../uploads'),
+            root: path_1.default.resolve(__dirname + '../../../uploads'),
         });
     });
     (0, routes_1.default)({}, app, spinalAPIMiddleware);
@@ -64,6 +67,5 @@ async function runServerRest(server, app, spinalAPIMiddleware, spinalIOMiddlewar
     const io = await (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
     return { app, io };
 }
-exports.runServerRest = runServerRest;
 __exportStar(require("../interfaces"), exports);
 //# sourceMappingURL=index.js.map

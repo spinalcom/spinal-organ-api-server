@@ -22,15 +22,20 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.useLogger = exports.morganMiddleware = exports.createLogRequestLifecycle = void 0;
-const express = require("express");
-const fileUpload = require("express-fileupload");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const routes_1 = require("./routes/routes");
+exports.morganMiddleware = void 0;
+exports.createLogRequestLifecycle = createLogRequestLifecycle;
+exports.useLogger = useLogger;
+const express_1 = __importDefault(require("express"));
+const express_fileupload_1 = __importDefault(require("express-fileupload"));
+const cors_1 = __importDefault(require("cors"));
+const body_parser_1 = __importDefault(require("body-parser"));
+const routes_1 = __importDefault(require("./routes/routes"));
 const morgan = require("morgan");
-const chalk_1 = require("chalk");
+const chalk_1 = __importDefault(require("chalk"));
 const non_secure_1 = require("nanoid/non-secure");
 function pad(str, length) {
     return str.padEnd(length);
@@ -41,9 +46,7 @@ function createLogRequestLifecycle(log_body) {
         req.id = id;
         const startTime = Date.now();
         console.log(`[ Pending ] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} from ${req.ip}`);
-        if (log_body &&
-            req.body &&
-            Object.keys(req.body).length > 0) {
+        if (log_body && req.body && Object.keys(req.body).length > 0) {
             try {
                 const bodyStr = JSON.stringify(req.body, null, 2);
                 console.log(`[Body][${id}] ${bodyStr}`);
@@ -59,7 +62,6 @@ function createLogRequestLifecycle(log_body) {
         next();
     };
 }
-exports.createLogRequestLifecycle = createLogRequestLifecycle;
 // export function logRequestLifecycle(req: express.Request, res: express.Response, next: express.NextFunction) {
 //   const id = nanoid(6);
 //   (req as any).id = id;
@@ -91,10 +93,14 @@ exports.morganMiddleware = morgan(function (tokens, req, res) {
     const method = chalk_1.default.hex('#34ace0').bold(tokens.method(req, res));
     const url = chalk_1.default.hex('#ff5252').bold(tokens.url(req, res));
     const status = tokens.status(req, res);
-    const responseTime = chalk_1.default.hex('#2ed573').bold(tokens['response-time'](req, res) + ' ms');
+    const responseTime = chalk_1.default
+        .hex('#2ed573')
+        .bold(tokens['response-time'](req, res) + ' ms');
     const date = chalk_1.default.hex('#f78fb3').bold('@ ' + tokens.date(req, res));
     const remoteAddr = chalk_1.default.yellow(tokens['remote-addr'](req, res));
-    const referrer = chalk_1.default.hex('#fffa65').bold('from ' + tokens.referrer(req, res));
+    const referrer = chalk_1.default
+        .hex('#fffa65')
+        .bold('from ' + tokens.referrer(req, res));
     let statusColor = chalk_1.default.hex('#ffb142'); // Default color
     if (status) {
         const statusCode = parseInt(status, 10);
@@ -118,7 +124,7 @@ exports.morganMiddleware = morgan(function (tokens, req, res) {
         responseTime,
         date,
         remoteAddr,
-        referrer
+        referrer,
     ].join(' ');
 });
 function useLogger(app, log_body) {
@@ -135,29 +141,38 @@ function useLogger(app, log_body) {
         app.use('/api/*', exports.morganMiddleware);
     }
 }
-exports.useLogger = useLogger;
 function APIServer(logger, spinalAPIMiddleware) {
-    const app = express();
+    const app = (0, express_1.default)();
     app.use((req, res, next) => {
         res.setHeader('X-API-Version', process.env.API_SERVER_VERSION);
         next();
     });
     // enable files upload
-    app.use(fileUpload({ createParentPath: true }));
-    app.use(cors());
+    app.use((0, express_fileupload_1.default)({ createParentPath: true }));
+    app.use((0, cors_1.default)());
     app.disable('x-powered-by');
-    app.use(bodyParser.urlencoded({ extended: true }));
-    const bodyParserDefault = bodyParser.json();
-    const bodyParserTicket = bodyParser.json({ limit: '500mb' });
+    app.use(body_parser_1.default.urlencoded({ extended: true }));
+    const bodyParserDefault = body_parser_1.default.json();
+    const bodyParserTicket = body_parser_1.default.json({ limit: '500mb' });
     app.use((req, res, next) => {
         if (req.originalUrl === '/api/v1/node/convert_base_64' ||
             req.originalUrl === '/api/v1/ticket/create_ticket')
             return bodyParserTicket(req, res, next);
         return bodyParserDefault(req, res, next);
     });
+    app.use((error, req, res, next) => {
+        if (error?.type === 'entity.parse.failed') {
+            return res
+                .status(400)
+                .send('Invalid JSON in request body : ' + error.message);
+        }
+        else {
+            next();
+        }
+    });
     // app.use(logRequestStart);
     // app.use(logRequestLifecycle);
-    app.use(createLogRequestLifecycle(["1", "true", "yes"].includes((process.env.LOG_BODY || "").toLowerCase())));
+    app.use(createLogRequestLifecycle(['1', 'true', 'yes'].includes((process.env.LOG_BODY || '').toLowerCase())));
     // useLogger(app, ["1", "true", "yes"].includes((process.env.LOG_BODY || "").toLowerCase()));
     (0, routes_1.default)(logger, app, spinalAPIMiddleware);
     return app;

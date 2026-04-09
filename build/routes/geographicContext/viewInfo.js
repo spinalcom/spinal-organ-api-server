@@ -23,6 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = default_1;
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 const viewInfo_func_1 = require("./viewInfo_func");
 function default_1(logger, app, spinalAPIMiddleware) {
@@ -112,5 +113,4 @@ function default_1(logger, app, spinalAPIMiddleware) {
         }
     });
 }
-exports.default = default_1;
 //# sourceMappingURL=viewInfo.js.map

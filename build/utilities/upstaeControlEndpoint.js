@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateControlEndpointWithAnalytic = void 0;
+exports.updateControlEndpointWithAnalytic = updateControlEndpointWithAnalytic;
 /*
  * Copyright 2022 SpinalCom - www.spinalcom.com
  *
@@ -52,5 +52,4 @@ async function updateControlEndpointWithAnalytic(node, valueToPush, dataType, ty
         console.log(valueToPush + " value to push in node : " + node.info.name.get() + " -- ABORTED !");
     }
 }
-exports.updateControlEndpointWithAnalytic = updateControlEndpointWithAnalytic;
 //# sourceMappingURL=upstaeControlEndpoint.js.map

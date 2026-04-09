@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTicketDetails = void 0;
+exports.getTicketDetails = getTicketDetails;
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const loadAndValidateNode_1 = require("../loadAndValidateNode");
@@ -153,7 +153,6 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includ
     }
     return info;
 }
-exports.getTicketDetails = getTicketDetails;
 async function getTicketLogDetails(ticketNode, processNode, contextNode) {
     const logs = await (0, spinal_service_ticket_1.getTicketLogs)(ticketNode);
     const logRes = await Promise.all(logs.map(async (log) => ({

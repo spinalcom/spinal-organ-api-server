@@ -22,12 +22,15 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const config_1 = require("./config");
-const api_server_1 = require("./api-server");
-const spinalAPIMiddleware_1 = require("./spinalAPIMiddleware");
+const config_1 = __importDefault(require("./config"));
+const api_server_1 = __importDefault(require("./api-server"));
+const spinalAPIMiddleware_1 = __importDefault(require("./spinalAPIMiddleware"));
 const swagger_1 = require("./swagger");
-const spinal_lib_organ_monitoring_1 = require("spinal-lib-organ-monitoring");
+const spinal_lib_organ_monitoring_1 = __importDefault(require("spinal-lib-organ-monitoring"));
 const preloadingScript_1 = require("./preloadingScript/preloadingScript");
 const preload_config = require('../preload_config');
 function Requests(logger) {

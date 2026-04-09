@@ -373,6 +373,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./health/healthStatus')(logger, app, spinalAPIMiddleware);
     require('./health/organStatus')(logger, app, spinalAPIMiddleware);
     require('./health/testTimeout')(logger, app, spinalAPIMiddleware);
+    require('./user/context/createUserContext')(logger, app, spinalAPIMiddleware);
 }
 exports.default = routes;
 //# sourceMappingURL=routes.js.map

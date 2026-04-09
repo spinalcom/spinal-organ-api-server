@@ -22,77 +22,80 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service");
-const moment = require("moment");
+const moment_1 = __importDefault(require("moment"));
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-  * @swagger
-  * /api/v1/event/create:
-  *   post:
-  *     security:
-  *       - bearerAuth:
-  *         - read
-  *     description: create event, by using this api, please check the repeat attribute that it must be false, if you want to set it to true you must fill in the repeatend attribute, the startDate and endDate attributes must be in this format DD MM YYYY
-  *     summary: create event
-  *     tags:
-  *       - Calendar & Event
-  *     requestBody:
-  *       content:
-  *         application/json:
-  *           schema:
-  *             type: object
-  *             required:
-  *               - name
-  *               - contextId
-  *               - categoryDynamicId
-  *               - groupDynamicId
-  *               - nodeDynamicId
-  *               - startDate
-  *               - endDate
-  *               - description
-  *               - repeat
-  *               - repeatEnd
-  *               - count
-  *               - period
-  *             properties:
-  *               name:
-  *                 type: string
-  *               contextId:
-  *                 type: number
-  *               categoryDynamicId:
-  *                 type: number
-  *               groupDynamicId:
-  *                 type: number
-  *               nodeDynamicId:
-  *                 type: number
-  *               startDate:
-  *                 type: string
-  *                 default: DD MM YYYY HH:mm:ss
-  *               endDate:
-  *                 type: string
-  *                 default: DD MM YYYY HH:mm:ss
-  *               description:
-  *                 type: string
-  *               repeat:
-  *                 type: boolean
-  *               repeatEnd:
-  *                 type: number
-  *                 default: DD MM YYYY HH:mm:ss
-  *               count:
-  *                 type: number
-  *               period:
-  *                 type: number
-  *                 default: day|week|month|year
-  *     responses:
-  *       200:
-  *         description: Updated successfully
-  *       400:
-  *         description: Bad request
-    */
-    app.post("/api/v1/event/create", async (req, res, next) => {
+     * @swagger
+     * /api/v1/event/create:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - read
+     *     description: create event, by using this api, please check the repeat attribute that it must be false, if you want to set it to true you must fill in the repeatend attribute, the startDate and endDate attributes must be in this format DD MM YYYY
+     *     summary: create event
+     *     tags:
+     *       - Calendar & Event
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - name
+     *               - contextId
+     *               - categoryDynamicId
+     *               - groupDynamicId
+     *               - nodeDynamicId
+     *               - startDate
+     *               - endDate
+     *               - description
+     *               - repeat
+     *               - repeatEnd
+     *               - count
+     *               - period
+     *             properties:
+     *               name:
+     *                 type: string
+     *               contextId:
+     *                 type: number
+     *               categoryDynamicId:
+     *                 type: number
+     *               groupDynamicId:
+     *                 type: number
+     *               nodeDynamicId:
+     *                 type: number
+     *               startDate:
+     *                 type: string
+     *                 default: DD MM YYYY HH:mm:ss
+     *               endDate:
+     *                 type: string
+     *                 default: DD MM YYYY HH:mm:ss
+     *               description:
+     *                 type: string
+     *               repeat:
+     *                 type: boolean
+     *               repeatEnd:
+     *                 type: number
+     *                 default: DD MM YYYY HH:mm:ss
+     *               count:
+     *                 type: number
+     *               period:
+     *                 type: number
+     *                 default: day|week|month|year
+     *     responses:
+     *       200:
+     *         description: Updated successfully
+     *       400:
+     *         description: Bad request
+     */
+    app.post('/api/v1/event/create', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const context = await spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId);
@@ -114,20 +117,23 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         groupId: groupe.getId().get(),
                         categoryId: category.getId().get(),
                         nodeId: node.getId().get(),
-                        startDate: (moment(req.body.startDate, "DD MM YYYY HH:mm:ss", true)).toISOString(),
+                        startDate: (0, moment_1.default)(req.body.startDate, 'DD MM YYYY HH:mm:ss', true).toISOString(),
                         description: req.body.description,
-                        endDate: (moment(req.body.endDate, "DD MM YYYY HH:mm:ss", true)).toISOString(),
-                        periodicity: { count: req.body.count, period: spinal_env_viewer_task_service_1.Period[req.body.period] },
+                        endDate: (0, moment_1.default)(req.body.endDate, 'DD MM YYYY HH:mm:ss', true).toISOString(),
+                        periodicity: {
+                            count: req.body.count,
+                            period: spinal_env_viewer_task_service_1.Period[req.body.period],
+                        },
                         repeat: req.body.repeat,
                         name: req.body.name,
-                        creationDate: (moment(Date.now(), "DD MM YYYY HH:mm:ss", true)).toISOString(),
-                        repeatEnd: (moment(req.body.repeatEnd, "DD MM YYYY HH:mm:ss", true)).toISOString()
+                        creationDate: (0, moment_1.default)(Date.now(), 'DD MM YYYY HH:mm:ss', true).toISOString(),
+                        repeatEnd: (0, moment_1.default)(req.body.repeatEnd, 'DD MM YYYY HH:mm:ss', true).toISOString(),
                     };
-                    const user = { username: "string", userId: 0 };
+                    const user = { username: 'string', userId: 0 };
                     let result = await spinal_env_viewer_task_service_1.SpinalEventService.createEvent(context.getId().get(), groupe.getId().get(), node.getId().get(), eventInfo, user);
                     if (!Array.isArray(result))
                         result = [result];
-                    const infos = result.map(ticketCreated => {
+                    const infos = result.map((ticketCreated) => {
                         const node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(ticketCreated.id.get());
                         return {
                             dynamicId: node._server_id,
@@ -142,19 +148,25 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             creationDate: ticketCreated.creationDate.get(),
                             user: {
                                 username: ticketCreated.user.username.get(),
-                                email: ticketCreated.user.email == undefined ? undefined : ticketCreated.user.email.get(),
-                                gsm: ticketCreated.user.gsm == undefined ? undefined : ticketCreated.user.gsm.get()
-                            }
+                                email: ticketCreated.user.email == undefined
+                                    ? undefined
+                                    : ticketCreated.user.email.get(),
+                                gsm: ticketCreated.user.gsm == undefined
+                                    ? undefined
+                                    : ticketCreated.user.gsm.get(),
+                            },
                         };
                     });
                     return res.status(200).json(infos);
                 }
                 else {
-                    return res.status(400).send("this context is not a SpinalEventGroupContext");
+                    return res
+                        .status(400)
+                        .send('this context is not a SpinalEventGroupContext');
                 }
             }
             else {
-                res.status(400).send("node not found in context");
+                res.status(400).send('node not found in context');
             }
         }
         catch (error) {

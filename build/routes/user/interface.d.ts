@@ -21,7 +21,18 @@ export interface UserGetMultiple {
     groups: boolean;
     organizations: boolean;
 }
-export interface NodeWithParent extends BasicNode {
+export interface NodeWithColor {
+    dynamicId: number;
+    staticId: string;
+    name: string;
+    type: string;
+    color: string;
+}
+export interface NodeWithParent {
+    dynamicId: number;
+    staticId: string;
+    name: string;
+    type: string;
     parentDynamicId: number;
 }
 export interface CreateOrEditName {

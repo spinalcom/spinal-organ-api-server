@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadAndValidateNode = void 0;
+exports.loadAndValidateNode = loadAndValidateNode;
 const spinal_model_graph_1 = require("spinal-model-graph");
 async function loadAndValidateNode(spinalAPIMiddleware, serverId, profileId, nodeType) {
     if ((typeof serverId === 'number' && isNaN(serverId)) ||
@@ -36,7 +36,6 @@ async function loadAndValidateNode(spinalAPIMiddleware, serverId, profileId, nod
         throw createErrorResponse(400, `Node ${serverId} is not of type ${nodeType}`);
     return node;
 }
-exports.loadAndValidateNode = loadAndValidateNode;
 async function safeLoadNode(spinalAPIMiddleware, serverId, profileId) {
     try {
         return await spinalAPIMiddleware.load(serverId, profileId);

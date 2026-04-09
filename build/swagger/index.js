@@ -22,15 +22,19 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.initSwagger = exports.getSwaggerDocs = void 0;
+exports.getSwaggerDocs = void 0;
+exports.initSwagger = initSwagger;
 const fs_1 = require("fs");
 const path_1 = require("path");
-const swaggerUi = require("swagger-ui-express");
-const swaggerJSDoc = require("swagger-jsdoc");
+const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
+const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
 const swaggerOption_1 = require("./swaggerOption");
 const redoc = require('redoc-express');
-const swaggerDocs = swaggerJSDoc(swaggerOption_1.swaggerOption);
+const swaggerDocs = (0, swagger_jsdoc_1.default)(swaggerOption_1.swaggerOption);
 const swaggerUiOpts = {
     explorer: true,
     openapi: '3.0.1',
@@ -60,8 +64,8 @@ function initSwagger(api) {
         }
     });
     // add swagger docs to API
-    api.use('/spinalcom-api-docs', swaggerUi.serve, (req, res, next) => {
-        return swaggerUi.setup(swaggerDocs, swaggerUiOpts)(req, res, next);
+    api.use('/spinalcom-api-docs', swagger_ui_express_1.default.serve, (req, res, next) => {
+        return swagger_ui_express_1.default.setup(swaggerDocs, swaggerUiOpts)(req, res, next);
     });
     api.get('/docs/swagger.json', (req, res) => {
         res.send(swaggerDocs);
@@ -71,5 +75,4 @@ function initSwagger(api) {
         specUrl: '/docs/swagger.json',
     }));
 }
-exports.initSwagger = initSwagger;
 //# sourceMappingURL=index.js.map

@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
@@ -23,7 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-const spinalTimeSeries_1 = require("../spinalTimeSeries");
+const spinalTimeSeries_1 = __importDefault(require("../spinalTimeSeries"));
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getTimeSeriesData_1 = require("../../../utilities/getTimeSeriesData");
 module.exports = function (logger, app, spinalAPIMiddleware) {

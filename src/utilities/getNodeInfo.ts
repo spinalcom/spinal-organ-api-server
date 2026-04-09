@@ -27,13 +27,14 @@ import type { ISpinalAPIMiddleware } from '../interfaces';
 import type { Relation } from '../routes/interface/Relation';
 import type { Node } from '../routes/interface/Node';
 import { childrensNode, parentsNode } from './corseChildrenAndParentNode';
+
 async function getNodeInfo(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string,
   dynamicId: number,
   includeChildrenRelations?: boolean,
   includeParentRelations?: boolean
-): Promise<Node | undefined> {
+): Promise<Node> {
   const node: SpinalNode<any> = await spinalAPIMiddleware.load(
     dynamicId,
     profileId
@@ -51,7 +52,7 @@ async function getNodeInfo(
   }
 
   const info: Node = {
-    dynamicId: node._server_id,
+    dynamicId: node._server_id!,
     staticId: node.getId().get(),
     name: node.getName().get(),
     type: node.getType().get(),

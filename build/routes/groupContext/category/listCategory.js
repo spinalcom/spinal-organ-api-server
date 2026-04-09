@@ -22,9 +22,12 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const spinal_env_viewer_plugin_group_manager_service_1 = require("spinal-env-viewer-plugin-group-manager-service");
+const spinal_env_viewer_plugin_group_manager_service_1 = __importDefault(require("spinal-env-viewer-plugin-group-manager-service"));
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/groupeContext/:id/category_list", async (req, res, next) => {

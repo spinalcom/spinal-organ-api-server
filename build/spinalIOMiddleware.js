@@ -22,10 +22,13 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SpinalIOMiddleware = void 0;
 const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
-const spinalAPIMiddleware_1 = require("./spinalAPIMiddleware");
+const spinalAPIMiddleware_1 = __importDefault(require("./spinalAPIMiddleware"));
 class SpinalIOMiddleware extends spinal_organ_api_pubsub_1.Middleware {
     constructor(connect, argConfig) {
         super(connect, argConfig);

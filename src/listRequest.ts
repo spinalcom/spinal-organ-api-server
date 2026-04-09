@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import * as origList from '../finalList';
+import origList from '../finalList';
 import { relative, join, sep, resolve } from 'path';
 import { readdirSync, statSync, writeFile } from 'fs';
 

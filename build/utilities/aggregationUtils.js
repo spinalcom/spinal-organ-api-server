@@ -1,6 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.computeBucketedAggregation = exports.computeBucketedTimeWeightedMean = exports.parseBucketParam = exports.VALID_OPS = exports.parseAggregationParam = exports.toTimestamp = exports.computeTimeWeightedMean = exports.computeAggregation = void 0;
+exports.VALID_OPS = void 0;
+exports.computeAggregation = computeAggregation;
+exports.computeTimeWeightedMean = computeTimeWeightedMean;
+exports.toTimestamp = toTimestamp;
+exports.parseAggregationParam = parseAggregationParam;
+exports.parseBucketParam = parseBucketParam;
+exports.computeBucketedTimeWeightedMean = computeBucketedTimeWeightedMean;
+exports.computeBucketedAggregation = computeBucketedAggregation;
 // Utility functions for computing aggregations sum, min , max ,avg on time-series data.
 function computeAggregation(datas, operations) {
     const result = {};
@@ -41,7 +48,6 @@ function computeAggregation(datas, operations) {
     result['count'] = datas.length;
     return result;
 }
-exports.computeAggregation = computeAggregation;
 function computeTimeWeightedMean(datas, start, end) {
     if (!datas || datas.length === 0 || start >= end)
         return null;
@@ -79,7 +85,6 @@ function computeTimeWeightedMean(datas, start, end) {
         return null;
     return accum / duration;
 }
-exports.computeTimeWeightedMean = computeTimeWeightedMean;
 //
 function toTimestamp(value) {
     if (value instanceof Date)
@@ -88,7 +93,6 @@ function toTimestamp(value) {
         return new Date(value).getTime();
     return value;
 }
-exports.toTimestamp = toTimestamp;
 const VALID_OPS = ['sum', 'min', 'max', 'avg', 'twavg', 'time_weighted_avg'];
 exports.VALID_OPS = VALID_OPS;
 function parseAggregationParam(aggregationParam) {
@@ -116,7 +120,6 @@ function parseAggregationParam(aggregationParam) {
         needsTwavg,
     };
 }
-exports.parseAggregationParam = parseAggregationParam;
 /**
  * Parse the ? bucket query parameter and return the bucket size in milliseconds.
  * Supported formats: "hour", "day", "week", "month" (case-insensitive).
@@ -137,7 +140,6 @@ function parseBucketParam(bucket) {
         default: return null;
     }
 }
-exports.parseBucketParam = parseBucketParam;
 /**
  * Split the interval [start, end] into sub-intervals of size `bucketMs`
  * and compute the time-weighted average for each bucket.
@@ -150,7 +152,6 @@ exports.parseBucketParam = parseBucketParam;
 function computeBucketedTimeWeightedMean(datas, start, end, bucketMs) {
     return computeBucketedAggregation(datas, start, end, bucketMs, [], true);
 }
-exports.computeBucketedTimeWeightedMean = computeBucketedTimeWeightedMean;
 /**
  * Split the interval [start, end] into sub-intervals of size `bucketMs`
  * and compute the requested aggregation operations for each bucket.
@@ -201,5 +202,4 @@ function computeBucketedAggregation(datas, start, end, bucketMs, basicOps = [], 
     }
     return results;
 }
-exports.computeBucketedAggregation = computeBucketedAggregation;
 //# sourceMappingURL=aggregationUtils.js.map

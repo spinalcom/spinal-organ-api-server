@@ -49,7 +49,19 @@ export interface UserGetMultiple {
   organizations: boolean;
 }
 
-export interface NodeWithParent extends BasicNode {
+export interface NodeWithColor {
+  dynamicId: number;
+  staticId: string;
+  name: string;
+  type: string;
+  color: string; // hex color code
+}
+
+export interface NodeWithParent {
+  dynamicId: number;
+  staticId: string;
+  name: string;
+  type: string;
   parentDynamicId: number;
 }
 export interface CreateOrEditName {

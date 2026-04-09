@@ -22,48 +22,51 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 // const spinalServiceTimeSeries = require('../../spinalTimeSeries')();
-const spinalTimeSeries_1 = require("../spinalTimeSeries");
+const spinalTimeSeries_1 = __importDefault(require("../spinalTimeSeries"));
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-    * @swagger
-    * /api/v1/endpoint/{id}/timeSeries/push:
-    *   post:
-    *     security:
-    *       - bearerAuth:
-    *         - read
-    *     description: push new value
-    *     summary: push new value
-    *     tags:
-    *       - IoTNetwork & Time Series
-    *     parameters:
-    *      - in: path
-    *        name: id
-    *        description: use the dynamic ID
-    *        required: true
-    *        schema:
-    *          type: integer
-    *          format: int64
-    *     requestBody:
-    *       content:
-    *         application/json:
-    *           schema:
-    *             type: object
-    *             required:
-    *               - newValue
-    *             properties:
-    *                newValue:
-    *                 type: number
-    *     responses:
-    *       200:
-    *         description: Create Successfully
-    *       400:
-    *         description: Bad request
-    */
-    app.post("/api/v1/endpoint/:id/timeSeries/push", async (req, res, next) => {
+     * @swagger
+     * /api/v1/endpoint/{id}/timeSeries/push:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - read
+     *     description: push new value
+     *     summary: push new value
+     *     tags:
+     *       - IoTNetwork & Time Series
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - newValue
+     *             properties:
+     *                newValue:
+     *                 type: number
+     *     responses:
+     *       200:
+     *         description: Create Successfully
+     *       400:
+     *         description: Bad request
+     */
+    app.post('/api/v1/endpoint/:id/timeSeries/push', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const node = await spinalAPIMiddleware.load(parseInt(req.params.id), profileId);
@@ -72,7 +75,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const timeseries = await (0, spinalTimeSeries_1.default)().getOrCreateTimeSeries(node.getId().get());
             await timeseries.push(req.body.newValue);
             return res.status(200).json({
-                newValue: req.body.newValue
+                newValue: req.body.newValue,
             });
         }
         catch (error) {

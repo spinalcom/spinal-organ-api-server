@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRoomInventory = exports.getFloorInventory = void 0;
+exports.getFloorInventory = getFloorInventory;
+exports.getRoomInventory = getRoomInventory;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 function parseOptionalId(value) {
@@ -31,7 +32,6 @@ async function getRoomInventory(spinalAPIMiddleware, profileId, groupContext, dy
     const classifiedItems = await classifyItemsByGroup(equipmentList, groupContext, reqInfo, mapAdditionalInfo);
     return classifiedItems;
 }
-exports.getRoomInventory = getRoomInventory;
 async function getFloorInventory(spinalAPIMiddleware, profileId, groupContext, dynamicId, reqInfo) {
     const floor = await spinalAPIMiddleware.load(dynamicId, profileId);
     //@ts-ignore
@@ -61,7 +61,6 @@ async function getFloorInventory(spinalAPIMiddleware, profileId, groupContext, d
     const classifiedItems = await classifyItemsByGroup(equipmentList, groupContext, reqInfo, mapAdditionalInfo);
     return classifiedItems;
 }
-exports.getFloorInventory = getFloorInventory;
 async function cleanEmptyParentRelations(node) {
     const par = node.parents['groupHasBIMObject'];
     for (const pointeur of par) {
