@@ -78,8 +78,9 @@ async function classifyItemsByGroup(itemList, groupContext, reqInfo, mapAddition
     const groupIds = parseOptionalIds(reqInfo.groupIds);
     const categoryId = parseOptionalId(reqInfo.categoryId);
     const res = [];
+    const assignedItemIds = new Set();
     for (const item of itemList) {
-        let parentGroups = groupContext.getType().get() === 'geographicRoomGroupContext' ? await item.getParents("groupHasgeographicRoom") : await item.getParents("groupHasBIMObject");
+        let parentGroups = groupContext.getType().get() === 'geographicRoomGroupContext' ? await item.getParentsInContext(groupContext, "groupHasgeographicRoom") : await item.getParentsInContext(groupContext, "groupHasBIMObject");
         if (groupIds && groupIds.length > 0) {
             parentGroups = parentGroups.filter(e => groupIds.includes(e._server_id));
         }
@@ -87,15 +88,13 @@ async function classifyItemsByGroup(itemList, groupContext, reqInfo, mapAddition
             parentGroups = parentGroups.filter(e => reqInfo.groups.includes(e.getName().get()));
         }
         for (const parentGroup of parentGroups) {
-            if (!parentGroup.belongsToContext(groupContext)) { // if the group does not belong to the context skip
-                continue;
-            }
-            const parentCategories = await parentGroup.getParents("hasGroup");
+            const parentCategories = await parentGroup.getParentsInContext(groupContext, "hasGroup");
             const parentCategory = categoryId !== undefined
                 ? parentCategories.find(e => e._server_id === categoryId)
                 : parentCategories.find(e => e.getName().get() === reqInfo.category);
             if (!parentCategory)
-                continue; // if the category is not the one user requested, skip
+                continue;
+            assignedItemIds.add(item._server_id);
             if (!res.find(e => e.name === parentGroup.getName().get())) {
                 res.push({
                     name: parentGroup.getName().get(),
@@ -115,6 +114,28 @@ async function classifyItemsByGroup(itemList, groupContext, reqInfo, mapAddition
                 ...additionalInfo,
                 position,
                 area
+            });
+        }
+    }
+    if (reqInfo.includeUnassignedItems) {
+        const unassignedItems = [];
+        for (const item of itemList) {
+            if (!assignedItemIds.has(item._server_id)) {
+                const additionalInfo = mapAdditionalInfo.get(item._server_id);
+                const position = reqInfo.includePosition ? await getCoordinate(item) : undefined;
+                const area = reqInfo.includeArea ? await getArea(item) : undefined;
+                unassignedItems.push({
+                    ...getDetail(item, reqInfo),
+                    ...additionalInfo,
+                    position,
+                    area
+                });
+            }
+        }
+        if (unassignedItems.length > 0) {
+            res.push({
+                name: 'unassignedItems',
+                groupItems: unassignedItems
             });
         }
     }

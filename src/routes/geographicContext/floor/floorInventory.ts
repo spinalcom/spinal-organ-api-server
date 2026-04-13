@@ -75,6 +75,12 @@ module.exports = function (
    *         required: false
    *         schema:
    *           type: boolean
+   *       - in: query
+   *         name: includeUnassignedItems
+   *         description: Include items not assigned to any group
+   *         required: false
+   *         schema:
+   *           type: boolean
    * 
    *     requestBody:
    *       required: true
@@ -123,12 +129,14 @@ module.exports = function (
       const includePosition = req.query.includePosition === "true" || false;
       const includeArea = req.query.includeArea === "true" || false;
       const onlyDynamicId = req.query.onlyDynamicId === "true" || false;
+      const includeUnassignedItems = req.query.includeUnassignedItems === "true" || false;
 
       const reqInfo = {
         ...req.body,
         includePosition,
         includeArea,
         onlyDynamicId,
+        includeUnassignedItems,
       }
 
       const inventory = await getFloorInventory(spinalAPIMiddleware, profileId, groupContext, parseInt(req.params.id, 10), reqInfo);

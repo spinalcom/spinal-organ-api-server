@@ -367,5 +367,6 @@ module.exports = [
   "../src/routes/interface/EndPointNode.ts",
   "../src/routes/interface/EndPointNodeMultiple.ts",
   "../src/routes/interface/Node.ts",
-  "../src/routes/interface/Relation.ts"
+  "../src/routes/interface/Relation.ts",
+  "../src/routes/groupContext/group/unassignItem.ts"
 ]

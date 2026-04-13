@@ -253,6 +253,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./groupContext/group/updateGroup')(logger, app, spinalAPIMiddleware);
     require('./groupContext/group/deleteGroup')(logger, app, spinalAPIMiddleware);
     require('./groupContext/group/readGroup')(logger, app, spinalAPIMiddleware);
+    require('./groupContext/group/unassignItem')(logger, app, spinalAPIMiddleware);
     // notes routes
     require('./notes/addNotes')(logger, app, spinalAPIMiddleware);
     // require('./notes/getnotes')(logger, app, spinalAPIMiddleware);

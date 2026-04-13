@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 13-04-2026 -> v1.1.11
+- Many documentation corrections
+- Added optional query param in floor inventory to include unassigned items 
+- Added new route /api/v1/groupContext/:contextId/category/:categoryId/group/:groupId/unassign_items to unassign items from a group
+
 ## 02-04-2026 -> v1.1.10
 - Floor inventory now supports includePosition on rooms 
 
