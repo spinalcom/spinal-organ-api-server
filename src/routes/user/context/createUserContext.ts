@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2026 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -24,9 +24,11 @@
 
 import { z } from 'zod';
 import validate from 'express-zod-safe';
-import { getProfileId } from '../../../utilities/requestUtilities';
 import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import type { Express } from 'express';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { createSpinalUserContext } from 'spinal-model-user-service';
+import { createBasicNodeSync } from '../../../utilities/createBasicNode';
 
 module.exports = function (
   logger: any,
@@ -39,11 +41,11 @@ module.exports = function (
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: create a user context
-   *     summary: create a user context
+   *         - write
+   *     summary: Create a user context
+   *     description: Create a user context
    *     tags:
-   *       - User Context
+   *       - User
    *     requestBody:
    *       content:
    *         application/json:
@@ -80,18 +82,30 @@ module.exports = function (
       try {
         const profileId = getProfileId(req);
         const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
-        if (!userGraph) res.status(401).send(`No graph found for ${profileId}`);
+        if (!userGraph)
+          throw { code: 401, message: `No graph found for ${profileId}` };
+        const { name } = req.body;
 
-        console.log(
-          'Creating user context with name:',
-          req.body.name,
-          'and type:',
-          req.body.type
-        );
-
-        res.status(201).json();
+        try {
+          const userContextAndGroups = await createSpinalUserContext(
+            name,
+            userGraph
+          );
+          const result = await createBasicNodeSync(
+            userContextAndGroups.context
+          );
+          res.status(201).json(result);
+        } catch (error) {
+          throw {
+            code: 400,
+            message:
+              error instanceof Error
+                ? error.message
+                : 'Failed to create user context',
+          };
+        }
       } catch (error: any) {
-        if (error.code && error.message)
+        if (error?.code && error?.message)
           return res.status(error.code).send(error.message);
         return res
           .status(500)

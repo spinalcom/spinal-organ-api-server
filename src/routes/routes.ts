@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2026 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -26,9 +25,13 @@
 import * as express from 'express';
 // import type SpinalAPIMiddleware from '../spinalAPIMiddleware';
 
-import { ISpinalAPIMiddleware } from "../interfaces";
+import { ISpinalAPIMiddleware } from '../interfaces';
 
-function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+function routes(
+  logger: any,
+  app: express.Application,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   //contexts routes
 
   require('./contexts/contextList')(logger, app, spinalAPIMiddleware);
@@ -63,19 +66,55 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   require('./nodes/relationChildrenNode')(logger, app, spinalAPIMiddleware);
   require('./nodes/relationParentNode')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeChildren')(logger, app, spinalAPIMiddleware);
-  require('./nodes/nodeChildrenSpecificRelations')(logger, app, spinalAPIMiddleware);
-  require('./nodes/nodeChildrenSpecificRelationsMultiple')(logger, app, spinalAPIMiddleware);
-  require('./nodes/nodeChildrenInContextSpecificRelations')(logger, app, spinalAPIMiddleware);
-  require('./nodes/nodeChildrenInContextSpecificRelationsMultiple')(logger, app, spinalAPIMiddleware);
-  require('./nodes/nodeParentsSpecificRelations')(logger, app, spinalAPIMiddleware);
-  require('./nodes/nodeParentsSpecificRelationsMultiple')(logger, app, spinalAPIMiddleware);
-  require('./nodes/nodeParentInContextSpecificRelations')(logger, app, spinalAPIMiddleware);
-  require('./nodes/nodeParentInContextSpecificRelationsMultiple')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeChildrenSpecificRelations')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./nodes/nodeChildrenSpecificRelationsMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./nodes/nodeChildrenInContextSpecificRelations')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./nodes/nodeChildrenInContextSpecificRelationsMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./nodes/nodeParentsSpecificRelations')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./nodes/nodeParentsSpecificRelationsMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./nodes/nodeParentInContextSpecificRelations')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./nodes/nodeParentInContextSpecificRelationsMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./nodes/nodeParents')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeEndPointList')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeEndPointListMultiple')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeControlEndPointList')(logger, app, spinalAPIMiddleware);
-  require('./nodes/nodeControlEndPointListMultiple')(logger, app, spinalAPIMiddleware);
+  require('./nodes/nodeControlEndPointListMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./nodes/nodeTicketList')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeTicketListMultiple')(logger, app, spinalAPIMiddleware);
   require('./nodes/nodeNoteList')(logger, app, spinalAPIMiddleware);
@@ -91,7 +130,11 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   //attributs routes
   require('./attributs/attributList')(logger, app, spinalAPIMiddleware);
   require('./attributs/attributListMultiple')(logger, app, spinalAPIMiddleware);
-  require('./attributs/updateAttributeMultiple')(logger, app, spinalAPIMiddleware);
+  require('./attributs/updateAttributeMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./attributs/createAttribut')(logger, app, spinalAPIMiddleware);
   require('./attributs/updateAttribute')(logger, app, spinalAPIMiddleware);
   require('./attributs/deleteAttribute')(logger, app, spinalAPIMiddleware);
@@ -222,7 +265,11 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   );
   require('./tickets/tickets/ticketArchive')(logger, app, spinalAPIMiddleware);
   require('./tickets/tickets/readTicket')(logger, app, spinalAPIMiddleware);
-  require('./tickets/tickets/readTicketMultiple')(logger, app, spinalAPIMiddleware);
+  require('./tickets/tickets/readTicketMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./tickets/tickets/ticketChangeProcess')(
     logger,
     app,
@@ -239,7 +286,11 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     spinalAPIMiddleware
   );
   require('./tickets/tickets/ticketUpdate')(logger, app, spinalAPIMiddleware);
-  require('./tickets/tickets/ticketMoveToStep')(logger, app, spinalAPIMiddleware);
+  require('./tickets/tickets/ticketMoveToStep')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./tickets/tickets/ticketFindEntity')(
     logger,
     app,
@@ -255,8 +306,6 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
-
-
 
   //endPoints routes
   require('./IoTNetwork/IoTNetworkContext/IoTNetworkList')(
@@ -644,7 +693,11 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     spinalAPIMiddleware
   );
 
-  require('./geographicContext/viewInfo').default(logger, app, spinalAPIMiddleware);
+  require('./geographicContext/viewInfo').default(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./geographicContext/viewInfo2')(logger, app, spinalAPIMiddleware);
 
   // calendar & Event
@@ -688,9 +741,12 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   require('./calendar/Events/updateEvent')(logger, app, spinalAPIMiddleware);
   require('./calendar/Events/createEvent')(logger, app, spinalAPIMiddleware);
   require('./calendar/Events/readEvent')(logger, app, spinalAPIMiddleware);
-  require('./calendar/Events/readEventMultiple')(logger, app, spinalAPIMiddleware);
+  require('./calendar/Events/readEventMultiple')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./calendar/Events/eventList')(logger, app, spinalAPIMiddleware);
-
 
   // group context
   require('./groupContext/groupeContextTypeList')(
@@ -1132,7 +1188,11 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   require('./analytics/roomResume')(logger, app, spinalAPIMiddleware);
 
   require('./analysis/global/getInputTypes')(logger, app, spinalAPIMiddleware);
-  require('./analysis/global/getTriggerTypes')(logger, app, spinalAPIMiddleware);
+  require('./analysis/global/getTriggerTypes')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./analysis/global/getAlgorithms')(logger, app, spinalAPIMiddleware);
   require('./analysis/contexts/createContext')(
     logger,
@@ -1140,23 +1200,11 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     spinalAPIMiddleware
   );
 
-  require('./analysis/contexts/getContexts')(
-    logger,
-    app,
-    spinalAPIMiddleware
-  );
+  require('./analysis/contexts/getContexts')(logger, app, spinalAPIMiddleware);
 
-  require('./analysis/contexts/getContext')(
-    logger,
-    app,
-    spinalAPIMiddleware
-  );
+  require('./analysis/contexts/getContext')(logger, app, spinalAPIMiddleware);
 
-  require('./analysis/contexts/getAnalytics')(
-    logger,
-    app,
-    spinalAPIMiddleware
-  );
+  require('./analysis/contexts/getAnalytics')(logger, app, spinalAPIMiddleware);
 
   require('./analysis/contexts/createAnalytics')(
     logger,
@@ -1164,11 +1212,7 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     spinalAPIMiddleware
   );
 
-  require('./analysis/analytics/getAnalytic')(
-    logger,
-    app,
-    spinalAPIMiddleware
-  );
+  require('./analysis/analytics/getAnalytic')(logger, app, spinalAPIMiddleware);
   // command
   require('./command/roomListCommandEnable')(logger, app, spinalAPIMiddleware);
   require('./command/roomCommandLight')(logger, app, spinalAPIMiddleware);
@@ -1197,8 +1241,19 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
   require('./health/testTimeout')(logger, app, spinalAPIMiddleware);
 
   require('./user/context/createUserContext')(logger, app, spinalAPIMiddleware);
+  require('./user/context/getUserContextById')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./user/context/getUserContext')(logger, app, spinalAPIMiddleware);
 
-
+  require('./user/user/createUser')(logger, app, spinalAPIMiddleware);
+  require('./user/user/deleteUser')(logger, app, spinalAPIMiddleware);
+  require('./user/user/getUserByContext')(logger, app, spinalAPIMiddleware);
+  require('./user/user/getUserMultiple')(logger, app, spinalAPIMiddleware);
+  require('./user/user/getUser')(logger, app, spinalAPIMiddleware);
+  require('./user/user/updateUser')(logger, app, spinalAPIMiddleware);
 }
 
 export default routes;

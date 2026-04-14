@@ -22,50 +22,51 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-// import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
-import { SpinalContext, SpinalNode, SpinalGraphService } from 'spinal-env-viewer-graph-service'
-import { ROOM_TYPE } from 'spinal-env-viewer-context-geographic-service/build/constants'
+import groupManagerService from 'spinal-env-viewer-plugin-group-manager-service';
+import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
+import { ROOM_TYPE } from 'spinal-env-viewer-context-geographic-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 import { awaitSync } from '../../../utilities/awaitSync';
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (
+  logger: any,
+  app: express.Express,
+  spinalAPIMiddleware: ISpinalAPIMiddleware
+) {
   /**
- * @swagger
- * /api/v1/roomsGroup/create:
- *   post:
- *     security: 
- *       - bearerAuth: 
- *         - read
- *     description: create Rooms Group context
- *     summary: create Rooms Group context
- *     tags:
- *       - Rooms Group
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - contextName
- *             properties:
- *                contextName:
- *                 type: string
- *                contextColor:
- *                 type: string
- *                contextIcon:
- *                 type: string
- *     responses:
- *       200:
- *         description: Create Successfully
- *       400:
- *         description: Bad request
-*/
+   * @swagger
+   * /api/v1/roomsGroup/create:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     description: create Rooms Group context
+   *     summary: create Rooms Group context
+   *     tags:
+   *       - Rooms Group
+   *     requestBody:
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - contextName
+   *             properties:
+   *                contextName:
+   *                 type: string
+   *                contextColor:
+   *                 type: string
+   *                contextIcon:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Create Successfully
+   *       400:
+   *         description: Bad request
+   */
 
-
-  app.post("/api/v1/roomsGroup/create", async (req, res, next) => {
-
+  app.post('/api/v1/roomsGroup/create', async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
       const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
@@ -74,20 +75,23 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const graph = await spinalAPIMiddleware.getGraph();
       await SpinalGraphService.setGraph(graph);
 
-      const contextExist = await graph.getContext(req.body.contextName)
+      const contextExist = await graph.getContext(req.body.contextName);
       if (contextExist) {
-        return res.status(400).send("Context name already exists")
+        return res.status(400).send('Context name already exists');
       }
-  
-      const context = await groupManagerService.createGroupContext(req.body.contextName, ROOM_TYPE)
-      if(req.body.contextColor){
-        context.info.add_attr({color : req.body.contextColor})
+
+      const context = await groupManagerService.createGroupContext(
+        req.body.contextName,
+        ROOM_TYPE
+      );
+      if (req.body.contextColor) {
+        context.info.add_attr({ color: req.body.contextColor });
       }
-      if(req.body.contextIcon){
-        context.info.add_attr({icon : req.body.contextIcon})
+      if (req.body.contextIcon) {
+        context.info.add_attr({ icon: req.body.contextIcon });
       }
       await awaitSync(context); // Wait for the _server_id to be assigned by hub
-      if(userGraph._server_id != graph._server_id){
+      if (userGraph._server_id != graph._server_id) {
         await userGraph.addContext(context);
       }
 
@@ -97,12 +101,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         dynamicId: context._server_id,
         type: context.getType().get(),
         icon: context.info.icon?.get(),
-        color: context.info.color?.get()
+        color: context.info.color?.get(),
       });
-    } catch (error) {
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      return res.status(400).send(error.message)
+    } catch (error: any) {
+      if (error?.code && error?.message)
+        return res.status(error.code).send(error.message);
+      return res.status(400).send(error?.message);
     }
-  })
-
-}
+  });
+};

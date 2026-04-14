@@ -28,42 +28,42 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_plugin_group_manager_service_1 = __importDefault(require("spinal-env-viewer-plugin-group-manager-service"));
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const constants_1 = require("spinal-env-viewer-context-geographic-service/build/constants");
+const spinal_env_viewer_context_geographic_service_1 = require("spinal-env-viewer-context-geographic-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const awaitSync_1 = require("../../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/roomsGroup/create:
-   *   post:
-   *     security:
-   *       - bearerAuth:
-   *         - read
-   *     description: create Rooms Group context
-   *     summary: create Rooms Group context
-   *     tags:
-   *       - Rooms Group
-   *     requestBody:
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - contextName
-   *             properties:
-   *                contextName:
-   *                 type: string
-   *                contextColor:
-   *                 type: string
-   *                contextIcon:
-   *                 type: string
-   *     responses:
-   *       200:
-   *         description: Create Successfully
-   *       400:
-   *         description: Bad request
-  */
-    app.post("/api/v1/roomsGroup/create", async (req, res, next) => {
+     * @swagger
+     * /api/v1/roomsGroup/create:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - write
+     *     description: create Rooms Group context
+     *     summary: create Rooms Group context
+     *     tags:
+     *       - Rooms Group
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - contextName
+     *             properties:
+     *                contextName:
+     *                 type: string
+     *                contextColor:
+     *                 type: string
+     *                contextIcon:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: Create Successfully
+     *       400:
+     *         description: Bad request
+     */
+    app.post('/api/v1/roomsGroup/create', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
@@ -73,9 +73,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             await spinal_env_viewer_graph_service_1.SpinalGraphService.setGraph(graph);
             const contextExist = await graph.getContext(req.body.contextName);
             if (contextExist) {
-                return res.status(400).send("Context name already exists");
+                return res.status(400).send('Context name already exists');
             }
-            const context = await spinal_env_viewer_plugin_group_manager_service_1.default.createGroupContext(req.body.contextName, constants_1.ROOM_TYPE);
+            const context = await spinal_env_viewer_plugin_group_manager_service_1.default.createGroupContext(req.body.contextName, spinal_env_viewer_context_geographic_service_1.ROOM_TYPE);
             if (req.body.contextColor) {
                 context.info.add_attr({ color: req.body.contextColor });
             }
@@ -92,13 +92,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 dynamicId: context._server_id,
                 type: context.getType().get(),
                 icon: context.info.icon?.get(),
-                color: context.info.color?.get()
+                color: context.info.color?.get(),
             });
         }
         catch (error) {
-            if (error.code && error.message)
+            if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            return res.status(400).send(error.message);
+            return res.status(400).send(error?.message);
         }
     });
 };

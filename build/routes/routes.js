@@ -1,12 +1,11 @@
 "use strict";
-/* eslint-disable @typescript-eslint/no-var-requires */
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2026 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -374,6 +373,14 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./health/organStatus')(logger, app, spinalAPIMiddleware);
     require('./health/testTimeout')(logger, app, spinalAPIMiddleware);
     require('./user/context/createUserContext')(logger, app, spinalAPIMiddleware);
+    require('./user/context/getUserContextById')(logger, app, spinalAPIMiddleware);
+    require('./user/context/getUserContext')(logger, app, spinalAPIMiddleware);
+    require('./user/user/createUser')(logger, app, spinalAPIMiddleware);
+    require('./user/user/deleteUser')(logger, app, spinalAPIMiddleware);
+    require('./user/user/getUserByContext')(logger, app, spinalAPIMiddleware);
+    require('./user/user/getUserMultiple')(logger, app, spinalAPIMiddleware);
+    require('./user/user/getUser')(logger, app, spinalAPIMiddleware);
+    require('./user/user/updateUser')(logger, app, spinalAPIMiddleware);
 }
 exports.default = routes;
 //# sourceMappingURL=routes.js.map

@@ -3,7 +3,7 @@
   "info": {
     "title": "SpinalCore Graph API",
     "version": "1.0.0",
-    "description": "Welcome to the reference documentation for the Spinalcore Digital Twin REST API! </br></br>To learn about the common use cases and concept of Spinalcore REST APIs, check out our resource center  (https://resourcecenter.fr.spinalcom.com/ressources-d%C3%A9veloppeur).</br></br>In addition to Spinalcore API Reference, we also provide complete documentation for integrator that need to install and implement Spinalcore Digital Twin Operating System on their built environment (https://resourcecenter.fr.spinalcom.com/ressources-int%C3%A9grateur)",
+    "description": "Welcome to the reference documentation for the Spinalcore Digital Twin REST API! <br><br>To learn about the common use cases and concept of Spinalcore REST APIs, check out our <a href=\"https://resourcecenter.fr.spinalcom.com/ressources-d%C3%A9veloppeur\" target=\"_blank\">resource center</a>.<br><br>In addition to Spinalcore API Reference, we also provide complete documentation for integrators that need to install and implement Spinalcore Digital Twin Operating System on their built environment: <a href=\"https://resourcecenter.fr.spinalcom.com/ressources-int%C3%A9grateur\" target=\"_blank\">Integrator Documentation</a>.",
     "termsOfService": "http://resources.spinalcom.com/licenses.pdf",
     "contact": {
       "email": "developers@spinalcom.com"
@@ -274,6 +274,127 @@
             "items": {
               "$ref": "#/components/schemas/EndPointNode"
             }
+          }
+        }
+      },
+      "IOrganization": {
+        "type": "object",
+        "required": [
+          "dynamicId",
+          "staticId",
+          "name",
+          "type"
+        ],
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "userGroupId": {
+            "type": "string"
+          }
+        }
+      },
+      "IUser": {
+        "type": "object",
+        "required": [
+          "dynamicId",
+          "staticId",
+          "email"
+        ],
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IUserGroup"
+            }
+          },
+          "organizations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IOrganization"
+            }
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "description": "A key-value pair object representing user attributes, where the key is the attribute name and the value is the attribute value."
+            }
+          }
+        },
+        "example": {
+          "dynamicId": 12345,
+          "staticId": "user-12345",
+          "email": "user@example.com",
+          "groups": [
+            {
+              "dynamicId": 1,
+              "staticId": "group-1",
+              "name": "Group 1",
+              "type": "SpinalUserGroup",
+              "color": "red"
+            }
+          ],
+          "organizations": [
+            {
+              "dynamicId": 1,
+              "staticId": "org-1",
+              "name": "Organization 1",
+              "type": "Organization",
+              "color": "blue"
+            }
+          ],
+          "attributes": {
+            "name": "John",
+            "lastname": "Doe"
+          }
+        }
+      },
+      "IUserGroup": {
+        "type": "object",
+        "required": [
+          "dynamicId",
+          "staticId",
+          "name",
+          "type",
+          "color"
+        ],
+        "properties": {
+          "dynamicId": {
+            "type": "integer"
+          },
+          "staticId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
           }
         }
       },
@@ -4021,14 +4142,14 @@
         "security": [
           {
             "bearerAuth": [
-              "read"
+              "write"
             ]
           }
         ],
-        "description": "create a user context",
-        "summary": "create a user context",
+        "summary": "Create a user context",
+        "description": "Create a user context",
         "tags": [
-          "User Context"
+          "User"
         ],
         "requestBody": {
           "content": {
@@ -4063,6 +4184,587 @@
           },
           "400": {
             "description": "failed to create user context"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve all User Context or a specific one by name",
+        "description": "Get all the User Context or a specific one if the name query parameter is provided",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "name",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "name of the user context to retrieve"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieve Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/BasicNode"
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/BasicNode"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "User context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/user/context/{contextId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "description": "Get a specific User Context by its dynamic ID",
+        "summary": "Get a specific User Context by its dynamic ID",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "dynamic ID of the user context to retrieve"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieve Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/BasicNode"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "User context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/user/context/{contextId}/user": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "create a SpinalUser in a SpinalUserContext",
+        "description": "Create a SpinalUser in a SpinalUserContext.",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "dynamic ID of the user context to retrieve"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Create Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IUser"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "User context not found"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Get SpinalUser(s) from a SpinalUserContext",
+        "description": "Get SpinalUsers from a SpinalUserContext or a specific one if the name query parameter is provided, with the possibility to add the groups and organizations which the user belongs to in the response. There is a limit of 100 users that can be retrieved, use the query offset to retrieve the next users if there is more than 100 users in the context.",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "dynamic ID of the user context to retrieve"
+            }
+          },
+          {
+            "in": "query",
+            "name": "name",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "name of the user to retrieve"
+            }
+          },
+          {
+            "in": "query",
+            "name": "startingAlphaNum",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9]|(special)$",
+              "description": "starting alphanumeric character for filtering users, for example if startingAlphaNum is \"A\", only users whose name starts with \"A\" will be retrieved, this filter is case insensitive. Only works with /^[a-zA-Z0-9]|(special)$/, for other characters use 'special'."
+            }
+          },
+          {
+            "in": "query",
+            "name": "attributes",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "add the attributes of the user in the response",
+              "default": false
+            }
+          },
+          {
+            "in": "query",
+            "name": "groups",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "add the groups which the user belongs to in the response",
+              "default": false
+            }
+          },
+          {
+            "in": "query",
+            "name": "organizations",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "add the organizations which the user belongs to in the response",
+              "default": false
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "offset for pagination",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieve Successfully",
+            "headers": {
+              "x-has-more": {
+                "description": "Indicates if there are more users to retrieve ('true' or 'false')",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/IUser"
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/IUser"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "User context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/user/{userId}": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Delete a SpinalUser by ID",
+        "description": "Delete a SpinalUser by their unique ID. Once you delete a user, there is no going back. Please be certain.",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "dynamic ID of the user to delete"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Delete Successfully"
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve a SpinalUser by ID",
+        "description": "Retrieve a SpinalUser by their unique ID.",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "dynamic ID of the user to retrieve"
+            }
+          },
+          {
+            "in": "query",
+            "name": "attributes",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "add the attributes of the user in the response",
+              "default": false
+            }
+          },
+          {
+            "in": "query",
+            "name": "groups",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "add the groups which the user belongs to in the response",
+              "default": false
+            }
+          },
+          {
+            "in": "query",
+            "name": "organizations",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "add the organizations which the user belongs to in the response",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieve Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IUser"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "patch": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Update a SpinalUser by ID",
+        "description": "Update a SpinalUser by their unique ID.",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "dynamic ID of the user to retrieve"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Retrieve Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IUser"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/api/v1/user/multiple": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve multiple SpinalUsers by their IDs",
+        "description": "Retrieve multiple SpinalUsers by their unique IDs.",
+        "tags": [
+          "User"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "userIds"
+                ],
+                "properties": {
+                  "userIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "description": "array of dynamic IDs of the users to retrieve"
+                  },
+                  "attributes": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "whether to include user attributes in the response"
+                  },
+                  "groups": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "whether to include user groups in the response"
+                  },
+                  "organizations": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "whether to include user organizations in the response"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Retrieve Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/IUser"
+                      },
+                      {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
           }
         }
       }
@@ -16119,7 +16821,7 @@
         "security": [
           {
             "bearerAuth": [
-              "read"
+              "write"
             ]
           }
         ],
