@@ -55,6 +55,7 @@ export interface IUser {
     dynamicId: number;
     staticId: string;
     email: string;
+    color: string;
     groups?: IUserGroup[];
     organizations?: IOrganization[];
     attributes?: Record<string, string>;

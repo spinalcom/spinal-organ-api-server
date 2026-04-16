@@ -58,7 +58,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *           application/json:
      *             schema:
      *               type: object
-     *               $ref: '#/components/schemas/BasicNode'
+     *               $ref: '#/components/schemas/BasicNodeWithColor'
      *       400:
      *         description: Bad request - Invalid input or parameters
      *       404:
@@ -85,7 +85,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         code: 404,
                         message: `No user context found with the ID ${contextId}`,
                     };
-                const result = await (0, createBasicNode_1.createBasicNodeSync)(userContext.context);
+                const result = await (0, createBasicNode_1.createBasicNodeSync)(userContext.context, [
+                    'color',
+                ]);
                 res.status(200).json(result);
             }
             catch (error) {

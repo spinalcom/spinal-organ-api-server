@@ -44,6 +44,7 @@ export async function getUserData(
     dynamicId: userNode._server_id!,
     staticId: userNode.info.id.get(),
     email: userNode.info.name.get(),
+    color: userNode.info.color.get(),
   };
 
   const [categoryAttr, groupNodes] = await Promise.all([
@@ -73,6 +74,7 @@ export async function getUserData(
 
     const orgIdSeen = new Set<number>();
     for (const orgNodes of organizationNodes) {
+      if (!Array.isArray(orgNodes.orgs)) continue;
       for (const orgNode of orgNodes.orgs) {
         if (!orgIdSeen.has(orgNode._server_id!)) {
           orgIdSeen.add(orgNode._server_id!);

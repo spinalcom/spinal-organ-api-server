@@ -368,5 +368,14 @@ module.exports = [
   "../src/routes/BIM/scenes/list.ts",
   "../src/routes/BIM/scenes/sceneUtils.ts",
   "../src/routes/BIM/viewer/viewer.ts",
-  "../src/routes/user/user/updateUser.ts"
+  "../src/routes/user/user/updateUser.ts",
+  "../src/routes/userGroup/context/createUserGroupContext.ts",
+  "../src/routes/userGroup/context/getUserGroupContext.ts",
+  "../src/routes/userGroup/context/getUserGroupContextById.ts",
+  "../src/routes/userGroup/context/deleteUserGroupContextById.ts",
+  "../src/routes/userGroup/context/updateUserGroupContextById.ts",
+  "../src/routes/userGroup/category/createUserCategoryGroup.ts",
+  "../src/routes/userGroup/category/getUserCategoryGroup.ts",
+  "../src/routes/userGroup/category/getUserCategoryGroupByContext.ts",
+  "../src/routes/userGroup/category/updateUserCategoryGroup.ts"
 ]

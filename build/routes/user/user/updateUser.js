@@ -31,6 +31,8 @@ const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
 const spinal_model_graph_1 = require("spinal-model-graph");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getUserData_1 = require("../../../utilities/getUserData");
+const spinal_model_user_service_1 = require("spinal-model-user-service");
+const zodAtLeastOne_1 = require("../../../utilities/zodAtLeastOne");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -56,12 +58,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         application/json:
      *           schema:
      *             type: object
-     *             required:
-     *               - email
      *             properties:
      *               email:
      *                 type: string
      *                 maxLength: 200
+     *                 minLength: 1
+     *               color:
+     *                 type: string
+     *                 pattern: '^#([A-Fa-f0-9]{6})$'
+     *                 description: Hexadecimal color code for the user (e.g., #RRGGBB)
      *               attributes:
      *                 type: object
      *                 additionalProperties:
@@ -80,15 +85,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       401:
      *         description: no graph found for the user
      */
-    app.get('/api/v1/user/:userId', (0, express_zod_safe_1.default)({
+    app.patch('/api/v1/user/:userId', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({
             userId: zod_1.z.coerce.number().positive(),
         }),
-        query: zod_1.z.strictObject({
-            attributes: zod_1.z.coerce.boolean().optional().default(false),
-            groups: zod_1.z.coerce.boolean().optional().default(false),
-            organizations: zod_1.z.coerce.boolean().optional().default(false),
-        }),
+        body: (0, zodAtLeastOne_1.atLeastOne)(zod_1.z.strictObject({
+            email: zod_1.z.string().max(200).min(1).optional(),
+            color: zod_1.z
+                .string()
+                .regex(/^#([A-Fa-f0-9]{6})$/)
+                .optional(),
+            attributes: zod_1.z.record(zod_1.z.string(), zod_1.z.string()).optional(),
+        })),
     }), async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
@@ -96,7 +104,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!userGraph)
                 throw { code: 401, message: `No graph found for ${profileId}` };
             const { userId } = req.params;
-            const { attributes, groups, organizations } = req.query;
+            const { email, color, attributes } = req.body;
             try {
                 const userNode = await spinalAPIMiddleware.load(userId, profileId);
                 if (!userNode ||
@@ -104,7 +112,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     userNode.info.type.get() !== 'SpinalUser') {
                     throw { code: 404, message: `User not found` };
                 }
-                const result = await (0, getUserData_1.getUserData)(userNode, attributes, groups, organizations);
+                await (0, spinal_model_user_service_1.updateSpinalUser)(userNode, email, color, attributes || {});
+                const result = await (0, getUserData_1.getUserData)(userNode, true, false, false);
                 res.status(200).json(result);
             }
             catch (error) {

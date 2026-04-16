@@ -29,6 +29,8 @@ import type { Express } from 'express';
 import { SpinalNode } from 'spinal-model-graph';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { getUserData } from '../../../utilities/getUserData';
+import { updateSpinalUser } from 'spinal-model-user-service';
+import { atLeastOne } from '../../../utilities/zodAtLeastOne';
 
 module.exports = function (
   logger: any,
@@ -59,12 +61,15 @@ module.exports = function (
    *         application/json:
    *           schema:
    *             type: object
-   *             required:
-   *               - email
    *             properties:
    *               email:
    *                 type: string
    *                 maxLength: 200
+   *                 minLength: 1
+   *               color:
+   *                 type: string
+   *                 pattern: '^#([A-Fa-f0-9]{6})$'
+   *                 description: Hexadecimal color code for the user (e.g., #RRGGBB)
    *               attributes:
    *                 type: object
    *                 additionalProperties:
@@ -83,17 +88,22 @@ module.exports = function (
    *       401:
    *         description: no graph found for the user
    */
-  app.get(
+  app.patch(
     '/api/v1/user/:userId',
     validate({
       params: z.strictObject({
         userId: z.coerce.number().positive(),
       }),
-      query: z.strictObject({
-        attributes: z.coerce.boolean().optional().default(false),
-        groups: z.coerce.boolean().optional().default(false),
-        organizations: z.coerce.boolean().optional().default(false),
-      }),
+      body: atLeastOne(
+        z.strictObject({
+          email: z.string().max(200).min(1).optional(),
+          color: z
+            .string()
+            .regex(/^#([A-Fa-f0-9]{6})$/)
+            .optional(),
+          attributes: z.record(z.string(), z.string()).optional(),
+        })
+      ),
     }),
     async (req, res) => {
       try {
@@ -102,7 +112,7 @@ module.exports = function (
         if (!userGraph)
           throw { code: 401, message: `No graph found for ${profileId}` };
         const { userId } = req.params;
-        const { attributes, groups, organizations } = req.query;
+        const { email, color, attributes } = req.body;
         try {
           const userNode = await spinalAPIMiddleware.load<SpinalNode>(
             userId,
@@ -116,12 +126,8 @@ module.exports = function (
             throw { code: 404, message: `User not found` };
           }
 
-          const result = await getUserData(
-            userNode,
-            attributes,
-            groups,
-            organizations
-          );
+          await updateSpinalUser(userNode, email, color, attributes || {});
+          const result = await getUserData(userNode, true, false, false);
           res.status(200).json(result);
         } catch (error) {
           throw {

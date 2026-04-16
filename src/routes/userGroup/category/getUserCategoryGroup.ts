@@ -22,11 +22,12 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { z } from 'zod';
-import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import type { Express } from 'express';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import { z } from 'zod';
 import validate from 'express-zod-safe';
-import { createSpinalUserGroupContext } from 'spinal-model-user-service';
+import { SpinalNode } from 'spinal-model-graph';
+import { SPINAL_USER_GROUP_CATEGORY_TYPE } from 'spinal-model-user-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { createBasicNodeSync } from '../../../utilities/createBasicNode';
 
@@ -37,46 +38,38 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/user-group/context:
-   *   post:
+   * /api/v1/user-group/category/{categoryId}:
+   *   get:
    *     security:
    *       - bearerAuth:
-   *         - write
-   *     summary: Create a user group context
-   *     description: Create a user group context
+   *         - read
+   *     summary: Get a user group category by ID
+   *     description: Get a user group category by ID
    *     tags:
-   *       - User
-   *     requestBody:
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - name
-   *             properties:
-   *               name:
-   *                 type: string
-   *                 maxLength: 200
-   *                 description: name of the user group context to create
+   *       - User Group
+   *     parameters:
+   *       - in: path
+   *         name: categoryId
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *         description: The ID of the user group category to retrieve
    *     responses:
-   *       201:
-   *         description: Create Successfully
+   *       200:
+   *         description: Successfully retrieved the user group category
    *         content:
    *           application/json:
    *             schema:
    *               type: object
-   *               $ref: '#/components/schemas/BasicNode'
-   *       400:
-   *         description: failed to create user group context
+   *               $ref: '#/components/schemas/BasicNodeWithColor'
    *       401:
    *         description: no graph found for the user
    */
-  app.post(
-    '/api/v1/user-group/context',
+  app.get(
+    '/api/v1/user-group/category/:categoryId',
     validate({
-      body: z.strictObject({
-        name: z.string().max(200),
-      }),
+      params: z.object({ categoryId: z.coerce.number().positive() }),
     }),
     async (req, res) => {
       try {
@@ -84,25 +77,31 @@ module.exports = function (
         const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
         if (!userGraph)
           throw { code: 401, message: `No graph found for ${profileId}` };
-        const { name } = req.body;
-
+        const { categoryId } = req.params;
+        const categoryNode = await spinalAPIMiddleware.load<SpinalNode>(
+          categoryId,
+          profileId
+        );
+        if (
+          !categoryNode ||
+          categoryNode.getType().get() !== SPINAL_USER_GROUP_CATEGORY_TYPE
+        )
+          throw {
+            code: 404,
+            message: `No user group category found with id ${categoryId}`,
+          };
         try {
-          const userContextAndGroups = await createSpinalUserGroupContext(
-            name,
-            userGraph
-          );
-          const result = await createBasicNodeSync(
-            userContextAndGroups.context,
-            ['color']
-          );
-          res.status(201).json(result);
+          const result = await createBasicNodeSync(categoryNode, [
+            'color',
+          ] as const);
+          res.status(200).json(result);
         } catch (error) {
           throw {
             code: 400,
             message:
               error instanceof Error
                 ? error.message
-                : 'Failed to create user group context',
+                : 'Failed to retrieve user group categories',
           };
         }
       } catch (error: any) {
@@ -111,7 +110,7 @@ module.exports = function (
         return res
           .status(500)
           .send(
-            'An unexpected error occurred while creating the user group context'
+            'An unexpected error occurred while retrieving the user group categories'
           );
       }
     }

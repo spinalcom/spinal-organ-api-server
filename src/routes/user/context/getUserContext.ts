@@ -63,8 +63,8 @@ module.exports = function (
    *               oneOf:
    *                 - type: array
    *                   items:
-   *                     $ref: '#/components/schemas/BasicNode'
-   *                 - $ref: '#/components/schemas/BasicNode'
+   *                     $ref: '#/components/schemas/BasicNodeWithColor'
+   *                 - $ref: '#/components/schemas/BasicNodeWithColor'
    *       400:
    *         description: Bad request - Invalid input or parameters
    *       404:
@@ -98,11 +98,15 @@ module.exports = function (
                 code: 404,
                 message: `No user context found with the name ${name}`,
               };
-            const result = await createBasicNodeSync(userContext);
+            const result = await createBasicNodeSync(userContext, [
+              'color',
+            ] as const);
             res.status(200).json(result);
           } else {
             const results = await Promise.all(
-              userContexts.map((context) => createBasicNodeSync(context))
+              userContexts.map((context) =>
+                createBasicNodeSync(context, ['color'] as const)
+              )
             );
             res.status(200).json(results);
           }

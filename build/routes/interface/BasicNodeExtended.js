@@ -23,4 +23,17 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     BasicNodeWithColor:
+ *       allOf:
+ *         - $ref: "#/components/schemas/BasicNode"
+ *         - type: "object"
+ *           properties:
+ *             color:
+ *               type: "string"
+ *               description: "Hexadecimal color code representing the color of the node, e.g., #FF5733."
+ */
 //# sourceMappingURL=BasicNodeExtended.js.map

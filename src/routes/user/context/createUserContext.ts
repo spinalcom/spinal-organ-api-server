@@ -29,6 +29,7 @@ import type { Express } from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { createSpinalUserContext } from 'spinal-model-user-service';
 import { createBasicNodeSync } from '../../../utilities/createBasicNode';
+import { atLeastOne } from '../../../utilities/zodAtLeastOne';
 
 module.exports = function (
   logger: any,
@@ -57,7 +58,12 @@ module.exports = function (
    *               name:
    *                 type: string
    *                 maxLength: 200
+   *                 minLength: 1
    *                 description: name of the user context to create
+   *               color:
+   *                 type: string
+   *                 pattern: '^#([A-Fa-f0-9]{6})$'
+   *                 description: Hexadecimal color code for the user context (e.g., #RRGGBB)
    *     responses:
    *       201:
    *         description: Create Successfully
@@ -65,7 +71,7 @@ module.exports = function (
    *           application/json:
    *             schema:
    *               type: object
-   *               $ref: '#/components/schemas/BasicNode'
+   *               $ref: '#/components/schemas/BasicNodeWithColor'
    *       400:
    *         description: failed to create user context
    *       401:
@@ -74,9 +80,15 @@ module.exports = function (
   app.post(
     '/api/v1/user/context',
     validate({
-      body: z.strictObject({
-        name: z.string().max(200),
-      }),
+      body: atLeastOne(
+        z.strictObject({
+          name: z.string().max(200).min(1),
+          color: z
+            .string()
+            .regex(/^#([A-Fa-f0-9]{6})$/)
+            .optional(),
+        })
+      ),
     }),
     async (req, res) => {
       try {
@@ -84,15 +96,17 @@ module.exports = function (
         const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
         if (!userGraph)
           throw { code: 401, message: `No graph found for ${profileId}` };
-        const { name } = req.body;
+        const { name, color } = req.body;
 
         try {
           const userContextAndGroups = await createSpinalUserContext(
+            userGraph,
             name,
-            userGraph
+            color
           );
           const result = await createBasicNodeSync(
-            userContextAndGroups.context
+            userContextAndGroups.context,
+            ['color'] as const
           );
           res.status(201).json(result);
         } catch (error) {

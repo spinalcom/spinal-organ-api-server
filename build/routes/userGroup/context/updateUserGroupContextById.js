@@ -31,65 +31,92 @@ const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
 const spinal_model_user_service_1 = require("spinal-model-user-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const createBasicNode_1 = require("../../../utilities/createBasicNode");
+const zodAtLeastOne_1 = require("../../../utilities/zodAtLeastOne");
+const safeSetAttr_1 = require("../../../utilities/safeSetAttr");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
-     * /api/v1/user-group/context:
-     *   post:
+     * /api/v1/user-group/context/{contextId}:
+     *   patch:
      *     security:
      *       - bearerAuth:
      *         - write
-     *     summary: Create a user group context
-     *     description: Create a user group context
+     *     summary: Update a user group context by its ID
+     *     description: Update a user group context by its ID
      *     tags:
-     *       - User
+     *       - User Group
+     *     parameters:
+     *       - in: path
+     *         name: contextId
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *         description: The ID of the user group context to update
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
      *             type: object
-     *             required:
-     *               - name
      *             properties:
      *               name:
      *                 type: string
      *                 maxLength: 200
-     *                 description: name of the user group context to create
+     *                 minLength: 1
+     *                 description: new name of the user group context
+     *               color:
+     *                 type: string
+     *                 pattern: '^#([A-Fa-f0-9]{6})$'
+     *                 description: new color of the user group context in hexadecimal format (e.g., #RRGGBB or #RGB)
      *     responses:
-     *       201:
-     *         description: Create Successfully
+     *       200:
+     *         description: Successfully updated the user group context
      *         content:
      *           application/json:
      *             schema:
      *               type: object
-     *               $ref: '#/components/schemas/BasicNode'
-     *       400:
-     *         description: failed to create user group context
+     *               $ref: '#/components/schemas/BasicNodeWithColor'
      *       401:
      *         description: no graph found for the user
      */
-    app.post('/api/v1/user-group/context', (0, express_zod_safe_1.default)({
-        body: zod_1.z.strictObject({
-            name: zod_1.z.string().max(200),
-        }),
+    app.patch('/api/v1/user-group/context/:contextId', (0, express_zod_safe_1.default)({
+        params: zod_1.z.object({ contextId: zod_1.z.coerce.number().positive() }),
+        body: (0, zodAtLeastOne_1.atLeastOne)(zod_1.z.strictObject({
+            name: zod_1.z.string().max(200).min(1).optional(),
+            color: zod_1.z
+                .string()
+                .regex(/^#([A-Fa-f0-9]{6})$/)
+                .optional(),
+        })),
     }), async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
             if (!userGraph)
                 throw { code: 401, message: `No graph found for ${profileId}` };
-            const { name } = req.body;
             try {
-                const userContextAndGroups = await (0, spinal_model_user_service_1.createSpinalUserGroupContext)(name, userGraph);
-                const result = await (0, createBasicNode_1.createBasicNodeSync)(userContextAndGroups.context, ['color']);
-                res.status(201).json(result);
+                const userGroupContexts = await (0, spinal_model_user_service_1.getSpinalUserGroupContext)(userGraph);
+                const userGroupContext = userGroupContexts.find((context) => context._server_id === req.params.contextId);
+                if (!userGroupContext)
+                    throw {
+                        code: 404,
+                        message: `No user group context found with id ${req.params.contextId}`,
+                    };
+                const { name, color } = req.body;
+                (0, safeSetAttr_1.safeSetAttr)(userGroupContext.info, 'name', name);
+                (0, safeSetAttr_1.safeSetAttr)(userGroupContext.info, 'color', color);
+                const result = await (0, createBasicNode_1.createBasicNodeSync)(userGroupContext, [
+                    'color',
+                ]);
+                res.status(200).json(result);
             }
             catch (error) {
                 throw {
                     code: 400,
                     message: error instanceof Error
                         ? error.message
-                        : 'Failed to create user group context',
+                        : 'Failed to update user group context',
                 };
             }
         }
@@ -98,8 +125,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             return res
                 .status(500)
-                .send('An unexpected error occurred while creating the user group context');
+                .send('An unexpected error occurred while updating the user group context');
         }
     });
 };
-//# sourceMappingURL=createUserGroupContext.js.map
+//# sourceMappingURL=updateUserGroupContextById.js.map

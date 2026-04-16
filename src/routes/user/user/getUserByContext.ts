@@ -68,6 +68,7 @@ module.exports = function (
    *         schema:
    *           type: string
    *           maxLength: 200
+   *           minLength: 1
    *           description: name of the user to retrieve
    *       - in: query
    *         name: startingAlphaNum
@@ -134,7 +135,7 @@ module.exports = function (
         contextId: z.coerce.number().positive(),
       }),
       query: z.strictObject({
-        name: z.string().max(200).optional(),
+        name: z.string().max(200).min(1).optional(),
         startingAlphaNum: z
           .string()
           .regex(/^[a-zA-Z0-9]|(special)$/)

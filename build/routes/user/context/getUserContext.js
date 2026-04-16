@@ -60,8 +60,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               oneOf:
      *                 - type: array
      *                   items:
-     *                     $ref: '#/components/schemas/BasicNode'
-     *                 - $ref: '#/components/schemas/BasicNode'
+     *                     $ref: '#/components/schemas/BasicNodeWithColor'
+     *                 - $ref: '#/components/schemas/BasicNodeWithColor'
      *       400:
      *         description: Bad request - Invalid input or parameters
      *       404:
@@ -89,11 +89,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             code: 404,
                             message: `No user context found with the name ${name}`,
                         };
-                    const result = await (0, createBasicNode_1.createBasicNodeSync)(userContext);
+                    const result = await (0, createBasicNode_1.createBasicNodeSync)(userContext, [
+                        'color',
+                    ]);
                     res.status(200).json(result);
                 }
                 else {
-                    const results = await Promise.all(userContexts.map((context) => (0, createBasicNode_1.createBasicNodeSync)(context)));
+                    const results = await Promise.all(userContexts.map((context) => (0, createBasicNode_1.createBasicNodeSync)(context, ['color'])));
                     res.status(200).json(results);
                 }
             }

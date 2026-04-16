@@ -61,7 +61,7 @@ module.exports = function (
    *           application/json:
    *             schema:
    *               type: object
-   *               $ref: '#/components/schemas/BasicNode'
+   *               $ref: '#/components/schemas/BasicNodeWithColor'
    *       400:
    *         description: Bad request - Invalid input or parameters
    *       404:
@@ -94,7 +94,9 @@ module.exports = function (
               code: 404,
               message: `No user context found with the ID ${contextId}`,
             };
-          const result = await createBasicNodeSync(userContext.context);
+          const result = await createBasicNodeSync(userContext.context, [
+            'color',
+          ] as const);
           res.status(200).json(result);
         } catch (error) {
           throw {

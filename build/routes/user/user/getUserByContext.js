@@ -59,6 +59,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         schema:
      *           type: string
      *           maxLength: 200
+     *           minLength: 1
      *           description: name of the user to retrieve
      *       - in: query
      *         name: startingAlphaNum
@@ -123,7 +124,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             contextId: zod_1.z.coerce.number().positive(),
         }),
         query: zod_1.z.strictObject({
-            name: zod_1.z.string().max(200).optional(),
+            name: zod_1.z.string().max(200).min(1).optional(),
             startingAlphaNum: zod_1.z
                 .string()
                 .regex(/^[a-zA-Z0-9]|(special)$/)

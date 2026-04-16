@@ -68,6 +68,11 @@ module.exports = function (
    *               email:
    *                 type: string
    *                 maxLength: 200
+   *                 minLength: 1
+   *               color:
+   *                 type: string
+   *                 pattern: '^#([A-Fa-f0-9]{6})$'
+   *                 description: Hexadecimal color code for the user (e.g., #RRGGBB)
    *               attributes:
    *                 type: object
    *                 additionalProperties:
@@ -93,7 +98,11 @@ module.exports = function (
         contextId: z.coerce.number().positive(),
       }),
       body: z.strictObject({
-        email: z.string().max(200),
+        email: z.string().max(200).min(1),
+        color: z
+          .string()
+          .regex(/^#([A-Fa-f0-9]{6})$/)
+          .optional(),
         attributes: z.record(z.string(), z.string()).optional(),
       }),
     }),
@@ -104,7 +113,7 @@ module.exports = function (
         if (!userGraph)
           throw { code: 401, message: `No graph found for ${profileId}` };
         const { contextId } = req.params;
-        const { email, attributes } = req.body;
+        const { email, color, attributes } = req.body;
         try {
           const userContexts = await getSpinalUserContexts(userGraph);
           const userContext = userContexts.find(
@@ -118,6 +127,7 @@ module.exports = function (
           const newUser = await createSpinalUser(
             userContext,
             email,
+            color,
             attributes
           );
           const result = await getUserData(newUser, true, false, false);

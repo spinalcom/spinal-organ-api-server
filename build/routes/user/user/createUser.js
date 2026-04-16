@@ -62,6 +62,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               email:
      *                 type: string
      *                 maxLength: 200
+     *                 minLength: 1
+     *               color:
+     *                 type: string
+     *                 pattern: '^#([A-Fa-f0-9]{6})$'
+     *                 description: Hexadecimal color code for the user (e.g., #RRGGBB)
      *               attributes:
      *                 type: object
      *                 additionalProperties:
@@ -85,7 +90,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             contextId: zod_1.z.coerce.number().positive(),
         }),
         body: zod_1.z.strictObject({
-            email: zod_1.z.string().max(200),
+            email: zod_1.z.string().max(200).min(1),
+            color: zod_1.z
+                .string()
+                .regex(/^#([A-Fa-f0-9]{6})$/)
+                .optional(),
             attributes: zod_1.z.record(zod_1.z.string(), zod_1.z.string()).optional(),
         }),
     }), async (req, res) => {
@@ -95,7 +104,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!userGraph)
                 throw { code: 401, message: `No graph found for ${profileId}` };
             const { contextId } = req.params;
-            const { email, attributes } = req.body;
+            const { email, color, attributes } = req.body;
             try {
                 const userContexts = await (0, spinal_model_user_service_1.getSpinalUserContexts)(userGraph);
                 const userContext = userContexts.find((context) => context._server_id === contextId);
@@ -104,7 +113,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         code: 404,
                         message: `No user context found with the ID ${contextId}`,
                     };
-                const newUser = await (0, spinal_model_user_service_1.createSpinalUser)(userContext, email, attributes);
+                const newUser = await (0, spinal_model_user_service_1.createSpinalUser)(userContext, email, color, attributes);
                 const result = await (0, getUserData_1.getUserData)(newUser, true, false, false);
                 res.status(201).json(result);
             }
