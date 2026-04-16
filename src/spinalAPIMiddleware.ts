@@ -144,7 +144,7 @@ class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
     await this._waitConnection();
     if (spinalIOMiddleware == undefined)
       spinalIOMiddleware = new SpinalIOMiddleware(this.conn, this.config);
-    const io = await runSocketServer(server, spinalIOMiddleware);
+    const io = await runSocketServer(server as any, spinalIOMiddleware);
     return io;
   }
 

@@ -63,7 +63,7 @@ export async function runServerRest(
   log_body = false
 ) {
   initApiServer(app, spinalAPIMiddleware, log_body);
-  const io = await runSocketServer(server, spinalIOMiddleware);
+  const io = await runSocketServer(server as any, spinalIOMiddleware);
   return { app, io };
 }
 
