@@ -34,54 +34,54 @@ const createBasicNode_1 = require("../../../utilities/createBasicNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
-     * /api/v1/user-group/category/{categoryId}:
+     * /api/v1/user-group/context/{contextId}/category:
      *   get:
      *     security:
      *       - bearerAuth:
      *         - read
-     *     summary: Get a user group category by ID
-     *     description: Get a user group category by ID
+     *     summary: Get all the user group categories of a user group context
+     *     description: Get all the user group categories of a user group context
      *     tags:
      *       - User Group
      *     parameters:
      *       - in: path
-     *         name: categoryId
+     *         name: contextId
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
-     *         description: The ID of the user group category to retrieve
+     *         description: The ID of the user group context to retrieve
      *     responses:
      *       200:
-     *         description: Successfully retrieved the user group category
+     *         description: Successfully retrieved the user group categories
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               $ref: '#/components/schemas/BasicNodeWithColor'
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 $ref: '#/components/schemas/BasicNodeWithColor'
      *       401:
      *         description: no graph found for the user
      */
-    app.get('/api/v1/user-group/category/:categoryId', (0, express_zod_safe_1.default)({
-        params: zod_1.z.object({ categoryId: zod_1.z.coerce.number().positive() }),
+    app.get('/api/v1/user-group/context/:contextId/category', (0, express_zod_safe_1.default)({
+        params: zod_1.z.object({ contextId: zod_1.z.coerce.number().positive() }),
     }), async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
             if (!userGraph)
                 throw { code: 401, message: `No graph found for ${profileId}` };
-            const { categoryId } = req.params;
-            const categoryNode = await spinalAPIMiddleware.load(categoryId, profileId);
-            if (!categoryNode ||
-                categoryNode.getType().get() !== spinal_model_user_service_1.SPINAL_USER_GROUP_CATEGORY_TYPE)
-                throw {
-                    code: 404,
-                    message: `No user group category found with id ${categoryId}`,
-                };
             try {
-                const result = await (0, createBasicNode_1.createBasicNodeSync)(categoryNode, [
-                    'color',
-                ]);
+                const userGroupContexts = await (0, spinal_model_user_service_1.getSpinalUserGroupContext)(userGraph);
+                const userGroupContext = userGroupContexts.find((context) => context._server_id === req.params.contextId);
+                if (!userGroupContext)
+                    throw {
+                        code: 404,
+                        message: `No user group context found with id ${req.params.contextId}`,
+                    };
+                const categories = await (0, spinal_model_user_service_1.getGroupingCategory)(userGroupContext);
+                const result = await Promise.all(categories.map((category) => (0, createBasicNode_1.createBasicNodeSync)(category, ['color'])));
                 res.status(200).json(result);
             }
             catch (error) {

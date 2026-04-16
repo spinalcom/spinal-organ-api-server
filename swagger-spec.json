@@ -4318,6 +4318,77 @@
             "description": "User context not found"
           }
         }
+      },
+      "patch": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "description": "Update a specific User Context by its dynamic ID",
+        "summary": "Update a specific User Context by its dynamic ID",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "description": "dynamic ID of the user context to update"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "description": "new name of the user context"
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#([A-Fa-f0-9]{6})$",
+                    "description": "new color of the user context in hexadecimal format (e.g.,"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated the user context",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "User context not found"
+          }
+        }
       }
     },
     "/api/v1/user/context/{contextId}/user": {
@@ -4794,6 +4865,510 @@
           },
           "400": {
             "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      }
+    },
+    "/api/v1/user-group/context/{contextId}/category": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Create a new user group category in a user group context",
+        "description": "Create a new user group category in a user group context",
+        "tags": [
+          "User Group"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group context to create the category in"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The name of the new user group category"
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#([A-Fa-f0-9]{6})$",
+                    "description": "Hexadecimal color code for the user group context (e.g.,"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created the user group category",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Get all the user group categories of a user group context",
+        "description": "Get all the user group categories of a user group context",
+        "tags": [
+          "User Group"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group context to retrieve"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the user group categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "$ref": "#/components/schemas/BasicNodeWithColor"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      }
+    },
+    "/api/v1/user-group/context/{contextId}/category/{categoryId}": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Delete a specific user group category by its ID",
+        "description": "Delete a specific user group category by its ID and remove all the user groups linked to it",
+        "tags": [
+          "User Group"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group context"
+          },
+          {
+            "in": "path",
+            "name": "categoryId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group category to delete"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted the user group category"
+          },
+          "400": {
+            "description": "failed to delete the user group category"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "user group context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/user-group/category/{categoryId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Get a user group category by ID",
+        "description": "Get a user group category by ID",
+        "tags": [
+          "User Group"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "categoryId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group category to retrieve"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the user group category",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      },
+      "patch": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Update a user group category by ID",
+        "description": "Update a user group category by ID",
+        "tags": [
+          "User Group"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "categoryId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group category to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated the user group category",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      }
+    },
+    "/api/v1/user-group/context": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Create a user group context",
+        "description": "Create a user group context",
+        "tags": [
+          "User Group"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "description": "name of the user group context to create"
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#([A-Fa-f0-9]{6})$",
+                    "description": "Hexadecimal color code for the user group context (e.g.,"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Create Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "failed to create user group context"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Get all the user group contexts",
+        "description": "Get all the user group contexts",
+        "tags": [
+          "User Group"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the user group contexts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "$ref": "#/components/schemas/BasicNodeWithColor"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      }
+    },
+    "/api/v1/user-group/context/{contextId}": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Delete a user group context by its ID",
+        "description": "Will delete the user group context with the given ID. It will also remove the categories and groups.",
+        "tags": [
+          "User Group"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group context to delete"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted the user group context"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Get a user group context by its ID",
+        "description": "Get a user group context by its ID",
+        "tags": [
+          "User Group"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group context to retrieve"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the user group context",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      },
+      "patch": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Update a user group context by its ID",
+        "description": "Update a user group context by its ID",
+        "tags": [
+          "User Group"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group context to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "description": "new name of the user group context"
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#([A-Fa-f0-9]{6})$",
+                    "description": "new color of the user group context in hexadecimal format (e.g.,"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated the user group context",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
           },
           "401": {
             "description": "no graph found for the user"
@@ -20026,65 +20601,7 @@
         }
       }
     },
-    "/api/v1/user-group/context": {
-      "post": {
-        "security": [
-          {
-            "bearerAuth": [
-              "write"
-            ]
-          }
-        ],
-        "summary": "Create a user group context",
-        "description": "Create a user group context",
-        "tags": [
-          "User Group"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "name"
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "maxLength": 200,
-                    "minLength": 1,
-                    "description": "name of the user group context to create"
-                  },
-                  "color": {
-                    "type": "string",
-                    "pattern": "^#([A-Fa-f0-9]{6})$",
-                    "description": "Hexadecimal color code for the user group context (e.g.,"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Create Successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/BasicNodeWithColor"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "failed to create user group context"
-          },
-          "401": {
-            "description": "no graph found for the user"
-          }
-        }
-      },
+    "/api/v1/user-group/context/{contextId}/category/{categoryId}/group": {
       "get": {
         "security": [
           {
@@ -20093,251 +20610,8 @@
             ]
           }
         ],
-        "summary": "Get all the user group contexts",
-        "description": "Get all the user group contexts",
-        "tags": [
-          "User Group"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved the user group contexts",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "$ref": "#/components/schemas/BasicNodeWithColor"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "no graph found for the user"
-          }
-        }
-      }
-    },
-    "/api/v1/user-group/context/{contextId}": {
-      "get": {
-        "security": [
-          {
-            "bearerAuth": [
-              "read"
-            ]
-          }
-        ],
-        "summary": "Get a user group context by its ID",
-        "description": "Get a user group context by its ID",
-        "tags": [
-          "User Group"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "contextId",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "description": "The ID of the user group context to retrieve"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved the user group context",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/BasicNodeWithColor"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "no graph found for the user"
-          }
-        }
-      },
-      "delete": {
-        "security": [
-          {
-            "bearerAuth": [
-              "write"
-            ]
-          }
-        ],
-        "summary": "Delete a user group context by its ID",
-        "description": "Will delete the user group context with the given ID. It will also remove the categories and groups.",
-        "tags": [
-          "User Group"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "contextId",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "description": "The ID of the user group context to delete"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successfully deleted the user group context"
-          },
-          "401": {
-            "description": "no graph found for the user"
-          }
-        }
-      },
-      "patch": {
-        "security": [
-          {
-            "bearerAuth": [
-              "write"
-            ]
-          }
-        ],
-        "summary": "Update a user group context by its ID",
-        "description": "Update a user group context by its ID",
-        "tags": [
-          "User Group"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "contextId",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "description": "The ID of the user group context to update"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "maxLength": 200,
-                    "minLength": 1,
-                    "description": "new name of the user group context"
-                  },
-                  "color": {
-                    "type": "string",
-                    "pattern": "^#([A-Fa-f0-9]{6})$",
-                    "description": "new color of the user group context in hexadecimal format (e.g.,"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully updated the user group context",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/BasicNodeWithColor"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "no graph found for the user"
-          }
-        }
-      }
-    },
-    "/api/v1/user-group/context/{contextId}/category": {
-      "post": {
-        "security": [
-          {
-            "bearerAuth": [
-              "write"
-            ]
-          }
-        ],
-        "summary": "Create a new user group category in a user group context",
-        "description": "Create a new user group category in a user group context",
-        "tags": [
-          "User Group"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "contextId",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "description": "The ID of the user group context to create the category in"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "name"
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "The name of the new user group category"
-                  },
-                  "color": {
-                    "type": "string",
-                    "pattern": "^#([A-Fa-f0-9]{6})$",
-                    "description": "Hexadecimal color code for the user group context (e.g.,"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successfully created the user group category",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BasicNodeWithColor"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "no graph found for the user"
-          }
-        }
-      },
-      "get": {
-        "security": [
-          {
-            "bearerAuth": [
-              "read"
-            ]
-          }
-        ],
-        "summary": "Get all the user group categories of a user group context",
-        "description": "Get all the user group categories of a user group context",
+        "summary": "Get all the user groups of a specific category in a user group context",
+        "description": "Get all the user groups of a specific category in a user group context",
         "tags": [
           "User Group"
         ],
@@ -20364,110 +20638,6 @@
                     "type": "object",
                     "$ref": "#/components/schemas/BasicNodeWithColor"
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "no graph found for the user"
-          }
-        }
-      }
-    },
-    "/api/v1/user-group/category/{categoryId}": {
-      "get": {
-        "security": [
-          {
-            "bearerAuth": [
-              "read"
-            ]
-          }
-        ],
-        "summary": "Get a user group category by ID",
-        "description": "Get a user group category by ID",
-        "tags": [
-          "User Group"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "categoryId",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "description": "The ID of the user group category to retrieve"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved the user group category",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/BasicNodeWithColor"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "no graph found for the user"
-          }
-        }
-      },
-      "patch": {
-        "security": [
-          {
-            "bearerAuth": [
-              "read"
-            ]
-          }
-        ],
-        "summary": "Update a user group category by ID",
-        "description": "Update a user group category by ID",
-        "tags": [
-          "User Group"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "categoryId",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "description": "The ID of the user group category to update"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "color": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully updated the user group category",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/BasicNodeWithColor"
                 }
               }
             }

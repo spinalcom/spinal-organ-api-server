@@ -32,6 +32,7 @@ import {
   getSpinalUserGroupContext,
 } from 'spinal-model-user-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
+import { createBasicNodeSync } from '../../../utilities/createBasicNode';
 
 module.exports = function (
   logger: any,
@@ -40,13 +41,13 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/user-group/context/{contextId}/category/{categoryId}:
-   *   delete:
+   * /api/v1/user-group/context/{contextId}/category/{categoryId}/group:
+   *   get:
    *     security:
    *       - bearerAuth:
    *         - read
-   *     summary: Delete a specific user group category by its ID
-   *     description: Delete a specific user group category by its ID and remove all the user groups linked to it
+   *     summary: Get all the user groups of a specific category in a user group context
+   *     description: Get all the user groups of a specific category in a user group context
    *     tags:
    *       - User Group
    *     parameters:
@@ -56,26 +57,22 @@ module.exports = function (
    *         schema:
    *           type: integer
    *           format: int64
-   *         description: The ID of the user group context
-   *       - in: path
-   *         name: categoryId
-   *         required: true
-   *         schema:
-   *           type: integer
-   *           format: int64
-   *         description: The ID of the user group category to delete
+   *         description: The ID of the user group context to retrieve
    *     responses:
-   *       204:
-   *         description: Successfully deleted the user group category
+   *       200:
+   *         description: Successfully retrieved the user group categories
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 $ref: '#/components/schemas/BasicNodeWithColor'
    *       401:
    *         description: no graph found for the user
-   *       404:
-   *         description: user group context not found
-   *       400:
-   *         description: failed to delete the user group category
    */
-  app.delete(
-    '/api/v1/user-group/context/:contextId/category/:categoryId',
+  app.get(
+    '/api/v1/user-group/context/:contextId/category/:categoryId/group',
     validate({
       params: z.object({
         contextId: z.coerce.number().positive(),
@@ -91,9 +88,10 @@ module.exports = function (
 
         try {
           const userGroupContexts = await getSpinalUserGroupContext(userGraph);
+          const { contextId, categoryId } = req.params;
 
           const userGroupContext = userGroupContexts.find(
-            (context) => context._server_id === req.params.contextId
+            (context) => context._server_id === contextId
           );
           if (!userGroupContext)
             throw {
@@ -103,24 +101,21 @@ module.exports = function (
 
           const categories = await getGroupingCategory(userGroupContext);
           const category = categories.find(
-            (cat) => cat._server_id === req.params.categoryId
+            (cat) => cat._server_id === categoryId
           );
           if (!category)
             throw {
               code: 404,
-              message: `No user group category found with id ${req.params.categoryId}`,
+              message: `No user group category found with id ${req.params.categoryId} in context ${req.params.contextId}`,
             };
 
           const groups = await getSpinalUserGroup(category, userGroupContext);
-          for (let i = 0; i < groups.length; i += 10) {
-            const chunk = groups.slice(i, i + 10);
-            await Promise.allSettled(
-              chunk.map((group) => group.removeFromGraph())
-            );
-          }
-          await category.removeFromGraph();
-
-          res.status(204).send();
+          const result = await Promise.all(
+            groups.map((group) =>
+              createBasicNodeSync(group, ['color'] as const)
+            )
+          );
+          res.status(200).json(result);
         } catch (error) {
           throw {
             code: 400,

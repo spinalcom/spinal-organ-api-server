@@ -57,7 +57,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *           type: integer
      *           format: int64
      *         description: The ID of the user group category to delete
-     *    responses:
+     *     responses:
      *       204:
      *         description: Successfully deleted the user group category
      *       401:

@@ -30,66 +30,66 @@ const zod_1 = require("zod");
 const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
 const spinal_model_user_service_1 = require("spinal-model-user-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const createBasicNode_1 = require("../../../utilities/createBasicNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
-     * /api/v1/user-group/context/{contextId}:
-     *   delete:
+     * /api/v1/user-group/category/{categoryId}:
+     *   get:
      *     security:
      *       - bearerAuth:
-     *         - write
-     *     summary: Delete a user group context by its ID
-     *     description: Will delete the user group context with the given ID. It will also remove the categories and groups.
+     *         - read
+     *     summary: Get a user group category by ID
+     *     description: Get a user group category by ID
      *     tags:
      *       - User Group
      *     parameters:
      *       - in: path
-     *         name: contextId
+     *         name: categoryId
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
-     *         description: The ID of the user group context to delete
+     *         description: The ID of the user group category to retrieve
      *     responses:
-     *       204:
-     *         description: Successfully deleted the user group context
+     *       200:
+     *         description: Successfully retrieved the user group category
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               $ref: '#/components/schemas/BasicNodeWithColor'
      *       401:
      *         description: no graph found for the user
      */
-    app.delete('/api/v1/user-group/context/:contextId', (0, express_zod_safe_1.default)({
-        params: zod_1.z.object({ contextId: zod_1.z.coerce.number().positive() }),
+    app.get('/api/v1/user-group/category/:categoryId', (0, express_zod_safe_1.default)({
+        params: zod_1.z.object({ categoryId: zod_1.z.coerce.number().positive() }),
     }), async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
             if (!userGraph)
                 throw { code: 401, message: `No graph found for ${profileId}` };
+            const { categoryId } = req.params;
+            const categoryNode = await spinalAPIMiddleware.load(categoryId, profileId);
+            if (!categoryNode ||
+                categoryNode.getType().get() !== spinal_model_user_service_1.SPINAL_USER_GROUP_CATEGORY_TYPE)
+                throw {
+                    code: 404,
+                    message: `No user group category found with id ${categoryId}`,
+                };
             try {
-                const userGroupContexts = await (0, spinal_model_user_service_1.getSpinalUserGroupContext)(userGraph);
-                const userGroupContext = userGroupContexts.find((context) => context._server_id === req.params.contextId);
-                if (!userGroupContext)
-                    throw {
-                        code: 404,
-                        message: `No user group context found with id ${req.params.contextId}`,
-                    };
-                const categories = await (0, spinal_model_user_service_1.getGroupingCategory)(userGroupContext);
-                for (const category of categories) {
-                    const groups = await (0, spinal_model_user_service_1.getSpinalUserGroup)(category, userGroupContext);
-                    for (let i = 0; i < groups.length; i += 10) {
-                        const chunk = groups.slice(i, i + 10);
-                        await Promise.allSettled(chunk.map((group) => group.removeFromGraph()));
-                    }
-                    await category.removeFromGraph();
-                }
-                await userGroupContext.removeFromGraph();
-                res.status(204).send();
+                const result = await (0, createBasicNode_1.createBasicNodeSync)(categoryNode, [
+                    'color',
+                ]);
+                res.status(200).json(result);
             }
             catch (error) {
                 throw {
                     code: 400,
                     message: error instanceof Error
                         ? error.message
-                        : 'Failed to delete user group context',
+                        : 'Failed to retrieve user group categories',
                 };
             }
         }
@@ -98,8 +98,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             return res
                 .status(500)
-                .send('An unexpected error occurred while deleting the user group context');
+                .send('An unexpected error occurred while retrieving the user group categories');
         }
     });
 };
-//# sourceMappingURL=deleteUserGroupContextById.js.map
+//# sourceMappingURL=getUserCategoryGroupById.js.map

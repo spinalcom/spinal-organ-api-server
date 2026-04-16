@@ -28,23 +28,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const zod_1 = require("zod");
 const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
-const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_model_user_service_1 = require("spinal-model-user-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const createBasicNode_1 = require("../../../utilities/createBasicNode");
-const zodAtLeastOne_1 = require("../../../utilities/zodAtLeastOne");
-const safeSetAttr_1 = require("../../../utilities/safeSetAttr");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
-     * /api/v1/user/context/{contextId}:
-     *   patch:
+     * /api/v1/user-group/context/{contextId}/category/{categoryId}/group:
+     *   get:
      *     security:
      *       - bearerAuth:
-     *         - write
-     *     description: Update a specific User Context by its dynamic ID
-     *     summary: Update a specific User Context by its dynamic ID
+     *         - read
+     *     summary: Get all the user groups of a specific category in a user group context
+     *     description: Get all the user groups of a specific category in a user group context
      *     tags:
-     *       - User
+     *       - User Group
      *     parameters:
      *       - in: path
      *         name: contextId
@@ -52,70 +50,49 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         schema:
      *           type: integer
      *           format: int64
-     *           description: dynamic ID of the user context to update
-     *     requestBody:
-     *       required: true
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             properties:
-     *               name:
-     *                 type: string
-     *                 maxLength: 200
-     *                 minLength: 1
-     *                 description: new name of the user context
-     *               color:
-     *                 type: string
-     *                 pattern: '^#([A-Fa-f0-9]{6})$'
-     *                 description: new color of the user context in hexadecimal format (e.g., #RRGGBB or #RGB)
+     *         description: The ID of the user group context to retrieve
      *     responses:
      *       200:
-     *         description: Successfully updated the user context
+     *         description: Successfully retrieved the user group categories
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               $ref: '#/components/schemas/BasicNodeWithColor'
-     *       400:
-     *         description: Bad request - Invalid input or parameters
-     *       404:
-     *         description: User context not found
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 $ref: '#/components/schemas/BasicNodeWithColor'
      *       401:
      *         description: no graph found for the user
      */
-    app.patch('/api/v1/user/context/:contextId', (0, express_zod_safe_1.default)({
-        params: zod_1.z.strictObject({
+    app.get('/api/v1/user-group/context/:contextId/category/:categoryId/group', (0, express_zod_safe_1.default)({
+        params: zod_1.z.object({
             contextId: zod_1.z.coerce.number().positive(),
+            categoryId: zod_1.z.coerce.number().positive(),
         }),
-        body: (0, zodAtLeastOne_1.atLeastOne)(zod_1.z.strictObject({
-            name: zod_1.z.string().max(200).min(1).optional(),
-            color: zod_1.z
-                .string()
-                .regex(/^#([A-Fa-f0-9]{6})$/)
-                .optional(),
-        })),
     }), async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
             if (!userGraph)
                 throw { code: 401, message: `No graph found for ${profileId}` };
-            const { contextId } = req.params;
             try {
-                const userContexts = await (0, spinal_model_user_service_1.getSpinalUserContexts)(userGraph);
-                const userContext = userContexts.find((context) => context._server_id === contextId);
-                if (!userContext)
+                const userGroupContexts = await (0, spinal_model_user_service_1.getSpinalUserGroupContext)(userGraph);
+                const { contextId, categoryId } = req.params;
+                const userGroupContext = userGroupContexts.find((context) => context._server_id === contextId);
+                if (!userGroupContext)
                     throw {
                         code: 404,
-                        message: `No user context found with the ID ${contextId}`,
+                        message: `No user group context found with id ${req.params.contextId}`,
                     };
-                const { name, color } = req.body;
-                (0, safeSetAttr_1.safeSetAttr)(userContext.info, 'name', name);
-                (0, safeSetAttr_1.safeSetAttr)(userContext.info, 'color', color);
-                const result = await (0, createBasicNode_1.createBasicNodeSync)(userContext.context, [
-                    'color',
-                ]);
+                const categories = await (0, spinal_model_user_service_1.getGroupingCategory)(userGroupContext);
+                const category = categories.find((cat) => cat._server_id === categoryId);
+                if (!category)
+                    throw {
+                        code: 404,
+                        message: `No user group category found with id ${req.params.categoryId} in context ${req.params.contextId}`,
+                    };
+                const groups = await (0, spinal_model_user_service_1.getSpinalUserGroup)(category, userGroupContext);
+                const result = await Promise.all(groups.map((group) => (0, createBasicNode_1.createBasicNodeSync)(group, ['color'])));
                 res.status(200).json(result);
             }
             catch (error) {
@@ -123,7 +100,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     code: 400,
                     message: error instanceof Error
                         ? error.message
-                        : 'Failed to retrieve user context',
+                        : 'Failed to retrieve user group categories',
                 };
             }
         }
@@ -132,8 +109,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             return res
                 .status(500)
-                .send('An unexpected error occurred while retrieving the user context');
+                .send('An unexpected error occurred while retrieving the user group categories');
         }
     });
 };
-//# sourceMappingURL=updateUserContextById.js.map
+//# sourceMappingURL=getUserGroup.js.map
