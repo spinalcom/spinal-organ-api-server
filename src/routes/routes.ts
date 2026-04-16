@@ -448,6 +448,11 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
+  require('./geographicContext/building/buildingInventory')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./geographicContext/building/buildingReferenceObjectsList')(
     logger,
     app,

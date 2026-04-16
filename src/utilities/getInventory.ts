@@ -61,6 +61,42 @@ async function getRoomInventory(
     return classifiedItems;
 }
 
+async function getBuildingInventory(
+    spinalAPIMiddleware: ISpinalAPIMiddleware,
+    profileId: string,
+    groupContext: SpinalNode<any>,
+    dynamicId: number,
+    reqInfo: InventoryRequestInfo
+) {
+    const building: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId, profileId);
+    //@ts-ignore
+    SpinalGraphService._addNode(building);
+    if (building.getType().get() !== "geographicBuilding") {
+        throw new Error("node is not of type geographicBuilding");
+    }
+
+    const floors = await building.getChildren("hasGeographicFloor");
+    const result: any[] = [];
+
+    for (const floor of floors) {
+        const floorInventory = await getFloorInventory(
+            spinalAPIMiddleware,
+            profileId,
+            groupContext,
+            floor._server_id,
+            reqInfo
+        );
+        result.push({
+            dynamicId: floor._server_id,
+            name: floor.getName().get(),
+            type: floor.getType().get(),
+            inventory: floorInventory
+        });
+    }
+
+    return result;
+}
+
 async function getFloorInventory(
     spinalAPIMiddleware: ISpinalAPIMiddleware,
     profileId: string,
@@ -223,4 +259,4 @@ async function getArea(room: SpinalNode<any>) {
     return area;
 }
 
-export { getFloorInventory, getRoomInventory };
+export { getBuildingInventory, getFloorInventory, getRoomInventory };

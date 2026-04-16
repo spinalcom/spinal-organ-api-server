@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRoomInventory = exports.getFloorInventory = void 0;
+exports.getRoomInventory = exports.getFloorInventory = exports.getBuildingInventory = void 0;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 function parseOptionalId(value) {
@@ -32,6 +32,27 @@ async function getRoomInventory(spinalAPIMiddleware, profileId, groupContext, dy
     return classifiedItems;
 }
 exports.getRoomInventory = getRoomInventory;
+async function getBuildingInventory(spinalAPIMiddleware, profileId, groupContext, dynamicId, reqInfo) {
+    const building = await spinalAPIMiddleware.load(dynamicId, profileId);
+    //@ts-ignore
+    spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(building);
+    if (building.getType().get() !== "geographicBuilding") {
+        throw new Error("node is not of type geographicBuilding");
+    }
+    const floors = await building.getChildren("hasGeographicFloor");
+    const result = [];
+    for (const floor of floors) {
+        const floorInventory = await getFloorInventory(spinalAPIMiddleware, profileId, groupContext, floor._server_id, reqInfo);
+        result.push({
+            dynamicId: floor._server_id,
+            name: floor.getName().get(),
+            type: floor.getType().get(),
+            inventory: floorInventory
+        });
+    }
+    return result;
+}
+exports.getBuildingInventory = getBuildingInventory;
 async function getFloorInventory(spinalAPIMiddleware, profileId, groupContext, dynamicId, reqInfo) {
     const floor = await spinalAPIMiddleware.load(dynamicId, profileId);
     //@ts-ignore

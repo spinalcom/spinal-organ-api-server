@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 16-04-2026 -> v1.1.12
+- added building/inventory
+
 ## 13-04-2026 -> v1.1.11
 - Many documentation corrections
 - Added optional query param in floor inventory to include unassigned items 
