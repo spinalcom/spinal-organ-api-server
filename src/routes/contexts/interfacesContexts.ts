@@ -44,6 +44,7 @@ export interface Context {
   name: string;
   type: string;
   color?: string;
+  icon?: string;
 }
 
 /**
@@ -102,7 +103,7 @@ export interface BIMFileContextItems {
   name: string;
   path: string;
   thumbnail?: string;
-  aecPath?:string;
+  aecPath?: string;
 }
 
 /**

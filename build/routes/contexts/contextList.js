@@ -61,6 +61,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     staticId: child.getId().get(),
                     name: child.getName().get(),
                     type: child.getType().get(),
+                    color: child.info.color?.get(),
+                    icon: child.info.icon?.get()
                 };
                 nodes.push(info);
             }
