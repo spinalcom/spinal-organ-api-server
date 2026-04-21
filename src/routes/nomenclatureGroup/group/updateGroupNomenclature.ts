@@ -110,7 +110,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
             staticId: groupUpdated.getId().get(),
             name: groupUpdated.getName().get(),
             type: groupUpdated.getType().get(),
-            color: groupUpdated.info.color.get()
+            color: groupUpdated.info.color?.get()
           };
         } else {
           res.status(400).send("node is not type of AttributeConfigurationGroupContext ");

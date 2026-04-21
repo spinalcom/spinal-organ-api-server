@@ -97,7 +97,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
               staticId: group.id.get(),
               name: group.name.get(),
               type: group.type.get(),
-              color: group.color.get(),
+              color: group.color?.get(),
             }
             res.json(objgroup);
           }

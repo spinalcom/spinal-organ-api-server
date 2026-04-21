@@ -83,13 +83,13 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       //@ts-ignore
       SpinalGraphService._addNode(category)
 
-      if(!(context instanceof SpinalContext)){
+      if (!(context instanceof SpinalContext)) {
         return res.status(400).send("The context Id provided does not represent a context");
       }
-      if(! category.belongsToContext(context)){
+      if (!category.belongsToContext(context)) {
         return res.status(400).send("The category does not belong to the context");
       }
-      if(context.getType().get() !== "BmsEndpointGroupContext"){
+      if (context.getType().get() !== "BmsEndpointGroupContext") {
         return res.status(400).send("node is not type of BmsEndpointGroupContext ");
       }
       const listGroups = await groupManagerService.getGroups(category.getId().get())
@@ -101,11 +101,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           staticId: realNode.getId().get(),
           name: realNode.getName().get(),
           type: realNode.getType().get(),
-          color: group.color.get()
+          color: group.color?.get()
         };
         nodes.push(info);
       }
-        
+
     } catch (error) {
       console.error(error);
       if (error.code && error.message) return res.status(error.code).send(error.message);

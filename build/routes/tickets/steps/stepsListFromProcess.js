@@ -85,8 +85,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     staticId: realNode.getId().get(),
                     name: realNode.getName().get(),
                     type: realNode.getType().get(),
-                    color: realNode.info.color.get(),
-                    order: realNode.info.order.get(),
+                    color: realNode.info.color?.get(),
+                    order: realNode.info.order?.get(),
                     processId: realNode.info.processId.get(),
                 };
             }));

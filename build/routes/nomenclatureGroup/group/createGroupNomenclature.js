@@ -89,7 +89,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         staticId: group.getId().get(),
                         name: group.getName().get(),
                         type: group.getType().get(),
-                        color: group.info.color.get()
+                        color: group.info.color?.get()
                     };
                 }
                 else {
