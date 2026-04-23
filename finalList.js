@@ -380,5 +380,9 @@ module.exports = [
   "../src/routes/BIM/scenes/list.ts",
   "../src/routes/BIM/scenes/sceneUtils.ts",
   "../src/routes/BIM/viewer/viewer.ts",
-  "../src/routes/userGroup/group/getUserGroup.ts"
+  "../src/routes/userGroup/group/getUserGroup.ts",
+  "../src/routes/userGroup/group/createUserGroup.ts",
+  "../src/routes/userGroup/group/deleteUserGroup.ts",
+  "../src/routes/userGroup/group/getUserGroupById.ts",
+  "../src/routes/userGroup/group/updateUserGroup.ts"
 ]

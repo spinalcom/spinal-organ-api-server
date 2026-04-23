@@ -27,12 +27,12 @@ import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import type { Express } from 'express';
 import validate from 'express-zod-safe';
 import {
-  getGroupingCategory,
-  getSpinalUserGroup,
+  deleteSpinalUserGroupContext,
   getSpinalUserGroupContext,
 } from 'spinal-model-user-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { createBasicNodeSync } from '../../../utilities/createBasicNode';
+// import { spinalControlPointService } from 'spinal-env-viewer-plugin-control-endpoint-service';
+// import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 
 module.exports = function (
   logger: any,
@@ -85,20 +85,7 @@ module.exports = function (
               code: 404,
               message: `No user group context found with id ${req.params.contextId}`,
             };
-
-          const categories = await getGroupingCategory(userGroupContext);
-          for (const category of categories) {
-            const groups = await getSpinalUserGroup(category, userGroupContext);
-            for (let i = 0; i < groups.length; i += 10) {
-              const chunk = groups.slice(i, i + 10);
-              await Promise.allSettled(
-                chunk.map((group) => group.removeFromGraph())
-              );
-            }
-            await category.removeFromGraph();
-          }
-          await userGroupContext.removeFromGraph();
-
+          await deleteSpinalUserGroupContext(userGroupContext);
           res.status(204).send();
         } catch (error) {
           throw {

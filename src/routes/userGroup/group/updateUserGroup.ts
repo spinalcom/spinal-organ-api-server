@@ -26,13 +26,11 @@ import type { Express } from 'express';
 import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import { z } from 'zod';
 import validate from 'express-zod-safe';
-import {
-  getGroupingCategory,
-  getSpinalUserGroup,
-  getSpinalUserGroupContext,
-} from 'spinal-model-user-service';
+import { SpinalNode } from 'spinal-model-graph';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { createBasicNodeSync } from '../../../utilities/createBasicNode';
+import { SPINAL_USER_GROUP_TYPE } from 'spinal-model-user-service';
+import { safeSetAttr } from '../../../utilities/safeSetAttr';
 
 module.exports = function (
   logger: any,
@@ -41,49 +39,61 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/user-group/context/{contextId}/category/{categoryId}/group:
-   *   get:
+   * /api/v1/user-group/group/{groupId}:
+   *   patch:
    *     security:
    *       - bearerAuth:
    *         - read
-   *     summary: Get all the user groups of a specific category in a user group context
-   *     description: Get all the user groups of a specific category in a user group context
+   *     summary: Update a user group by its ID
+   *     description: Update a user group by its ID
    *     tags:
    *       - User Group
    *     parameters:
    *       - in: path
-   *         name: contextId
+   *         name: groupId
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
-   *         description: The ID of the user group context to retrieve
-   *       - in: path
-   *         name: categoryId
-   *         required: true
-   *         schema:
-   *           type: integer
-   *           format: int64
-   *         description: The ID of the user group category to retrieve
+   *         description: The ID of the user group to update
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               name:
+   *                 type: string
+   *                 maxLength: 200
+   *                 minLength: 1
+   *                 description: The new name of the user group
+   *               color:
+   *                 type: string
+   *                 pattern: '^#([A-Fa-f0-9]{6})$'
+   *                 description: The new hexadecimal color code for the user group (e.g., #RRGGBB)
    *     responses:
    *       200:
-   *         description: Successfully retrieved the user group categories
+   *         description: Successfully updated the user group
    *         content:
    *           application/json:
    *             schema:
-   *               type: array
-   *               items:
-   *                 type: object
-   *                 $ref: '#/components/schemas/BasicNodeWithColor'
+   *               $ref: '#/components/schemas/BasicNodeWithColor'
    *       401:
    *         description: no graph found for the user
    */
-  app.get(
-    '/api/v1/user-group/context/:contextId/category/:categoryId/group',
+  app.patch(
+    '/api/v1/user-group/group/:groupId',
     validate({
       params: z.object({
-        contextId: z.coerce.number().positive(),
-        categoryId: z.coerce.number().positive(),
+        groupId: z.coerce.number().positive(),
+      }),
+      body: z.strictObject({
+        name: z.string().max(200).min(1).optional(),
+        color: z
+          .string()
+          .regex(/^#([A-Fa-f0-9]{6})$/)
+          .optional(),
       }),
     }),
     async (req, res) => {
@@ -94,34 +104,22 @@ module.exports = function (
           throw { code: 401, message: `No graph found for ${profileId}` };
 
         try {
-          const userGroupContexts = await getSpinalUserGroupContext(userGraph);
-          const { contextId, categoryId } = req.params;
-
-          const userGroupContext = userGroupContexts.find(
-            (context) => context._server_id === contextId
+          const { groupId } = req.params;
+          const group = await spinalAPIMiddleware.load<SpinalNode>(
+            groupId,
+            profileId
           );
-          if (!userGroupContext)
-            throw {
-              code: 404,
-              message: `No user group context found with id ${req.params.contextId}`,
-            };
-
-          const categories = await getGroupingCategory(userGroupContext);
-          const category = categories.find(
-            (cat) => cat._server_id === categoryId
-          );
-          if (!category)
-            throw {
-              code: 404,
-              message: `No user group category found with id ${req.params.categoryId} in context ${req.params.contextId}`,
-            };
-
-          const groups = await getSpinalUserGroup(category, userGroupContext);
-          const result = await Promise.all(
-            groups.map((group) =>
-              createBasicNodeSync(group, ['color'] as const)
-            )
-          );
+          const parseResult = z
+            .instanceof(SpinalNode)
+            .refine((node) => node.info.type.get() === SPINAL_USER_GROUP_TYPE)
+            .safeParse(group);
+          if (!parseResult.success) {
+            throw { code: 400, message: 'Invalid group data' };
+          }
+          const { name, color } = req.body;
+          safeSetAttr(group.info.name, 'name', name);
+          safeSetAttr(group.info.color, 'color', color);
+          const result = await createBasicNodeSync(group, ['color'] as const);
           res.status(200).json(result);
         } catch (error) {
           throw {
@@ -129,7 +127,7 @@ module.exports = function (
             message:
               error instanceof Error
                 ? error.message
-                : 'Failed to retrieve user group categories',
+                : 'Failed to retrieve user group with the specified ID',
           };
         }
       } catch (error: any) {
@@ -138,7 +136,7 @@ module.exports = function (
         return res
           .status(500)
           .send(
-            'An unexpected error occurred while retrieving the user group categories'
+            'An unexpected error occurred while retrieving the user group with the specified ID'
           );
       }
     }

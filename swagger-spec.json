@@ -4495,7 +4495,7 @@
           },
           {
             "in": "query",
-            "name": "name",
+            "name": "email",
             "required": false,
             "schema": {
               "type": "string",
@@ -20625,6 +20625,16 @@
               "format": "int64"
             },
             "description": "The ID of the user group context to retrieve"
+          },
+          {
+            "in": "path",
+            "name": "categoryId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group category to retrieve"
           }
         ],
         "responses": {
@@ -20638,6 +20648,224 @@
                     "type": "object",
                     "$ref": "#/components/schemas/BasicNodeWithColor"
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Create a new user group in a specific category within a user group context",
+        "description": "Create a new user group in a specific category within a user group context",
+        "tags": [
+          "User Group"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group context to retrieve"
+          },
+          {
+            "in": "path",
+            "name": "categoryId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group category to retrieve"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "description": "name of the user group to create"
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#([A-Fa-f0-9]{6})$",
+                    "description": "Hexadecimal color code for the user group (e.g.,"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successfully created the user group",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      }
+    },
+    "/api/v1/user-group/group/{groupId}": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Delete a user group by its ID",
+        "description": "Delete the user group with the given ID. Will also remove the users and control points linked to the group",
+        "tags": [
+          "User Group"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group to delete"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted the user group"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Get a user group by its ID",
+        "description": "Get a user group by its ID",
+        "tags": [
+          "User Group"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group to retrieve"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the user group",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      },
+      "patch": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Update a user group by its ID",
+        "description": "Update a user group by its ID",
+        "tags": [
+          "User Group"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The ID of the user group to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "description": "The new name of the user group"
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#([A-Fa-f0-9]{6})$",
+                    "description": "The new hexadecimal color code for the user group (e.g.,"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated the user group",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
                 }
               }
             }

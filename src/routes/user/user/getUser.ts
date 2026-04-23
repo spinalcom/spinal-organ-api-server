@@ -63,7 +63,7 @@ module.exports = function (
    *           format: int64
    *           description: dynamic ID of the user context to retrieve
    *       - in: query
-   *         name: name
+   *         name: email
    *         required: false
    *         schema:
    *           type: string
@@ -135,7 +135,7 @@ module.exports = function (
         contextId: z.coerce.number().positive(),
       }),
       query: z.strictObject({
-        name: z.string().max(200).min(1).optional(),
+        email: z.string().max(200).min(1).optional(),
         startingAlphaNum: z
           .string()
           .regex(/^[a-zA-Z0-9]|(special)$/)
@@ -154,7 +154,7 @@ module.exports = function (
           throw { code: 401, message: `No graph found for ${profileId}` };
         const { contextId } = req.params;
         const {
-          name,
+          email: name,
           attributes,
           startingAlphaNum,
           groups,

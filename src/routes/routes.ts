@@ -1247,13 +1247,91 @@ function routes(
     spinalAPIMiddleware
   );
   require('./user/context/getUserContext')(logger, app, spinalAPIMiddleware);
+  require('./user/context/updateUserContext')(logger, app, spinalAPIMiddleware);
 
   require('./user/user/createUser')(logger, app, spinalAPIMiddleware);
   require('./user/user/deleteUser')(logger, app, spinalAPIMiddleware);
-  require('./user/user/getUserByContext')(logger, app, spinalAPIMiddleware);
-  require('./user/user/getUserMultiple')(logger, app, spinalAPIMiddleware);
   require('./user/user/getUser')(logger, app, spinalAPIMiddleware);
+  require('./user/user/getUserById')(logger, app, spinalAPIMiddleware);
+  require('./user/user/getUserMultiple')(logger, app, spinalAPIMiddleware);
   require('./user/user/updateUser')(logger, app, spinalAPIMiddleware);
+
+  require('./userGroup/category/createUserCategoryGroup')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./userGroup/category/deleteUserCategoryGroup')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./userGroup/category/getUserCategoryGroup')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./userGroup/category/getUserCategoryGroupById')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./userGroup/category/updateUserCategoryGroup')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./userGroup/context/createUserGroupContext')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./userGroup/context/deleteUserGroupContext')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./userGroup/context/getUserGroupContext')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./userGroup/context/getUserGroupContextById')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./userGroup/context/updateUserGroupContext')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./userGroup/group/getUserGroupByContext')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./userGroup/group/getUserGroup')(logger, app, spinalAPIMiddleware);
+  require('./userGroup/group/createUserGroup')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./userGroup/group/deleteUserGroup')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./userGroup/group/getUserGroupById')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./userGroup/group/updateUserGroup')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
 }
 
 export default routes;

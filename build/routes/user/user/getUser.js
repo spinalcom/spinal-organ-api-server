@@ -54,7 +54,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *           format: int64
      *           description: dynamic ID of the user context to retrieve
      *       - in: query
-     *         name: name
+     *         name: email
      *         required: false
      *         schema:
      *           type: string
@@ -124,7 +124,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             contextId: zod_1.z.coerce.number().positive(),
         }),
         query: zod_1.z.strictObject({
-            name: zod_1.z.string().max(200).min(1).optional(),
+            email: zod_1.z.string().max(200).min(1).optional(),
             startingAlphaNum: zod_1.z
                 .string()
                 .regex(/^[a-zA-Z0-9]|(special)$/)
@@ -141,7 +141,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!userGraph)
                 throw { code: 401, message: `No graph found for ${profileId}` };
             const { contextId } = req.params;
-            const { name, attributes, startingAlphaNum, groups, organizations, offset, } = req.query;
+            const { email: name, attributes, startingAlphaNum, groups, organizations, offset, } = req.query;
             try {
                 const userContexts = await (0, spinal_model_user_service_1.getSpinalUserContexts)(userGraph);
                 const userContext = userContexts.find((context) => context._server_id === contextId);

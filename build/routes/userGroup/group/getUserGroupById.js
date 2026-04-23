@@ -28,49 +28,43 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const zod_1 = require("zod");
 const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
-const spinal_model_user_service_1 = require("spinal-model-user-service");
+const spinal_model_graph_1 = require("spinal-model-graph");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+const createBasicNode_1 = require("../../../utilities/createBasicNode");
+const spinal_model_user_service_1 = require("spinal-model-user-service");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
-     * /api/v1/user-group/context/{contextId}/category/{categoryId}:
-     *   delete:
+     * /api/v1/user-group/group/{groupId}:
+     *   get:
      *     security:
      *       - bearerAuth:
      *         - read
-     *     summary: Delete a specific user group category by its ID
-     *     description: Delete a specific user group category by its ID and remove all the user groups linked to it
+     *     summary: Get a user group by its ID
+     *     description: Get a user group by its ID
      *     tags:
      *       - User Group
      *     parameters:
      *       - in: path
-     *         name: contextId
+     *         name: groupId
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
-     *         description: The ID of the user group context
-     *       - in: path
-     *         name: categoryId
-     *         required: true
-     *         schema:
-     *           type: integer
-     *           format: int64
-     *         description: The ID of the user group category to delete
+     *         description: The ID of the user group to retrieve
      *     responses:
-     *       204:
-     *         description: Successfully deleted the user group category
+     *       200:
+     *         description: Successfully retrieved the user group
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/BasicNodeWithColor'
      *       401:
      *         description: no graph found for the user
-     *       404:
-     *         description: user group context not found
-     *       400:
-     *         description: failed to delete the user group category
      */
-    app.delete('/api/v1/user-group/context/:contextId/category/:categoryId', (0, express_zod_safe_1.default)({
+    app.get('/api/v1/user-group/group/:groupId', (0, express_zod_safe_1.default)({
         params: zod_1.z.object({
-            contextId: zod_1.z.coerce.number().positive(),
-            categoryId: zod_1.z.coerce.number().positive(),
+            groupId: zod_1.z.coerce.number().positive(),
         }),
     }), async (req, res) => {
         try {
@@ -79,29 +73,24 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!userGraph)
                 throw { code: 401, message: `No graph found for ${profileId}` };
             try {
-                const userGroupContexts = await (0, spinal_model_user_service_1.getSpinalUserGroupContext)(userGraph);
-                const userGroupContext = userGroupContexts.find((context) => context._server_id === req.params.contextId);
-                if (!userGroupContext)
-                    throw {
-                        code: 404,
-                        message: `No user group context found with id ${req.params.contextId}`,
-                    };
-                const categories = await (0, spinal_model_user_service_1.getGroupingCategory)(userGroupContext);
-                const category = categories.find((cat) => cat._server_id === req.params.categoryId);
-                if (!category)
-                    throw {
-                        code: 404,
-                        message: `No user group category found with id ${req.params.categoryId}`,
-                    };
-                await (0, spinal_model_user_service_1.deleteGroupingCategory)(category);
-                res.status(204).send();
+                const { groupId } = req.params;
+                const group = await spinalAPIMiddleware.load(groupId, profileId);
+                const parseResult = zod_1.z
+                    .instanceof(spinal_model_graph_1.SpinalNode)
+                    .refine((node) => node.info.type.get() === spinal_model_user_service_1.SPINAL_USER_GROUP_TYPE)
+                    .safeParse(group);
+                if (!parseResult.success) {
+                    throw { code: 400, message: 'Invalid group data' };
+                }
+                const result = await (0, createBasicNode_1.createBasicNodeSync)(group, ['color']);
+                res.status(200).json(result);
             }
             catch (error) {
                 throw {
                     code: 400,
                     message: error instanceof Error
                         ? error.message
-                        : 'Failed to retrieve user group categories',
+                        : 'Failed to retrieve user group with the specified ID',
                 };
             }
         }
@@ -110,8 +99,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             return res
                 .status(500)
-                .send('An unexpected error occurred while retrieving the user group categories');
+                .send('An unexpected error occurred while retrieving the user group with the specified ID');
         }
     });
 };
-//# sourceMappingURL=deleteUserCategoryGroup.js.map
+//# sourceMappingURL=getUserGroupById.js.map

@@ -30,6 +30,8 @@ const zod_1 = require("zod");
 const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
 const spinal_model_user_service_1 = require("spinal-model-user-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
+// import { spinalControlPointService } from 'spinal-env-viewer-plugin-control-endpoint-service';
+// import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -72,16 +74,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         code: 404,
                         message: `No user group context found with id ${req.params.contextId}`,
                     };
-                const categories = await (0, spinal_model_user_service_1.getGroupingCategory)(userGroupContext);
-                for (const category of categories) {
-                    const groups = await (0, spinal_model_user_service_1.getSpinalUserGroup)(category, userGroupContext);
-                    for (let i = 0; i < groups.length; i += 10) {
-                        const chunk = groups.slice(i, i + 10);
-                        await Promise.allSettled(chunk.map((group) => group.removeFromGraph()));
-                    }
-                    await category.removeFromGraph();
-                }
-                await userGroupContext.removeFromGraph();
+                await (0, spinal_model_user_service_1.deleteSpinalUserGroupContext)(userGroupContext);
                 res.status(204).send();
             }
             catch (error) {

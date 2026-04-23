@@ -27,11 +27,13 @@ import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import { z } from 'zod';
 import validate from 'express-zod-safe';
 import {
+  createSpinalUserGroup,
   getGroupingCategory,
-  deleteGroupingCategory,
+  getSpinalUserGroup,
   getSpinalUserGroupContext,
 } from 'spinal-model-user-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
+import { createBasicNodeSync } from '../../../utilities/createBasicNode';
 
 module.exports = function (
   logger: any,
@@ -40,13 +42,13 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/user-group/context/{contextId}/category/{categoryId}:
-   *   delete:
+   * /api/v1/user-group/context/{contextId}/category/{categoryId}/group:
+   *   post:
    *     security:
    *       - bearerAuth:
    *         - read
-   *     summary: Delete a specific user group category by its ID
-   *     description: Delete a specific user group category by its ID and remove all the user groups linked to it
+   *     summary: Create a new user group in a specific category within a user group context
+   *     description: Create a new user group in a specific category within a user group context
    *     tags:
    *       - User Group
    *     parameters:
@@ -56,30 +58,55 @@ module.exports = function (
    *         schema:
    *           type: integer
    *           format: int64
-   *         description: The ID of the user group context
+   *         description: The ID of the user group context to retrieve
    *       - in: path
    *         name: categoryId
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
-   *         description: The ID of the user group category to delete
+   *         description: The ID of the user group category to retrieve
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - name
+   *             properties:
+   *               name:
+   *                 type: string
+   *                 maxLength: 200
+   *                 minLength: 1
+   *                 description: name of the user group to create
+   *               color:
+   *                 type: string
+   *                 pattern: '^#([A-Fa-f0-9]{6})$'
+   *                 description: Hexadecimal color code for the user group (e.g., #RRGGBB)
    *     responses:
-   *       204:
-   *         description: Successfully deleted the user group category
+   *       201:
+   *         description: Successfully created the user group
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/BasicNodeWithColor'
    *       401:
    *         description: no graph found for the user
-   *       404:
-   *         description: user group context not found
-   *       400:
-   *         description: failed to delete the user group category
    */
-  app.delete(
-    '/api/v1/user-group/context/:contextId/category/:categoryId',
+  app.post(
+    '/api/v1/user-group/context/:contextId/category/:categoryId/group',
     validate({
       params: z.object({
         contextId: z.coerce.number().positive(),
         categoryId: z.coerce.number().positive(),
+      }),
+      body: z.strictObject({
+        name: z.string().max(200).min(1),
+        color: z
+          .string()
+          .regex(/^#([A-Fa-f0-9]{6})$/)
+          .optional(),
       }),
     }),
     async (req, res) => {
@@ -91,9 +118,10 @@ module.exports = function (
 
         try {
           const userGroupContexts = await getSpinalUserGroupContext(userGraph);
+          const { contextId, categoryId } = req.params;
 
           const userGroupContext = userGroupContexts.find(
-            (context) => context._server_id === req.params.contextId
+            (context) => context._server_id === contextId
           );
           if (!userGroupContext)
             throw {
@@ -103,22 +131,30 @@ module.exports = function (
 
           const categories = await getGroupingCategory(userGroupContext);
           const category = categories.find(
-            (cat) => cat._server_id === req.params.categoryId
+            (cat) => cat._server_id === categoryId
           );
           if (!category)
             throw {
               code: 404,
-              message: `No user group category found with id ${req.params.categoryId}`,
+              message: `No user group category found with id ${req.params.categoryId} in context ${req.params.contextId}`,
             };
-          await deleteGroupingCategory(category);
-          res.status(204).send();
+          const { name, color } = req.body;
+          const group = await createSpinalUserGroup(
+            userGroupContext,
+            category,
+            name,
+            color
+          );
+
+          const result = await createBasicNodeSync(group, ['color'] as const);
+          res.status(201).json(result);
         } catch (error) {
           throw {
             code: 400,
             message:
               error instanceof Error
                 ? error.message
-                : 'Failed to retrieve user group categories',
+                : 'Failed to create user group in the specified category and context',
           };
         }
       } catch (error: any) {
@@ -127,7 +163,7 @@ module.exports = function (
         return res
           .status(500)
           .send(
-            'An unexpected error occurred while retrieving the user group categories'
+            'An unexpected error occurred while creating the user group in the specified category and context'
           );
       }
     }
