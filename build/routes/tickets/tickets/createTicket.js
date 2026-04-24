@@ -93,6 +93,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               declarer_id:
      *                 type: string
      *                 description: Optional - The declarer's identifier
+     *               email:
+     *                 type: string
+     *                 description: Optional - The email of the ticket's declarer
      *               images:
      *                 type: array
      *                 description: Optional - Array of images to attach to the ticket
@@ -130,7 +133,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post('/api/v1/ticket/create_ticket', validateTicketCreationData, routeTicketCreationByMode);
     // validate the body
     function validateTicketCreationData(req, res, next) {
-        const { workflow, process, nodeDynamicId, name, priority, description, } = req.body;
+        const { workflow, process, nodeDynamicId, name, priority, description, email, } = req.body;
         const missing = [];
         if (!workflow)
             missing.push('workflow');
@@ -148,6 +151,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             missing.push('name (must be a string)');
         if (!description || typeof description !== 'string')
             missing.push('description (must be a string)');
+        if (email && typeof email !== 'string')
+            missing.push('email (must be a string)');
         if (missing.length > 0) {
             return res
                 .status(400)
@@ -207,7 +212,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     req.body.workflow,
             };
         }
-        return { profileId, ticketInfo, workflowNode, processNode };
+        return {
+            profileId,
+            ticketInfo,
+            workflowNode,
+            processNode,
+            email: req.body.email,
+        };
     }
     async function routeTicketCreationByMode(req, res) {
         try {
@@ -224,7 +235,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     }
     async function createTicketRegular(req, res) {
         try {
-            const { profileId, ticketInfo, workflowNode, processNode } = await getTicketCreationPrerequisites(req);
+            const { profileId, ticketInfo, workflowNode, processNode, email } = await getTicketCreationPrerequisites(req);
             const targetNode = await fetchSpinalNodeTarget(spinalAPIMiddleware, profileId, req.body.nodeDynamicId, req.body.nodeStaticId);
             if (!targetNode)
                 return res.status(400).send('invalid nodeDynamicId or nodeStaticId');
@@ -260,6 +271,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (req.body.additionalAttributes) {
                 await applyAdditionalAttributes(ticketCreatedNode, req.body.additionalAttributes);
             }
+            if (email) {
+                addTicketToUser(profileId, email, ticketCreatedNode);
+            }
             return res.status(201).json(info);
         }
         catch (error) {
@@ -270,7 +284,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     }
     async function createTicketFast(req, res) {
         try {
-            const { profileId, ticketInfo, workflowNode, processNode } = await getTicketCreationPrerequisites(req);
+            const { profileId, ticketInfo, workflowNode, processNode, email } = await getTicketCreationPrerequisites(req);
             //@ts-ignore
             const ticketNode = new spinal_env_viewer_graph_service_1.SpinalNode(ticketInfo.name, 'SpinalSystemServiceTicketTypeTicket');
             spinal_core_connectorjs_type_1.FileSystem._objects_to_send.set(ticketNode.model_id, ticketNode);
@@ -285,11 +299,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 elementSelected: req.body.nodeDynamicId,
                 description: ticketInfo.description,
                 priority: ticketInfo.priority,
-                declarer_id: ticketInfo.declarer_id
+                declarer_id: ticketInfo.declarer_id,
             };
             const images = Array.isArray(req.body.images) ? req.body.images : [];
             const additionalAttributes = req.body.additionalAttributes || null;
-            void finalizeFastTicketCreationInBackground(profileId, ticketInfo, workflowNode, processNode, ticketNode, req.body.nodeDynamicId, images, additionalAttributes);
+            void finalizeFastTicketCreationInBackground(profileId, ticketInfo, workflowNode, processNode, ticketNode, req.body.nodeDynamicId, email, images, additionalAttributes);
             return res.status(201).json(info);
         }
         catch (error) {
@@ -298,7 +312,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             return res.status(400).send({ ko: error });
         }
     }
-    async function finalizeFastTicketCreationInBackground(profileId, ticketInfo, workflowNode, processNode, ticketNode, nodeDynamicId, images = [], additionalAttributes = null) {
+    async function finalizeFastTicketCreationInBackground(profileId, ticketInfo, workflowNode, processNode, ticketNode, nodeDynamicId, email, images = [], additionalAttributes = null) {
         try {
             const targetNode = await fetchSpinalNodeTarget(spinalAPIMiddleware, profileId, nodeDynamicId);
             if (!targetNode) {
@@ -321,6 +335,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     console.error('[createTicketFast] error applying additional attributes:', error);
                 }
             }
+            if (email) {
+                addTicketToUser(profileId, email, ticketCreatedNode);
+            }
         }
         catch (error) {
             console.error('[createTicketFast] deferred creation failed:', error);
@@ -338,8 +355,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             };
             try {
                 const imageBufferData = processImageBase64(image.value);
-                await spinal_env_viewer_plugin_documentation_service_2.FileExplorer.uploadFiles(ticketNode, { name: image.name, buffer: imageBufferData });
-                // await serviceDocumentation.addFileAsNote( // BAD PERFORMANCE, ADDING NOTES TURNED OUT TO BE VERY COSTLY BECAUSE THEY ARE ALL STORED IN SAME SPACE :c 
+                await spinal_env_viewer_plugin_documentation_service_2.FileExplorer.uploadFiles(ticketNode, {
+                    name: image.name,
+                    buffer: imageBufferData,
+                });
+                // await serviceDocumentation.addFileAsNote( // BAD PERFORMANCE, ADDING NOTES TURNED OUT TO BE VERY COSTLY BECAUSE THEY ARE ALL STORED IN SAME SPACE :c
                 //   ticketNode,
                 //   { name: image.name, buffer: imageBufferData },
                 //   user
@@ -448,5 +468,12 @@ async function fetchSpinalNodeTarget(spinalAPIMiddleware, profileId, dynamicId, 
             }
         }
     }
+}
+async function addTicketToUser(profileId, email, ticketNode) {
+    // const userContext = await getUserContext();
+    // get user context - if not exist create it
+    // get user in context by email
+    // if not found create a new user with this email
+    // add the ticket to the user with a 'UserHasTicket' relation
 }
 //# sourceMappingURL=createTicket.js.map

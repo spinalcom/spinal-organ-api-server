@@ -27,7 +27,10 @@ import type { SpinalContext } from 'spinal-model-graph';
 import type { Lst } from 'spinal-core-connectorjs';
 import { FileSystem } from 'spinal-core-connectorjs_type';
 import type { ISpinalAPIMiddleware } from '../../../interfaces/ISpinalAPIMiddleware';
-import { SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service';
+import {
+  SpinalGraphService,
+  SpinalNode,
+} from 'spinal-env-viewer-graph-service';
 import * as express from 'express';
 import {
   addTicket,
@@ -112,6 +115,9 @@ module.exports = function (
    *               declarer_id:
    *                 type: string
    *                 description: Optional - The declarer's identifier
+   *               email:
+   *                 type: string
+   *                 description: Optional - The email of the ticket's declarer
    *               images:
    *                 type: array
    *                 description: Optional - Array of images to attach to the ticket
@@ -165,6 +171,7 @@ module.exports = function (
       name,
       priority,
       description,
+      email,
     } = req.body;
     const missing: string[] = [];
     if (!workflow) missing.push('workflow');
@@ -179,7 +186,8 @@ module.exports = function (
       missing.push('name (must be a string)');
     if (!description || typeof description !== 'string')
       missing.push('description (must be a string)');
-
+    if (email && typeof email !== 'string')
+      missing.push('email (must be a string)');
     if (missing.length > 0) {
       return res
         .status(400)
@@ -259,7 +267,13 @@ module.exports = function (
       };
     }
 
-    return { profileId, ticketInfo, workflowNode, processNode };
+    return {
+      profileId,
+      ticketInfo,
+      workflowNode,
+      processNode,
+      email: req.body.email,
+    };
   }
 
   async function routeTicketCreationByMode(
@@ -282,9 +296,8 @@ module.exports = function (
     res: express.Response
   ) {
     try {
-      const { profileId, ticketInfo, workflowNode, processNode } =
+      const { profileId, ticketInfo, workflowNode, processNode, email } =
         await getTicketCreationPrerequisites(req);
-
 
       const targetNode = await fetchSpinalNodeTarget(
         spinalAPIMiddleware,
@@ -351,7 +364,9 @@ module.exports = function (
           req.body.additionalAttributes
         );
       }
-
+      if (email) {
+        addTicketToUser(profileId, email, ticketCreatedNode);
+      }
       return res.status(201).json(info);
     } catch (error) {
       if (error?.code && error?.message)
@@ -362,11 +377,12 @@ module.exports = function (
 
   async function createTicketFast(req: express.Request, res: express.Response) {
     try {
-      const { profileId, ticketInfo, workflowNode, processNode } =
+      const { profileId, ticketInfo, workflowNode, processNode, email } =
         await getTicketCreationPrerequisites(req);
       //@ts-ignore
       const ticketNode = new SpinalNode(
-        ticketInfo.name, 'SpinalSystemServiceTicketTypeTicket'
+        ticketInfo.name,
+        'SpinalSystemServiceTicketTypeTicket'
       );
       FileSystem._objects_to_send.set(ticketNode.model_id, ticketNode);
       //@ts-ignore
@@ -381,7 +397,7 @@ module.exports = function (
         elementSelected: req.body.nodeDynamicId,
         description: ticketInfo.description,
         priority: ticketInfo.priority,
-        declarer_id: ticketInfo.declarer_id
+        declarer_id: ticketInfo.declarer_id,
       };
 
       const images = Array.isArray(req.body.images) ? req.body.images : [];
@@ -394,6 +410,7 @@ module.exports = function (
         processNode,
         ticketNode,
         req.body.nodeDynamicId,
+        email,
         images,
         additionalAttributes
       );
@@ -418,6 +435,7 @@ module.exports = function (
     processNode: SpinalNode,
     ticketNode: SpinalNode,
     nodeDynamicId: number,
+    email: string | undefined,
     images: any[] = [],
     additionalAttributes: any = null
   ) {
@@ -459,10 +477,20 @@ module.exports = function (
       // Add additional attributes if provided
       if (additionalAttributes) {
         try {
-          await applyAdditionalAttributes(ticketCreatedNode, additionalAttributes);
+          await applyAdditionalAttributes(
+            ticketCreatedNode,
+            additionalAttributes
+          );
         } catch (error) {
-          console.error('[createTicketFast] error applying additional attributes:', error);
+          console.error(
+            '[createTicketFast] error applying additional attributes:',
+            error
+          );
         }
+      }
+
+      if (email) {
+        addTicketToUser(profileId, email, ticketCreatedNode);
       }
     } catch (error) {
       console.error('[createTicketFast] deferred creation failed:', error);
@@ -485,8 +513,11 @@ module.exports = function (
       };
       try {
         const imageBufferData = processImageBase64(image.value as string);
-        await FileExplorer.uploadFiles(ticketNode, { name: image.name, buffer: imageBufferData });
-        // await serviceDocumentation.addFileAsNote( // BAD PERFORMANCE, ADDING NOTES TURNED OUT TO BE VERY COSTLY BECAUSE THEY ARE ALL STORED IN SAME SPACE :c 
+        await FileExplorer.uploadFiles(ticketNode, {
+          name: image.name,
+          buffer: imageBufferData,
+        });
+        // await serviceDocumentation.addFileAsNote( // BAD PERFORMANCE, ADDING NOTES TURNED OUT TO BE VERY COSTLY BECAUSE THEY ARE ALL STORED IN SAME SPACE :c
         //   ticketNode,
         //   { name: image.name, buffer: imageBufferData },
         //   user
@@ -525,14 +556,9 @@ module.exports = function (
 function processImageBase64(base64Image: string): Buffer {
   // check if data base64
   if (/^data:image\/\w+;base64,/.test(base64Image) === true) {
-    const imageData = base64Image.replace(
-      /^data:image\/\w+;base64,/,
-      ''
-    );
+    const imageData = base64Image.replace(/^data:image\/\w+;base64,/, '');
     const imageBufferData = Buffer.from(imageData, 'base64');
     return imageBufferData;
-
-
   }
 }
 
@@ -638,4 +664,16 @@ async function fetchSpinalNodeTarget(
       }
     }
   }
+}
+
+async function addTicketToUser(
+  profileId: string,
+  email: string,
+  ticketNode: SpinalNode
+) {
+  // const userContext = await getUserContext();
+  // get user context - if not exist create it
+  // get user in context by email
+  // if not found create a new user with this email
+  // add the ticket to the user with a 'UserHasTicket' relation
 }

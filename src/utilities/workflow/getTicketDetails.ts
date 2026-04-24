@@ -83,7 +83,7 @@ async function getTicketDetails(
   // list of attributes to include even if they are empty : description, declarer_id, username, gmaoId, gmaoDateCreation
   // const allAttributesObject = allAttributes.map(attr => ({ [attr.label.get()]: attr.value.get() }));
 
-  const info = {
+  const info : Record<string, any> = {
     dynamicId: ticketNode._server_id,
     staticId: ticketNode.info.id.get(),
     name: ticketNode.info.name.get(),
