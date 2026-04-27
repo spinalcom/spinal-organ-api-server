@@ -151,24 +151,69 @@ export interface BucketResult {
 }
 
 /**
- * Parse the ? bucket query parameter and return the bucket size in milliseconds.
+ * Parse the ?bucket query parameter and return the bucket size in milliseconds,
+ * or 'month' for calendar-month bucketing.
  * Supported formats: "hour", "day", "week", "month" (case-insensitive).
  * 
  * Returns null if the parameter is absent or invalid.
  * 
  * Returns the bucket size in milliseconds if valid.
  */
-export function parseBucketParam(bucket: string | undefined): number | null {
+export function parseBucketParam(bucket: string | undefined): number | 'month' | null {
   if (!bucket) return null;
   const unit = bucket.trim().toLowerCase();
 
   switch (unit) {
-    case 'hour': return 3600000                      //60 * 60 * 1000;
-    case 'day': return 86400000                      //24 * 60 * 60 * 1000;
-    case 'week': return 604800000                    //7 * 24 * 60 * 60 * 1000;
-    case 'month': return 2592000000                  //30 * 24 * 60 * 60 * 1000  (30 days)
-    default: return null;
+    case 'hour':  return 60 * 60 * 1000;
+    case 'day':   return 24 * 60 * 60 * 1000;
+    case 'week':  return 7 * 24 * 60 * 60 * 1000;
+    case 'month': return 'month';
+    default:      return null;
   }
+}
+
+/**
+ * Generate calendar-month bucket boundaries between start and end.
+ * Each full month runs from the 1st at 00:00 UTC to the 1st of the next month.
+ * The first and last buckets may be partial if start/end are not on the 1st.
+ */
+export function generateMonthBuckets(
+  start: number,
+  end: number
+): { bucketStart: number; bucketEnd: number }[] {
+  const buckets: { bucketStart: number; bucketEnd: number }[] = [];
+  const startDate = new Date(start);
+
+  // Determine the first month boundary after start
+  let cursor: Date;
+  if (
+    startDate.getUTCDate() === 1 &&
+    startDate.getUTCHours() === 0 &&
+    startDate.getUTCMinutes() === 0 &&
+    startDate.getUTCSeconds() === 0 &&
+    startDate.getUTCMilliseconds() === 0
+  ) {
+    cursor = new Date(start);
+  } else {
+    cursor = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth() + 1, 1));
+    if (cursor.getTime() > end) {
+      buckets.push({ bucketStart: start, bucketEnd: end });
+      return buckets;
+    }
+    buckets.push({ bucketStart: start, bucketEnd: cursor.getTime() });
+  }
+
+  // Full calendar months
+  while (cursor.getTime() < end) {
+    const nextMonth = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
+    buckets.push({
+      bucketStart: cursor.getTime(),
+      bucketEnd: Math.min(nextMonth.getTime(), end),
+    });
+    cursor = nextMonth;
+  }
+
+  return buckets;
 }
 
 /**
@@ -184,19 +229,20 @@ export function computeBucketedTimeWeightedMean(
   datas: { date: number; value: number }[],
   start: number,
   end: number,
-  bucketMs: number
+  bucketMs: number | 'month'
 ): BucketResult[] {
   return computeBucketedAggregation(datas, start, end, bucketMs, [], true);
 }
 
 /**
  * Split the interval [start, end] into sub-intervals of size `bucketMs`
- * and compute the requested aggregation operations for each bucket.
+ * (or calendar months when bucketMs === 'month') and compute the requested
+ * aggregation operations for each bucket.
  *
  * @param datas       — full (unsorted) dataset
  * @param start       — interval start (ms epoch)
  * @param end         — interval end   (ms epoch)
- * @param bucketMs    — bucket width in milliseconds
+ * @param bucketMs    — bucket width in milliseconds, or 'month' for calendar months
  * @param basicOps    — array of basic operations: 'sum' | 'min' | 'max' | 'avg'
  * @param needsTwavg  — whether to compute the time-weighted average
  */
@@ -204,18 +250,29 @@ export function computeBucketedAggregation(
   datas: { date: number; value: number }[],
   start: number,
   end: number,
-  bucketMs: number,
+  bucketMs: number | 'month',
   basicOps: string[] = [],
   needsTwavg: boolean = true
 ): BucketResult[] {
   const results: BucketResult[] = [];
   const sorted = [...datas].sort((a, b) => a.date - b.date);
 
-  let bucketStart = start;
+  // Generate bucket intervals
+  let intervals: { bucketStart: number; bucketEnd: number }[];
 
-  while (bucketStart < end) {
-    const bucketEnd = Math.min(bucketStart + bucketMs, end);
+  if (bucketMs === 'month') {
+    intervals = generateMonthBuckets(start, end);
+  } else {
+    intervals = [];
+    let bs = start;
+    while (bs < end) {
+      const be = Math.min(bs + bucketMs, end);
+      intervals.push({ bucketStart: bs, bucketEnd: be });
+      bs = be;
+    }
+  }
 
+  for (const { bucketStart, bucketEnd } of intervals) {
     // Points strictly inside this bucket (for basic aggregations)
     const bucketPoints = sorted.filter(p => p.date > bucketStart && p.date <= bucketEnd);
 
@@ -249,7 +306,6 @@ export function computeBucketedAggregation(
     }
 
     results.push(entry);
-    bucketStart = bucketEnd;
   }
 
   return results;

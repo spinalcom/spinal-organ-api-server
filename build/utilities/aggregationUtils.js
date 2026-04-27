@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.computeBucketedAggregation = exports.computeBucketedTimeWeightedMean = exports.parseBucketParam = exports.VALID_OPS = exports.parseAggregationParam = exports.toTimestamp = exports.computeTimeWeightedMean = exports.computeAggregation = void 0;
+exports.computeBucketedAggregation = exports.computeBucketedTimeWeightedMean = exports.generateMonthBuckets = exports.parseBucketParam = exports.VALID_OPS = exports.parseAggregationParam = exports.toTimestamp = exports.computeTimeWeightedMean = exports.computeAggregation = void 0;
 // Utility functions for computing aggregations sum, min , max ,avg on time-series data.
 function computeAggregation(datas, operations) {
     const result = {};
@@ -118,7 +118,8 @@ function parseAggregationParam(aggregationParam) {
 }
 exports.parseAggregationParam = parseAggregationParam;
 /**
- * Parse the ? bucket query parameter and return the bucket size in milliseconds.
+ * Parse the ?bucket query parameter and return the bucket size in milliseconds,
+ * or 'month' for calendar-month bucketing.
  * Supported formats: "hour", "day", "week", "month" (case-insensitive).
  *
  * Returns null if the parameter is absent or invalid.
@@ -130,14 +131,51 @@ function parseBucketParam(bucket) {
         return null;
     const unit = bucket.trim().toLowerCase();
     switch (unit) {
-        case 'hour': return 3600000; //60 * 60 * 1000;
-        case 'day': return 86400000; //24 * 60 * 60 * 1000;
-        case 'week': return 604800000; //7 * 24 * 60 * 60 * 1000;
-        case 'month': return 2592000000; //30 * 24 * 60 * 60 * 1000  (30 days)
+        case 'hour': return 60 * 60 * 1000;
+        case 'day': return 24 * 60 * 60 * 1000;
+        case 'week': return 7 * 24 * 60 * 60 * 1000;
+        case 'month': return 'month';
         default: return null;
     }
 }
 exports.parseBucketParam = parseBucketParam;
+/**
+ * Generate calendar-month bucket boundaries between start and end.
+ * Each full month runs from the 1st at 00:00 UTC to the 1st of the next month.
+ * The first and last buckets may be partial if start/end are not on the 1st.
+ */
+function generateMonthBuckets(start, end) {
+    const buckets = [];
+    const startDate = new Date(start);
+    // Determine the first month boundary after start
+    let cursor;
+    if (startDate.getUTCDate() === 1 &&
+        startDate.getUTCHours() === 0 &&
+        startDate.getUTCMinutes() === 0 &&
+        startDate.getUTCSeconds() === 0 &&
+        startDate.getUTCMilliseconds() === 0) {
+        cursor = new Date(start);
+    }
+    else {
+        cursor = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth() + 1, 1));
+        if (cursor.getTime() > end) {
+            buckets.push({ bucketStart: start, bucketEnd: end });
+            return buckets;
+        }
+        buckets.push({ bucketStart: start, bucketEnd: cursor.getTime() });
+    }
+    // Full calendar months
+    while (cursor.getTime() < end) {
+        const nextMonth = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
+        buckets.push({
+            bucketStart: cursor.getTime(),
+            bucketEnd: Math.min(nextMonth.getTime(), end),
+        });
+        cursor = nextMonth;
+    }
+    return buckets;
+}
+exports.generateMonthBuckets = generateMonthBuckets;
 /**
  * Split the interval [start, end] into sub-intervals of size `bucketMs`
  * and compute the time-weighted average for each bucket.
@@ -153,21 +191,34 @@ function computeBucketedTimeWeightedMean(datas, start, end, bucketMs) {
 exports.computeBucketedTimeWeightedMean = computeBucketedTimeWeightedMean;
 /**
  * Split the interval [start, end] into sub-intervals of size `bucketMs`
- * and compute the requested aggregation operations for each bucket.
+ * (or calendar months when bucketMs === 'month') and compute the requested
+ * aggregation operations for each bucket.
  *
  * @param datas       — full (unsorted) dataset
  * @param start       — interval start (ms epoch)
  * @param end         — interval end   (ms epoch)
- * @param bucketMs    — bucket width in milliseconds
+ * @param bucketMs    — bucket width in milliseconds, or 'month' for calendar months
  * @param basicOps    — array of basic operations: 'sum' | 'min' | 'max' | 'avg'
  * @param needsTwavg  — whether to compute the time-weighted average
  */
 function computeBucketedAggregation(datas, start, end, bucketMs, basicOps = [], needsTwavg = true) {
     const results = [];
     const sorted = [...datas].sort((a, b) => a.date - b.date);
-    let bucketStart = start;
-    while (bucketStart < end) {
-        const bucketEnd = Math.min(bucketStart + bucketMs, end);
+    // Generate bucket intervals
+    let intervals;
+    if (bucketMs === 'month') {
+        intervals = generateMonthBuckets(start, end);
+    }
+    else {
+        intervals = [];
+        let bs = start;
+        while (bs < end) {
+            const be = Math.min(bs + bucketMs, end);
+            intervals.push({ bucketStart: bs, bucketEnd: be });
+            bs = be;
+        }
+    }
+    for (const { bucketStart, bucketEnd } of intervals) {
         // Points strictly inside this bucket (for basic aggregations)
         const bucketPoints = sorted.filter(p => p.date > bucketStart && p.date <= bucketEnd);
         const hasData = bucketPoints.length > 0;
@@ -197,7 +248,6 @@ function computeBucketedAggregation(datas, start, end, bucketMs, basicOps = [], 
                 : null;
         }
         results.push(entry);
-        bucketStart = bucketEnd;
     }
     return results;
 }
