@@ -66,6 +66,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     color: realNode.info.color?.get(),
                 };
                 nodes.push(info);
+                return res.status(200).send(nodes);
             }
         }
         catch (error) {
@@ -73,7 +74,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             return res.status(400).send('list of group contexts is not loaded');
         }
-        res.send(nodes);
     });
 };
 //# sourceMappingURL=listGroupContext.js.map

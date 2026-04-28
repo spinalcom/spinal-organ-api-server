@@ -91,23 +91,34 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const group = await spinalAPIMiddleware.load(parseInt(req.params.groupId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(group);
-            if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && category.belongsToContext(context) && group.belongsToContext(context)) {
-                const dataObject = {
-                    name: req.body.newNameGroup,
-                    color: req.body.newNameColor
-                };
-                spinal_env_viewer_plugin_group_manager_service_1.default.updateGroup(group.getId().get(), dataObject);
+            if (!context || !(context instanceof spinal_env_viewer_graph_service_1.SpinalContext)) {
+                res.status(400).send("context not found");
+                return;
             }
-            else {
-                res.status(400).send("category or group not found in context");
+            if (!category || !category.belongsToContext(context)) {
+                res.status(400).send("category not found");
+                return;
             }
+            if (!group || !group.belongsToContext(context)) {
+                res.status(400).send("group not found");
+                return;
+            }
+            const dataObject = {
+                name: req.body.newNameGroup,
+                color: req.body.newNameColor
+            };
+            const nodeRef = await spinal_env_viewer_plugin_group_manager_service_1.default.updateGroup(group.getId().get(), dataObject);
+            return res.status(200).json({
+                id: nodeRef.id.get(),
+                name: nodeRef.name.get(),
+                color: nodeRef.color.get()
+            });
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
             res.status(400).send(error.message);
         }
-        res.json();
     });
 };
 //# sourceMappingURL=updateGroup.js.map

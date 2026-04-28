@@ -10022,8 +10022,38 @@
                     "description": "Flag to include room reference, defaults to true"
                   },
                   "equipements": {
-                    "type": "boolean",
-                    "description": "Flag to include equipment details, defaults to false"
+                    "oneOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "contextName",
+                            "categoryName",
+                            "groupNames"
+                          ],
+                          "properties": {
+                            "contextName": {
+                              "type": "string"
+                            },
+                            "categoryName": {
+                              "type": "string"
+                            },
+                            "groupNames": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "description": "List of group names to filter by. Empty array means all groups in the category."
+                            }
+                          }
+                        }
+                      }
+                    ],
+                    "description": "Boolean to include all equipment, or array of group filters to include only matching equipment"
                   }
                 }
               }
