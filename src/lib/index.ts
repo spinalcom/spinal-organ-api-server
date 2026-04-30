@@ -28,6 +28,8 @@ import { initSwagger } from '../swagger';
 import { ISpinalAPIMiddleware } from '../interfaces';
 import * as fileUpload from 'express-fileupload';
 import * as path from 'path';
+
+const { version: API_SERVER_VERSION } = require('../../package.json');
 import routes from '../routes/routes';
 import { createLogRequestLifecycle } from '../api-server';
 import { runSocketServer, ISpinalIOMiddleware } from 'spinal-organ-api-pubsub';
@@ -39,6 +41,10 @@ function initApiServer(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   log_body = false
 ) {
+  app.use((req, res, next) => {
+    res.setHeader('X-API-Version', API_SERVER_VERSION);
+    next();
+  });
   app.use(fileUpload({ createParentPath: true }));
   // app.use(logRequestLifecycle);
   app.use(createLogRequestLifecycle(log_body));

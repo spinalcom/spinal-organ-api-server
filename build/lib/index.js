@@ -41,12 +41,17 @@ exports.runServerRest = void 0;
 const swagger_1 = require("../swagger");
 const fileUpload = require("express-fileupload");
 const path = require("path");
+const { version: API_SERVER_VERSION } = require('../../package.json');
 const routes_1 = require("../routes/routes");
 const api_server_1 = require("../api-server");
 const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
 __exportStar(require("../routes/geographicContext/viewInfo_func"), exports);
 __exportStar(require("../preloadingScript/preloadingScript"), exports);
 function initApiServer(app, spinalAPIMiddleware, log_body = false) {
+    app.use((req, res, next) => {
+        res.setHeader('X-API-Version', API_SERVER_VERSION);
+        next();
+    });
     app.use(fileUpload({ createParentPath: true }));
     // app.use(logRequestLifecycle);
     app.use((0, api_server_1.createLogRequestLifecycle)(log_body));

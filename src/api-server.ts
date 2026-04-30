@@ -75,8 +75,8 @@ export function createLogRequestLifecycle(log_body: boolean) {
 //   (req as any).id = id;
 
 //   const startTime = Date.now();
-  
-  
+
+
 //   console.log(
 //     `[ Pending ] [ ${pad(id, 6)} ] ${pad(req.method, 7)} ${pad(req.originalUrl, 40)} from ${req.ip}`
 //   );
