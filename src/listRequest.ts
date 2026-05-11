@@ -112,5 +112,6 @@ function getCategoryInFilePath(filePath: string): string | undefined {
 function getIndexCat(filePath: string, orderCat: string[]): number {
   const dir = getCategoryInFilePath(filePath);
   if (!dir) return 9999;
-  return orderCat.indexOf(dir);
+  const idx = orderCat.indexOf(dir);
+  return idx === -1 ? 9999 : idx;
 }
