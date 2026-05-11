@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 11-05-2026 -> v1.1.13
+- fix groupContext/list
+
 ## 16-04-2026 -> v1.1.12
 - added building/inventory
 
