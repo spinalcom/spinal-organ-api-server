@@ -48,7 +48,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const analyticId = req.params.analyticId;
             const analyticNode = await spinalAPIMiddleware.load(parseInt(analyticId, 10), profileId);
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(analyticNode);
-            const analyticDetails = await spinal_model_analysis_1.spinalAnalyticNodeManagerService.getAnalyticDetails(analyticNode.getId().get());
+            const analyticDetails = await spinal_model_analysis_1.spinalAnalyticNodeManagerService.getAnalyticDetails(analyticNode);
             return res.json({
                 data: analyticDetails,
                 meta: {

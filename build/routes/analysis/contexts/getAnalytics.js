@@ -48,10 +48,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const contextId = req.params.contextId;
             const contextNode = await spinalAPIMiddleware.load(parseInt(contextId, 10), profileId);
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(contextNode);
-            const analytics = await spinal_model_analysis_1.spinalAnalyticNodeManagerService.getAllAnalytics(contextNode.getId().get());
+            const analytics = await spinal_model_analysis_1.spinalAnalyticNodeManagerService.getAnalysisNodesByContextName(contextNode.getName().get());
             const analyticDetails = [];
-            for (const analyticInfo of analytics) {
-                const analyticDetail = await spinal_model_analysis_1.spinalAnalyticNodeManagerService.getAnalyticDetails(analyticInfo.id.get());
+            for (const analyticNode of analytics) {
+                const analyticDetail = await spinal_model_analysis_1.spinalAnalyticNodeManagerService.getAnalyticDetails(analyticNode);
                 analyticDetails.push(analyticDetail);
             }
             return res.json({

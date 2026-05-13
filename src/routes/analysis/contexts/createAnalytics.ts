@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
-import { spinalAnalyticNodeManagerService, VERSION, CONSTANTS } from "spinal-model-analysis";
+import { spinalAnalysisFactoryService, VERSION, IAnalysisConfigJSON } from "spinal-model-analysis";
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { SpinalNode } from 'spinal-model-graph';
 
@@ -15,7 +15,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *       - bearerAuth:
    *           - write
    *     summary: Create analytic for a specific analysis context
-   *     description: Creates new analytic associated with a specific analysis context node by its ID
+   *     description: Creates a new analysis (analytic) from a JSON descriptor under the given context. The body follows the IAnalysisConfigJSON shape from spinal-model-analysis. The contextName field is overridden by the context resolved from the URL. The anchorNodeId field is expected to be a numeric server_id and is converted to the internal SpinalNode id before being passed to the factory.
    *     tags:
    *       - Analysis
    *     parameters:
@@ -24,17 +24,32 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *         required: true
    *         schema:
    *           type: string
-   *           description: ID of the analysis context
+   *           description: server_id of the analysis context
    *     requestBody:
    *       required: true
    *       content:
    *         application/json:
    *           schema:
    *             type: object
-   * 
+   *             required:
+   *               - analysisName
+   *             properties:
+   *               analysisName:
+   *                 type: string
+   *               description:
+   *                 type: string
+   *               anchorNodeId:
+   *                 type: string
+   *                 description: server_id of the node to use as the anchor target
+   *               worknodeResolver:
+   *                 type: object
+   *               inputWorkflow:
+   *                 type: object
+   *               executionWorkflow:
+   *                 type: object
    *     responses:
    *       200:
-   *         description: Analytic for the analysis context successfully created
+   *         description: Analytic successfully created
    *         content:
    *           application/json:
    *             schema:
@@ -42,13 +57,18 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *               properties:
    *                 data:
    *                   type: object
-   *                   description: Analytic information for the analysis context
+   *                   properties:
+   *                     id:
+   *                       type: number
+   *                     name:
+   *                       type: string
+   *                     type:
+   *                       type: string
    *                 meta:
    *                   type: object
    *                   properties:
    *                     analysisModuleVersion:
    *                       type: string
-   *                       description: Version of spinal-model-analysis used
    *       400:
    *         description: Bad request
    */
@@ -57,23 +77,30 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     try {
       const profileId = getProfileId(req);
       const contextId = req.params.contextId;
-      const requestAnalyticDetails = req.body;
+      const body = req.body as IAnalysisConfigJSON & { anchorNodeId?: string };
 
       const contextNode: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(contextId, 10), profileId);
       SpinalGraphService._addNode(contextNode);
 
-      const anchorNode: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(requestAnalyticDetails.anchor.id, 10), profileId);
-      SpinalGraphService._addNode(anchorNode);
+      const config: IAnalysisConfigJSON = {
+        ...body,
+        contextName: contextNode.getName().get(),
+      };
 
-      requestAnalyticDetails.anchor.id = anchorNode.getId().get();
+      if (body.anchorNodeId !== undefined && body.anchorNodeId !== null && `${body.anchorNodeId}` !== '') {
+        const anchorNode: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(`${body.anchorNodeId}`, 10), profileId);
+        SpinalGraphService._addNode(anchorNode);
+        config.anchorNodeId = anchorNode.getId().get();
+      }
 
-      const analyticDetails = await spinalAnalyticNodeManagerService.createAnalytic(
-        requestAnalyticDetails,
-        contextNode
-      );
+      const analysisNode = await spinalAnalysisFactoryService.createFromJSON(config);
 
       return res.json({
-        data: analyticDetails,
+        data: {
+          id: analysisNode._server_id,
+          name: analysisNode.getName().get(),
+          type: analysisNode.getType().get(),
+        },
         meta: {
           analysisModuleVersion: VERSION
         }

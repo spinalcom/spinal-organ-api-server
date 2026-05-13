@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_model_analysis_1 = require("spinal-model-analysis");
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -42,16 +41,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (name) {
                 const search = name.toLowerCase();
                 const isExact = exact === 'true';
-                contexts = contexts.filter(nodeInfo => {
-                    const node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(nodeInfo.id.get());
+                contexts = contexts.filter(node => {
                     const nodeName = node.getName().get().toLowerCase();
                     return isExact
                         ? nodeName === search
                         : nodeName.includes(search);
                 });
             }
-            const data = contexts.map(nodeInfo => {
-                const node = spinal_env_viewer_graph_service_1.SpinalGraphService.getRealNode(nodeInfo.id.get());
+            const data = contexts.map(node => {
                 return {
                     id: node._server_id,
                     name: node.getName().get(),

@@ -11,7 +11,7 @@
   "author": "SpinalCom",
   "types": "build/lib/index.d.ts",
   "license": "UNLICENSED",
-  "version": "1.1.13",
+  "version": "1.1.14",
   "main": "build/lib/index.js",
   "dependencies": {
     "body-parser": "^1.19.0",
@@ -80,6 +80,6 @@
     "spinal-organ-network_sample": "spinal-organ-network_sample",
     "spinal-service-ticket": "spinal-service-ticket",
     "spinal-service-user": "spinal-service-user",
-    "spinal-model-analysis": "spinal-model-analysis"
+    "spinal-model-analysis": "spinal-model-analysis@dev"
   }
 }

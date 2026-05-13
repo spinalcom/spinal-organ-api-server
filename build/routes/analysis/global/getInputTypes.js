@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
-const spinal_model_analysis_1 = require("spinal-model-analysis");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
        * @swagger
@@ -39,16 +38,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/analysis/inputTypes", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const data = spinal_model_analysis_1.CONSTANTS.TRACK_METHOD
-                ? Object.values(spinal_model_analysis_1.CONSTANTS.TRACK_METHOD)
-                : [];
-            return res.json({
-                data,
-                meta: {
-                    count: data.length,
-                    analysisModuleVersion: spinal_model_analysis_1.VERSION
-                }
-            });
+            // const data = CONSTANTS.TRACK_METHOD
+            //   ? Object.values(CONSTANTS.TRACK_METHOD)
+            //   : [];
+            // return res.json({
+            //   data,
+            //   meta: {
+            //     count: data.length,
+            //     analysisModuleVersion: VERSION
+            //   }
+            // });
         }
         catch (error) {
             if (error?.code && error?.message) {

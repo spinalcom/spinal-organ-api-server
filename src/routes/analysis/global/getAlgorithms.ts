@@ -1,20 +1,27 @@
 import * as express from 'express';
-import { childrensNode, parentsNode } from '../../../utilities/corseChildrenAndParentNode'
-import { SpinalNode } from 'spinal-model-graph';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
-import { ALGORITHMS  , VERSION } from "spinal-model-analysis";
+import {
+  ALGORITHM_DEFINITIONS,
+  NUMBER_ALGORITHMS,
+  NODE_ALGORITHMS,
+  FLOW_CONTROL_ALGORITHMS,
+  REGISTER_ALGORITHMS,
+  AlgorithmDefinition,
+  VERSION,
+} from "spinal-model-analysis";
+
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
-/**
+  /**
    * @swagger
    * /api/v1/analysis/algorithms:
    *   get:
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns a list of algorithm for analysis
-   *     summary: Gets analysis algorithms
+   *     description: Returns analysis algorithms grouped by category. Each algorithm contains its name, description, input types, output type, and parameters. The `run` function is not serialized.
+   *     summary: Gets analysis algorithms grouped by category
    *     tags:
    *       - Analysis
    *     responses:
@@ -26,9 +33,28 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *               type: object
    *               properties:
    *                 data:
-   *                   type: array
-   *                   items:
-   *                     type: string
+   *                   type: object
+   *                   properties:
+   *                     NUMBER:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                     NODE:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                     FLOW_CONTROL:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                     REGISTER:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                     OTHER:
+   *                       type: array
+   *                       items:
+   *                         type: object
    *                 meta:
    *                   type: object
    *                   properties:
@@ -43,13 +69,39 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.get("/api/v1/analysis/algorithms", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);
-                
-      const data = ALGORITHMS ? Object.values(ALGORITHMS) : [];
+
+      const serialize = (a: AlgorithmDefinition) => ({
+        name: a.name,
+        description: a.description,
+        inputTypes: a.inputTypes,
+        outputType: a.outputType,
+        parameters: a.parameters,
+      });
+
+      const categorized: AlgorithmDefinition[] = [
+        ...NUMBER_ALGORITHMS,
+        ...NODE_ALGORITHMS,
+        ...FLOW_CONTROL_ALGORITHMS,
+        ...REGISTER_ALGORITHMS,
+      ];
+      const categorizedNames = new Set(categorized.map(a => a.name));
+      const other = ALGORITHM_DEFINITIONS.filter(a => !categorizedNames.has(a.name));
+
+      const data = {
+        NUMBER: NUMBER_ALGORITHMS.map(serialize),
+        NODE: NODE_ALGORITHMS.map(serialize),
+        FLOW_CONTROL: FLOW_CONTROL_ALGORITHMS.map(serialize),
+        REGISTER: REGISTER_ALGORITHMS.map(serialize),
+        OTHER: other.map(serialize),
+      };
+
+      const count = Object.values(data).reduce((acc, arr) => acc + arr.length, 0);
+
       return res.json({
         data,
         meta: {
-          count: data.length,
-          analysisModuleVersion : VERSION
+          count,
+          analysisModuleVersion: VERSION,
         }
       });
 

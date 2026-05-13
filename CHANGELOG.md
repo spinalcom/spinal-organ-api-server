@@ -1,5 +1,8 @@
 # CHANGELOG
 
+# 13-05-2026 -> v1.1.14
+- New analysis module and update routes
+
 ## 11-05-2026 -> v1.1.13
 - fix groupContext/list
 

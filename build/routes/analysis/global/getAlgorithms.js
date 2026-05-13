@@ -4,47 +4,88 @@ const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_model_analysis_1 = require("spinal-model-analysis");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-       * @swagger
-       * /api/v1/analysis/algorithms:
-       *   get:
-       *     security:
-       *       - bearerAuth:
-       *         - readOnly
-       *     description: Returns a list of algorithm for analysis
-       *     summary: Gets analysis algorithms
-       *     tags:
-       *       - Analysis
-       *     responses:
-       *       200:
-       *         description: Success
-       *         content:
-       *           application/json:
-       *             schema:
-       *               type: object
-       *               properties:
-       *                 data:
-       *                   type: array
-       *                   items:
-       *                     type: string
-       *                 meta:
-       *                   type: object
-       *                   properties:
-       *                     count:
-       *                       type: integer
-       *                     analysisModuleVersion:
-       *                       type: string
-       *       400:
-       *         description: Bad request
-       */
+     * @swagger
+     * /api/v1/analysis/algorithms:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     description: Returns analysis algorithms grouped by category. Each algorithm contains its name, description, input types, output type, and parameters. The `run` function is not serialized.
+     *     summary: Gets analysis algorithms grouped by category
+     *     tags:
+     *       - Analysis
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 data:
+     *                   type: object
+     *                   properties:
+     *                     NUMBER:
+     *                       type: array
+     *                       items:
+     *                         type: object
+     *                     NODE:
+     *                       type: array
+     *                       items:
+     *                         type: object
+     *                     FLOW_CONTROL:
+     *                       type: array
+     *                       items:
+     *                         type: object
+     *                     REGISTER:
+     *                       type: array
+     *                       items:
+     *                         type: object
+     *                     OTHER:
+     *                       type: array
+     *                       items:
+     *                         type: object
+     *                 meta:
+     *                   type: object
+     *                   properties:
+     *                     count:
+     *                       type: integer
+     *                     analysisModuleVersion:
+     *                       type: string
+     *       400:
+     *         description: Bad request
+     */
     app.get("/api/v1/analysis/algorithms", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const data = spinal_model_analysis_1.ALGORITHMS ? Object.values(spinal_model_analysis_1.ALGORITHMS) : [];
+            const serialize = (a) => ({
+                name: a.name,
+                description: a.description,
+                inputTypes: a.inputTypes,
+                outputType: a.outputType,
+                parameters: a.parameters,
+            });
+            const categorized = [
+                ...spinal_model_analysis_1.NUMBER_ALGORITHMS,
+                ...spinal_model_analysis_1.NODE_ALGORITHMS,
+                ...spinal_model_analysis_1.FLOW_CONTROL_ALGORITHMS,
+                ...spinal_model_analysis_1.REGISTER_ALGORITHMS,
+            ];
+            const categorizedNames = new Set(categorized.map(a => a.name));
+            const other = spinal_model_analysis_1.ALGORITHM_DEFINITIONS.filter(a => !categorizedNames.has(a.name));
+            const data = {
+                NUMBER: spinal_model_analysis_1.NUMBER_ALGORITHMS.map(serialize),
+                NODE: spinal_model_analysis_1.NODE_ALGORITHMS.map(serialize),
+                FLOW_CONTROL: spinal_model_analysis_1.FLOW_CONTROL_ALGORITHMS.map(serialize),
+                REGISTER: spinal_model_analysis_1.REGISTER_ALGORITHMS.map(serialize),
+                OTHER: other.map(serialize),
+            };
+            const count = Object.values(data).reduce((acc, arr) => acc + arr.length, 0);
             return res.json({
                 data,
                 meta: {
-                    count: data.length,
-                    analysisModuleVersion: spinal_model_analysis_1.VERSION
+                    count,
+                    analysisModuleVersion: spinal_model_analysis_1.VERSION,
                 }
             });
         }

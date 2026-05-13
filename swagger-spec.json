@@ -17599,7 +17599,7 @@
           }
         ],
         "summary": "Create analytic for a specific analysis context",
-        "description": "Creates new analytic associated with a specific analysis context node by its ID",
+        "description": "Creates a new analysis (analytic) from a JSON descriptor under the given context. The body follows the IAnalysisConfigJSON shape from spinal-model-analysis. The contextName field is overridden by the context resolved from the URL. The anchorNodeId field is expected to be a numeric server_id and is converted to the internal SpinalNode id before being passed to the factory.",
         "tags": [
           "Analysis"
         ],
@@ -17610,7 +17610,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "description": "ID of the analysis context"
+              "description": "server_id of the analysis context"
             }
           }
         ],
@@ -17619,14 +17619,38 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object"
+                "type": "object",
+                "required": [
+                  "analysisName"
+                ],
+                "properties": {
+                  "analysisName": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "anchorNodeId": {
+                    "type": "string",
+                    "description": "server_id of the node to use as the anchor target"
+                  },
+                  "worknodeResolver": {
+                    "type": "object"
+                  },
+                  "inputWorkflow": {
+                    "type": "object"
+                  },
+                  "executionWorkflow": {
+                    "type": "object"
+                  }
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Analytic for the analysis context successfully created",
+            "description": "Analytic successfully created",
             "content": {
               "application/json": {
                 "schema": {
@@ -17634,14 +17658,23 @@
                   "properties": {
                     "data": {
                       "type": "object",
-                      "description": "Analytic information for the analysis context"
+                      "properties": {
+                        "id": {
+                          "type": "number"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        }
+                      }
                     },
                     "meta": {
                       "type": "object",
                       "properties": {
                         "analysisModuleVersion": {
-                          "type": "string",
-                          "description": "Version of spinal-model-analysis used"
+                          "type": "string"
                         }
                       }
                     }
@@ -17885,8 +17918,8 @@
             ]
           }
         ],
-        "description": "Returns a list of algorithm for analysis",
-        "summary": "Gets analysis algorithms",
+        "description": "Returns analysis algorithms grouped by category. Each algorithm contains its name, description, input types, output type, and parameters. The `run` function is not serialized.",
+        "summary": "Gets analysis algorithms grouped by category",
         "tags": [
           "Analysis"
         ],
@@ -17899,9 +17932,38 @@
                   "type": "object",
                   "properties": {
                     "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
+                      "type": "object",
+                      "properties": {
+                        "NUMBER": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
+                        "NODE": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
+                        "FLOW_CONTROL": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
+                        "REGISTER": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
+                        "OTHER": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        }
                       }
                     },
                     "meta": {
