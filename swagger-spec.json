@@ -17533,6 +17533,64 @@
       }
     },
     "/api/v1/analysis/analytics/{analyticId}": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Delete a specific analytic by its ID",
+        "description": "Deletes the analysis node identified by analyticId along with its mandatory sub-nodes (workflows, anchor, etc.).",
+        "tags": [
+          "Analysis"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analyticId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "server_id of the analytic to delete"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytic successfully deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "deleted": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "analysisModuleVersion": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      },
       "get": {
         "security": [
           {
@@ -17575,6 +17633,95 @@
                         "analysisModuleVersion": {
                           "type": "string",
                           "description": "Version of spinal-model-analysis used"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/analysis/analytics/{analyticId}/execute": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Execute a specific analytic by its ID",
+        "description": "Runs the full analysis pipeline (worknode resolver → input workflow → execution workflow) for the given analytic and returns the per-work-node execution results.",
+        "tags": [
+          "Analysis"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analyticId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "server_id of the analytic to execute"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytic successfully executed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "analysisName": {
+                          "type": "string"
+                        },
+                        "totalWorkNodes": {
+                          "type": "integer"
+                        },
+                        "results": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "workNodeId": {
+                                "type": "string"
+                              },
+                              "workNodeName": {
+                                "type": "string"
+                              },
+                              "success": {
+                                "type": "boolean"
+                              },
+                              "inputRegisters": {
+                                "type": "object"
+                              },
+                              "executionOutputs": {
+                                "type": "object"
+                              },
+                              "error": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "analysisModuleVersion": {
+                          "type": "string"
                         }
                       }
                     }

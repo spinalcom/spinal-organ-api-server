@@ -1175,6 +1175,17 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     app,
     spinalAPIMiddleware
   );
+  require('./analysis/analytics/executeAnalytic')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./analysis/analytics/deleteAnalytic')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+
   // command
   require('./command/roomListCommandEnable')(logger, app, spinalAPIMiddleware);
   require('./command/roomCommandLight')(logger, app, spinalAPIMiddleware);
