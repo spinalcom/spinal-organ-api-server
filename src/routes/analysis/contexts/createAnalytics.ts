@@ -5,7 +5,7 @@ import { spinalAnalysisFactoryService, VERSION, IAnalysisConfigJSON } from "spin
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { SpinalNode } from 'spinal-model-graph';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (logger: any, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
    * @swagger
@@ -80,7 +80,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const body = req.body as IAnalysisConfigJSON & { anchorNodeId?: string };
 
       const contextNode: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(contextId, 10), profileId);
-      SpinalGraphService._addNode(contextNode);
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
 
       const config: IAnalysisConfigJSON = {
         ...body,
@@ -93,7 +93,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         config.anchorNodeId = anchorNode.getId().get();
       }
 
-      const analysisNode = await spinalAnalysisFactoryService.createFromJSON(config);
+      const analysisNode = await spinalAnalysisFactoryService.createFromJSON(config, graph);
 
       return res.json({
         data: {

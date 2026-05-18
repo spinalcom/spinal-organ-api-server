@@ -5,7 +5,7 @@ import { spinalAnalyticNodeManagerService, VERSION } from "spinal-model-analysis
 import { awaitSync } from '../../../utilities/awaitSync';
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (logger: any, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
    * @swagger
@@ -56,10 +56,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     try {
       const profileId = getProfileId(req);
       const contextName = req.body.contextName;
-      const graph = await spinalAPIMiddleware.getGraph();
-      await SpinalGraphService.setGraph(graph);
+      const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
 
-      const node = await spinalAnalyticNodeManagerService.createContext(contextName);
+      const node = await spinalAnalyticNodeManagerService.createContext(contextName, graph);
       await awaitSync(node)
       return res.json({
         data: {

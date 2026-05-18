@@ -75,7 +75,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const contextId = req.params.contextId;
             const body = req.body;
             const contextNode = await spinalAPIMiddleware.load(parseInt(contextId, 10), profileId);
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(contextNode);
+            const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
             const config = {
                 ...body,
                 contextName: contextNode.getName().get(),
@@ -85,7 +85,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(anchorNode);
                 config.anchorNodeId = anchorNode.getId().get();
             }
-            const analysisNode = await spinal_model_analysis_1.spinalAnalysisFactoryService.createFromJSON(config);
+            const analysisNode = await spinal_model_analysis_1.spinalAnalysisFactoryService.createFromJSON(config, graph);
             return res.json({
                 data: {
                     id: analysisNode._server_id,

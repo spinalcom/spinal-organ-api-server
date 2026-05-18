@@ -4,9 +4,8 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 import { spinalAnalyticNodeManagerService, VERSION } from "spinal-model-analysis";
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { SpinalNode } from 'spinal-model-graph';
-import { count } from 'console';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (logger: any, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
    * @swagger
@@ -51,10 +50,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     try {
       const profileId = getProfileId(req);
       const contextId = req.params.contextId;
-
       const contextNode: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(contextId, 10), profileId);
-      SpinalGraphService._addNode(contextNode);
-      const analytics = await spinalAnalyticNodeManagerService.getAnalysisNodesByContextName(contextNode.getName().get());
+
+      const analytics = await spinalAnalyticNodeManagerService.getAnalysisNodesByContextNode(contextNode);
       const analyticDetails = [];
       for (const analyticNode of analytics) {
         const analyticDetail = await spinalAnalyticNodeManagerService.getAnalyticDetails(analyticNode);

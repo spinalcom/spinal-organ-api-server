@@ -5,7 +5,7 @@ import { spinalAnalyticNodeManagerService, VERSION } from "spinal-model-analysis
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { SpinalNode } from 'spinal-model-graph';
 
-module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+module.exports = function (logger: any, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
    * @swagger
