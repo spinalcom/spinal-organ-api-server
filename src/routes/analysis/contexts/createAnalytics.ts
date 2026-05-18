@@ -4,6 +4,7 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 import { spinalAnalysisFactoryService, VERSION, IAnalysisConfigJSON } from "spinal-model-analysis";
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { SpinalNode } from 'spinal-model-graph';
+import { awaitSync } from '../../../utilities/awaitSync';
 
 module.exports = function (logger: any, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
@@ -94,7 +95,7 @@ module.exports = function (logger: any, app: express.Express, spinalAPIMiddlewar
       }
 
       const analysisNode = await spinalAnalysisFactoryService.createFromJSON(config, graph);
-
+      await awaitSync(analysisNode)
       return res.json({
         data: {
           id: analysisNode._server_id,

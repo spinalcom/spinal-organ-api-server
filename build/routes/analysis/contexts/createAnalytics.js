@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_model_analysis_1 = require("spinal-model-analysis");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const awaitSync_1 = require("../../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -86,6 +87,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 config.anchorNodeId = anchorNode.getId().get();
             }
             const analysisNode = await spinal_model_analysis_1.spinalAnalysisFactoryService.createFromJSON(config, graph);
+            await (0, awaitSync_1.awaitSync)(analysisNode);
             return res.json({
                 data: {
                     id: analysisNode._server_id,
