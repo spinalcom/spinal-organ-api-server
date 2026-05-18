@@ -1158,6 +1158,12 @@ function routes(logger, app: express.Application, spinalAPIMiddleware: ISpinalAP
     spinalAPIMiddleware
   );
 
+  require('./analysis/contexts/deleteContext')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+
   require('./analysis/contexts/getAnalytics')(
     logger,
     app,
