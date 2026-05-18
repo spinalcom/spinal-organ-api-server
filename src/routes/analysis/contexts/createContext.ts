@@ -56,8 +56,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     try {
       const profileId = getProfileId(req);
       const contextName = req.body.contextName;
-      const nodeInfo = await spinalAnalyticNodeManagerService.createContext(contextName);
-      const node = SpinalGraphService.getRealNode(nodeInfo.id.get());
+      const node = await spinalAnalyticNodeManagerService.createContext(contextName);
       await awaitSync(node)
       return res.json({
         data: {
