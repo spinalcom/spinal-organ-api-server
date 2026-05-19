@@ -80,6 +80,6 @@
     "spinal-organ-network_sample": "spinal-organ-network_sample",
     "spinal-service-ticket": "spinal-service-ticket",
     "spinal-service-user": "spinal-service-user",
-    "spinal-model-analysis": "spinal-model-analysis@dev"
+    "spinal-model-analysis": "spinal-model-analysis"
   }
 }
