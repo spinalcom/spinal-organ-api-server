@@ -94,13 +94,15 @@ module.exports = function (
         if (!userGraph)
           throw { code: 401, message: `No graph found for ${profileId}` };
         const { name, color } = req.body;
+        const graph = await spinalAPIMiddleware.getGraph();
 
         try {
           const userGroupContext = await createSpinalUserGroupContext(
-            userGraph,
+            graph,
             name,
             color
           );
+          await userGraph.addContext(userGroupContext);
           const result = await createBasicNodeSync(userGroupContext, [
             'color',
           ] as const);

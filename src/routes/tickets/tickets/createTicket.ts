@@ -22,8 +22,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import type { SpinalContext } from 'spinal-model-graph';
-
+import {
+  type SpinalContext,
+  SPINAL_RELATION_PTR_LST_TYPE,
+} from 'spinal-model-graph';
 import type { Lst } from 'spinal-core-connectorjs';
 import { FileSystem } from 'spinal-core-connectorjs_type';
 import type { ISpinalAPIMiddleware } from '../../../interfaces/ISpinalAPIMiddleware';
@@ -47,9 +49,15 @@ import { awaitSync } from '../../../utilities/awaitSync';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { getSpatialContext } from '../../../utilities/getSpatialContext';
 import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
+import {
+  createSpinalUser,
+  createSpinalUserContext,
+  getSpinalUser,
+  getSpinalUserContexts,
+} from 'spinal-model-user-service';
 
 module.exports = function (
-  logger,
+  logger: any,
   app: express.Express,
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
@@ -284,7 +292,7 @@ module.exports = function (
       const mode = parseTicketCreationMode(req.query.mode);
       if (mode === 'fast') return createTicketFast(req, res);
       return createTicketRegular(req, res);
-    } catch (error) {
+    } catch (error: any) {
       if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
       return res.status(400).send({ ko: error });
@@ -337,11 +345,11 @@ module.exports = function (
       await awaitSync(ticketCreatedNode);
       const infoFromTicket = await getTicketInfo(ticketCreatedNode);
       const info: Record<string, string | number> = {
-        dynamicId: ticketCreatedNode._server_id,
+        dynamicId: ticketCreatedNode._server_id!,
         staticId: ticketCreatedNode.info.id.get(),
         name: infoFromTicket.name || ticketCreatedNode.info.name.get(),
         type: ticketCreatedNode.info.type.get(),
-        elementSelected: targetNode._server_id,
+        elementSelected: targetNode._server_id!,
         priority: +infoFromTicket.priority,
         description: infoFromTicket.description,
         declarer_id: infoFromTicket.declarer_id,
@@ -368,7 +376,7 @@ module.exports = function (
         addTicketToUser(profileId, email, ticketCreatedNode);
       }
       return res.status(201).json(info);
-    } catch (error) {
+    } catch (error: any) {
       if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
       return res.status(400).send({ ko: error });
@@ -390,7 +398,7 @@ module.exports = function (
 
       await awaitSync(ticketNode);
       const info: Record<string, string | number> = {
-        dynamicId: ticketNode._server_id,
+        dynamicId: ticketNode._server_id!,
         staticId: ticketNode.info.id.get(),
         name: ticketNode.info.name.get(),
         type: ticketNode.info.type.get(),
@@ -416,7 +424,7 @@ module.exports = function (
       );
 
       return res.status(201).json(info);
-    } catch (error) {
+    } catch (error: any) {
       if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
       return res.status(400).send({ ko: error });
@@ -548,12 +556,41 @@ module.exports = function (
       }
     }
   }
+
+  async function addTicketToUser(
+    profileId: string,
+    email: string,
+    ticketNode: SpinalNode
+  ) {
+    const graph = await spinalAPIMiddleware.getGraph();
+    const userContexts = await getSpinalUserContexts(graph);
+    let userContext = userContexts[0]; // Assuming the first context is the relevant one, adjust as needed
+    if (!userContext) {
+      const contextName = 'Default User Context';
+      const contextData = await createSpinalUserContext(graph, contextName);
+      userContext = contextData.context;
+      const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
+      await userGraph.addContext(userContext);
+    }
+    // get user in context by email
+    let user = await getSpinalUser(userContext, email);
+    // if not found create a new user with this email
+    if (!user) {
+      user = await createSpinalUser(userContext, email);
+    }
+    // add the ticket to the user with a 'UserHasTicket' relation
+    await user.addChild(
+      ticketNode,
+      'UserHasTicket',
+      SPINAL_RELATION_PTR_LST_TYPE
+    );
+  }
 };
 
 /**
  * Helper function to process base64 image string, stripping data URL prefix if present.
  */
-function processImageBase64(base64Image: string): Buffer {
+function processImageBase64(base64Image: string): Buffer | undefined {
   // check if data base64
   if (/^data:image\/\w+;base64,/.test(base64Image) === true) {
     const imageData = base64Image.replace(/^data:image\/\w+;base64,/, '');
@@ -583,7 +620,7 @@ async function getWorkflowNode(
   workflowIdOrName: string | number,
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string
-) {
+): Promise<SpinalNode | undefined> {
   try {
     const workflowId = +workflowIdOrName;
     if (!isNaN(workflowId)) {
@@ -611,7 +648,7 @@ async function getProcessNode(
   processIdOrName: string | number,
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string
-): Promise<SpinalNode> {
+): Promise<SpinalNode | undefined> {
   try {
     const processId = +processIdOrName;
     if (!isNaN(processId)) {
@@ -639,7 +676,7 @@ async function fetchSpinalNodeTarget(
   profileId: string,
   dynamicId?: number,
   staticId?: string
-): Promise<SpinalNode> {
+): Promise<SpinalNode | undefined> {
   if (dynamicId) {
     try {
       const node: SpinalNode = await loadAndValidateNode(
@@ -664,16 +701,4 @@ async function fetchSpinalNodeTarget(
       }
     }
   }
-}
-
-async function addTicketToUser(
-  profileId: string,
-  email: string,
-  ticketNode: SpinalNode
-) {
-  // const userContext = await getUserContext();
-  // get user context - if not exist create it
-  // get user in context by email
-  // if not found create a new user with this email
-  // add the ticket to the user with a 'UserHasTicket' relation
 }

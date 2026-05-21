@@ -110,6 +110,7 @@ function getIndexCat(filePath, orderCat) {
     const dir = getCategoryInFilePath(filePath);
     if (!dir)
         return 9999;
-    return orderCat.indexOf(dir);
+    const idx = orderCat.indexOf(dir);
+    return idx === -1 ? 9999 : idx;
 }
 //# sourceMappingURL=listRequest.js.map

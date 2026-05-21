@@ -23,6 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+const spinal_model_graph_1 = require("spinal-model-graph");
 const spinal_core_connectorjs_type_1 = require("spinal-core-connectorjs_type");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
@@ -32,6 +33,7 @@ const awaitSync_1 = require("../../../utilities/awaitSync");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getSpatialContext_1 = require("../../../utilities/getSpatialContext");
 const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
+const spinal_model_user_service_1 = require("spinal-model-user-service");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -382,6 +384,26 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
         }
     }
+    async function addTicketToUser(profileId, email, ticketNode) {
+        const graph = await spinalAPIMiddleware.getGraph();
+        const userContexts = await (0, spinal_model_user_service_1.getSpinalUserContexts)(graph);
+        let userContext = userContexts[0]; // Assuming the first context is the relevant one, adjust as needed
+        if (!userContext) {
+            const contextName = 'Default User Context';
+            const contextData = await (0, spinal_model_user_service_1.createSpinalUserContext)(graph, contextName);
+            userContext = contextData.context;
+            const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
+            await userGraph.addContext(userContext);
+        }
+        // get user in context by email
+        let user = await (0, spinal_model_user_service_1.getSpinalUser)(userContext, email);
+        // if not found create a new user with this email
+        if (!user) {
+            user = await (0, spinal_model_user_service_1.createSpinalUser)(userContext, email);
+        }
+        // add the ticket to the user with a 'UserHasTicket' relation
+        await user.addChild(ticketNode, 'UserHasTicket', spinal_model_graph_1.SPINAL_RELATION_PTR_LST_TYPE);
+    }
 };
 /**
  * Helper function to process base64 image string, stripping data URL prefix if present.
@@ -468,12 +490,5 @@ async function fetchSpinalNodeTarget(spinalAPIMiddleware, profileId, dynamicId, 
             }
         }
     }
-}
-async function addTicketToUser(profileId, email, ticketNode) {
-    // const userContext = await getUserContext();
-    // get user context - if not exist create it
-    // get user in context by email
-    // if not found create a new user with this email
-    // add the ticket to the user with a 'UserHasTicket' relation
 }
 //# sourceMappingURL=createTicket.js.map

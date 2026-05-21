@@ -382,6 +382,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./user/user/getUserById')(logger, app, spinalAPIMiddleware);
     require('./user/user/getUserMultiple')(logger, app, spinalAPIMiddleware);
     require('./user/user/updateUser')(logger, app, spinalAPIMiddleware);
+    require('./user/user/getUserTickets')(logger, app, spinalAPIMiddleware);
     require('./userGroup/category/createUserCategoryGroup')(logger, app, spinalAPIMiddleware);
     require('./userGroup/category/deleteUserCategoryGroup')(logger, app, spinalAPIMiddleware);
     require('./userGroup/category/getUserCategoryGroup')(logger, app, spinalAPIMiddleware);
