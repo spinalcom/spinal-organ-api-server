@@ -111,8 +111,26 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                 type: boolean
      *                 description: Flag to include room reference, defaults to true
      *               equipements:
-     *                 type: boolean
-     *                 description: Flag to include equipment details, defaults to false
+     *                 oneOf:
+     *                   - type: boolean
+     *                   - type: array
+     *                     items:
+     *                       type: object
+     *                       required:
+     *                         - contextName
+     *                         - categoryName
+     *                         - groupNames
+     *                       properties:
+     *                         contextName:
+     *                           type: string
+     *                         categoryName:
+     *                           type: string
+     *                         groupNames:
+     *                           type: array
+     *                           items:
+     *                             type: string
+     *                           description: List of group names to filter by. Empty array means all groups in the category.
+     *                 description: Boolean to include all equipment, or array of group filters to include only matching equipment
      *     responses:
      *       200:
      *         description: Flattened geographic tree with BIM alias dictionary
@@ -146,7 +164,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             roomRef: body.roomRef || true,
             equipements: body.equipements || false,
         };
-        // Default behavior: if no dynamicId → return whole building
+        // Default behavior: if no dynamicId -> return whole building
         if (!options.dynamicId) {
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
             const contexts = await graph.getChildren("hasContext");
@@ -157,6 +175,35 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             options.floorRef = true;
             options.roomRef = true;
             options.equipements = true;
+        }
+        // PRELOAD allowed group node IDs when equipements is an array filter
+        let allowedGroupIds = null;
+        if (Array.isArray(options.equipements)) {
+            allowedGroupIds = new Set();
+            const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
+            const allContexts = await graph.getChildren('hasContext');
+            for (const filter of options.equipements) {
+                const ctx = allContexts.find((c) => c.info.name.get() === filter.contextName);
+                if (!ctx)
+                    continue;
+                const categories = await ctx.getChildren('hasCategory');
+                const cat = categories.find((c) => c.info.name.get() === filter.categoryName);
+                if (!cat)
+                    continue;
+                const groups = await cat.getChildren('hasGroup');
+                if (filter.groupNames.length === 0) {
+                    // empty groupNames means all groups in this category
+                    for (const g of groups)
+                        allowedGroupIds.add(g.getId().get());
+                }
+                else {
+                    for (const g of groups) {
+                        if (filter.groupNames.includes(g.info.name.get())) {
+                            allowedGroupIds.add(g.getId().get());
+                        }
+                    }
+                }
+            }
         }
         // LOAD ROOT NODES
         const roots = await getRootNodes(options.dynamicId, profileId);
@@ -191,6 +238,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 }
                 else if (relation === constants_1.REFERENCE_RELATION && parent?.info.type.get() === constants_1.FLOOR_TYPE) {
                     type = 'floorRef'; // Floor reference objects
+                }
+                // Filter equipment by allowed groups when using array filter
+                if (type === constants_1.EQUIPMENT_TYPE && allowedGroupIds !== null) {
+                    const parentGroups = await node.getParents('groupHasBIMObject');
+                    const belongsToAllowed = parentGroups.some((g) => allowedGroupIds.has(g.getId().get()));
+                    if (!belongsToAllowed)
+                        continue;
                 }
                 let dbId = null;
                 let alias = null;

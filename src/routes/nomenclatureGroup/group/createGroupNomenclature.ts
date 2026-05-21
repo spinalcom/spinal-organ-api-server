@@ -94,7 +94,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
             staticId: group.getId().get(),
             name: group.getName().get(),
             type: group.getType().get(),
-            color: group.info.color.get()
+            color: group.info.color?.get()
           };
         } else {
           res.status(400).send("node is not type of AttributeConfigurationGroupContext ");

@@ -66,10 +66,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
       for (const child of childrens) {
         const info: Context = {
-          dynamicId: child._server_id,
+          dynamicId: child._server_id!,
           staticId: child.getId().get(),
           name: child.getName().get(),
           type: child.getType().get(),
+          color: child.info.color?.get(),
+          icon: child.info.icon?.get()
         };
         nodes.push(info);
       }

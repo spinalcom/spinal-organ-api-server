@@ -24,6 +24,8 @@ async function buildPaths(node, contextStaticId) {
         name: nodeName,
         dynamicId: nodeId,
         type: node.getType().get(),
+        color: node.info.color?.get(),
+        icon: node.info.icon?.get(),
         parentsInContext,
     };
 }

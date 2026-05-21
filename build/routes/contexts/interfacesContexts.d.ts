@@ -20,6 +20,7 @@ export interface Context {
     name: string;
     type: string;
     color?: string;
+    icon?: string;
 }
 /**
  * @swagger

@@ -44,10 +44,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(category)
-      if(!(context instanceof SpinalContext)){
+      if (!(context instanceof SpinalContext)) {
         return res.status(400).send("The context Id provided does not represent a context");
       }
-      if(!category.belongsToContext(context)){
+      if (!category.belongsToContext(context)) {
         return res.status(400).send("The category does not belong to the context");
       }
       const listGroups = await groupManagerService.getGroups(category.getId().get())
@@ -59,8 +59,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           staticId: realNode.getId().get(),
           name: realNode.getName().get(),
           type: realNode.getType().get(),
-          color: group.color.get(),
-          icon:  group.icon?.get()
+          color: group.color?.get(),
+          icon: group.icon?.get()
         };
         nodes.push(info);
       }
@@ -123,10 +123,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(category)
-      if(!(context instanceof SpinalContext)){
+      if (!(context instanceof SpinalContext)) {
         return res.status(400).send("The context Id provided does not represent a context");
       }
-      if(!category.belongsToContext(context)){
+      if (!category.belongsToContext(context)) {
         return res.status(400).send("The category does not belong to the context");
       }
       const listGroups = await groupManagerService.getGroups(category.getId().get())
@@ -138,8 +138,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           staticId: realNode.getId().get(),
           name: realNode.getName().get(),
           type: realNode.getType().get(),
-          color: group.color.get(),
-          icon:  group.icon?.get()
+          color: group.color?.get(),
+          icon: group.icon?.get()
         };
         nodes.push(info);
       }

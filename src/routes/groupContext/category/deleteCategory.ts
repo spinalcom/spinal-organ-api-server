@@ -72,11 +72,20 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const category: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(category)
-      if (context instanceof SpinalContext && category.belongsToContext(context)) {
-        await SpinalGraphService.removeFromGraph(category.getId().get())
-      } else {
-        res.status(400).send("category not found in context");
+
+      if (!context || !(context instanceof SpinalContext)) {
+        res.status(400).send("context not found");
+        return;
       }
+      if (!category || !category.belongsToContext(context)) {
+        res.status(400).send("category not found");
+        return;
+      }
+      const groups = await category.getChildren("hasGroup");
+      await Promise.allSettled(groups.map(group => group.removeFromGraph()));
+      await category.removeFromGraph();
+      res.status(200).send("Deleted Successfully");
+
     } catch (error) {
 
       if (error.code && error.message) return res.status(error.code).send(error.message);

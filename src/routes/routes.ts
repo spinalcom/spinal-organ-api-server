@@ -497,6 +497,11 @@ function routes(
     app,
     spinalAPIMiddleware
   );
+  require('./geographicContext/building/buildingInventory')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./geographicContext/building/buildingReferenceObjectsList')(
     logger,
     app,
@@ -818,6 +823,11 @@ function routes(
   require('./groupContext/group/updateGroup')(logger, app, spinalAPIMiddleware);
   require('./groupContext/group/deleteGroup')(logger, app, spinalAPIMiddleware);
   require('./groupContext/group/readGroup')(logger, app, spinalAPIMiddleware);
+  require('./groupContext/group/unassignItem')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
 
   // notes routes
   require('./notes/addNotes')(logger, app, spinalAPIMiddleware);
@@ -1204,6 +1214,12 @@ function routes(
 
   require('./analysis/contexts/getContext')(logger, app, spinalAPIMiddleware);
 
+  require('./analysis/contexts/deleteContext')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+
   require('./analysis/contexts/getAnalytics')(logger, app, spinalAPIMiddleware);
 
   require('./analysis/contexts/createAnalytics')(
@@ -1213,6 +1229,16 @@ function routes(
   );
 
   require('./analysis/analytics/getAnalytic')(logger, app, spinalAPIMiddleware);
+  require('./analysis/analytics/executeAnalytic')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./analysis/analytics/deleteAnalytic')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   // command
   require('./command/roomListCommandEnable')(logger, app, spinalAPIMiddleware);
   require('./command/roomCommandLight')(logger, app, spinalAPIMiddleware);

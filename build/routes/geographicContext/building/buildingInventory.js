@@ -35,23 +35,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     };
     /**
      * @swagger
-     * /api/v1/floor/{id}/inventory:
+     * /api/v1/building/inventory:
      *   post:
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Gets floor inventory details ( room inventory or equipment inventory  depending on given context)
-     *     summary: Gets floor inventory
+     *     description: Gets building inventory details by aggregating floor inventories for all floors
+     *     summary: Gets building inventory
      *     tags:
      *       - Geographic Context
      *     parameters:
-     *       - in: path
-     *         name: id
-     *         description: Use the dynamic ID of the floor
-     *         required: true
-     *         schema:
-     *           type: integer
-     *           format: int64
      *       - in: query
      *         name: includePosition
      *         description: Include position details in the response
@@ -108,15 +101,33 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         content:
      *           application/json:
      *             schema:
-     *               $ref: '#/components/schemas/InventoryRoomDetails'
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 properties:
+     *                   dynamicId:
+     *                     type: integer
+     *                   name:
+     *                     type: string
+     *                   type:
+     *                     type: string
+     *                   inventory:
+     *                     type: array
      *       400:
      *         description: Bad request
      */
-    app.post("/api/v1/floor/:id/inventory", async (req, res, next) => {
+    app.post("/api/v1/building/inventory", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
             const contexts = await graph.getChildren("hasContext");
+            const geographicContexts = contexts.filter((el) => el.getType().get() === 'geographicContext');
+            if (!geographicContexts.length)
+                throw { code: 400, message: "geographic context not found" };
+            const buildings = await geographicContexts[0].getChildren('hasGeographicBuilding');
+            if (!buildings.length)
+                throw { code: 400, message: "building not found" };
+            const building = buildings[0];
             const contextId = parseOptionalId(req.body.contextId);
             const groupContext = contexts.find(e => contextId !== undefined ? e._server_id === contextId : e.getName().get() === req.body.context);
             if (!groupContext)
@@ -132,7 +143,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 onlyDynamicId,
                 includeUnassignedItems,
             };
-            const inventory = await (0, getInventory_1.getFloorInventory)(spinalAPIMiddleware, profileId, groupContext, parseInt(req.params.id, 10), reqInfo);
+            const inventory = await (0, getInventory_1.getBuildingInventory)(spinalAPIMiddleware, profileId, groupContext, building._server_id, reqInfo);
             return res.json(inventory);
         }
         catch (error) {
@@ -142,4 +153,4 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
     });
 };
-//# sourceMappingURL=floorInventory.js.map
+//# sourceMappingURL=buildingInventory.js.map

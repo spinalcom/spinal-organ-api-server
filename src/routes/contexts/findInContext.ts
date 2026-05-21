@@ -225,11 +225,11 @@ async function getTicketInfo(
       elementSelected == undefined
         ? 0
         : {
-            dynamicId: elementSelected._server_id,
-            staticId: elementSelected.getId().get(),
-            name: elementSelected.getName().get(),
-            type: elementSelected.getType().get(),
-          },
+          dynamicId: elementSelected._server_id,
+          staticId: elementSelected.getId().get(),
+          name: elementSelected.getName().get(),
+          type: elementSelected.getType().get(),
+        },
     userName:
       _node.info.user?.name?.get() || _node.info.user?.username?.get() || '',
     gmaoId: _node.info.gmaoId?.get() || '',
@@ -240,22 +240,22 @@ async function getTicketInfo(
       _process === undefined
         ? ''
         : {
-            dynamicId: _process._server_id,
-            staticId: _process.getId().get(),
-            name: _process.getName().get(),
-            type: _process.getType().get(),
-          },
+          dynamicId: _process._server_id,
+          staticId: _process.getId().get(),
+          name: _process.getName().get(),
+          type: _process.getType().get(),
+        },
     step:
       _step === undefined
         ? ''
         : {
-            dynamicId: _step._server_id,
-            staticId: _step.getId().get(),
-            name: _step.getName().get(),
-            type: _step.getType().get(),
-            color: _step.info.color.get(),
-            order: _step.info.order.get(),
-          },
+          dynamicId: _step._server_id,
+          staticId: _step.getId().get(),
+          name: _step.getName().get(),
+          type: _step.getType().get(),
+          color: _step.info.color?.get(),
+          order: _step.info.order?.get(),
+        },
     workflowId: context._server_id,
     workflowName: context.getName().get(),
     categories: _infoCategories,

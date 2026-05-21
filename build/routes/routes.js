@@ -174,6 +174,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./geographicContext/geographicContextTree')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/geographicContextSpace')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/building/readBuilding')(logger, app, spinalAPIMiddleware);
+    require('./geographicContext/building/buildingInventory')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/building/buildingReferenceObjectsList')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/floor/floorList')(logger, app, spinalAPIMiddleware);
     require('./geographicContext/floor/floorDetails')(logger, app, spinalAPIMiddleware);
@@ -252,6 +253,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./groupContext/group/updateGroup')(logger, app, spinalAPIMiddleware);
     require('./groupContext/group/deleteGroup')(logger, app, spinalAPIMiddleware);
     require('./groupContext/group/readGroup')(logger, app, spinalAPIMiddleware);
+    require('./groupContext/group/unassignItem')(logger, app, spinalAPIMiddleware);
     // notes routes
     require('./notes/addNotes')(logger, app, spinalAPIMiddleware);
     // require('./notes/getnotes')(logger, app, spinalAPIMiddleware);
@@ -356,9 +358,12 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./analysis/contexts/createContext')(logger, app, spinalAPIMiddleware);
     require('./analysis/contexts/getContexts')(logger, app, spinalAPIMiddleware);
     require('./analysis/contexts/getContext')(logger, app, spinalAPIMiddleware);
+    require('./analysis/contexts/deleteContext')(logger, app, spinalAPIMiddleware);
     require('./analysis/contexts/getAnalytics')(logger, app, spinalAPIMiddleware);
     require('./analysis/contexts/createAnalytics')(logger, app, spinalAPIMiddleware);
     require('./analysis/analytics/getAnalytic')(logger, app, spinalAPIMiddleware);
+    require('./analysis/analytics/executeAnalytic')(logger, app, spinalAPIMiddleware);
+    require('./analysis/analytics/deleteAnalytic')(logger, app, spinalAPIMiddleware);
     // command
     require('./command/roomListCommandEnable')(logger, app, spinalAPIMiddleware);
     require('./command/roomCommandLight')(logger, app, spinalAPIMiddleware);

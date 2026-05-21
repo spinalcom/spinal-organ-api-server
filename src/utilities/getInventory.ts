@@ -16,6 +16,7 @@ type InventoryRequestInfo = {
     includePosition?: boolean;
     includeArea?: boolean;
     onlyDynamicId?: boolean;
+    includeUnassignedItems?: boolean;
 };
 
 function parseOptionalId(value: any): number | undefined {
@@ -58,6 +59,42 @@ async function getRoomInventory(
 
     const classifiedItems = await classifyItemsByGroup(equipmentList, groupContext, reqInfo, mapAdditionalInfo);
     return classifiedItems;
+}
+
+async function getBuildingInventory(
+    spinalAPIMiddleware: ISpinalAPIMiddleware,
+    profileId: string,
+    groupContext: SpinalNode<any>,
+    dynamicId: number,
+    reqInfo: InventoryRequestInfo
+) {
+    const building: SpinalNode<any> = await spinalAPIMiddleware.load(dynamicId, profileId);
+    //@ts-ignore
+    SpinalGraphService._addNode(building);
+    if (building.getType().get() !== "geographicBuilding") {
+        throw new Error("node is not of type geographicBuilding");
+    }
+
+    const floors = await building.getChildren("hasGeographicFloor");
+    const result: any[] = [];
+
+    for (const floor of floors) {
+        const floorInventory = await getFloorInventory(
+            spinalAPIMiddleware,
+            profileId,
+            groupContext,
+            floor._server_id,
+            reqInfo
+        );
+        result.push({
+            dynamicId: floor._server_id,
+            name: floor.getName().get(),
+            type: floor.getType().get(),
+            inventory: floorInventory
+        });
+    }
+
+    return result;
 }
 
 async function getFloorInventory(
@@ -126,22 +163,21 @@ async function classifyItemsByGroup(itemList: SpinalNode<any>[], groupContext: S
     const groupIds = parseOptionalIds(reqInfo.groupIds);
     const categoryId = parseOptionalId(reqInfo.categoryId);
     const res = [];
+    const assignedItemIds = new Set<number>();
     for (const item of itemList) {
-        let parentGroups = groupContext.getType().get() === 'geographicRoomGroupContext' ? await item.getParents("groupHasgeographicRoom") : await item.getParents("groupHasBIMObject");
+        let parentGroups = groupContext.getType().get() === 'geographicRoomGroupContext' ? await item.getParentsInContext(groupContext, "groupHasgeographicRoom") : await item.getParentsInContext(groupContext, "groupHasBIMObject");
         if (groupIds && groupIds.length > 0) {
             parentGroups = parentGroups.filter(e => groupIds.includes(e._server_id));
         } else if (reqInfo.groups && reqInfo.groups.length > 0) {
             parentGroups = parentGroups.filter(e => reqInfo.groups.includes(e.getName().get()));
         }
         for (const parentGroup of parentGroups) {
-            if (!parentGroup.belongsToContext(groupContext)) { // if the group does not belong to the context skip
-                continue;
-            }
-            const parentCategories = await parentGroup.getParents("hasGroup")
+            const parentCategories = await parentGroup.getParentsInContext(groupContext, "hasGroup");
             const parentCategory = categoryId !== undefined
                 ? parentCategories.find(e => e._server_id === categoryId)
                 : parentCategories.find(e => e.getName().get() === reqInfo.category);
-            if (!parentCategory) continue; // if the category is not the one user requested, skip
+            if (!parentCategory) continue;
+            assignedItemIds.add(item._server_id);
             if (!res.find(e => e.name === parentGroup.getName().get())) {
                 res.push({
                     name: parentGroup.getName().get(),
@@ -164,6 +200,29 @@ async function classifyItemsByGroup(itemList: SpinalNode<any>[], groupContext: S
             });
 
 
+        }
+    }
+
+    if (reqInfo.includeUnassignedItems) {
+        const unassignedItems = [];
+        for (const item of itemList) {
+            if (!assignedItemIds.has(item._server_id)) {
+                const additionalInfo = mapAdditionalInfo.get(item._server_id);
+                const position = reqInfo.includePosition ? await getCoordinate(item) : undefined;
+                const area = reqInfo.includeArea ? await getArea(item) : undefined;
+                unassignedItems.push({
+                    ...getDetail(item, reqInfo),
+                    ...additionalInfo,
+                    position,
+                    area
+                });
+            }
+        }
+        if (unassignedItems.length > 0) {
+            res.push({
+                name: 'unassignedItems',
+                groupItems: unassignedItems
+            });
         }
     }
 
@@ -200,4 +259,4 @@ async function getArea(room: SpinalNode<any>) {
     return area;
 }
 
-export { getFloorInventory, getRoomInventory };
+export { getBuildingInventory, getFloorInventory, getRoomInventory };

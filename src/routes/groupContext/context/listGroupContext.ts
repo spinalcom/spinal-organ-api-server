@@ -80,12 +80,11 @@ module.exports = function (
         };
         nodes.push(info);
       }
+      return res.status(200).send(nodes);
     } catch (error) {
       if (error.code && error.message)
         return res.status(error.code).send(error.message);
       return res.status(400).send('list of group contexts is not loaded');
     }
-
-    res.send(nodes);
   });
 };

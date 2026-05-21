@@ -10,7 +10,9 @@ type InventoryRequestInfo = {
     includePosition?: boolean;
     includeArea?: boolean;
     onlyDynamicId?: boolean;
+    includeUnassignedItems?: boolean;
 };
 declare function getRoomInventory(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, groupContext: SpinalNode<any>, dynamicId: number, reqInfo: InventoryRequestInfo): Promise<any[]>;
+declare function getBuildingInventory(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, groupContext: SpinalNode<any>, dynamicId: number, reqInfo: InventoryRequestInfo): Promise<any[]>;
 declare function getFloorInventory(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, groupContext: SpinalNode<any>, dynamicId: number, reqInfo: InventoryRequestInfo): Promise<any[]>;
-export { getFloorInventory, getRoomInventory };
+export { getBuildingInventory, getFloorInventory, getRoomInventory };

@@ -98,7 +98,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
           staticId: group.getId().get(),
           name: group.getName().get(),
           type: group.getType().get(),
-          color: group.info.color.get()
+          color: group.info.color?.get()
         }
         return res.json(info)
       } else {
@@ -109,6 +109,6 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       if (error.code && error.message) return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }
-    
+
   });
 }

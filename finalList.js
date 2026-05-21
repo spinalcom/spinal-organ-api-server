@@ -1,3 +1,27 @@
+/*
+ * Copyright 2026 SpinalCom - www.spinalcom.com
+ * 
+ * This file is part of SpinalCore.
+ * 
+ * Please read all of the following terms and conditions
+ * of the Software license Agreement ("Agreement")
+ * carefully.
+ * 
+ * This Agreement is a legally binding contract between
+ * the Licensee (as defined below) and SpinalCom that
+ * sets forth the terms and conditions that govern your
+ * use of the Program. By installing and/or using the
+ * Program, you agree to abide by all the terms and
+ * conditions stated or referenced herein.
+ * 
+ * If you do not agree to abide by these terms and
+ * conditions, do not demonstrate your acceptance and do
+ * not install or use the Program.
+ * You should have received a copy of the license along
+ * with this file. If not, see
+ * <http://resources.spinalcom.com/licenses.pdf>.
+ */
+
 module.exports = [
   "../src/routes/contexts/contextFindNodeByDate.ts",
   "../src/routes/contexts/contextList.ts",
@@ -60,6 +84,7 @@ module.exports = [
   "../src/routes/attributs/deleteAttribute.ts",
   "../src/routes/attributs/updateAttribute.ts",
   "../src/routes/attributs/updateAttributeMultiple.ts",
+  "../src/routes/geographicContext/building/buildingInventory.ts",
   "../src/routes/geographicContext/building/buildingReferenceObjectsList.ts",
   "../src/routes/geographicContext/building/readBuilding.ts",
   "../src/routes/geographicContext/building/readStaticDetails.ts",
@@ -217,6 +242,7 @@ module.exports = [
   "../src/routes/groupContext/group/deleteGroup.ts",
   "../src/routes/groupContext/group/listGroup.ts",
   "../src/routes/groupContext/group/readGroup.ts",
+  "../src/routes/groupContext/group/unassignItem.ts",
   "../src/routes/groupContext/group/updateGroup.ts",
   "../src/routes/groupContext/groupeContextTypeList.ts",
   "../src/routes/groupContext/interfacesGroupContexts.ts",
@@ -385,4 +411,4 @@ module.exports = [
   "../src/routes/userGroup/group/getUserGroup.ts",
   "../src/routes/userGroup/group/getUserGroupById.ts",
   "../src/routes/userGroup/group/updateUserGroup.ts"
-]
+];

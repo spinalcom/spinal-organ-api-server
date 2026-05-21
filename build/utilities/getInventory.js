@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getBuildingInventory = getBuildingInventory;
 exports.getFloorInventory = getFloorInventory;
 exports.getRoomInventory = getRoomInventory;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
@@ -31,6 +32,26 @@ async function getRoomInventory(spinalAPIMiddleware, profileId, groupContext, dy
     const equipmentList = await room.getChildren("hasBimObject");
     const classifiedItems = await classifyItemsByGroup(equipmentList, groupContext, reqInfo, mapAdditionalInfo);
     return classifiedItems;
+}
+async function getBuildingInventory(spinalAPIMiddleware, profileId, groupContext, dynamicId, reqInfo) {
+    const building = await spinalAPIMiddleware.load(dynamicId, profileId);
+    //@ts-ignore
+    spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(building);
+    if (building.getType().get() !== "geographicBuilding") {
+        throw new Error("node is not of type geographicBuilding");
+    }
+    const floors = await building.getChildren("hasGeographicFloor");
+    const result = [];
+    for (const floor of floors) {
+        const floorInventory = await getFloorInventory(spinalAPIMiddleware, profileId, groupContext, floor._server_id, reqInfo);
+        result.push({
+            dynamicId: floor._server_id,
+            name: floor.getName().get(),
+            type: floor.getType().get(),
+            inventory: floorInventory
+        });
+    }
+    return result;
 }
 async function getFloorInventory(spinalAPIMiddleware, profileId, groupContext, dynamicId, reqInfo) {
     const floor = await spinalAPIMiddleware.load(dynamicId, profileId);
@@ -77,8 +98,9 @@ async function classifyItemsByGroup(itemList, groupContext, reqInfo, mapAddition
     const groupIds = parseOptionalIds(reqInfo.groupIds);
     const categoryId = parseOptionalId(reqInfo.categoryId);
     const res = [];
+    const assignedItemIds = new Set();
     for (const item of itemList) {
-        let parentGroups = groupContext.getType().get() === 'geographicRoomGroupContext' ? await item.getParents("groupHasgeographicRoom") : await item.getParents("groupHasBIMObject");
+        let parentGroups = groupContext.getType().get() === 'geographicRoomGroupContext' ? await item.getParentsInContext(groupContext, "groupHasgeographicRoom") : await item.getParentsInContext(groupContext, "groupHasBIMObject");
         if (groupIds && groupIds.length > 0) {
             parentGroups = parentGroups.filter(e => groupIds.includes(e._server_id));
         }
@@ -86,15 +108,13 @@ async function classifyItemsByGroup(itemList, groupContext, reqInfo, mapAddition
             parentGroups = parentGroups.filter(e => reqInfo.groups.includes(e.getName().get()));
         }
         for (const parentGroup of parentGroups) {
-            if (!parentGroup.belongsToContext(groupContext)) { // if the group does not belong to the context skip
-                continue;
-            }
-            const parentCategories = await parentGroup.getParents("hasGroup");
+            const parentCategories = await parentGroup.getParentsInContext(groupContext, "hasGroup");
             const parentCategory = categoryId !== undefined
                 ? parentCategories.find(e => e._server_id === categoryId)
                 : parentCategories.find(e => e.getName().get() === reqInfo.category);
             if (!parentCategory)
-                continue; // if the category is not the one user requested, skip
+                continue;
+            assignedItemIds.add(item._server_id);
             if (!res.find(e => e.name === parentGroup.getName().get())) {
                 res.push({
                     name: parentGroup.getName().get(),
@@ -114,6 +134,28 @@ async function classifyItemsByGroup(itemList, groupContext, reqInfo, mapAddition
                 ...additionalInfo,
                 position,
                 area
+            });
+        }
+    }
+    if (reqInfo.includeUnassignedItems) {
+        const unassignedItems = [];
+        for (const item of itemList) {
+            if (!assignedItemIds.has(item._server_id)) {
+                const additionalInfo = mapAdditionalInfo.get(item._server_id);
+                const position = reqInfo.includePosition ? await getCoordinate(item) : undefined;
+                const area = reqInfo.includeArea ? await getArea(item) : undefined;
+                unassignedItems.push({
+                    ...getDetail(item, reqInfo),
+                    ...additionalInfo,
+                    position,
+                    area
+                });
+            }
+        }
+        if (unassignedItems.length > 0) {
+            res.push({
+                name: 'unassignedItems',
+                groupItems: unassignedItems
             });
         }
     }
