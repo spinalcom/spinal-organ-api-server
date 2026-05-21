@@ -94,6 +94,11 @@ module.exports = function (logger: any, app: express.Express, spinalAPIMiddlewar
         config.anchorNodeId = anchorNode.getId().get();
       }
 
+      const errors = spinalAnalysisFactoryService.validateConfig(config);
+      if (errors.length > 0) {
+        return res.status(400).json({ errors });
+      }
+
       const analysisNode = await spinalAnalysisFactoryService.createFromJSON(config, graph);
       await awaitSync(analysisNode)
       return res.json({

@@ -86,6 +86,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(anchorNode);
                 config.anchorNodeId = anchorNode.getId().get();
             }
+            const errors = spinal_model_analysis_1.spinalAnalysisFactoryService.validateConfig(config);
+            if (errors.length > 0) {
+                return res.status(400).json({ errors });
+            }
             const analysisNode = await spinal_model_analysis_1.spinalAnalysisFactoryService.createFromJSON(config, graph);
             await (0, awaitSync_1.awaitSync)(analysisNode);
             return res.json({
