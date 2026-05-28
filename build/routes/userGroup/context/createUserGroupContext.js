@@ -91,7 +91,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const graph = await spinalAPIMiddleware.getGraph();
             try {
                 const userGroupContext = await (0, spinal_model_user_service_1.createSpinalUserGroupContext)(graph, name, color);
-                await userGraph.addContext(userGroupContext);
+                if (userGraph !== graph)
+                    await userGraph.addContext(userGroupContext);
                 const result = await (0, createBasicNode_1.createBasicNodeSync)(userGroupContext, [
                     'color',
                 ]);
