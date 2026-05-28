@@ -1333,11 +1333,6 @@ function routes(
     app,
     spinalAPIMiddleware
   );
-  require('./userGroup/group/getUserGroupByContext')(
-    logger,
-    app,
-    spinalAPIMiddleware
-  );
   require('./userGroup/group/getUserGroup')(logger, app, spinalAPIMiddleware);
   require('./userGroup/group/createUserGroup')(
     logger,

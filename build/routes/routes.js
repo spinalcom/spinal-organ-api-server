@@ -398,7 +398,6 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./userGroup/context/getUserGroupContext')(logger, app, spinalAPIMiddleware);
     require('./userGroup/context/getUserGroupContextById')(logger, app, spinalAPIMiddleware);
     require('./userGroup/context/updateUserGroupContext')(logger, app, spinalAPIMiddleware);
-    require('./userGroup/group/getUserGroupByContext')(logger, app, spinalAPIMiddleware);
     require('./userGroup/group/getUserGroup')(logger, app, spinalAPIMiddleware);
     require('./userGroup/group/createUserGroup')(logger, app, spinalAPIMiddleware);
     require('./userGroup/group/deleteUserGroup')(logger, app, spinalAPIMiddleware);
