@@ -570,7 +570,8 @@ module.exports = function (
       const contextData = await createSpinalUserContext(graph, contextName);
       userContext = contextData.context;
       const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
-      await userGraph.addContext(userContext);
+      if (userGraph && userGraph !== graph)
+        await userGraph.addContext(userContext);
     }
     // get user in context by email
     let user = await getSpinalUser(userContext, email);

@@ -102,7 +102,7 @@ module.exports = function (
             name,
             color
           );
-          await userGraph.addContext(userGroupContext);
+          if (userGraph !== graph) await userGraph.addContext(userGroupContext);
           const result = await createBasicNodeSync(userGroupContext, [
             'color',
           ] as const);
