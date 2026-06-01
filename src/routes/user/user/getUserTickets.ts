@@ -128,8 +128,8 @@ module.exports = function (
               )
             );
           }
-
-          res.status(200).json(resData);
+          const result = await Promise.all(resData);
+          res.status(200).json(result);
         } catch (error) {
           throw {
             code: 400,

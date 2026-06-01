@@ -104,7 +104,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     const ticket = reversedTickets[i];
                     resData.push((0, getTicketDetails_1.default)(spinalAPIMiddleware, profileId, ticket._server_id, true));
                 }
-                res.status(200).json(resData);
+                const result = await Promise.all(resData);
+                res.status(200).json(result);
             }
             catch (error) {
                 throw {
