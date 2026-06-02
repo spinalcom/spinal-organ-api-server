@@ -26,9 +26,9 @@ import { z } from 'zod';
 import validate from 'express-zod-safe';
 import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import type { Express } from 'express';
-import { SpinalNode } from 'spinal-model-graph';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import getTicketDetails from '../../../utilities/workflow/getTicketDetails';
+import { getOrganizationContext } from 'spinal-model-user-service';
+import { createBasicNodeSync } from '../../../utilities/createBasicNode';
 
 module.exports = function (
   logger: any,
@@ -37,54 +37,47 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/user/{userId}/tickets:
+   * /api/v1/organization/context:
    *   get:
    *     security:
    *       - bearerAuth:
    *         - read
-   *     summary: Retrieve tickets for a SpinalUser by ID
-   *     description: Retrieve tickets for a SpinalUser by their unique ID. Limit of 100 tickets per request with pagination using the offset query parameter.
+   *     summary: Retrieve all Organization Context or a specific one by name
+   *     description: Get all the Organization Context or a specific one if the name query parameter is provided
    *     tags:
-   *       - User
+   *       - Organization
    *     parameters:
-   *       - in: path
-   *         name: userId
-   *         required: true
-   *         schema:
-   *           type: integer
-   *           format: int64
-   *           description: dynamic ID of the user to retrieve
    *       - in: query
-   *         name: offset
+   *         name: name
    *         required: false
    *         schema:
-   *           type: integer
-   *           description: offset for pagination
-   *           default: 0
+   *           type: string
+   *           maxLength: 200
+   *           minLength: 1
+   *           description: name of the organization context to retrieve
    *     responses:
    *       200:
    *         description: Retrieve Successfully
    *         content:
    *           application/json:
    *             schema:
-   *               $ref: '#/components/schemas/IUser'
+   *               oneOf:
+   *                 - type: array
+   *                   items:
+   *                     $ref: '#/components/schemas/BasicNodeWithColor'
+   *                 - $ref: '#/components/schemas/BasicNodeWithColor'
    *       400:
    *         description: Bad request - Invalid input or parameters
    *       404:
-   *         description: User not found
+   *         description: Organization context not found
    *       401:
    *         description: no graph found for the user
    */
   app.get(
-    '/api/v1/user/:userId/tickets',
+    '/api/v1/organization/context',
     validate({
-      params: z.strictObject({
-        userId: z.coerce.number().positive(),
-      }),
       query: z.strictObject({
-        offset: z.coerce.number().min(0).default(0),
-        startDate: z.coerce.number().optional(),
-        endDate: z.coerce.number().optional(),
+        name: z.string().max(200).min(1).optional(),
       }),
     }),
     async (req, res) => {
@@ -93,49 +86,42 @@ module.exports = function (
         const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
         if (!userGraph)
           throw { code: 401, message: `No graph found for ${profileId}` };
-        const { userId } = req.params;
-        const { offset } = req.query;
-        try {
-          const userNode = await spinalAPIMiddleware.load<SpinalNode>(
-            userId,
-            profileId
-          );
-          if (
-            !userNode ||
-            !(userNode instanceof SpinalNode) ||
-            userNode.info.type.get() !== 'SpinalUser'
-          ) {
-            throw { code: 404, message: `User not found` };
-          }
+        const { name } = req.query;
 
-          const ticketNodes = await userNode.getChildren('UserHasTicket');
-          // Sort tickets by creation date (newest first)
-          const reversedTickets = ticketNodes.reverse();
-          const resData: Record<string, any>[] = [];
-          for (
-            let i = offset;
-            i < reversedTickets.length && resData.length < 100;
-            i++
-          ) {
-            const ticket = reversedTickets[i];
-            resData.push(
-              getTicketDetails(
-                spinalAPIMiddleware,
-                profileId,
-                ticket._server_id!,
-                true
+        try {
+          if (name) {
+            const organizationContext = await getOrganizationContext(
+              userGraph,
+              name
+            );
+            if (!organizationContext)
+              throw {
+                code: 404,
+                message: `No organization context found with the name ${name}`,
+              };
+            const result = await createBasicNodeSync(organizationContext, [
+              'color',
+            ] as const);
+            res.status(200).json(result);
+          } else {
+            const organizationContexts = await getOrganizationContext(
+              userGraph
+            );
+
+            const results = await Promise.all(
+              organizationContexts.map((context) =>
+                createBasicNodeSync(context, ['color'] as const)
               )
             );
+            res.status(200).json(results);
           }
-          const result = await Promise.all(resData);
-          res.status(200).json(result);
         } catch (error) {
           throw {
             code: 400,
             message:
               error instanceof Error
                 ? error.message
-                : 'Failed to retrieve user data',
+                : 'Failed to retrieve organization context',
           };
         }
       } catch (error: any) {
@@ -143,7 +129,9 @@ module.exports = function (
           return res.status(error.code).send(error.message);
         return res
           .status(500)
-          .send('An unexpected error occurred while retrieving the user data');
+          .send(
+            'An unexpected error occurred while retrieving the organization context'
+          );
       }
     }
   );

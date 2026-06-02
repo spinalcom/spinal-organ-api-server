@@ -27,12 +27,13 @@ import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import { z } from 'zod';
 import validate from 'express-zod-safe';
 import {
-  createSpinalUserGroup,
-  getGroupingCategory,
+  addSpinalUserToSpinalUserGroup,
   getSpinalUserGroupContext,
+  SPINAL_USER_GROUP_TYPE,
+  SPINAL_USER_TYPE,
 } from 'spinal-model-user-service';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { createBasicNodeSync } from '../../../utilities/createBasicNode';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 
 module.exports = function (
   logger: any,
@@ -41,13 +42,13 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/user-group/context/{contextId}/category/{categoryId}/group:
+   * /api/v1/user-group/context/{contextId}/group/{groupId}/user:
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     summary: Create a new user group in a specific category within a user group context
-   *     description: Create a new user group in a specific category within a user group context
+   *         - write
+   *     summary: Add users to a specific user group within a user group context
+   *     description: Add users to a specific user group within a user group context
    *     tags:
    *       - User Group
    *     parameters:
@@ -59,53 +60,57 @@ module.exports = function (
    *           format: int64
    *         description: The ID of the user group context to retrieve
    *       - in: path
-   *         name: categoryId
+   *         name: groupId
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
-   *         description: The ID of the user group category to retrieve
+   *         description: The ID of the user group to retrieve
    *     requestBody:
-   *       required: true
    *       content:
    *         application/json:
    *           schema:
    *             type: object
    *             required:
-   *               - name
+   *               - userDynamicIds
    *             properties:
-   *               name:
-   *                 type: string
-   *                 maxLength: 200
-   *                 minLength: 1
-   *                 description: name of the user group to create
-   *               color:
-   *                 type: string
-   *                 pattern: '^#([A-Fa-f0-9]{6})$'
-   *                 description: Hexadecimal color code for the user group (e.g., #RRGGBB)
+   *               userDynamicIds:
+   *                 type: array
+   *                 items:
+   *                   type: number
+   *                   minLength: 1
    *     responses:
-   *       201:
-   *         description: Successfully created the user group
+   *       200:
+   *         description: Successfully added users to the user group
    *         content:
    *           application/json:
    *             schema:
-   *               $ref: '#/components/schemas/BasicNodeWithColor'
+   *               type: object
+   *               properties:
+   *                 userSuccessfullyAdded:
+   *                   type: array
+   *                   items:
+   *                     type: integer
+   *                     format: int64
+   *                   description: array of dynamic IDs of the users that were successfully added to the user group
+   *                 userFailedToAdd:
+   *                   type: array
+   *                   items:
+   *                     type: integer
+   *                     format: int64
+   *                   description: array of dynamic IDs of the users that failed to be added to the user group
    *       401:
    *         description: no graph found for the user
    */
   app.post(
-    '/api/v1/user-group/context/:contextId/category/:categoryId/group',
+    '/api/v1/user-group/context/:contextId/group/:groupId/user',
     validate({
       params: z.object({
         contextId: z.coerce.number().positive(),
-        categoryId: z.coerce.number().positive(),
+        groupId: z.coerce.number().positive(),
       }),
       body: z.strictObject({
-        name: z.string().max(200).min(1),
-        color: z
-          .string()
-          .regex(/^#([A-Fa-f0-9]{6})$/)
-          .optional(),
+        userDynamicIds: z.array(z.coerce.number().positive()).min(1),
       }),
     }),
     async (req, res) => {
@@ -117,7 +122,7 @@ module.exports = function (
 
         try {
           const userGroupContexts = await getSpinalUserGroupContext(userGraph);
-          const { contextId, categoryId } = req.params;
+          const { contextId, groupId } = req.params;
 
           const userGroupContext = userGroupContexts.find(
             (context) => context._server_id === contextId
@@ -128,32 +133,50 @@ module.exports = function (
               message: `No user group context found with id ${req.params.contextId}`,
             };
 
-          const categories = await getGroupingCategory(userGroupContext);
-          const category = categories.find(
-            (cat) => cat._server_id === categoryId
-          );
-          if (!category)
-            throw {
-              code: 404,
-              message: `No user group category found with id ${req.params.categoryId} in context ${req.params.contextId}`,
-            };
-          const { name, color } = req.body;
-          const group = await createSpinalUserGroup(
-            userGroupContext,
-            category,
-            name,
-            color
+          const groupNode = await loadAndValidateNode(
+            spinalAPIMiddleware,
+            groupId,
+            profileId,
+            SPINAL_USER_GROUP_TYPE
           );
 
-          const result = await createBasicNodeSync(group, ['color'] as const);
-          res.status(201).json(result);
+          const results: {
+            userSuccessfullyAdded: number[];
+            userFailedToAdd: number[];
+          } = { userSuccessfullyAdded: [], userFailedToAdd: [] };
+          // Process req.body.userDynamicIds in batches of 25
+          for (let i = 0; i < req.body.userDynamicIds.length; i += 25) {
+            const batch = req.body.userDynamicIds.slice(i, i + 25);
+            await Promise.all(
+              batch.map(async (userId) => {
+                try {
+                  const userNode = await loadAndValidateNode(
+                    spinalAPIMiddleware,
+                    userId,
+                    profileId,
+                    SPINAL_USER_TYPE
+                  );
+                  await addSpinalUserToSpinalUserGroup(
+                    userGroupContext,
+                    groupNode,
+                    userNode
+                  );
+
+                  results.userSuccessfullyAdded.push(userId);
+                } catch (error) {
+                  results.userFailedToAdd.push(userId);
+                }
+              })
+            );
+          }
+          res.status(200).json(results);
         } catch (error) {
           throw {
             code: 400,
             message:
               error instanceof Error
                 ? error.message
-                : 'Failed to create user group in the specified category and context',
+                : 'Failed to add users to the user group',
           };
         }
       } catch (error: any) {
@@ -162,7 +185,7 @@ module.exports = function (
         return res
           .status(500)
           .send(
-            'An unexpected error occurred while creating the user group in the specified category and context'
+            'An unexpected error occurred while adding users to the user group'
           );
       }
     }

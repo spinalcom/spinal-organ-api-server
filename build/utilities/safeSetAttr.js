@@ -24,11 +24,21 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.safeSetAttr = safeSetAttr;
+const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
 function safeSetAttr(model, attrName, value) {
     if (value === undefined || value === null)
         return; // Do not set undefined or null values
     if (model[attrName] !== undefined) {
-        model[attrName].set(value);
+        // test type of existing attribute to prevent type errors
+        const existingAttr = model[attrName];
+        if ((existingAttr instanceof spinal_core_connectorjs_1.Str && typeof value === 'string') ||
+            (existingAttr instanceof spinal_core_connectorjs_1.Val && typeof value === 'number') ||
+            (existingAttr instanceof spinal_core_connectorjs_1.Bool && typeof value === 'boolean')) {
+            existingAttr.set(value);
+        }
+        else {
+            model.mod_attr(attrName, value);
+        }
     }
     else if (typeof attrName === 'string') {
         model.add_attr(attrName, value);

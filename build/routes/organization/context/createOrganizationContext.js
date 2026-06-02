@@ -34,16 +34,17 @@ const createBasicNode_1 = require("../../../utilities/createBasicNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
-     * /api/v1/user/context:
+     * /api/v1/organization/context:
      *   post:
      *     security:
      *       - bearerAuth:
      *         - write
-     *     summary: Create a user context
-     *     description: Create a user context
+     *     summary: Create a new Organization Context
+     *     description: Create a new Organization Context with a unique name and an optional color
      *     tags:
-     *       - User
+     *       - Organization
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -55,25 +56,25 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                 type: string
      *                 maxLength: 200
      *                 minLength: 1
-     *                 description: name of the user context to create
+     *                 description: name of the organization context to create
      *               color:
      *                 type: string
      *                 pattern: '^#([A-Fa-f0-9]{6})$'
-     *                 description: Hexadecimal color code for the user context (e.g., #RRGGBB)
+     *                 description: Hexadecimal color code for the organization context (e.g., #RRGGBB)
      *     responses:
      *       201:
-     *         description: Create Successfully
+     *         description: Organization Context created successfully
      *         content:
      *           application/json:
      *             schema:
      *               type: object
      *               $ref: '#/components/schemas/BasicNodeWithColor'
      *       400:
-     *         description: failed to create user context
+     *         description: failed to create organization context
      *       401:
      *         description: no graph found for the user
      */
-    app.post('/api/v1/user/context', (0, express_zod_safe_1.default)({
+    app.post('/api/v1/organization/context', (0, express_zod_safe_1.default)({
         body: zod_1.z.strictObject({
             name: zod_1.z.string().max(200).min(1),
             color: zod_1.z
@@ -88,12 +89,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!userGraph)
                 throw { code: 401, message: `No graph found for ${profileId}` };
             const { name, color } = req.body;
-            const graph = await spinalAPIMiddleware.getGraph();
             try {
-                const userContextAndGroups = await (0, spinal_model_user_service_1.createSpinalUserContext)(graph, name, color);
-                if (userGraph !== graph)
-                    await userGraph.addContext(userContextAndGroups.context);
-                const result = await (0, createBasicNode_1.createBasicNodeSync)(userContextAndGroups.context, ['color']);
+                const organizationContext = await (0, spinal_model_user_service_1.createOrganizationContext)(userGraph, name, color);
+                const result = await (0, createBasicNode_1.createBasicNodeSync)(organizationContext, [
+                    'color',
+                ]);
                 res.status(201).json(result);
             }
             catch (error) {
@@ -101,7 +101,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     code: 400,
                     message: error instanceof Error
                         ? error.message
-                        : 'Failed to create user context',
+                        : 'Failed to create organization context',
                 };
             }
         }
@@ -110,8 +110,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             return res
                 .status(500)
-                .send('An unexpected error occurred while creating the user context');
+                .send('An unexpected error occurred while creating the organization context');
         }
     });
 };
-//# sourceMappingURL=createUserContext.js.map
+//# sourceMappingURL=createOrganizationContext.js.map

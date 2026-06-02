@@ -34,52 +34,41 @@ const createBasicNode_1 = require("../../../utilities/createBasicNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
-     * /api/v1/user/context:
-     *   post:
+     * /api/v1/organization/context/{contextId}:
+     *   get:
      *     security:
      *       - bearerAuth:
-     *         - write
-     *     summary: Create a user context
-     *     description: Create a user context
+     *         - read
+     *     summary: Retrieve an Organization Context by ID
+     *     description: Get a specific Organization Context by its ID
      *     tags:
-     *       - User
-     *     requestBody:
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             required:
-     *               - name
-     *             properties:
-     *               name:
-     *                 type: string
-     *                 maxLength: 200
-     *                 minLength: 1
-     *                 description: name of the user context to create
-     *               color:
-     *                 type: string
-     *                 pattern: '^#([A-Fa-f0-9]{6})$'
-     *                 description: Hexadecimal color code for the user context (e.g., #RRGGBB)
+     *       - Organization
+     *     parameters:
+     *       - in: path
+     *         name: contextId
+     *         required: true
+     *         schema:
+     *           type: number
+     *           format: int64
+     *           minimum: 1
+     *           description: ID of the organization context to retrieve
      *     responses:
-     *       201:
-     *         description: Create Successfully
+     *       200:
+     *         description: Retrieve Successfully
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
      *               $ref: '#/components/schemas/BasicNodeWithColor'
      *       400:
-     *         description: failed to create user context
+     *         description: Bad request - Invalid input or parameters
+     *       404:
+     *         description: Organization context not found
      *       401:
      *         description: no graph found for the user
      */
-    app.post('/api/v1/user/context', (0, express_zod_safe_1.default)({
-        body: zod_1.z.strictObject({
-            name: zod_1.z.string().max(200).min(1),
-            color: zod_1.z
-                .string()
-                .regex(/^#([A-Fa-f0-9]{6})$/)
-                .optional(),
+    app.get('/api/v1/organization/context/:contextId', (0, express_zod_safe_1.default)({
+        params: zod_1.z.strictObject({
+            contextId: zod_1.z.coerce.number().positive(),
         }),
     }), async (req, res) => {
         try {
@@ -87,21 +76,26 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
             if (!userGraph)
                 throw { code: 401, message: `No graph found for ${profileId}` };
-            const { name, color } = req.body;
-            const graph = await spinalAPIMiddleware.getGraph();
+            const { contextId } = req.params;
             try {
-                const userContextAndGroups = await (0, spinal_model_user_service_1.createSpinalUserContext)(graph, name, color);
-                if (userGraph !== graph)
-                    await userGraph.addContext(userContextAndGroups.context);
-                const result = await (0, createBasicNode_1.createBasicNodeSync)(userContextAndGroups.context, ['color']);
-                res.status(201).json(result);
+                const organizationContexts = await (0, spinal_model_user_service_1.getOrganizationContext)(userGraph);
+                const organizationContext = organizationContexts.find((context) => context._server_id === contextId);
+                if (!organizationContext)
+                    throw {
+                        code: 404,
+                        message: `No organization context found with the ID ${contextId}`,
+                    };
+                const result = await (0, createBasicNode_1.createBasicNodeSync)(organizationContext, [
+                    'color',
+                ]);
+                res.status(200).json(result);
             }
             catch (error) {
                 throw {
                     code: 400,
                     message: error instanceof Error
                         ? error.message
-                        : 'Failed to create user context',
+                        : 'Failed to retrieve organization context',
                 };
             }
         }
@@ -110,8 +104,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             return res
                 .status(500)
-                .send('An unexpected error occurred while creating the user context');
+                .send('An unexpected error occurred while retrieving the organization context');
         }
     });
 };
-//# sourceMappingURL=createUserContext.js.map
+//# sourceMappingURL=getOrganizationContextById.js.map

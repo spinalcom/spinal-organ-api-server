@@ -49,9 +49,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *           schema:
      *             type: object
      *             required:
-     *               - userIds
+     *               - userDynamicIds
      *             properties:
-     *               userIds:
+     *               userDynamicIds:
      *                 type: array
      *                 items:
      *                   type: integer
@@ -89,7 +89,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      */
     app.post('/api/v1/user/multiple', (0, express_zod_safe_1.default)({
         body: zod_1.z.strictObject({
-            userIds: zod_1.z.array(zod_1.z.coerce.number().positive()).min(1).max(100),
+            userDynamicIds: zod_1.z.array(zod_1.z.coerce.number().positive()).min(1).max(100),
             attributes: zod_1.z.coerce.boolean().optional().default(false),
             groups: zod_1.z.coerce.boolean().optional().default(false),
             organizations: zod_1.z.coerce.boolean().optional().default(false),
@@ -100,11 +100,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
             if (!userGraph)
                 throw { code: 401, message: `No graph found for ${profileId}` };
-            const { userIds, attributes, groups, organizations } = req.body;
+            const { userDynamicIds, attributes, groups, organizations } = req.body;
             const results = [];
-            // Process userIds in batches of 25
-            for (let i = 0; i < userIds.length; i += 25) {
-                const batch = userIds.slice(i, i + 25);
+            // Process userDynamicIds in batches of 25
+            for (let i = 0; i < userDynamicIds.length; i += 25) {
+                const batch = userDynamicIds.slice(i, i + 25);
                 const batchResults = await Promise.all(batch.map(async (userId) => {
                     try {
                         const userNode = await spinalAPIMiddleware.load(userId, profileId);

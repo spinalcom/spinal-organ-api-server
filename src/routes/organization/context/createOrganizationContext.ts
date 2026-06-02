@@ -27,7 +27,7 @@ import validate from 'express-zod-safe';
 import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import type { Express } from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { createSpinalUserContext } from 'spinal-model-user-service';
+import { createOrganizationContext } from 'spinal-model-user-service';
 import { createBasicNodeSync } from '../../../utilities/createBasicNode';
 
 module.exports = function (
@@ -37,16 +37,17 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/user/context:
+   * /api/v1/organization/context:
    *   post:
    *     security:
    *       - bearerAuth:
    *         - write
-   *     summary: Create a user context
-   *     description: Create a user context
+   *     summary: Create a new Organization Context
+   *     description: Create a new Organization Context with a unique name and an optional color
    *     tags:
-   *       - User
+   *       - Organization
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
@@ -58,26 +59,26 @@ module.exports = function (
    *                 type: string
    *                 maxLength: 200
    *                 minLength: 1
-   *                 description: name of the user context to create
+   *                 description: name of the organization context to create
    *               color:
    *                 type: string
    *                 pattern: '^#([A-Fa-f0-9]{6})$'
-   *                 description: Hexadecimal color code for the user context (e.g., #RRGGBB)
+   *                 description: Hexadecimal color code for the organization context (e.g., #RRGGBB)
    *     responses:
    *       201:
-   *         description: Create Successfully
+   *         description: Organization Context created successfully
    *         content:
    *           application/json:
    *             schema:
    *               type: object
    *               $ref: '#/components/schemas/BasicNodeWithColor'
    *       400:
-   *         description: failed to create user context
+   *         description: failed to create organization context
    *       401:
    *         description: no graph found for the user
    */
   app.post(
-    '/api/v1/user/context',
+    '/api/v1/organization/context',
     validate({
       body: z.strictObject({
         name: z.string().max(200).min(1),
@@ -94,20 +95,15 @@ module.exports = function (
         if (!userGraph)
           throw { code: 401, message: `No graph found for ${profileId}` };
         const { name, color } = req.body;
-        const graph = await spinalAPIMiddleware.getGraph();
-
         try {
-          const userContextAndGroups = await createSpinalUserContext(
-            graph,
+          const organizationContext = await createOrganizationContext(
+            userGraph,
             name,
             color
           );
-          if (userGraph !== graph)
-            await userGraph.addContext(userContextAndGroups.context);
-          const result = await createBasicNodeSync(
-            userContextAndGroups.context,
-            ['color'] as const
-          );
+          const result = await createBasicNodeSync(organizationContext, [
+            'color',
+          ] as const);
           res.status(201).json(result);
         } catch (error) {
           throw {
@@ -115,7 +111,7 @@ module.exports = function (
             message:
               error instanceof Error
                 ? error.message
-                : 'Failed to create user context',
+                : 'Failed to create organization context',
           };
         }
       } catch (error: any) {
@@ -123,7 +119,9 @@ module.exports = function (
           return res.status(error.code).send(error.message);
         return res
           .status(500)
-          .send('An unexpected error occurred while creating the user context');
+          .send(
+            'An unexpected error occurred while creating the organization context'
+          );
       }
     }
   );

@@ -27,8 +27,10 @@ import validate from 'express-zod-safe';
 import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import type { Express } from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { createSpinalUserContext } from 'spinal-model-user-service';
+import { getOrganizationContext } from 'spinal-model-user-service';
 import { createBasicNodeSync } from '../../../utilities/createBasicNode';
+import { atLeastOne } from '../../../utilities/zodAtLeastOne';
+import { safeSetAttr } from '../../../utilities/safeSetAttr';
 
 module.exports = function (
   logger: any,
@@ -37,55 +39,69 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/user/context:
-   *   post:
+   * /api/v1/organization/context/{contextId}:
+   *   patch:
    *     security:
    *       - bearerAuth:
    *         - write
-   *     summary: Create a user context
-   *     description: Create a user context
+   *     summary: Update an Organization Context by ID
+   *     description: Update a specific Organization Context by its ID
    *     tags:
-   *       - User
+   *       - Organization
+   *     parameters:
+   *       - in: path
+   *         name: contextId
+   *         required: true
+   *         schema:
+   *           type: number
+   *           format: int64
+   *           minimum: 1
+   *           description: ID of the organization context to update
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
    *             type: object
-   *             required:
-   *               - name
    *             properties:
    *               name:
    *                 type: string
    *                 maxLength: 200
    *                 minLength: 1
-   *                 description: name of the user context to create
+   *                 description: name of the organization context to update
    *               color:
    *                 type: string
    *                 pattern: '^#([A-Fa-f0-9]{6})$'
-   *                 description: Hexadecimal color code for the user context (e.g., #RRGGBB)
+   *                 description: Hexadecimal color code for the organization context (e.g., #RRGGBB)
    *     responses:
-   *       201:
-   *         description: Create Successfully
+   *       200:
+   *         description: Update Successfully
    *         content:
    *           application/json:
    *             schema:
-   *               type: object
    *               $ref: '#/components/schemas/BasicNodeWithColor'
    *       400:
-   *         description: failed to create user context
+   *         description: Bad request - Invalid input or parameters
+   *       404:
+   *         description: Organization context not found
    *       401:
    *         description: no graph found for the user
    */
-  app.post(
-    '/api/v1/user/context',
+  app.patch(
+    '/api/v1/organization/context/:contextId',
     validate({
-      body: z.strictObject({
-        name: z.string().max(200).min(1),
-        color: z
-          .string()
-          .regex(/^#([A-Fa-f0-9]{6})$/)
-          .optional(),
+      params: z.strictObject({
+        contextId: z.coerce.number().positive(),
       }),
+      body: atLeastOne(
+        z.strictObject({
+          name: z.string().max(200).min(1).optional(),
+          color: z
+            .string()
+            .regex(/^#([A-Fa-f0-9]{6})$/)
+            .optional(),
+        })
+      ),
     }),
     async (req, res) => {
       try {
@@ -93,29 +109,32 @@ module.exports = function (
         const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
         if (!userGraph)
           throw { code: 401, message: `No graph found for ${profileId}` };
-        const { name, color } = req.body;
-        const graph = await spinalAPIMiddleware.getGraph();
+        const { contextId } = req.params;
 
         try {
-          const userContextAndGroups = await createSpinalUserContext(
-            graph,
-            name,
-            color
+          const organizationContexts = await getOrganizationContext(userGraph);
+          const organizationContext = organizationContexts.find(
+            (context) => context._server_id === contextId
           );
-          if (userGraph !== graph)
-            await userGraph.addContext(userContextAndGroups.context);
-          const result = await createBasicNodeSync(
-            userContextAndGroups.context,
-            ['color'] as const
-          );
-          res.status(201).json(result);
+          if (!organizationContext)
+            throw {
+              code: 404,
+              message: `No organization context found with the ID ${contextId}`,
+            };
+          const { name, color } = req.body;
+          safeSetAttr(organizationContext.info, 'name', name);
+          safeSetAttr(organizationContext.info, 'color', color);
+          const result = await createBasicNodeSync(organizationContext, [
+            'color',
+          ] as const);
+          res.status(200).json(result);
         } catch (error) {
           throw {
             code: 400,
             message:
               error instanceof Error
                 ? error.message
-                : 'Failed to create user context',
+                : 'Failed to update organization context',
           };
         }
       } catch (error: any) {
@@ -123,7 +142,9 @@ module.exports = function (
           return res.status(error.code).send(error.message);
         return res
           .status(500)
-          .send('An unexpected error occurred while creating the user context');
+          .send(
+            'An unexpected error occurred while updating the organization context'
+          );
       }
     }
   );

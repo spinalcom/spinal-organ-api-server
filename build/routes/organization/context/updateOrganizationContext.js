@@ -31,77 +31,99 @@ const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_model_user_service_1 = require("spinal-model-user-service");
 const createBasicNode_1 = require("../../../utilities/createBasicNode");
+const zodAtLeastOne_1 = require("../../../utilities/zodAtLeastOne");
+const safeSetAttr_1 = require("../../../utilities/safeSetAttr");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
-     * /api/v1/user/context:
-     *   post:
+     * /api/v1/organization/context/{contextId}:
+     *   patch:
      *     security:
      *       - bearerAuth:
      *         - write
-     *     summary: Create a user context
-     *     description: Create a user context
+     *     summary: Update an Organization Context by ID
+     *     description: Update a specific Organization Context by its ID
      *     tags:
-     *       - User
+     *       - Organization
+     *     parameters:
+     *       - in: path
+     *         name: contextId
+     *         required: true
+     *         schema:
+     *           type: number
+     *           format: int64
+     *           minimum: 1
+     *           description: ID of the organization context to update
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
      *             type: object
-     *             required:
-     *               - name
      *             properties:
      *               name:
      *                 type: string
      *                 maxLength: 200
      *                 minLength: 1
-     *                 description: name of the user context to create
+     *                 description: name of the organization context to update
      *               color:
      *                 type: string
      *                 pattern: '^#([A-Fa-f0-9]{6})$'
-     *                 description: Hexadecimal color code for the user context (e.g., #RRGGBB)
+     *                 description: Hexadecimal color code for the organization context (e.g., #RRGGBB)
      *     responses:
-     *       201:
-     *         description: Create Successfully
+     *       200:
+     *         description: Update Successfully
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
      *               $ref: '#/components/schemas/BasicNodeWithColor'
      *       400:
-     *         description: failed to create user context
+     *         description: Bad request - Invalid input or parameters
+     *       404:
+     *         description: Organization context not found
      *       401:
      *         description: no graph found for the user
      */
-    app.post('/api/v1/user/context', (0, express_zod_safe_1.default)({
-        body: zod_1.z.strictObject({
-            name: zod_1.z.string().max(200).min(1),
+    app.patch('/api/v1/organization/context/:contextId', (0, express_zod_safe_1.default)({
+        params: zod_1.z.strictObject({
+            contextId: zod_1.z.coerce.number().positive(),
+        }),
+        body: (0, zodAtLeastOne_1.atLeastOne)(zod_1.z.strictObject({
+            name: zod_1.z.string().max(200).min(1).optional(),
             color: zod_1.z
                 .string()
                 .regex(/^#([A-Fa-f0-9]{6})$/)
                 .optional(),
-        }),
+        })),
     }), async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
             if (!userGraph)
                 throw { code: 401, message: `No graph found for ${profileId}` };
-            const { name, color } = req.body;
-            const graph = await spinalAPIMiddleware.getGraph();
+            const { contextId } = req.params;
             try {
-                const userContextAndGroups = await (0, spinal_model_user_service_1.createSpinalUserContext)(graph, name, color);
-                if (userGraph !== graph)
-                    await userGraph.addContext(userContextAndGroups.context);
-                const result = await (0, createBasicNode_1.createBasicNodeSync)(userContextAndGroups.context, ['color']);
-                res.status(201).json(result);
+                const organizationContexts = await (0, spinal_model_user_service_1.getOrganizationContext)(userGraph);
+                const organizationContext = organizationContexts.find((context) => context._server_id === contextId);
+                if (!organizationContext)
+                    throw {
+                        code: 404,
+                        message: `No organization context found with the ID ${contextId}`,
+                    };
+                const { name, color } = req.body;
+                (0, safeSetAttr_1.safeSetAttr)(organizationContext.info, 'name', name);
+                (0, safeSetAttr_1.safeSetAttr)(organizationContext.info, 'color', color);
+                const result = await (0, createBasicNode_1.createBasicNodeSync)(organizationContext, [
+                    'color',
+                ]);
+                res.status(200).json(result);
             }
             catch (error) {
                 throw {
                     code: 400,
                     message: error instanceof Error
                         ? error.message
-                        : 'Failed to create user context',
+                        : 'Failed to update organization context',
                 };
             }
         }
@@ -110,8 +132,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             return res
                 .status(500)
-                .send('An unexpected error occurred while creating the user context');
+                .send('An unexpected error occurred while updating the organization context');
         }
     });
 };
-//# sourceMappingURL=createUserContext.js.map
+//# sourceMappingURL=updateOrganizationContext.js.map

@@ -66,13 +66,13 @@
 
 ### user
 
-- [ ] GET /api/v1/user-group/context/:contextId/group/:groupId/user
+- [x] GET /api/v1/user-group/context/:contextId/group/:groupId/user
   - description: Get all the Users of a UserGroup from a SpinalUserContext
-- [ ] POST /api/v1/user-group/context/:contextId/group/:groupId/user
+- [x] POST /api/v1/user-group/context/:contextId/group/:groupId/user
   - description: Add Users to a UserGroup via a GroupingCategory and SpinalUserContext
-- [ ] DELETE /api/v1/user-group/group/:groupId/user/:userId
+- [x] DELETE /api/v1/user-group/group/:groupId/user/:userId
   - description: Delete User from a UserGroup
-- [ ] POST /api/v1/user-group/context/:contextId/group/move
+- [x] POST /api/v1/user-group/user/move
   - description: Move Users from an UserGroup to another UserGroup via SpinalUserContext
 
 # Organization
@@ -81,27 +81,27 @@
 
 ### context
 
-- [ ] GET /api/v1/organization/context
+- [x] GET /api/v1/organization/context
   - description: Get all the organization context
-- [ ] POST /api/v1/organization/context
+- [x] POST /api/v1/organization/context
   - description: Create an organization context
-- [ ] GET /api/v1/organization/context/:contextId
+- [x] GET /api/v1/organization/context/:contextId
   - description: Get an organization context
-- [ ] PATCH /api/v1/organization/context/:contextId
+- [x] PATCH /api/v1/organization/context/:contextId
   - description: Update an organization context
-- [ ] DELETE /api/v1/organization/context/:contextId
-  - description: Delete an organization context
+- ~~[ ] DELETE /api/v1/organization/context/:contextId~~
+  - ~~description: Delete an organization context~~
 
 ### organization
 
-- [ ] GET /api/v1/organization/context/:contextId/organization
+- [x] GET /api/v1/organization/context/:contextId/organization
   - description: Get the organizations directly under an organization context
-- [ ] POST /api/v1/organization/context/:contextId/organization
-  - description: Create an organization in an organization context
-- [ ] GET /api/v1/organization/context/:contextId/organization/:organizationId
+- [x] POST /api/v1/organization
+  - description: Create an organization in an organization context or an organization
+- [x] GET /api/v1/organization/context/:contextId/organization/:organizationId
   - description: Get the direct organizations children under an organization in an organization context
-- [ ] POST /api/v1/organization/context/:contextId/organization/:organizationId
-  - description: Create an organizations children under an organization in an organization context
+- ~[ ] POST /api/v1/organization/context/:contextId/organization/:organizationId~
+  - ~description: Create an organizations children under an organization in an organization context~
 - [ ] DELETE /api/v1/organization/:parentOrganizationId/:organizationIdToBeRemoved
   - description: Remove an organization from an organization
 - [ ] DELETE /api/v1/organization/context/:contextId/:organizationIdToBeRemoved
