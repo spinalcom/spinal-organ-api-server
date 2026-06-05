@@ -84,7 +84,7 @@ module.exports = function (
    *           default: regular
    *         description: Ticket creation mode. `regular` keeps the current full synchronous behavior. `fast` uses the new fast path.
    *     requestBody:
-   *       description: For the two parameters *workflow* and *process* you can use either the dynamicId or the name. To associate the ticket with an element, please fill in the dynamicId parameter
+   *       description: For the two parameters *workflow* and *process* you can use either the dynamicId or the name. To associate the ticket with an element, provide either *nodeDynamicId* or *nodeStaticId*.
    *       required: true
    *       content:
    *         application/json:
@@ -93,7 +93,6 @@ module.exports = function (
    *             required:
    *               - workflow
    *               - process
-   *               - nodeDynamicId
    *               - name
    *               - priority
    *               - description
@@ -110,7 +109,10 @@ module.exports = function (
    *                   - type: integer
    *               nodeDynamicId:
    *                 type: integer
-   *                 description: The node's target dynamicId
+   *                 description: The node's target dynamicId. Provide either this or nodeStaticId.
+   *               nodeStaticId:
+   *                 type: string
+   *                 description: The node's target staticId. Used when nodeDynamicId is not provided.
    *               name:
    *                 type: string
    *                 description: The ticket's name
@@ -176,6 +178,7 @@ module.exports = function (
       workflow,
       process,
       nodeDynamicId,
+      nodeStaticId,
       name,
       priority,
       description,
@@ -184,10 +187,13 @@ module.exports = function (
     const missing: string[] = [];
     if (!workflow) missing.push('workflow');
     if (!process) missing.push('process');
-    if (!nodeDynamicId) {
-      missing.push('nodeDynamicId (required)');
-    } else if (isNaN(+nodeDynamicId)) {
+    // a target node must be provided via either nodeDynamicId or nodeStaticId
+    if (!nodeDynamicId && !nodeStaticId) {
+      missing.push('nodeDynamicId or nodeStaticId (one is required)');
+    } else if (nodeDynamicId && isNaN(+nodeDynamicId)) {
       missing.push('nodeDynamicId (must be a number)');
+    } else if (!nodeDynamicId && typeof nodeStaticId !== 'string') {
+      missing.push('nodeStaticId (must be a string)');
     }
     if (priority === undefined) missing.push('priority');
     if (!name || typeof name !== 'string')
@@ -402,7 +408,7 @@ module.exports = function (
         staticId: ticketNode.info.id.get(),
         name: ticketNode.info.name.get(),
         type: ticketNode.info.type.get(),
-        elementSelected: req.body.nodeDynamicId,
+        elementSelected: req.body.nodeDynamicId ?? req.body.nodeStaticId,
         description: ticketInfo.description,
         priority: ticketInfo.priority,
         declarer_id: ticketInfo.declarer_id,
@@ -418,6 +424,7 @@ module.exports = function (
         processNode,
         ticketNode,
         req.body.nodeDynamicId,
+        req.body.nodeStaticId,
         email,
         images,
         additionalAttributes
@@ -443,6 +450,7 @@ module.exports = function (
     processNode: SpinalNode,
     ticketNode: SpinalNode,
     nodeDynamicId: number,
+    nodeStaticId: string | undefined,
     email: string | undefined,
     images: any[] = [],
     additionalAttributes: any = null
@@ -451,11 +459,12 @@ module.exports = function (
       const targetNode = await fetchSpinalNodeTarget(
         spinalAPIMiddleware,
         profileId,
-        nodeDynamicId
+        nodeDynamicId,
+        nodeStaticId
       );
       if (!targetNode) {
         console.error(
-          '[createTicketFast] invalid nodeDynamicId in deferred creation'
+          '[createTicketFast] invalid nodeDynamicId or nodeStaticId in deferred creation'
         );
         return;
       }

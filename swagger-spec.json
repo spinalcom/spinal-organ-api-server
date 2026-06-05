@@ -10785,7 +10785,7 @@
           }
         ],
         "requestBody": {
-          "description": "For the two parameters *workflow* and *process* you can use either the dynamicId or the name. To associate the ticket with an element, please fill in the dynamicId parameter",
+          "description": "For the two parameters *workflow* and *process* you can use either the dynamicId or the name. To associate the ticket with an element, provide either *nodeDynamicId* or *nodeStaticId*.",
           "required": true,
           "content": {
             "application/json": {
@@ -10794,7 +10794,6 @@
                 "required": [
                   "workflow",
                   "process",
-                  "nodeDynamicId",
                   "name",
                   "priority",
                   "description"
@@ -10824,7 +10823,11 @@
                   },
                   "nodeDynamicId": {
                     "type": "integer",
-                    "description": "The node's target dynamicId"
+                    "description": "The node's target dynamicId. Provide either this or nodeStaticId."
+                  },
+                  "nodeStaticId": {
+                    "type": "string",
+                    "description": "The node's target staticId. Used when nodeDynamicId is not provided."
                   },
                   "name": {
                     "type": "string",
