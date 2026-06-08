@@ -29,8 +29,7 @@ import type { Express } from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import {
   getOrganizationContext,
-  getOrganizationFromOrganization,
-  getOrganizationFromOrganizationByName,
+  getSpinalUserGroupFromOrganization,
   SPINAL_ORGANIZATION_TYPE,
 } from 'spinal-model-user-service';
 import { createBasicNodeSync } from '../../../utilities/createBasicNode';
@@ -43,13 +42,13 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/organization/context/{contextId}/organization/{organizationId}:
+   * /api/v1/organization/context/{contextId}/organization/{organizationId}/user-group:
    *   get:
    *     security:
    *       - bearerAuth:
    *         - read
-   *     summary: Retrieve the Organizations from an Organization into an Organization Context by the context ID
-   *     description: Get a list of Organizations linked to a specific an Organization into Organization Context by their ID, if the name query parameter is provided, it will filter the organizations by name
+   *     summary: Retrieve the user group from an Organization
+   *     description: Get the user group linked to a specific Organization by their ID
    *     tags:
    *       - Organization
    *     parameters:
@@ -68,26 +67,14 @@ module.exports = function (
    *           type: number
    *           format: int64
    *           minimum: 1
-   *           description: ID of the organization parent to retrieve the organizations from
-   *       - in: query
-   *         name: name
-   *         required: false
-   *         schema:
-   *           type: string
-   *           maxLength: 200
-   *           minLength: 1
-   *           description: name of the organization to filter by
+   *           description: ID of the organization to retrieve the user group from
    *     responses:
    *       200:
    *         description: Retrieve Successfully
    *         content:
    *           application/json:
    *             schema:
-   *               oneOf:
-   *                 - type: array
-   *                   items:
-   *                     $ref: '#/components/schemas/BasicNodeWithColor'
-   *                 - $ref: '#/components/schemas/BasicNodeWithColor'
+   *               $ref: '#/components/schemas/BasicNodeWithColor'
    *       400:
    *         description: Bad request - Invalid input or parameters
    *       404:
@@ -96,14 +83,11 @@ module.exports = function (
    *         description: no graph found for the user
    */
   app.get(
-    '/api/v1/organization/context/:contextId/organization/:organizationId',
+    '/api/v1/organization/context/:contextId/organization/:organizationId/user-group',
     validate({
       params: z.strictObject({
         contextId: z.coerce.number().positive(),
         organizationId: z.coerce.number().positive(),
-      }),
-      query: z.strictObject({
-        name: z.string().max(200).min(1).optional(),
       }),
     }),
     async (req, res) => {
@@ -113,7 +97,6 @@ module.exports = function (
         if (!userGraph)
           throw { code: 401, message: `No graph found for ${profileId}` };
         const { contextId, organizationId } = req.params;
-        const { name } = req.query;
         const organizationContexts = await getOrganizationContext(userGraph);
         const organizationContext = organizationContexts.find(
           (context) => context._server_id === contextId
@@ -131,34 +114,25 @@ module.exports = function (
             SPINAL_ORGANIZATION_TYPE
           );
 
-          if (name) {
-            const organization = await getOrganizationFromOrganizationByName(
-              organizationParent,
-              name,
-              organizationContext
-            );
-            if (!organization)
-              throw {
-                code: 404,
-                message: `No organization found with the name ${name}`,
-              };
-            const result = await createBasicNodeSync(organization, [
+          const userGroup = await getSpinalUserGroupFromOrganization(
+            organizationParent,
+            organizationContext
+          );
+          if (!userGroup) {
+            throw {
+              code: 404,
+              message: `No user group found for the organization with ID ${organizationId}`,
+            };
+          } else {
+            const results = await createBasicNodeSync(userGroup, [
               'color',
             ] as const);
-            res.status(200).json(result);
-          } else {
-            const organizations = await getOrganizationFromOrganization(
-              organizationParent,
-              organizationContext
-            );
-            const results = await Promise.all(
-              organizations.map((organization) =>
-                createBasicNodeSync(organization, ['color'] as const)
-              )
-            );
             res.status(200).json(results);
           }
-        } catch (error) {
+        } catch (error: any) {
+          if (error?.code && error?.message) {
+            throw error;
+          }
           throw {
             code: 400,
             message:

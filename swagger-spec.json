@@ -19907,6 +19907,1225 @@
         }
       }
     },
+    "/api/v1/organization/context": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Create a new Organization Context",
+        "description": "Create a new Organization Context with a unique name and an optional color",
+        "tags": [
+          "Organization"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "description": "name of the organization context to create"
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#([A-Fa-f0-9]{6})$",
+                    "description": "Hexadecimal color code for the organization context (e.g.,"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Organization Context created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "failed to create organization context"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve all Organization Context or a specific one by name",
+        "description": "Get all the Organization Context or a specific one if the name query parameter is provided",
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "name",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "minLength": 1,
+              "description": "name of the organization context to retrieve"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieve Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/BasicNodeWithColor"
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/BasicNodeWithColor"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "Organization context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/organization/context/{contextId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve an Organization Context by ID",
+        "description": "Get a specific Organization Context by its ID",
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization context to retrieve"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieve Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "Organization context not found"
+          }
+        }
+      },
+      "patch": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Update an Organization Context by ID",
+        "description": "Update a specific Organization Context by its ID",
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization context to update"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "description": "name of the organization context to update"
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#([A-Fa-f0-9]{6})$",
+                    "description": "Hexadecimal color code for the organization context (e.g.,"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "Organization context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/organization": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Create a new Organization",
+        "description": "Create a new Organization under a specific Organization Context",
+        "tags": [
+          "Organization"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "contextDynamicId",
+                  "name"
+                ],
+                "properties": {
+                  "contextDynamicId": {
+                    "type": "number",
+                    "format": "int64",
+                    "minimum": 1,
+                    "description": "ID of the organization context to create the organization under"
+                  },
+                  "organizationDynamicId": {
+                    "type": "number",
+                    "format": "int64",
+                    "minimum": 1,
+                    "description": "ID of the organization to create the organization under, if not provided will be created under the organization context directly"
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "description": "Name of the organization to create"
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#([A-Fa-f0-9]{6})$",
+                    "description": "Hexadecimal color code for the organization context (e.g.,"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Organization created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          }
+        }
+      },
+      "patch": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Update Organization(s)",
+        "description": "Update Organization properties such as name and color. Multiple organizations can be updated in a single request.",
+        "tags": [
+          "Organization"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "query"
+                ],
+                "properties": {
+                  "query": {
+                    "type": "array",
+                    "minLength": 1,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "dynamicId"
+                      ],
+                      "properties": {
+                        "dynamicId": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "format": "int64",
+                          "description": "dynamic ID of the organization to update"
+                        },
+                        "name": {
+                          "type": "string",
+                          "maxLength": 200,
+                          "minLength": 1,
+                          "description": "name of the organization to update"
+                        },
+                        "color": {
+                          "type": "string",
+                          "pattern": "^#([A-Fa-f0-9]{6})$",
+                          "description": "Hexadecimal color code for the organization context (e.g.,"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "successfullyUpdated": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "format": "int64"
+                      },
+                      "description": "array of dynamic IDs of the organizations that were successfully updated"
+                    },
+                    "failedToUpdate": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "format": "int64"
+                      },
+                      "description": "array of dynamic IDs of the organizations that failed to be updated"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "Organization context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/organization/{parentOrganizationId}/{organizationIdToBeRemoved}": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Delete an Organization",
+        "description": "Delete a specific Organization by its ID and its parent Organization (context) ID",
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "parentOrganizationId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the parent organization (context) of the organization to be removed"
+            }
+          },
+          {
+            "in": "path",
+            "name": "organizationIdToBeRemoved",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization to be removed"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Organization deleted successfully"
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "Unauthorized - No graph found for the user"
+          },
+          "404": {
+            "description": "Organization context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/organization/{organizationId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Get an Organization by ID",
+        "description": "Retrieve a specific Organization by its ID",
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization to be retrieved"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "Unauthorized - No graph found for the user"
+          },
+          "404": {
+            "description": "Organization context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/organization/{organizationId}/parent/context": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Get the direct context parents organization of an Organization",
+        "description": "Retrieve the context parent organization of a specific Organization by its ID",
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization to retrieve the context parent organization from"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Context parents organization retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNodeWithColor"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "Unauthorized - No graph found for the user"
+          },
+          "404": {
+            "description": "Organization not found"
+          }
+        }
+      }
+    },
+    "/api/v1/organization/context/{contextId}/organization": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve the Organizations from an Organization Context by the context ID",
+        "description": "Get a list of Organizations linked to a specific Organization Context by its ID, if the name query parameter is provided, it will filter the organizations by name",
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization context to retrieve"
+            }
+          },
+          {
+            "in": "query",
+            "name": "name",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "minLength": 1,
+              "description": "name of the organization to filter by"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieve Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/BasicNodeWithColor"
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/BasicNodeWithColor"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "Organization context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/organization/context/{contextId}/organization/{organizationId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve the Organizations from an Organization into an Organization Context by the context ID",
+        "description": "Get a list of Organizations linked to a specific an Organization into Organization Context by their ID, if the name query parameter is provided, it will filter the organizations by name",
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization context"
+            }
+          },
+          {
+            "in": "path",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization parent to retrieve the organizations from"
+            }
+          },
+          {
+            "in": "query",
+            "name": "name",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "minLength": 1,
+              "description": "name of the organization to filter by"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieve Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/BasicNodeWithColor"
+                      }
+                    },
+                    {
+                      "$ref": "#/components/schemas/BasicNodeWithColor"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "Organization context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/organization/{organizationId}/parents": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Get the direct parents organization of an Organization",
+        "description": "Retrieve the parent organization of a specific Organization by its ID",
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization to retrieve the parent organization from"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Parents organization retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNodeWithColor"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "Unauthorized - No graph found for the user"
+          },
+          "404": {
+            "description": "Organization not found"
+          }
+        }
+      }
+    },
+    "/api/v1/organization/room-group": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Add a room group to an Organization",
+        "description": "Add a room group linked to a specific Organization",
+        "tags": [
+          "Organization"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "query"
+                ],
+                "properties": {
+                  "query": {
+                    "type": "array",
+                    "minLength": 1,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "contextOrganizationDynamicId",
+                        "organizationDynamicId",
+                        "roomGroupDynamicIds"
+                      ],
+                      "properties": {
+                        "contextOrganizationDynamicId": {
+                          "type": "number",
+                          "format": "int64",
+                          "minimum": 1,
+                          "description": "ID of the organization context"
+                        },
+                        "organizationDynamicId": {
+                          "type": "number",
+                          "format": "int64",
+                          "minimum": 1,
+                          "description": "ID of the organization to add the room group to"
+                        },
+                        "roomGroupDynamicIds": {
+                          "type": "array",
+                          "description": "IDs of the room groups to add to the organization",
+                          "items": {
+                            "type": "number",
+                            "format": "int64",
+                            "minimum": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully added room groups to the organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "successfullyAdded": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "format": "int64"
+                      },
+                      "description": "array of dynamic IDs of the room groups that were successfully added to an organization"
+                    },
+                    "failedToAdd": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "format": "int64"
+                      },
+                      "description": "array of dynamic IDs of the room groups that failed to be added to an organization"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "Organization context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/organization/context/{contextId}/organization/{organizationId}/room-group/{roomGroupId}": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Remove the room group from an Organization",
+        "description": "Remove the room group linked to a specific Organization",
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization context"
+            }
+          },
+          {
+            "in": "path",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization to remove the room group from"
+            }
+          },
+          {
+            "in": "path",
+            "name": "roomGroupId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the room group to remove"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Room group removed successfully"
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "Organization context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/organization/context/{contextId}/organization/{organizationId}/room-group": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve all the room groups from an Organization",
+        "description": "Get all the room groups linked to a specific Organization by their ID",
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization context"
+            }
+          },
+          {
+            "in": "path",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization to retrieve the room group from"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieve Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BasicNodeWithColor"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "Organization context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/organization/user-group": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Add an user group to an Organization",
+        "description": "Add an user group linked to a specific Organization",
+        "tags": [
+          "Organization"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "query"
+                ],
+                "properties": {
+                  "query": {
+                    "type": "array",
+                    "minLength": 1,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "contextOrganizationDynamicId",
+                        "organizationDynamicId",
+                        "userGroupDynamicId"
+                      ],
+                      "properties": {
+                        "contextOrganizationDynamicId": {
+                          "type": "number",
+                          "format": "int64",
+                          "minimum": 1,
+                          "description": "ID of the organization context"
+                        },
+                        "organizationDynamicId": {
+                          "type": "number",
+                          "format": "int64",
+                          "minimum": 1,
+                          "description": "ID of the organization to add the user group to"
+                        },
+                        "userGroupDynamicId": {
+                          "type": "number",
+                          "format": "int64",
+                          "minimum": 1,
+                          "description": "ID of the user group to add to the organization"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully added user groups to the organization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "successfullyAdded": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "format": "int64"
+                      },
+                      "description": "array of dynamic IDs of the user groups that were successfully added to an organization"
+                    },
+                    "failedToAdd": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "format": "int64"
+                      },
+                      "description": "array of dynamic IDs of the user groups that failed to be added to an organization"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "Organization context not found"
+          }
+        }
+      }
+    },
+    "/api/v1/organization/context/{contextId}/organization/{organizationId}/user-group": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Remove the user group from an Organization",
+        "description": "Remove the user group linked to a specific Organization",
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization context"
+            }
+          },
+          {
+            "in": "path",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization to remove the user group from"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User group removed successfully"
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "Organization context not found"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve the user group from an Organization",
+        "description": "Get the user group linked to a specific Organization by their ID",
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization context"
+            }
+          },
+          {
+            "in": "path",
+            "name": "organizationId",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 1,
+              "description": "ID of the organization to retrieve the user group from"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieve Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicNodeWithColor"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "401": {
+            "description": "no graph found for the user"
+          },
+          "404": {
+            "description": "Organization context not found"
+          }
+        }
+      }
+    },
     "/api/v1/user/context": {
       "post": {
         "security": [
@@ -21796,175 +23015,6 @@
           },
           "401": {
             "description": "no graph found for the user"
-          }
-        }
-      }
-    },
-    "/api/v1/organization/context": {
-      "post": {
-        "security": [
-          {
-            "bearerAuth": [
-              "read"
-            ]
-          }
-        ],
-        "summary": "Create a new Organization Context",
-        "description": "Create a new Organization Context with a unique name and an optional color",
-        "tags": [
-          "Organization"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "name"
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "maxLength": 200,
-                    "minLength": 1,
-                    "description": "name of the organization context to create"
-                  },
-                  "color": {
-                    "type": "string",
-                    "pattern": "^#([A-Fa-f0-9]{6})$",
-                    "description": "Hexadecimal color code for the organization context (e.g.,"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Organization Context created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "$ref": "#/components/schemas/BasicNodeWithColor"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "failed to create organization context"
-          },
-          "401": {
-            "description": "no graph found for the user"
-          }
-        }
-      },
-      "get": {
-        "security": [
-          {
-            "bearerAuth": [
-              "read"
-            ]
-          }
-        ],
-        "summary": "Retrieve all Organization Context or a specific one by name",
-        "description": "Get all the Organization Context or a specific one if the name query parameter is provided",
-        "tags": [
-          "Organization"
-        ],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "name",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "maxLength": 200,
-              "minLength": 1,
-              "description": "name of the organization context to retrieve"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Retrieve Successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/BasicNodeWithColor"
-                      }
-                    },
-                    {
-                      "$ref": "#/components/schemas/BasicNodeWithColor"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request - Invalid input or parameters"
-          },
-          "401": {
-            "description": "no graph found for the user"
-          },
-          "404": {
-            "description": "Organization context not found"
-          }
-        }
-      }
-    },
-    "/api/v1/organization/context/{contextId}": {
-      "get": {
-        "security": [
-          {
-            "bearerAuth": [
-              "read"
-            ]
-          }
-        ],
-        "summary": "Retrieve an Organization Context by ID",
-        "description": "Get a specific Organization Context by its ID",
-        "tags": [
-          "Organization"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "contextId",
-            "required": true,
-            "schema": {
-              "type": "number",
-              "format": "int64",
-              "minimum": 1,
-              "description": "ID of the organization context to retrieve"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Retrieve Successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BasicNodeWithColor"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request - Invalid input or parameters"
-          },
-          "401": {
-            "description": "no graph found for the user"
-          },
-          "404": {
-            "description": "Organization context not found"
           }
         }
       }

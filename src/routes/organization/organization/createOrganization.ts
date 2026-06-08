@@ -84,7 +84,7 @@ module.exports = function (
    *                 description: Hexadecimal color code for the organization context (e.g., #RRGGBB)
    *     responses:
    *       201:
-   *         description: Retrieve Successfully
+   *         description: Organization created successfully
    *         content:
    *           application/json:
    *             schema:
@@ -141,6 +141,7 @@ module.exports = function (
             const parentNode = await loadAndValidateNode(
               spinalAPIMiddleware,
               organizationDynamicId,
+              profileId,
               SPINAL_ORGANIZATION_TYPE
             );
             node = await createOrganizationToOrganization(

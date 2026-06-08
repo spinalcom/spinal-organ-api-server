@@ -29,8 +29,8 @@ import type { Express } from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import {
   getOrganizationContext,
-  getOrganizationFromOrganization,
-  getOrganizationFromOrganizationByName,
+  getSpinalUserGroupFromOrganization,
+  removeSpinalUserGroupFromOrganization,
   SPINAL_ORGANIZATION_TYPE,
 } from 'spinal-model-user-service';
 import { createBasicNodeSync } from '../../../utilities/createBasicNode';
@@ -43,13 +43,13 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/organization/context/{contextId}/organization/{organizationId}:
-   *   get:
+   * /api/v1/organization/context/{contextId}/organization/{organizationId}/user-group:
+   *   delete:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     summary: Retrieve the Organizations from an Organization into an Organization Context by the context ID
-   *     description: Get a list of Organizations linked to a specific an Organization into Organization Context by their ID, if the name query parameter is provided, it will filter the organizations by name
+   *         - write
+   *     summary: Remove the user group from an Organization
+   *     description: Remove the user group linked to a specific Organization
    *     tags:
    *       - Organization
    *     parameters:
@@ -68,26 +68,10 @@ module.exports = function (
    *           type: number
    *           format: int64
    *           minimum: 1
-   *           description: ID of the organization parent to retrieve the organizations from
-   *       - in: query
-   *         name: name
-   *         required: false
-   *         schema:
-   *           type: string
-   *           maxLength: 200
-   *           minLength: 1
-   *           description: name of the organization to filter by
+   *           description: ID of the organization to remove the user group from
    *     responses:
-   *       200:
-   *         description: Retrieve Successfully
-   *         content:
-   *           application/json:
-   *             schema:
-   *               oneOf:
-   *                 - type: array
-   *                   items:
-   *                     $ref: '#/components/schemas/BasicNodeWithColor'
-   *                 - $ref: '#/components/schemas/BasicNodeWithColor'
+   *       204:
+   *         description: User group removed successfully
    *       400:
    *         description: Bad request - Invalid input or parameters
    *       404:
@@ -95,15 +79,12 @@ module.exports = function (
    *       401:
    *         description: no graph found for the user
    */
-  app.get(
-    '/api/v1/organization/context/:contextId/organization/:organizationId',
+  app.delete(
+    '/api/v1/organization/context/:contextId/organization/:organizationId/user-group',
     validate({
       params: z.strictObject({
         contextId: z.coerce.number().positive(),
         organizationId: z.coerce.number().positive(),
-      }),
-      query: z.strictObject({
-        name: z.string().max(200).min(1).optional(),
       }),
     }),
     async (req, res) => {
@@ -113,7 +94,6 @@ module.exports = function (
         if (!userGraph)
           throw { code: 401, message: `No graph found for ${profileId}` };
         const { contextId, organizationId } = req.params;
-        const { name } = req.query;
         const organizationContexts = await getOrganizationContext(userGraph);
         const organizationContext = organizationContexts.find(
           (context) => context._server_id === contextId
@@ -124,41 +104,18 @@ module.exports = function (
               code: 404,
               message: `No organization context found with the ID ${contextId}`,
             };
-          const organizationParent = await loadAndValidateNode(
+          const organizationNode = await loadAndValidateNode(
             spinalAPIMiddleware,
             organizationId,
             profileId,
             SPINAL_ORGANIZATION_TYPE
           );
-
-          if (name) {
-            const organization = await getOrganizationFromOrganizationByName(
-              organizationParent,
-              name,
-              organizationContext
-            );
-            if (!organization)
-              throw {
-                code: 404,
-                message: `No organization found with the name ${name}`,
-              };
-            const result = await createBasicNodeSync(organization, [
-              'color',
-            ] as const);
-            res.status(200).json(result);
-          } else {
-            const organizations = await getOrganizationFromOrganization(
-              organizationParent,
-              organizationContext
-            );
-            const results = await Promise.all(
-              organizations.map((organization) =>
-                createBasicNodeSync(organization, ['color'] as const)
-              )
-            );
-            res.status(200).json(results);
+          await removeSpinalUserGroupFromOrganization(organizationNode);
+          res.sendStatus(204);
+        } catch (error: any) {
+          if (error?.code && error?.message) {
+            throw error;
           }
-        } catch (error) {
           throw {
             code: 400,
             message:

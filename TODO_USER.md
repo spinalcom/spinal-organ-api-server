@@ -102,35 +102,33 @@
   - description: Get the direct organizations children under an organization in an organization context
 - ~[ ] POST /api/v1/organization/context/:contextId/organization/:organizationId~
   - ~description: Create an organizations children under an organization in an organization context~
-- [ ] DELETE /api/v1/organization/:parentOrganizationId/:organizationIdToBeRemoved
+- [x] DELETE /api/v1/organization/:parentOrganizationId/:organizationIdToBeRemoved
   - description: Remove an organization from an organization
-- [ ] DELETE /api/v1/organization/context/:contextId/:organizationIdToBeRemoved
-  - description: Remove an organization from an organization context
-- [ ] GET /api/v1/organization/:organizationId
+- ~[ ] DELETE /api/v1/organization/context/:contextId/:organizationIdToBeRemoved~
+  - ~description: Remove an organization from an organization context~
+- [x] GET /api/v1/organization/:organizationId
   - description: Get an organization
-- [ ] PATCH /api/v1/organization
+- [x] PATCH /api/v1/organization
   - description: Update multiple organizations
-- [ ] GET /api/v1/organization/:organizationId/parents
-  - description: Get the organization parents
+- [x] GET /api/v1/organization/:organizationId/parents
+  - description: Get the parent organization or organization context
 
 ### user group
 
-- [ ] GET /api/v1/organization/context/:contextId/organization/:organizationId/user-group
-  - description: Get all UserGroup from a organization in an organization context
-- [ ] POST /api/v1/organization/context/:contextId/organization/:organizationId/user-group
-  - description: Add an UserGroup in a organization from an organization context
-- [ ] DELETE /api/v1/organization/:organizationId/user-group/:userGroupId
+- [x] GET /api/v1/organization/context/:contextId/organization/:organizationId/user-group
+  - description: Get the UserGroup from a organization in an organization context
+- [x] POST /api/v1/organization/user-group
+  - description: Add UserGroup in a organization from an organization context
+- [x] DELETE /api/v1/organization/:organizationId/user-group
   - description: Remove an UserGroup from a organization
-- [ ] POST /api/v1/organization/context/:contextId/user-group/move
-  - description: Move an UserGroup from an organization to another organization in an organization context
 
 ### room group
 
 - [ ] GET /api/v1/organization/context/:contextId/organization/:organizationId/room-group
   - description: Get all RoomGroup from a organization in an organization context
-- [ ] POST /api/v1/organization/context/:contextId/organization/:organizationId/room-group
+- [x] POST /api/v1/organization/context/:contextId/organization/:organizationId/room-group
   - description: Add an RoomGroup in a organization from an organization context
-- [ ] DELETE /api/v1/organization/:organizationId/room-group/:roomGroupId
+- [x] DELETE /api/v1/organization/:organizationId/room-group/:roomGroupId
   - description: Remove an RoomGroup from a organization
 - [ ] POST /api/v1/organization/context/:contextId/user-group
   - description: Move an RoomGroup from an organization to another organization in an organization context

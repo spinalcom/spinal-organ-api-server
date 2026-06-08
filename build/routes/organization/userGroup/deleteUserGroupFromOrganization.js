@@ -30,18 +30,17 @@ const zod_1 = require("zod");
 const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_model_user_service_1 = require("spinal-model-user-service");
-const createBasicNode_1 = require("../../../utilities/createBasicNode");
 const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
-     * /api/v1/organization/context/{contextId}/organization/{organizationId}:
-     *   get:
+     * /api/v1/organization/context/{contextId}/organization/{organizationId}/user-group:
+     *   delete:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     summary: Retrieve the Organizations from an Organization into an Organization Context by the context ID
-     *     description: Get a list of Organizations linked to a specific an Organization into Organization Context by their ID, if the name query parameter is provided, it will filter the organizations by name
+     *         - write
+     *     summary: Remove the user group from an Organization
+     *     description: Remove the user group linked to a specific Organization
      *     tags:
      *       - Organization
      *     parameters:
@@ -60,26 +59,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *           type: number
      *           format: int64
      *           minimum: 1
-     *           description: ID of the organization parent to retrieve the organizations from
-     *       - in: query
-     *         name: name
-     *         required: false
-     *         schema:
-     *           type: string
-     *           maxLength: 200
-     *           minLength: 1
-     *           description: name of the organization to filter by
+     *           description: ID of the organization to remove the user group from
      *     responses:
-     *       200:
-     *         description: Retrieve Successfully
-     *         content:
-     *           application/json:
-     *             schema:
-     *               oneOf:
-     *                 - type: array
-     *                   items:
-     *                     $ref: '#/components/schemas/BasicNodeWithColor'
-     *                 - $ref: '#/components/schemas/BasicNodeWithColor'
+     *       204:
+     *         description: User group removed successfully
      *       400:
      *         description: Bad request - Invalid input or parameters
      *       404:
@@ -87,13 +70,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       401:
      *         description: no graph found for the user
      */
-    app.get('/api/v1/organization/context/:contextId/organization/:organizationId', (0, express_zod_safe_1.default)({
+    app.delete('/api/v1/organization/context/:contextId/organization/:organizationId/user-group', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({
             contextId: zod_1.z.coerce.number().positive(),
             organizationId: zod_1.z.coerce.number().positive(),
-        }),
-        query: zod_1.z.strictObject({
-            name: zod_1.z.string().max(200).min(1).optional(),
         }),
     }), async (req, res) => {
         try {
@@ -102,7 +82,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!userGraph)
                 throw { code: 401, message: `No graph found for ${profileId}` };
             const { contextId, organizationId } = req.params;
-            const { name } = req.query;
             const organizationContexts = await (0, spinal_model_user_service_1.getOrganizationContext)(userGraph);
             const organizationContext = organizationContexts.find((context) => context._server_id === contextId);
             try {
@@ -111,26 +90,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         code: 404,
                         message: `No organization context found with the ID ${contextId}`,
                     };
-                const organizationParent = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, organizationId, profileId, spinal_model_user_service_1.SPINAL_ORGANIZATION_TYPE);
-                if (name) {
-                    const organization = await (0, spinal_model_user_service_1.getOrganizationFromOrganizationByName)(organizationParent, name, organizationContext);
-                    if (!organization)
-                        throw {
-                            code: 404,
-                            message: `No organization found with the name ${name}`,
-                        };
-                    const result = await (0, createBasicNode_1.createBasicNodeSync)(organization, [
-                        'color',
-                    ]);
-                    res.status(200).json(result);
-                }
-                else {
-                    const organizations = await (0, spinal_model_user_service_1.getOrganizationFromOrganization)(organizationParent, organizationContext);
-                    const results = await Promise.all(organizations.map((organization) => (0, createBasicNode_1.createBasicNodeSync)(organization, ['color'])));
-                    res.status(200).json(results);
-                }
+                const organizationNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, organizationId, profileId, spinal_model_user_service_1.SPINAL_ORGANIZATION_TYPE);
+                await (0, spinal_model_user_service_1.removeSpinalUserGroupFromOrganization)(organizationNode);
+                res.sendStatus(204);
             }
             catch (error) {
+                if (error?.code && error?.message) {
+                    throw error;
+                }
                 throw {
                     code: 400,
                     message: error instanceof Error
@@ -148,4 +115,4 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
     });
 };
-//# sourceMappingURL=getOrganizationFromOrganization.js.map
+//# sourceMappingURL=deleteUserGroupFromOrganization.js.map

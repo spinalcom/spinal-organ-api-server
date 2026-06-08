@@ -75,7 +75,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                 description: Hexadecimal color code for the organization context (e.g., #RRGGBB)
      *     responses:
      *       201:
-     *         description: Retrieve Successfully
+     *         description: Organization created successfully
      *         content:
      *           application/json:
      *             schema:
@@ -118,7 +118,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     node = await (0, spinal_model_user_service_1.createOrganizationToOrganizationContext)(organizationContext, name, color);
                 }
                 else {
-                    const parentNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, organizationDynamicId, spinal_model_user_service_1.SPINAL_ORGANIZATION_TYPE);
+                    const parentNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, organizationDynamicId, profileId, spinal_model_user_service_1.SPINAL_ORGANIZATION_TYPE);
                     node = await (0, spinal_model_user_service_1.createOrganizationToOrganization)(organizationContext, parentNode, name, color);
                 }
                 const result = await (0, createBasicNode_1.createBasicNodeSync)(node, ['color']);
