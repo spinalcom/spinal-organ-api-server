@@ -40,18 +40,56 @@ async function getBuildingInventory(spinalAPIMiddleware, profileId, groupContext
     if (building.getType().get() !== "geographicBuilding") {
         throw new Error("node is not of type geographicBuilding");
     }
-    const floors = await building.getChildren("hasGeographicFloor");
-    const result = [];
-    for (const floor of floors) {
-        const floorInventory = await getFloorInventory(spinalAPIMiddleware, profileId, groupContext, floor._server_id, reqInfo);
-        result.push({
-            dynamicId: floor._server_id,
-            name: floor.getName().get(),
-            type: floor.getType().get(),
-            inventory: floorInventory
-        });
+    // For building its faster to classify by the group context directly without going through floors and rooms
+    return await classifyItemsByContext(groupContext, reqInfo);
+}
+async function classifyItemsByContext(groupContext, reqInfo) {
+    const groupIds = parseOptionalIds(reqInfo.groupIds);
+    const categoryId = parseOptionalId(reqInfo.categoryId);
+    const isRoomContext = groupContext.getType().get() === 'geographicRoomGroupContext';
+    const groupToItemRelation = isRoomContext ? "groupHasgeographicRoom" : "groupHasBIMObject";
+    if (!isRoomContext) {
+        reqInfo.includeArea = false; // safety check, area is only relevant for rooms
     }
-    return result;
+    const res = [];
+    let categories = await groupContext.getChildren("hasCategory");
+    if (categoryId !== undefined) {
+        categories = categories.filter(e => e._server_id === categoryId);
+    }
+    else if (reqInfo.category) {
+        categories = categories.filter(e => e.getName().get() === reqInfo.category);
+    }
+    for (const category of categories) {
+        let groups = await category.getChildren("hasGroup");
+        if (groupIds && groupIds.length > 0) {
+            groups = groups.filter(e => groupIds.includes(e._server_id));
+        }
+        else if (reqInfo.groups && reqInfo.groups.length > 0) {
+            groups = groups.filter(e => reqInfo.groups.includes(e.getName().get()));
+        }
+        for (const group of groups) {
+            const items = await group.getChildren(groupToItemRelation);
+            const groupItems = [];
+            for (const item of items) {
+                const position = reqInfo.includePosition ? await getCoordinate(item) : undefined;
+                const area = reqInfo.includeArea ? await getArea(item) : undefined;
+                groupItems.push({
+                    ...getDetail(item, reqInfo),
+                    position,
+                    area
+                });
+            }
+            res.push({
+                name: group.getName().get(),
+                dynamicId: group._server_id,
+                type: group.getType().get(),
+                color: group.info.color?.get(),
+                icon: group.info.icon?.get(),
+                groupItems
+            });
+        }
+    }
+    return res;
 }
 async function getFloorInventory(spinalAPIMiddleware, profileId, groupContext, dynamicId, reqInfo) {
     const floor = await spinalAPIMiddleware.load(dynamicId, profileId);

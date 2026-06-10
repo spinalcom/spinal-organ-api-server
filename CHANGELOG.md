@@ -1,5 +1,8 @@
 # CHANGELOG
 
+# 10-06-2026 -> v1.1.15
+- Building inventory goes through gorup context instead of spatial context
+
 # 13-05-2026 -> v1.1.14
 - New analysis module and update routes
 
