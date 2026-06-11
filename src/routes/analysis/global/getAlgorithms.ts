@@ -7,6 +7,12 @@ import {
   NODE_ALGORITHMS,
   FLOW_CONTROL_ALGORITHMS,
   REGISTER_ALGORITHMS,
+  NODE_ATTRIBUTES_ALGORITHMS,
+  LIST_ALGORITHMS,
+  BOOLEAN_ALGORITHMS,
+  CONVERSION_ALGORITHMS,
+  OBJECT_ALGORITHMS,
+  TIMESERIES_ALGORITHMS,
   AlgorithmDefinition,
   VERSION,
 } from "spinal-model-analysis";
@@ -83,6 +89,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         ...NODE_ALGORITHMS,
         ...FLOW_CONTROL_ALGORITHMS,
         ...REGISTER_ALGORITHMS,
+        ...NODE_ATTRIBUTES_ALGORITHMS,
+        ...LIST_ALGORITHMS,
+        ...BOOLEAN_ALGORITHMS,
+        ...CONVERSION_ALGORITHMS,
+        ...OBJECT_ALGORITHMS,
+        ...TIMESERIES_ALGORITHMS,
       ];
       const categorizedNames = new Set(categorized.map(a => a.name));
       const other = ALGORITHM_DEFINITIONS.filter(a => !categorizedNames.has(a.name));
@@ -92,6 +104,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         NODE: NODE_ALGORITHMS.map(serialize),
         FLOW_CONTROL: FLOW_CONTROL_ALGORITHMS.map(serialize),
         REGISTER: REGISTER_ALGORITHMS.map(serialize),
+        NODE_ATTRIBUTES: NODE_ATTRIBUTES_ALGORITHMS.map(serialize),
+        LIST: LIST_ALGORITHMS.map(serialize),
+        BOOLEAN: BOOLEAN_ALGORITHMS.map(serialize),
+        CONVERSION: CONVERSION_ALGORITHMS.map(serialize),
+        OBJECT: OBJECT_ALGORITHMS.map(serialize),
+        TIMESERIES: TIMESERIES_ALGORITHMS.map(serialize),
         OTHER: other.map(serialize),
       };
 
