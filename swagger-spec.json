@@ -5715,6 +5715,15 @@
             "schema": {
               "type": "boolean"
             }
+          },
+          {
+            "in": "query",
+            "name": "onlyCounts",
+            "description": "Return only the number of items per group instead of loading the items themselves",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "requestBody": {

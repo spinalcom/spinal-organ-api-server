@@ -43,9 +43,27 @@ async function getBuildingInventory(spinalAPIMiddleware, profileId, groupContext
     // For building its faster to classify by the group context directly without going through floors and rooms
     return await classifyItemsByContext(groupContext, reqInfo);
 }
+// Counts the children of a node under a given relation name without loading them.
+// Reads the count straight from the relation, like corseChildrenAndParentNode does.
+function getRelationChildrenCount(node, relationName) {
+    for (const [, relationTypeMap] of node.children) {
+        for (const [relName, relation] of relationTypeMap) {
+            if (relName === relationName)
+                return relation.getNbChildren();
+        }
+    }
+    return 0;
+}
+// For the building scope, we walk the group context (context -> category -> group)
+// instead of the spatial tree (floor -> room -> equipment), which avoids loading every
+// room and equipment of the building.
+// When reqInfo.onlyCounts is true we go one step further and never load the items either:
+// each group only reports the number of items it holds (via getNbChildren). Otherwise the
+// items are loaded and detailed like the other inventories.
 async function classifyItemsByContext(groupContext, reqInfo) {
     const groupIds = parseOptionalIds(reqInfo.groupIds);
     const categoryId = parseOptionalId(reqInfo.categoryId);
+    const onlyCounts = reqInfo.onlyCounts === true;
     const isRoomContext = groupContext.getType().get() === 'geographicRoomGroupContext';
     const groupToItemRelation = isRoomContext ? "groupHasgeographicRoom" : "groupHasBIMObject";
     if (!isRoomContext) {
@@ -68,25 +86,31 @@ async function classifyItemsByContext(groupContext, reqInfo) {
             groups = groups.filter(e => reqInfo.groups.includes(e.getName().get()));
         }
         for (const group of groups) {
-            const items = await group.getChildren(groupToItemRelation);
-            const groupItems = [];
-            for (const item of items) {
-                const position = reqInfo.includePosition ? await getCoordinate(item) : undefined;
-                const area = reqInfo.includeArea ? await getArea(item) : undefined;
-                groupItems.push({
-                    ...getDetail(item, reqInfo),
-                    position,
-                    area
-                });
-            }
-            res.push({
+            const groupEntry = {
                 name: group.getName().get(),
                 dynamicId: group._server_id,
                 type: group.getType().get(),
                 color: group.info.color?.get(),
                 icon: group.info.icon?.get(),
-                groupItems
-            });
+            };
+            if (onlyCounts) {
+                groupEntry.itemsCount = getRelationChildrenCount(group, groupToItemRelation);
+            }
+            else {
+                const items = await group.getChildren(groupToItemRelation);
+                const groupItems = [];
+                for (const item of items) {
+                    const position = reqInfo.includePosition ? await getCoordinate(item) : undefined;
+                    const area = reqInfo.includeArea ? await getArea(item) : undefined;
+                    groupItems.push({
+                        ...getDetail(item, reqInfo),
+                        position,
+                        area
+                    });
+                }
+                groupEntry.groupItems = groupItems;
+            }
+            res.push(groupEntry);
         }
     }
     return res;
