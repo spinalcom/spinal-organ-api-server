@@ -18405,8 +18405,8 @@
             ]
           }
         ],
-        "description": "Returns a list of trigger type strings for analysis",
-        "summary": "Gets analysis trigger types",
+        "description": "Returns the available analysis trigger types along with the fields required to configure each one. Each field has a name, primitive type, description, and whether it is required.",
+        "summary": "Gets analysis trigger types and their configuration fields",
         "tags": [
           "Analysis"
         ],
@@ -18421,7 +18421,42 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "type": "string"
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "description": "The trigger type identifier (e.g. INTERVAL_TIME, CRON, COV)"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "When/how this trigger fires"
+                          },
+                          "fields": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string"
+                                },
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "string",
+                                    "number",
+                                    "boolean"
+                                  ]
+                                },
+                                "description": {
+                                  "type": "string"
+                                },
+                                "required": {
+                                  "type": "boolean"
+                                }
+                              }
+                            }
+                          }
+                        }
                       }
                     },
                     "meta": {
