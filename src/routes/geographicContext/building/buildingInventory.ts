@@ -74,7 +74,13 @@ module.exports = function (
      *         required: false
      *         schema:
      *           type: boolean
-     * 
+     *       - in: query
+     *         name: onlyCounts
+     *         description: Return only the number of items per group instead of loading the items themselves
+     *         required: false
+     *         schema:
+     *           type: boolean
+     *
      *     requestBody:
      *       required: true
      *       content:
@@ -143,6 +149,7 @@ module.exports = function (
             const includeArea = req.query.includeArea === "true" || false;
             const onlyDynamicId = req.query.onlyDynamicId === "true" || false;
             const includeUnassignedItems = req.query.includeUnassignedItems === "true" || false;
+            const onlyCounts = req.query.onlyCounts === "true" || false;
 
             const reqInfo = {
                 ...req.body,
@@ -150,6 +157,7 @@ module.exports = function (
                 includeArea,
                 onlyDynamicId,
                 includeUnassignedItems,
+                onlyCounts,
             }
 
             const inventory = await getBuildingInventory(spinalAPIMiddleware, profileId, groupContext, building._server_id, reqInfo);

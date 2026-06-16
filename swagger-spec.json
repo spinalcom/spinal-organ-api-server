@@ -5715,6 +5715,15 @@
             "schema": {
               "type": "boolean"
             }
+          },
+          {
+            "in": "query",
+            "name": "onlyCounts",
+            "description": "Return only the number of items per group instead of loading the items themselves",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "requestBody": {
@@ -10785,7 +10794,7 @@
           }
         ],
         "requestBody": {
-          "description": "For the two parameters *workflow* and *process* you can use either the dynamicId or the name. To associate the ticket with an element, please fill in the dynamicId parameter",
+          "description": "For the two parameters *workflow* and *process* you can use either the dynamicId or the name. To associate the ticket with an element, provide either *nodeDynamicId* or *nodeStaticId*.",
           "required": true,
           "content": {
             "application/json": {
@@ -10794,7 +10803,6 @@
                 "required": [
                   "workflow",
                   "process",
-                  "nodeDynamicId",
                   "name",
                   "priority",
                   "description"
@@ -10824,7 +10832,11 @@
                   },
                   "nodeDynamicId": {
                     "type": "integer",
-                    "description": "The node's target dynamicId"
+                    "description": "The node's target dynamicId. Provide either this or nodeStaticId."
+                  },
+                  "nodeStaticId": {
+                    "type": "string",
+                    "description": "The node's target staticId. Used when nodeDynamicId is not provided."
                   },
                   "name": {
                     "type": "string",
@@ -18393,8 +18405,8 @@
             ]
           }
         ],
-        "description": "Returns a list of trigger type strings for analysis",
-        "summary": "Gets analysis trigger types",
+        "description": "Returns the available analysis trigger types along with the fields required to configure each one. Each field has a name, primitive type, description, and whether it is required.",
+        "summary": "Gets analysis trigger types and their configuration fields",
         "tags": [
           "Analysis"
         ],
@@ -18409,7 +18421,42 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "type": "string"
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "description": "The trigger type identifier (e.g. INTERVAL_TIME, CRON, COV)"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "When/how this trigger fires"
+                          },
+                          "fields": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string"
+                                },
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "string",
+                                    "number",
+                                    "boolean"
+                                  ]
+                                },
+                                "description": {
+                                  "type": "string"
+                                },
+                                "required": {
+                                  "type": "boolean"
+                                }
+                              }
+                            }
+                          }
+                        }
                       }
                     },
                     "meta": {

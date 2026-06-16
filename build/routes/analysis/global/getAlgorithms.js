@@ -10,7 +10,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Returns analysis algorithms grouped by category. Each algorithm contains its name, description, input types, output type, and parameters. The `run` function is not serialized.
+     *     description: Returns analysis algorithms grouped by category. Each algorithm contains its name, description, inputs (each input slot has a name, accepted types, description, required flag and optional variadic flag), output type, and parameters. The `run` function is not serialized.
      *     summary: Gets analysis algorithms grouped by category
      *     tags:
      *       - Analysis
@@ -61,7 +61,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const serialize = (a) => ({
                 name: a.name,
                 description: a.description,
-                inputTypes: a.inputTypes,
+                inputs: a.inputs,
                 outputType: a.outputType,
                 parameters: a.parameters,
             });
@@ -70,6 +70,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 ...spinal_model_analysis_1.NODE_ALGORITHMS,
                 ...spinal_model_analysis_1.FLOW_CONTROL_ALGORITHMS,
                 ...spinal_model_analysis_1.REGISTER_ALGORITHMS,
+                ...spinal_model_analysis_1.NODE_ATTRIBUTES_ALGORITHMS,
+                ...spinal_model_analysis_1.LIST_ALGORITHMS,
+                ...spinal_model_analysis_1.BOOLEAN_ALGORITHMS,
+                ...spinal_model_analysis_1.CONVERSION_ALGORITHMS,
+                ...spinal_model_analysis_1.OBJECT_ALGORITHMS,
+                ...spinal_model_analysis_1.TIMESERIES_ALGORITHMS,
             ];
             const categorizedNames = new Set(categorized.map(a => a.name));
             const other = spinal_model_analysis_1.ALGORITHM_DEFINITIONS.filter(a => !categorizedNames.has(a.name));
@@ -78,6 +84,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 NODE: spinal_model_analysis_1.NODE_ALGORITHMS.map(serialize),
                 FLOW_CONTROL: spinal_model_analysis_1.FLOW_CONTROL_ALGORITHMS.map(serialize),
                 REGISTER: spinal_model_analysis_1.REGISTER_ALGORITHMS.map(serialize),
+                NODE_ATTRIBUTES: spinal_model_analysis_1.NODE_ATTRIBUTES_ALGORITHMS.map(serialize),
+                LIST: spinal_model_analysis_1.LIST_ALGORITHMS.map(serialize),
+                BOOLEAN: spinal_model_analysis_1.BOOLEAN_ALGORITHMS.map(serialize),
+                CONVERSION: spinal_model_analysis_1.CONVERSION_ALGORITHMS.map(serialize),
+                OBJECT: spinal_model_analysis_1.OBJECT_ALGORITHMS.map(serialize),
+                TIMESERIES: spinal_model_analysis_1.TIMESERIES_ALGORITHMS.map(serialize),
                 OTHER: other.map(serialize),
             };
             const count = Object.values(data).reduce((acc, arr) => acc + arr.length, 0);
