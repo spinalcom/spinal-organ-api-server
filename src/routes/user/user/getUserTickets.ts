@@ -113,11 +113,9 @@ module.exports = function (
           // Sort tickets by creation date (newest first)
           const reversedTickets = ticketNodes.reverse();
           const resData: Record<string, any>[] = [];
-          for (
-            let i = offset;
-            i < reversedTickets.length && resData.length < 100;
-            i++
-          ) {
+          let i = offset;
+
+          for (; i < reversedTickets.length && resData.length < 100; i++) {
             const ticket = reversedTickets[i];
             resData.push(
               getTicketDetails(
@@ -128,8 +126,33 @@ module.exports = function (
               )
             );
           }
-          const result = await Promise.all(resData);
-          res.status(200).json(result);
+          const result = await Promise.allSettled(resData);
+          const fulfilledResults = result
+            .filter((r) => r.status === 'fulfilled')
+            .map((r: any) => r.value);
+          if (fulfilledResults.length < 100 && i < reversedTickets.length) {
+            while (
+              i < reversedTickets.length &&
+              fulfilledResults.length < 100
+            ) {
+              const ticket = reversedTickets[i];
+              try {
+                const ticketDetails = await getTicketDetails(
+                  spinalAPIMiddleware,
+                  profileId,
+                  ticket._server_id!,
+                  true
+                );
+                fulfilledResults.push(ticketDetails);
+              } catch (error) {
+                logger.error(
+                  `Failed to retrieve details for ticket ${ticket._server_id}: ${error}`
+                );
+              }
+              i++;
+            }
+          }
+          res.status(200).json(fulfilledResults);
         } catch (error) {
           throw {
             code: 400,

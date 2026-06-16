@@ -23,7 +23,10 @@
  */
 
 import type { ISpinalAPIMiddleware } from '../../interfaces/ISpinalAPIMiddleware';
-import { attributeService, serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
+import {
+  attributeService,
+  serviceDocumentation,
+} from 'spinal-env-viewer-plugin-documentation-service';
 import {
   getStepFromProcessByStepId,
   getTicketLogs,
@@ -39,7 +42,8 @@ import { SpinalNode, SpinalContext } from 'spinal-model-graph';
 import { SpinalLogTicketInterface } from 'spinal-models-ticket';
 import { loadAndValidateNode } from '../loadAndValidateNode';
 
-function getPriorityNumber(priority: string): number { // compatibility with old tickets by spinalcom
+function getPriorityNumber(priority: string): number {
+  // compatibility with old tickets by spinalcom
   if (!priority) return 0; // default to 0 if priority is undefined or empty
   const normalizedPriority = String(priority).trim().toLowerCase();
   switch (normalizedPriority) {
@@ -50,7 +54,8 @@ function getPriorityNumber(priority: string): number { // compatibility with old
     case 'urgent':
       return 2;
     // These three cases are for old tickets created by Spinalcom with mission
-    default: { // All future tickets should have number parsable prioirity, but in case of tickets with unparsable priority, we default to 0
+    default: {
+      // All future tickets should have number parsable prioirity, but in case of tickets with unparsable priority, we default to 0
       const parsedPriority = Number(normalizedPriority);
       return Number.isFinite(parsedPriority) ? parsedPriority : 0;
     }
@@ -63,8 +68,12 @@ async function getTicketDetails(
   includeAttachedItems = true
 ) {
   await spinalAPIMiddleware.getGraph();
-  const { contextNode, processNode, stepNode, ticketNode } =
-    await getTicketNodeTree(ticketId, profileId, spinalAPIMiddleware);
+  const ticketData = await getTicketNodeTree(
+    ticketId,
+    profileId,
+    spinalAPIMiddleware
+  );
+  const { contextNode, processNode, stepNode, ticketNode } = ticketData || {};
   if (!contextNode || !processNode || !stepNode || !ticketNode) {
     throw new Error('Failed to retrieve ticket node tree');
   }
@@ -83,45 +92,48 @@ async function getTicketDetails(
   // list of attributes to include even if they are empty : description, declarer_id, username, gmaoId, gmaoDateCreation
   // const allAttributesObject = allAttributes.map(attr => ({ [attr.label.get()]: attr.value.get() }));
 
-  const info : Record<string, any> = {
+  const info: Record<string, any> = {
     dynamicId: ticketNode._server_id,
     staticId: ticketNode.info.id.get(),
     name: ticketNode.info.name.get(),
     type: ticketNode.info.type.get(),
     priority: getPriorityNumber(ticketNodeInfo.priority),
-    creationDate: ticketNode.info.creationDate?.get() || Number(ticketNodeInfo.creationDate) || NaN,
+    creationDate:
+      ticketNode.info.creationDate?.get() ||
+      Number(ticketNodeInfo.creationDate) ||
+      NaN,
     elementSelected:
       elementSelected === undefined
         ? ''
         : {
-          dynamicId: elementSelected._server_id,
-          staticId: elementSelected.info.id.get(),
-          name: elementSelected.info.name.get(),
-          type: elementSelected.info.type.get(),
-        },
+            dynamicId: elementSelected._server_id,
+            staticId: elementSelected.info.id.get(),
+            name: elementSelected.info.name.get(),
+            type: elementSelected.info.type.get(),
+          },
     process:
       processNode === undefined
         ? ''
         : {
-          dynamicId: processNode._server_id,
-          staticId: processNode.info.id.get(),
-          name: processNode.info.name.get(),
-          type: processNode.info.type.get(),
-        },
+            dynamicId: processNode._server_id,
+            staticId: processNode.info.id.get(),
+            name: processNode.info.name.get(),
+            type: processNode.info.type.get(),
+          },
     step:
       stepNode === undefined
         ? ''
         : {
-          dynamicId: stepNode._server_id,
-          staticId: stepNode.info.id.get(),
-          name: stepNode.info.name.get(),
-          type: stepNode.info.type.get(),
-          color: stepNode.info.color.get(),
-          order: stepNode.info.order.get(),
-        },
+            dynamicId: stepNode._server_id,
+            staticId: stepNode.info.id.get(),
+            name: stepNode.info.name.get(),
+            type: stepNode.info.type.get(),
+            color: stepNode.info.color.get(),
+            order: stepNode.info.order.get(),
+          },
     workflowId: contextNode?._server_id,
     workflowName: contextNode?.info.name.get(),
-  }
+  };
 
   for (const attr of allAttributes) {
     const label = attr.label.get();
@@ -129,7 +141,6 @@ async function getTicketDetails(
       info[label] = attr.value.get();
     }
   }
-
 
   // const info = {
   //   dynamicId: ticketNode._server_id,
