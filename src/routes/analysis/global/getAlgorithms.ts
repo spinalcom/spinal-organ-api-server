@@ -26,7 +26,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns analysis algorithms grouped by category. Each algorithm contains its name, description, input types, output type, and parameters. The `run` function is not serialized.
+   *     description: Returns analysis algorithms grouped by category. Each algorithm contains its name, description, inputs (each input slot has a name, accepted types, description, required flag and optional variadic flag), output type, and parameters. The `run` function is not serialized.
    *     summary: Gets analysis algorithms grouped by category
    *     tags:
    *       - Analysis
@@ -79,7 +79,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const serialize = (a: AlgorithmDefinition) => ({
         name: a.name,
         description: a.description,
-        inputTypes: a.inputTypes,
+        inputs: a.inputs,
         outputType: a.outputType,
         parameters: a.parameters,
       });
