@@ -12,6 +12,7 @@ import {
   BOOLEAN_ALGORITHMS,
   CONVERSION_ALGORITHMS,
   OBJECT_ALGORITHMS,
+  STRING_ALGORITHMS,
   TIMESERIES_ALGORITHMS,
   HTTP_ALGORITHMS,
   AlgorithmDefinition,
@@ -95,6 +96,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         ...BOOLEAN_ALGORITHMS,
         ...CONVERSION_ALGORITHMS,
         ...OBJECT_ALGORITHMS,
+        ...STRING_ALGORITHMS,
         ...TIMESERIES_ALGORITHMS,
         ...HTTP_ALGORITHMS,
       ];
@@ -111,6 +113,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         BOOLEAN: BOOLEAN_ALGORITHMS.map(serialize),
         CONVERSION: CONVERSION_ALGORITHMS.map(serialize),
         OBJECT: OBJECT_ALGORITHMS.map(serialize),
+        STRING: STRING_ALGORITHMS.map(serialize),
         TIMESERIES: TIMESERIES_ALGORITHMS.map(serialize),
         HTTP: HTTP_ALGORITHMS.map(serialize),
         OTHER: other.map(serialize),

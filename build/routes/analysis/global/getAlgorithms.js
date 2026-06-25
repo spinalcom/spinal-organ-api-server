@@ -75,6 +75,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 ...spinal_model_analysis_1.BOOLEAN_ALGORITHMS,
                 ...spinal_model_analysis_1.CONVERSION_ALGORITHMS,
                 ...spinal_model_analysis_1.OBJECT_ALGORITHMS,
+                ...spinal_model_analysis_1.STRING_ALGORITHMS,
                 ...spinal_model_analysis_1.TIMESERIES_ALGORITHMS,
                 ...spinal_model_analysis_1.HTTP_ALGORITHMS,
             ];
@@ -90,6 +91,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 BOOLEAN: spinal_model_analysis_1.BOOLEAN_ALGORITHMS.map(serialize),
                 CONVERSION: spinal_model_analysis_1.CONVERSION_ALGORITHMS.map(serialize),
                 OBJECT: spinal_model_analysis_1.OBJECT_ALGORITHMS.map(serialize),
+                STRING: spinal_model_analysis_1.STRING_ALGORITHMS.map(serialize),
                 TIMESERIES: spinal_model_analysis_1.TIMESERIES_ALGORITHMS.map(serialize),
                 HTTP: spinal_model_analysis_1.HTTP_ALGORITHMS.map(serialize),
                 OTHER: other.map(serialize),
