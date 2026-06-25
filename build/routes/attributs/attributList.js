@@ -51,7 +51,7 @@ const requestUtilities_1 = require("../../utilities/requestUtilities");
 const getAttributeListInfo_1 = require("../../utilities/getAttributeListInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     //deprecated
-    app.get('/api/v1/node/:id/attributsList', async (req, res, next) => {
+    app.get("/api/v1/node/:id/attributsList", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
@@ -107,7 +107,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/node/:id/attribute_list', async (req, res, next) => {
+    app.get("/api/v1/node/:id/attribute_list", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const result = await (0, getAttributeListInfo_1.getAttributeListInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));

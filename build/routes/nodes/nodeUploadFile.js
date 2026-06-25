@@ -64,7 +64,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Upload not Successfully
      */
-    app.post('/api/v1/node/:id/upload_file', async (req, res, next) => {
+    app.post("/api/v1/node/:id/upload_file", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
@@ -74,7 +74,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!req.files) {
                 res.send({
                     status: false,
-                    message: 'No file uploaded',
+                    message: "No file uploaded",
                 });
             }
             else {
@@ -90,7 +90,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 //send response
                 res.send({
                     status: true,
-                    message: 'File is uploaded',
+                    message: "File is uploaded",
                     data: {
                         name: file.name,
                         mimetype: file.mimetype,
@@ -102,7 +102,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send('ko');
+            res.status(400).send("ko");
         }
         // res.json();
     });

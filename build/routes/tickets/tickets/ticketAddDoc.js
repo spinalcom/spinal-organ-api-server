@@ -73,7 +73,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Add not Successfully
      */
-    app.post('/api/v1/ticket/:ticketId/add_doc', async (req, res) => {
+    app.post("/api/v1/ticket/:ticketId/add_doc", async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const ticket = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, parseInt(req.params.ticketId, 10), profileId, spinal_service_ticket_1.SPINAL_TICKET_SERVICE_TICKET_TYPE);
@@ -81,7 +81,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!req.files) {
                 return res.send({
                     status: false,
-                    message: 'No file uploaded',
+                    message: "No file uploaded",
                 });
             }
             //@ts-ignore
@@ -90,13 +90,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (list.length === 0) {
                 return res.send({
                     status: false,
-                    message: 'No file uploaded',
+                    message: "No file uploaded",
                 });
             }
             if (list.length === 1)
                 return res.send({
                     status: true,
-                    message: 'File is uploaded',
+                    message: "File is uploaded",
                     data: {
                         name: list[0].name,
                         mimetype: list[0].mimetype,
@@ -118,14 +118,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
             return res.send({
                 status: true,
-                message: 'Files are uploaded',
+                message: "Files are uploaded",
                 data: resData,
             });
         }
         catch (error) {
             if (error?.code && error?.message)
                 return res.status(error.code).send(error.message);
-            return res.status(400).send('ko');
+            return res.status(400).send("ko");
         }
     });
 };

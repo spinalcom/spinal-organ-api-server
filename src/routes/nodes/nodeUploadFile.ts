@@ -22,100 +22,89 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
-import type { Express } from 'express';
-import { FileExplorer } from 'spinal-env-viewer-plugin-documentation-service';
-import { getProfileId } from '../../utilities/requestUtilities';
-import type { ISpinalAPIMiddleware } from '../../interfaces';
+import { SpinalNode, SpinalGraphService } from "spinal-env-viewer-graph-service";
+import type { Express } from "express";
+import { FileExplorer } from "spinal-env-viewer-plugin-documentation-service";
+import { getProfileId } from "../../utilities/requestUtilities";
+import type { ISpinalAPIMiddleware } from "../../interfaces";
 
-module.exports = function (
-  logger: any,
-  app: Express,
-  spinalAPIMiddleware: ISpinalAPIMiddleware
-) {
-  /**
-   * @swagger
-   * /api/v1/node/{id}/upload_file:
-   *   post:
-   *     security:
-   *       - bearerAuth:
-   *         - read
-   *     description: Upload a Doc
-   *     summary: Upload a Doc
-   *     tags:
-   *       - Nodes
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     requestBody:
-   *       content:
-   *         multipart/form-data:
-   *           schema:
-   *             type: object
-   *             properties:
-   *               file:
-   *                 type: string
-   *                 format: binary
-   *           encoding:
-   *             file:
-   *               style: form
-   *     responses:
-   *       200:
-   *         description: Upload Successfully
-   *       400:
-   *         description: Upload not Successfully
-   */
-  app.post('/api/v1/node/:id/upload_file', async (req, res, next) => {
-    try {
-      const profileId = getProfileId(req);
-      const node: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10),
-        profileId
-      );
-      //@ts-ignore
-      SpinalGraphService._addNode(node);
+module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+	/**
+	 * @swagger
+	 * /api/v1/node/{id}/upload_file:
+	 *   post:
+	 *     security:
+	 *       - bearerAuth:
+	 *         - read
+	 *     description: Upload a Doc
+	 *     summary: Upload a Doc
+	 *     tags:
+	 *       - Nodes
+	 *     parameters:
+	 *      - in: path
+	 *        name: id
+	 *        description: use the dynamic ID
+	 *        required: true
+	 *        schema:
+	 *          type: integer
+	 *          format: int64
+	 *     requestBody:
+	 *       content:
+	 *         multipart/form-data:
+	 *           schema:
+	 *             type: object
+	 *             properties:
+	 *               file:
+	 *                 type: string
+	 *                 format: binary
+	 *           encoding:
+	 *             file:
+	 *               style: form
+	 *     responses:
+	 *       200:
+	 *         description: Upload Successfully
+	 *       400:
+	 *         description: Upload not Successfully
+	 */
+	app.post("/api/v1/node/:id/upload_file", async (req, res, next) => {
+		try {
+			const profileId = getProfileId(req);
+			const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+			//@ts-ignore
+			SpinalGraphService._addNode(node);
 
-      // @ts-ignore
-      if (!req.files) {
-        res.send({
-          status: false,
-          message: 'No file uploaded',
-        });
-      } else {
-        //Use the name of the input field (i.e. "file") to retrieve the uploaded file
-        // @ts-ignore
-        const file = req.files.file;
-        //Use the mv() method to place the file in upload directory (i.e. "uploads")
-        const data = {
-          name: file.name,
-          buffer: file.data,
-        };
+			// @ts-ignore
+			if (!req.files) {
+				res.send({
+					status: false,
+					message: "No file uploaded",
+				});
+			} else {
+				//Use the name of the input field (i.e. "file") to retrieve the uploaded file
+				// @ts-ignore
+				const file: any = req.files.file;
+				//Use the mv() method to place the file in upload directory (i.e. "uploads")
+				const data = {
+					name: file.name,
+					buffer: file.data,
+				};
 
-        await FileExplorer.uploadFiles(node, data);
-        //send response
-        res.send({
-          status: true,
-          message: 'File is uploaded',
-          data: {
-            name: file.name,
-            mimetype: file.mimetype,
-            size: file.size,
-          },
-        });
-      }
-    } catch (error) {
-      if (error.code && error.message)
-        return res.status(error.code).send(error.message);
-      res.status(400).send('ko');
-    }
-    // res.json();
-  });
+				await FileExplorer.uploadFiles(node, data);
+				//send response
+				res.send({
+					status: true,
+					message: "File is uploaded",
+					data: {
+						name: file.name,
+						mimetype: file.mimetype,
+						size: file.size,
+					},
+				});
+			}
+		} catch (error) {
+			if (error.code && error.message) return res.status(error.code).send(error.message);
+			res.status(400).send("ko");
+		}
+		// res.json();
+	});
 };

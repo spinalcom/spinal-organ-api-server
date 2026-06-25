@@ -46,93 +46,80 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
-import { getProfileId } from '../../utilities/requestUtilities';
-import { getAttributeListInfo } from '../../utilities/getAttributeListInfo';
-import type { Express } from 'express';
-import type { NodeAttribut } from '../interface/NodeAttribut';
-import type { ISpinalAPIMiddleware } from '../../interfaces';
-import type { SpinalNode } from 'spinal-model-graph';
+import { NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service";
+import { getProfileId } from "../../utilities/requestUtilities";
+import { getAttributeListInfo } from "../../utilities/getAttributeListInfo";
+import type { Express } from "express";
+import type { NodeAttribut } from "../interface/NodeAttribut";
+import type { ISpinalAPIMiddleware } from "../../interfaces";
+import type { SpinalNode } from "spinal-model-graph";
 
-module.exports = function (
-  logger: any,
-  app: Express,
-  spinalAPIMiddleware: ISpinalAPIMiddleware
-) {
-  //deprecated
-  app.get('/api/v1/node/:id/attributsList', async (req, res, next) => {
-    try {
-      const profileId = getProfileId(req);
-      const node = await spinalAPIMiddleware.load<SpinalNode>(
-        parseInt(req.params.id, 10),
-        profileId
-      );
-      const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
-      const prom = childrens.map(async (child): Promise<NodeAttribut> => {
-        const attributs = await child.element?.load();
-        const info: NodeAttribut = {
-          dynamicId: child._server_id!,
-          staticId: child.getId().get(),
-          name: child.getName().get(),
-          type: child.getType().get(),
-          attributs: attributs?.get(),
-        };
-        return info;
-      });
-      const json = await Promise.all(prom);
-      return res.json(json);
-    } catch (error: any) {
-      if (error.code)
-        return res.status(error.code).send({ message: error.message });
-      return res.status(400).send(error.message);
-    }
-  });
+module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+	//deprecated
+	app.get("/api/v1/node/:id/attributsList", async (req, res, next) => {
+		try {
+			const profileId = getProfileId(req);
+			const node = await spinalAPIMiddleware.load<SpinalNode>(parseInt(req.params.id, 10), profileId);
+			const childrens = await node.getChildren(NODE_TO_CATEGORY_RELATION);
+			const prom = childrens.map(async (child): Promise<NodeAttribut> => {
+				const attributs = await child.element?.load();
+				const info: NodeAttribut = {
+					dynamicId: child._server_id!,
+					staticId: child.getId().get(),
+					name: child.getName().get(),
+					type: child.getType().get(),
+					attributs: attributs?.get(),
+				};
+				return info;
+			});
+			const json = await Promise.all(prom);
+			return res.json(json);
+		} catch (error: any) {
+			if (error.code) return res.status(error.code).send({ message: error.message });
+			return res.status(400).send(error.message);
+		}
+	});
 
-  /**
-   * @swagger
-   * /api/v1/node/{id}/attribute_list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Returns list of attributs
-   *     summary: Get list of attributs
-   *     tags:
-   *       - Node Attributs
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/NodeAttribut'
-   *       400:
-   *         description: Bad request
-   */
+	/**
+	 * @swagger
+	 * /api/v1/node/{id}/attribute_list:
+	 *   get:
+	 *     security:
+	 *       - bearerAuth:
+	 *         - readOnly
+	 *     description: Returns list of attributs
+	 *     summary: Get list of attributs
+	 *     tags:
+	 *       - Node Attributs
+	 *     parameters:
+	 *      - in: path
+	 *        name: id
+	 *        description: use the dynamic ID
+	 *        required: true
+	 *        schema:
+	 *          type: integer
+	 *          format: int64
+	 *     responses:
+	 *       200:
+	 *         description: Success
+	 *         content:
+	 *           application/json:
+	 *             schema:
+	 *               type: array
+	 *               items:
+	 *                $ref: '#/components/schemas/NodeAttribut'
+	 *       400:
+	 *         description: Bad request
+	 */
 
-  app.get('/api/v1/node/:id/attribute_list', async (req, res, next) => {
-    try {
-      const profileId = getProfileId(req);
-      const result = await getAttributeListInfo(
-        spinalAPIMiddleware,
-        profileId,
-        parseInt(req.params.id, 10)
-      );
-      return res.json(result);
-    } catch (error: any) {
-      if (error.code)
-        return res.status(error.code).send({ message: error.message });
-      return res.status(400).send(error.message);
-    }
-  });
+	app.get("/api/v1/node/:id/attribute_list", async (req, res, next) => {
+		try {
+			const profileId = getProfileId(req);
+			const result = await getAttributeListInfo(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10));
+			return res.json(result);
+		} catch (error: any) {
+			if (error.code) return res.status(error.code).send({ message: error.message });
+			return res.status(400).send(error.message);
+		}
+	});
 };

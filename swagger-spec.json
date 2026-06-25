@@ -18276,7 +18276,7 @@
             ]
           }
         ],
-        "description": "Returns analysis algorithms grouped by category. Each algorithm contains its name, description, input types, output type, and parameters. The `run` function is not serialized.",
+        "description": "Returns analysis algorithms grouped by category. Each algorithm contains its name, description, inputs (each input slot has a name, accepted types, description, required flag and optional variadic flag), output type, and parameters. The `run` function is not serialized.",
         "summary": "Gets analysis algorithms grouped by category",
         "tags": [
           "Analysis"
@@ -21507,6 +21507,810 @@
           },
           "401": {
             "description": "no graph found for the user"
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/file/{fileDynamicId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Get file data",
+        "description": "Returns a file content converted to the requested format.",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileDynamicId",
+            "required": true,
+            "description": "Dynamic identifier of the file node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "description": "Output format for the returned file data.",
+            "schema": {
+              "type": "string",
+              "default": "buffer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File data returned successfully."
+          },
+          "400": {
+            "description": "Invalid file id."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/file/linked_to_node/{nodeId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Get files linked to a node",
+        "description": "Returns all files linked to a node in the requested format.",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "nodeId",
+            "required": true,
+            "description": "Dynamic identifier of the target node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "description": "Output format for each file.",
+            "schema": {
+              "type": "string",
+              "default": "buffer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Files linked to the node returned successfully."
+          },
+          "400": {
+            "description": "Invalid node id."
+          },
+          "404": {
+            "description": "Node not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/file/{nodeId}/versions/{versionName}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Get one file version",
+        "description": "Returns one file version selected by version id or name.",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "nodeId",
+            "required": true,
+            "description": "Dynamic identifier of the file node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "path",
+            "name": "versionName",
+            "required": true,
+            "description": "Version name or version id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "description": "Output format for the selected version.",
+            "schema": {
+              "type": "string",
+              "default": "buffer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Version returned successfully."
+          },
+          "400": {
+            "description": "Invalid file id."
+          },
+          "404": {
+            "description": "File or version not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/file/{nodeId}/versions": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Get all file versions",
+        "description": "Returns all versions of a file in the requested format.",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "nodeId",
+            "required": true,
+            "description": "Dynamic identifier of the file node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "description": "Output format for each version.",
+            "schema": {
+              "type": "string",
+              "default": "buffer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Versions returned successfully."
+          },
+          "400": {
+            "description": "Invalid file id."
+          },
+          "404": {
+            "description": "File or versions not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/file/link_to_node/{nodeId}": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Upload and link files to a node",
+        "description": "Uploads one or multiple files and links them to the target node.",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "nodeId",
+            "required": true,
+            "description": "Dynamic identifier of the target node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Files uploaded and linked successfully."
+          },
+          "400": {
+            "description": "Invalid request or missing file."
+          },
+          "404": {
+            "description": "Node not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/file/{fileId}/link_to_node/{nodeId}": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Link existing file to node",
+        "description": "Links an existing file node to another target node.",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileId",
+            "required": true,
+            "description": "Dynamic identifier of the file node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "path",
+            "name": "nodeId",
+            "required": true,
+            "description": "Dynamic identifier of the target node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File linked to node successfully."
+          },
+          "400": {
+            "description": "Invalid file id or node id."
+          },
+          "404": {
+            "description": "File or node not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/file/{fileId}/unlink_from_node/{nodeId}": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Unlink file from node",
+        "description": "Removes the relation between a file node and a target node.",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileId",
+            "required": true,
+            "description": "Dynamic identifier of the file node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "path",
+            "name": "nodeId",
+            "required": true,
+            "description": "Dynamic identifier of the target node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File unlinked from node successfully."
+          },
+          "400": {
+            "description": "Invalid file id or node id."
+          },
+          "404": {
+            "description": "File or node not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/file/update_file_version/{fileId}": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Upload a new file version",
+        "description": "Creates and returns a new version of an existing file.",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileId",
+            "required": true,
+            "description": "Dynamic identifier of the file node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Optional name for the new file version."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File version updated successfully."
+          },
+          "400": {
+            "description": "Invalid request or missing file."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/create_context": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Create documentary context",
+        "description": "Creates a documentary context and links it to the user graph when needed.",
+        "tags": [
+          "Documentary"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the context to create."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Context created successfully."
+          },
+          "400": {
+            "description": "Missing or invalid request data."
+          },
+          "406": {
+            "description": "Profile graph not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/create_directory/{contextId}/{parentId}": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Create directory in context",
+        "description": "Creates a documentation directory under a parent node within a context.",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "description": "Dynamic id of the context node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "path",
+            "name": "parentId",
+            "required": true,
+            "description": "Dynamic id of the parent node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Directory name."
+                  },
+                  "icon": {
+                    "type": "string",
+                    "description": "Optional icon value for the directory."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Directory created successfully."
+          },
+          "400": {
+            "description": "Missing or invalid parameters."
+          },
+          "404": {
+            "description": "Context or parent node not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/file/file_in_tree/{startNodeId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Get files in tree",
+        "description": "Returns all files found in a tree starting from the provided node.",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "startNodeId",
+            "required": true,
+            "description": "Dynamic id of the start node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "description": "Output format for returned files.",
+            "schema": {
+              "type": "string",
+              "default": "buffer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Files returned successfully."
+          },
+          "400": {
+            "description": "Invalid start node id."
+          },
+          "404": {
+            "description": "Start node not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/move_document_in_context": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Move document in context",
+        "description": "Moves a document from a source node to a target node inside a context.",
+        "tags": [
+          "Documentary"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "sourceId",
+                  "targetId",
+                  "contextId",
+                  "documentId"
+                ],
+                "properties": {
+                  "sourceId": {
+                    "type": "integer",
+                    "format": "int64",
+                    "description": "Dynamic id of source node."
+                  },
+                  "targetId": {
+                    "type": "integer",
+                    "format": "int64",
+                    "description": "Dynamic id of target node."
+                  },
+                  "contextId": {
+                    "type": "integer",
+                    "format": "int64",
+                    "description": "Dynamic id of context node."
+                  },
+                  "documentId": {
+                    "type": "integer",
+                    "format": "int64",
+                    "description": "Dynamic id of document node."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Document moved successfully."
+          },
+          "400": {
+            "description": "Missing or invalid body values."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/file/remove_from_context/{documentId}": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Remove file from context",
+        "description": "Removes a file node from its documentary context.",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "documentId",
+            "required": true,
+            "description": "Dynamic id of the document file node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File removed successfully."
+          },
+          "400": {
+            "description": "Invalid file id or operation failed."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/upload_file_in_context/{contextId}/{parentId}": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Upload file in context",
+        "description": "Uploads one or multiple files and attaches them under a parent node in a context.",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contextId",
+            "required": true,
+            "description": "Dynamic id of the context node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "path",
+            "name": "parentId",
+            "required": true,
+            "description": "Dynamic id of the parent node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Files uploaded successfully."
+          },
+          "400": {
+            "description": "Invalid request or missing file."
+          },
+          "404": {
+            "description": "Context or parent node not found."
+          },
+          "500": {
+            "description": "Internal server error."
           }
         }
       }
