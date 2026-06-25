@@ -1204,6 +1204,11 @@ function routes(
     spinalAPIMiddleware
   );
   require('./analysis/global/getAlgorithms')(logger, app, spinalAPIMiddleware);
+  require('./analysis/global/getAnalyticOptions')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./analysis/contexts/createContext')(
     logger,
     app,
@@ -1239,6 +1244,15 @@ function routes(
     app,
     spinalAPIMiddleware
   );
+
+  require('./analysis/analytics/modifyAnalytic')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+
+
+
   // command
   require('./command/roomListCommandEnable')(logger, app, spinalAPIMiddleware);
   require('./command/roomCommandLight')(logger, app, spinalAPIMiddleware);

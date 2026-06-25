@@ -17798,6 +17798,110 @@
             "description": "Bad request"
           }
         }
+      },
+      "put": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Update (full replace) a specific analytic by its ID",
+        "description": "Updates an existing analytic in place from a JSON descriptor (IAnalysisConfigJSON shape). The analytic node keeps its id/server_id. Name, description, concurrency and status are updated directly on the node; the anchor link, the three workflows and the triggers are wiped and rebuilt from the body (workflow DAGs are rebuilt rather than diffed/patched). This is a FULL REPLACE: optional fields that are omitted revert to their defaults (concurrency -> BOUNDED/10, status -> Inactive, no anchor, no triggers). To preserve the current values, GET the analytic first and send it back with your changes applied. contextName is ignored (the analytic stays in its existing context). anchorNodeId is expected to be a numeric server_id and is converted to the internal SpinalNode id.\n",
+        "tags": [
+          "Analysis"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analyticId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "server_id of the analytic to update"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "analysisName"
+                ],
+                "properties": {
+                  "analysisName": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "anchorNodeId": {
+                    "type": "string",
+                    "description": "server_id of the node to use as the anchor target"
+                  },
+                  "concurrency": {
+                    "type": "object"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "Active",
+                      "Inactive"
+                    ]
+                  },
+                  "worknodeResolver": {
+                    "type": "object"
+                  },
+                  "inputWorkflow": {
+                    "type": "object"
+                  },
+                  "executionWorkflow": {
+                    "type": "object"
+                  },
+                  "triggers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Analytic successfully updated (returns the updated details)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "description": "The updated analytic config (IAnalysisConfigJSON)"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "analysisModuleVersion": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
       }
     },
     "/api/v1/analysis/analytics/{analyticId}/execute": {
@@ -21507,6 +21611,125 @@
           },
           "401": {
             "description": "no graph found for the user"
+          }
+        }
+      }
+    },
+    "/api/v1/analysis/analyticOptions": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns the analytic-level option metadata used to build the analysis form: the available work-node concurrency modes (with their configurable fields and which is the default) and the available lifecycle statuses (with which is the default). Lets clients render concurrency/status selectors generically, the same way triggerTypes drives the trigger form. Single source of truth for the selectable values of `concurrency` and `status` in IAnalysisConfigJSON.\n",
+        "summary": "Gets the selectable concurrency modes and lifecycle statuses for an analytic",
+        "tags": [
+          "Analysis"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "concurrencyModes": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "mode": {
+                                "type": "string",
+                                "enum": [
+                                  "BOUNDED",
+                                  "FULL",
+                                  "SEQUENTIAL"
+                                ]
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "default": {
+                                "type": "boolean",
+                                "description": "Whether this is the mode applied when none is specified"
+                              },
+                              "fields": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "string",
+                                        "number",
+                                        "boolean"
+                                      ]
+                                    },
+                                    "description": {
+                                      "type": "string"
+                                    },
+                                    "required": {
+                                      "type": "boolean"
+                                    },
+                                    "default": {
+                                      "description": "Value to pre-fill when none is provided"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "statuses": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "string",
+                                "enum": [
+                                  "Active",
+                                  "Inactive"
+                                ]
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "default": {
+                                "type": "boolean",
+                                "description": "Whether this is the value applied when none is specified"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "analysisModuleVersion": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
           }
         }
       }

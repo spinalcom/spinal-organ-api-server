@@ -1,0 +1,114 @@
+import * as express from 'express';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { ISpinalAPIMiddleware } from '../../../interfaces';
+import { CONCURRENCY_MODE_DEFINITIONS, ANALYSIS_STATUS_DEFINITIONS, VERSION } from "spinal-model-analysis";
+
+module.exports = function (logger: any, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+
+  /**
+   * @swagger
+   * /api/v1/analysis/analyticOptions:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: >
+   *       Returns the analytic-level option metadata used to build the analysis form:
+   *       the available work-node concurrency modes (with their configurable fields and
+   *       which is the default) and the available lifecycle statuses (with which is the
+   *       default). Lets clients render concurrency/status selectors generically, the
+   *       same way triggerTypes drives the trigger form. Single source of truth for the
+   *       selectable values of `concurrency` and `status` in IAnalysisConfigJSON.
+   *     summary: Gets the selectable concurrency modes and lifecycle statuses for an analytic
+   *     tags:
+   *       - Analysis
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     concurrencyModes:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                         properties:
+   *                           mode:
+   *                             type: string
+   *                             enum: [BOUNDED, FULL, SEQUENTIAL]
+   *                           description:
+   *                             type: string
+   *                           default:
+   *                             type: boolean
+   *                             description: Whether this is the mode applied when none is specified
+   *                           fields:
+   *                             type: array
+   *                             items:
+   *                               type: object
+   *                               properties:
+   *                                 name:
+   *                                   type: string
+   *                                 type:
+   *                                   type: string
+   *                                   enum: [string, number, boolean]
+   *                                 description:
+   *                                   type: string
+   *                                 required:
+   *                                   type: boolean
+   *                                 default:
+   *                                   description: Value to pre-fill when none is provided
+   *                     statuses:
+   *                       type: array
+   *                       items:
+   *                         type: object
+   *                         properties:
+   *                           value:
+   *                             type: string
+   *                             enum: [Active, Inactive]
+   *                           description:
+   *                             type: string
+   *                           default:
+   *                             type: boolean
+   *                             description: Whether this is the value applied when none is specified
+   *                 meta:
+   *                   type: object
+   *                   properties:
+   *                     analysisModuleVersion:
+   *                       type: string
+   *       400:
+   *         description: Bad request
+   */
+
+  app.get("/api/v1/analysis/analyticOptions", async (req, res, next) => {
+    try {
+      const profileId = getProfileId(req);
+
+      const data = {
+        concurrencyModes: CONCURRENCY_MODE_DEFINITIONS,
+        statuses: ANALYSIS_STATUS_DEFINITIONS,
+      };
+
+      return res.json({
+        data,
+        meta: {
+          analysisModuleVersion: VERSION,
+        }
+      });
+
+    } catch (error: any) {
+      if (error?.code && error?.message) {
+        return res.status(error.code).send(error.message);
+      }
+      if (error?.message) {
+        return res.status(400).send(error.message);
+      }
+      console.error(error);
+      return res.status(400).send(error);
+    }
+  });
+}
