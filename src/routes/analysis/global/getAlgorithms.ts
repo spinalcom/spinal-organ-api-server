@@ -15,6 +15,7 @@ import {
   STRING_ALGORITHMS,
   TIMESERIES_ALGORITHMS,
   HTTP_ALGORITHMS,
+  TICKET_ALGORITHMS,
   AlgorithmDefinition,
   VERSION,
 } from "spinal-model-analysis";
@@ -99,6 +100,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         ...STRING_ALGORITHMS,
         ...TIMESERIES_ALGORITHMS,
         ...HTTP_ALGORITHMS,
+        ...TICKET_ALGORITHMS,
       ];
       const categorizedNames = new Set(categorized.map(a => a.name));
       const other = ALGORITHM_DEFINITIONS.filter(a => !categorizedNames.has(a.name));
@@ -116,6 +118,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         STRING: STRING_ALGORITHMS.map(serialize),
         TIMESERIES: TIMESERIES_ALGORITHMS.map(serialize),
         HTTP: HTTP_ALGORITHMS.map(serialize),
+        TICKET: TICKET_ALGORITHMS.map(serialize),
         OTHER: other.map(serialize),
       };
 
