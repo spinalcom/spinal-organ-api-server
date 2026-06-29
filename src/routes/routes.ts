@@ -1251,6 +1251,12 @@ function routes(
     spinalAPIMiddleware
   );
 
+  require('./analysis/analytics/patchAnalytic')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+
 
 
   // command

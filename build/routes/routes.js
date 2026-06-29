@@ -366,6 +366,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./analysis/analytics/executeAnalytic')(logger, app, spinalAPIMiddleware);
     require('./analysis/analytics/deleteAnalytic')(logger, app, spinalAPIMiddleware);
     require('./analysis/analytics/modifyAnalytic')(logger, app, spinalAPIMiddleware);
+    require('./analysis/analytics/patchAnalytic')(logger, app, spinalAPIMiddleware);
     // command
     require('./command/roomListCommandEnable')(logger, app, spinalAPIMiddleware);
     require('./command/roomCommandLight')(logger, app, spinalAPIMiddleware);
