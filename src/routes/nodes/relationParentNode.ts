@@ -87,23 +87,24 @@ module.exports = function (
         relation instanceof SpinalRelationRef
       ) {
         parent = await relation.getParent();
-        const children_node = childrensNode(parent);
-        const parent_node = await parentsNode(parent);
+        //const children_node = childrensNode(parent);
+        //const parent_node = await parentsNode(parent);
         const info = {
           dynamicId: parent._server_id!,
           staticId: parent.getId().get(),
           name: parent.getName().get(),
           type: parent.getType().get(),
-          children_relation_list: children_node,
-          parent_relation_list: parent_node,
+          //parent_relation_list: parent_node,
         };
-        res.json(info);
+        return res.json(info);
+      }
+      else {
+        return res.status(400).send('The given id is not an expected relation instance');
       }
     } catch (error: any) {
       if (error.code && error.message)
         return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }
-    res.status(400).send('ko');
   });
 };
