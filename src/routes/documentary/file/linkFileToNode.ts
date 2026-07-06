@@ -69,7 +69,7 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 				...file.info.get(),
 			}));
 
-			return res.status(200).send({ message: "Files linked successfully", files: filesFormatted });
+			return res.status(200).send(filesFormatted);
 		} catch (error: any) {
 			if (error.code) return res.status(error.code).send({ message: error.message });
 			return res.status(500).send({ message: error.message });

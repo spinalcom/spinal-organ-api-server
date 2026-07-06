@@ -4,7 +4,7 @@ import { getProfileId } from "../../../utilities/requestUtilities";
 import { fileFormat, serviceDocumentation, SpinalDocument } from "spinal-env-viewer-plugin-documentation-service";
 import { SpinalNode } from "spinal-model-graph";
 import { File as SpinalFile } from "spinal-core-connectorjs_type";
-import { getHubUrl } from "../utils";
+import { _formatFileNode, getHubUrl } from "../utils";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 	/**
@@ -53,12 +53,16 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			const fileNode = await spinalAPIMiddleware.load<SpinalNode | SpinalDocument | SpinalFile>(fileDynamicId, profileId);
 			if (!fileNode) return res.status(404).send({ message: `No file found with id ${fileDynamicId}` });
 
-			let format: fileFormat = (req.query?.format as fileFormat) || "buffer";
-			const hubUrl = getHubUrl(spinalAPIMiddleware);
+			const fileData = _formatFileNode(fileNode);
 
-			const data = await serviceDocumentation.convertFileToSpecialFormat(fileNode, format, hubUrl);
+			let format: fileFormat = req.query?.format as fileFormat;
 
-			return res.status(200).send(data);
+			if (format) {
+				const hubUrl = getHubUrl(spinalAPIMiddleware);
+				fileData.data = await serviceDocumentation.convertFileToSpecialFormat(fileNode, format, hubUrl);
+			}
+
+			return res.status(200).send(fileData);
 		} catch (error: any) {
 			if (error.code) return res.status(error.code).send({ message: error.message });
 			return res.status(500).send({ message: error.message });

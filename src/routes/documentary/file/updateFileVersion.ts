@@ -1,9 +1,9 @@
 import type { Express } from "express";
 import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { getProfileId } from "../../../utilities/requestUtilities";
-import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
+import { fileFormat, serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
 import { SpinalNode } from "spinal-model-graph";
-import { getHubUrl } from "../utils";
+import { _formatFileVersion, getHubUrl, waitUntilServerIdNotDefined } from "../utils";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 	/**
@@ -62,9 +62,15 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			if (!file) return res.status(404).send({ message: `No file found with id ${fileId}` });
 			const { name } = req.body;
 			const fileVersion = await serviceDocumentation.updateFileVersion(file, req.files.file, name);
+			await waitUntilServerIdNotDefined(fileVersion);
+
 			const hubUrl = getHubUrl(spinalAPIMiddleware);
-			const versionFormatted = await fileVersion.getAsSpecialFormat("buffer", hubUrl);
-			return res.status(200).send(versionFormatted);
+			const fileName = file instanceof SpinalNode ? file.getName().get() : (file as any).name.get();
+
+			const fileFormatted = _formatFileVersion(fileVersion, fileName);
+			if (req.query?.format) fileFormatted.data = await fileVersion.getAsSpecialFormat(req.query.format as fileFormat, hubUrl);
+
+			return res.status(200).send(fileFormatted);
 		} catch (error: any) {
 			if (error.code) return res.status(error.code).send({ message: error.message });
 			return res.status(500).send({ message: error.message });

@@ -1,0 +1,9 @@
+{
+	"spinal-env-viewer-plugin-documentation-service": {
+		"forceCommit": "documentary",
+		"found": {
+			"": ["spinal-organ-api-server"],
+			"": ["spinal-env-viewer-plugin-control-endpoint-service", "spinal-env-viewer-task-service", "spinal-model-timeseries", "spinal-organ-api-pubsub", "spinal-service-ticket", "spinal-model-user-service", "spinal-model-analysis", "spinal-model-bmsnetwork"]
+		}
+	}
+}

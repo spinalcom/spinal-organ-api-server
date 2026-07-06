@@ -51,7 +51,7 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			const node = await spinalAPIMiddleware.load<SpinalNode>(nodeDynamicId, profileId);
 			if (!node) return res.status(404).send({ message: `No node found with id ${nodeDynamicId}` });
 
-			let format: fileFormat = (req.query?.format as fileFormat) || "buffer";
+			let format: fileFormat = req.query?.format as fileFormat;
 			const hubUrl = getHubUrl(spinalAPIMiddleware);
 
 			const data = await serviceDocumentation.getFilesInTreeToSpecificFormat(node, format, hubUrl);

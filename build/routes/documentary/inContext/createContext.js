@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+const utils_1 = require("../utils");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -52,6 +53,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && graph._server_id !== userGraph._server_id) {
                 await userGraph.addContext(context);
             }
+            await (0, utils_1.waitUntilServerIdNotDefined)(context);
             const contextFormatted = {
                 ...context.info.get(),
                 dynamicId: context._server_id,

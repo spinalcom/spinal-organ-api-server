@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+const utils_1 = require("../utils");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -73,6 +74,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!parentNode)
                 return res.status(404).send({ message: `Parent node with ID ${parentId} not found` });
             const directory = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addDirectoryToNodeInContext(parentNode, name, context, icon);
+            await (0, utils_1.waitUntilServerIdNotDefined)(directory);
             return res.status(200).send({
                 ...directory.info.get(),
                 dynamicId: directory._server_id,

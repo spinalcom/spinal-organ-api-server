@@ -21511,58 +21511,6 @@
         }
       }
     },
-    "/api/v1/documentary/file/{fileDynamicId}": {
-      "get": {
-        "security": [
-          {
-            "bearerAuth": [
-              "readOnly"
-            ]
-          }
-        ],
-        "summary": "Get file data",
-        "description": "Returns a file content converted to the requested format.",
-        "tags": [
-          "Documentary"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "fileDynamicId",
-            "required": true,
-            "description": "Dynamic identifier of the file node.",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "query",
-            "name": "format",
-            "required": false,
-            "description": "Output format for the returned file data.",
-            "schema": {
-              "type": "string",
-              "default": "buffer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "File data returned successfully."
-          },
-          "400": {
-            "description": "Invalid file id."
-          },
-          "404": {
-            "description": "File not found."
-          },
-          "500": {
-            "description": "Internal server error."
-          }
-        }
-      }
-    },
     "/api/v1/documentary/file/linked_to_node/{nodeId}": {
       "get": {
         "security": [
@@ -22308,6 +22256,58 @@
           },
           "404": {
             "description": "Context or parent node not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/file/{fileDynamicId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Get file data",
+        "description": "Returns a file content converted to the requested format.",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileDynamicId",
+            "required": true,
+            "description": "Dynamic identifier of the file node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "description": "Output format for the returned file data.",
+            "schema": {
+              "type": "string",
+              "default": "buffer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File data returned successfully."
+          },
+          "400": {
+            "description": "Invalid file id."
+          },
+          "404": {
+            "description": "File not found."
           },
           "500": {
             "description": "Internal server error."

@@ -3,7 +3,7 @@ import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { getProfileId } from "../../../utilities/requestUtilities";
 import { fileFormat, serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
 import { SpinalNode } from "spinal-model-graph";
-import { getHubUrl } from "../utils";
+import { _formatFileVersion, getHubUrl } from "../utils";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 	/**
@@ -54,19 +54,29 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			const fileDynamicId = parseInt(req.params.nodeId, 10);
 			if (isNaN(fileDynamicId)) return res.status(400).send({ message: "Invalid fileDynamicId" });
 
+			// Load the file node using the spinalAPIMiddleware
 			const fileNode = await spinalAPIMiddleware.load<SpinalNode>(fileDynamicId, profileId);
 			if (!fileNode) return res.status(404).send({ message: `No file found with id ${fileDynamicId}` });
 
+			// Get all versions of the file node and find the one that matches the versionName parameter
 			const versions = await serviceDocumentation.getFileVersions(fileNode);
 			if (!versions || versions.length === 0) return res.status(404).send({ message: `No versions found for file with id ${fileDynamicId}` });
 
-			let format: fileFormat = (req.query?.format as fileFormat) || "buffer";
-			const hubUrl = getHubUrl(spinalAPIMiddleware);
+			const versionName = req.params.versionName;
 
-			const versionFound = versions.find((version) => version.id.get() === req.params.versionName || version.name.get() === req.params.versionName);
-			if (!versionFound) return res.status(404).send({ message: `No version found with name ${req.params.versionName}` });
+			const versionFound = versions.find((version) => version.id.get() == versionName || version.version.get() == versionName);
+			if (!versionFound) return res.status(404).send({ message: `No version found with name ${versionName}` });
 
-			const versionData = await versionFound.getAsSpecialFormat(format, hubUrl);
+			// format the version data using the _formatFileVersion utility function
+			const fileName = fileNode?.info?.name?.get() || fileNode?.name?.get();
+			let versionData = _formatFileVersion(versionFound, fileName);
+
+			let format: fileFormat = req.query?.format as fileFormat;
+			if (format) {
+				const hubUrl = getHubUrl(spinalAPIMiddleware);
+				versionData.data = await versionFound.getAsSpecialFormat(format, hubUrl);
+			}
+
 			res.status(200).send(versionData);
 		} catch (error: any) {
 			if (error.code) return res.status(error.code).send({ message: error.message });

@@ -2,7 +2,7 @@ import type { Express } from "express";
 import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { getProfileId } from "../../../utilities/requestUtilities";
 import { SpinalNode } from "spinal-env-viewer-graph-service";
-import { getHubUrl } from "../utils";
+import { _formatFileVersion, getHubUrl } from "../utils";
 import { fileFormat, serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
@@ -54,10 +54,15 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			const versions = await serviceDocumentation.getFileVersions(fileNode);
 			if (!versions || versions.length === 0) return res.status(404).send({ message: `No versions found for file with id ${fileDynamicId}` });
 
-			let format: fileFormat = (req.query?.format as fileFormat) || "buffer";
+			let format: fileFormat = req.query?.format as fileFormat;
 			const hubUrl = getHubUrl(spinalAPIMiddleware);
+			const fileName = fileNode.info?.name?.get() || fileNode.name?.get();
 
-			const versionDataPromises = versions.map(async (version) => version.getAsSpecialFormat(format, hubUrl));
+			const versionDataPromises = versions.map(async (version) => {
+				const formattedVersion = _formatFileVersion(version, fileName);
+				if (format) formattedVersion.data = await version.getAsSpecialFormat(format, hubUrl);
+				return formattedVersion;
+			});
 			const versionData = await Promise.all(versionDataPromises);
 			res.status(200).send(versionData);
 		} catch (error: any) {

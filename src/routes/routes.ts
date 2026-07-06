@@ -456,7 +456,7 @@ function routes(logger: any, app: express.Application, spinalAPIMiddleware: ISpi
 	require("./documentary/inContext/uploadFileInContext")(logger, app, spinalAPIMiddleware);
 
 	// documentary routes files
-	require("./documentary/file/gerFileData")(logger, app, spinalAPIMiddleware);
+	require("./documentary/file/getFileData")(logger, app, spinalAPIMiddleware);
 	require("./documentary/file/getFileVersionByName")(logger, app, spinalAPIMiddleware);
 	require("./documentary/file/linkFileToNodeById")(logger, app, spinalAPIMiddleware);
 	require("./documentary/file/unlinkFileFromNode")(logger, app, spinalAPIMiddleware);

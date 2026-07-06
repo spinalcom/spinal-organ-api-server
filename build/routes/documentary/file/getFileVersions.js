@@ -52,9 +52,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const versions = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getFileVersions(fileNode);
             if (!versions || versions.length === 0)
                 return res.status(404).send({ message: `No versions found for file with id ${fileDynamicId}` });
-            let format = req.query?.format || "buffer";
+            let format = req.query?.format;
             const hubUrl = (0, utils_1.getHubUrl)(spinalAPIMiddleware);
-            const versionDataPromises = versions.map(async (version) => version.getAsSpecialFormat(format, hubUrl));
+            const fileName = fileNode.info?.name?.get() || fileNode.name?.get();
+            const versionDataPromises = versions.map(async (version) => {
+                const formattedVersion = (0, utils_1._formatFileVersion)(version, fileName);
+                if (format)
+                    formattedVersion.data = await version.getAsSpecialFormat(format, hubUrl);
+                return formattedVersion;
+            });
             const versionData = await Promise.all(versionDataPromises);
             res.status(200).send(versionData);
         }

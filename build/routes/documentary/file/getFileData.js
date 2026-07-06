@@ -49,10 +49,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const fileNode = await spinalAPIMiddleware.load(fileDynamicId, profileId);
             if (!fileNode)
                 return res.status(404).send({ message: `No file found with id ${fileDynamicId}` });
-            let format = req.query?.format || "buffer";
-            const hubUrl = (0, utils_1.getHubUrl)(spinalAPIMiddleware);
-            const data = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.convertFileToSpecialFormat(fileNode, format, hubUrl);
-            return res.status(200).send(data);
+            const fileData = (0, utils_1._formatFileNode)(fileNode);
+            let format = req.query?.format;
+            if (format) {
+                const hubUrl = (0, utils_1.getHubUrl)(spinalAPIMiddleware);
+                fileData.data = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.convertFileToSpecialFormat(fileNode, format, hubUrl);
+            }
+            return res.status(200).send(fileData);
         }
         catch (error) {
             if (error.code)
@@ -61,4 +64,4 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
     });
 };
-//# sourceMappingURL=gerFileData.js.map
+//# sourceMappingURL=getFileData.js.map

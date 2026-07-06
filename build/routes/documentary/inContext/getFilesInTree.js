@@ -49,7 +49,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const node = await spinalAPIMiddleware.load(nodeDynamicId, profileId);
             if (!node)
                 return res.status(404).send({ message: `No node found with id ${nodeDynamicId}` });
-            let format = req.query?.format || "buffer";
+            let format = req.query?.format;
             const hubUrl = (0, utils_1.getHubUrl)(spinalAPIMiddleware);
             const data = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getFilesInTreeToSpecificFormat(node, format, hubUrl);
             return res.status(200).send(data);

@@ -3,6 +3,7 @@ import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { getProfileId } from "../../../utilities/requestUtilities";
 import { FILE_NODE_TYPE, serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
 import { SpinalNode } from "spinal-env-viewer-graph-service";
+import { waitUntilServerIdNotDefined } from "../utils";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 	/**
@@ -76,6 +77,9 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			if (!Array.isArray(files)) files = [files];
 
 			const fileUploaded = await serviceDocumentation.addFileToNodeInContext(parent, files, context);
+
+			const promises = fileUploaded.map((fileNode) => waitUntilServerIdNotDefined(fileNode));
+			await Promise.all(promises);
 
 			const filesFormatted = fileUploaded.map((fileNode) => ({
 				...fileNode.info.get(),

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+const spinal_model_graph_1 = require("spinal-model-graph");
 const utils_1 = require("../utils");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
@@ -61,9 +62,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(404).send({ message: `No file found with id ${fileId}` });
             const { name } = req.body;
             const fileVersion = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.updateFileVersion(file, req.files.file, name);
+            await (0, utils_1.waitUntilServerIdNotDefined)(fileVersion);
             const hubUrl = (0, utils_1.getHubUrl)(spinalAPIMiddleware);
-            const versionFormatted = await fileVersion.getAsSpecialFormat("buffer", hubUrl);
-            return res.status(200).send(versionFormatted);
+            const fileName = file instanceof spinal_model_graph_1.SpinalNode ? file.getName().get() : file.name.get();
+            const fileFormatted = (0, utils_1._formatFileVersion)(fileVersion, fileName);
+            if (req.query?.format)
+                fileFormatted.data = await fileVersion.getAsSpecialFormat(req.query.format, hubUrl);
+            return res.status(200).send(fileFormatted);
         }
         catch (error) {
             if (error.code)

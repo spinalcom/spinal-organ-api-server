@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+const utils_1 = require("../utils");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -74,6 +75,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!Array.isArray(files))
                 files = [files];
             const fileUploaded = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addFileToNodeInContext(parent, files, context);
+            const promises = fileUploaded.map((fileNode) => (0, utils_1.waitUntilServerIdNotDefined)(fileNode));
+            await Promise.all(promises);
             const filesFormatted = fileUploaded.map((fileNode) => ({
                 ...fileNode.info.get(),
                 dynamicId: fileNode._server_id,

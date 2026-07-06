@@ -3,6 +3,7 @@ import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { SpinalContext, SpinalGraphService } from "spinal-env-viewer-graph-service";
 import { getProfileId } from "../../../utilities/requestUtilities";
 import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
+import { waitUntilServerIdNotDefined } from "../utils";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 	/**
@@ -55,6 +56,8 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			if (context instanceof SpinalContext && graph._server_id !== userGraph._server_id) {
 				await userGraph.addContext(context);
 			}
+
+			await waitUntilServerIdNotDefined(context);
 
 			const contextFormatted = {
 				...context.info.get(),

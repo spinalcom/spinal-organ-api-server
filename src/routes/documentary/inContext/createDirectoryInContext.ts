@@ -3,6 +3,7 @@ import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { getProfileId } from "../../../utilities/requestUtilities";
 import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
 import { SpinalNode } from "spinal-env-viewer-graph-service";
+import { waitUntilServerIdNotDefined } from "../utils";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 	/**
@@ -75,6 +76,8 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			if (!parentNode) return res.status(404).send({ message: `Parent node with ID ${parentId} not found` });
 
 			const directory = await serviceDocumentation.addDirectoryToNodeInContext(parentNode, name, context, icon);
+
+			await waitUntilServerIdNotDefined(directory);
 
 			return res.status(200).send({
 				...directory.info.get(),
