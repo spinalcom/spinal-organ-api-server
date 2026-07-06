@@ -18462,10 +18462,25 @@
             ]
           }
         ],
-        "description": "Returns analysis algorithms grouped by category. Each algorithm contains its name, description, inputs (each input slot has a name, accepted types, description, required flag and optional variadic flag), output type, and parameters. The `run` function is not serialized.",
+        "description": "Returns analysis algorithms grouped by category. Each algorithm contains its stable name, a display label, description, cross-cutting search tags, inputs (each input slot has a name, accepted types, description, required flag and optional variadic flag), output type, and parameters. The `run` function is not serialized. Pass ?locale=fr to get French label/description/input/parameter text (each field falls back to English when untranslated).",
         "summary": "Gets analysis algorithms grouped by category",
         "tags": [
           "Analysis"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en",
+                "fr"
+              ]
+            },
+            "description": "Language for label/description text (default en). Untranslated fields fall back to English."
+          }
         ],
         "responses": {
           "200": {

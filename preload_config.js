@@ -34,4 +34,24 @@ module.exports = {
   // array of server_id (STEP) to preload ticket; do a getchildren then a getTicketDetails
   runTicketLists: [
   ],
+  // array of floor inventories to preload. Each entry runs the floor inventory
+  // (like POST /api/v1/floor/{id}/inventory) on every floor id, then, when
+  // staticDetails is true, preloads the static details of every item found.
+  inventories: [
+    // {
+    //   ids: [],             // Floor dynamic ids (server_id)
+    //   context: '',         // Group context name (or use contextId)
+    //   category: '',        // Category name (or use categoryId)
+    //   groups: [],          // Group names to filter on (empty = every group of the category)
+    //   staticDetails: false // preload static details of the resulting items
+    // },
+
+    {
+      ids: [25434496],             // Floor dynamic ids (server_id)
+      context: 'Gestion des équipements',         // Group context name (or use contextId)
+      category: 'Typologie',        // Category name (or use categoryId)
+      groups: [],          // Group names to filter on (empty = every group of the category)
+      staticDetails: true // preload static details of the resulting items
+    },
+  ],
 };

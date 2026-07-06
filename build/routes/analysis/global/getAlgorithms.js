@@ -10,10 +10,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Returns analysis algorithms grouped by category. Each algorithm contains its name, description, inputs (each input slot has a name, accepted types, description, required flag and optional variadic flag), output type, and parameters. The `run` function is not serialized.
+     *     description: Returns analysis algorithms grouped by category. Each algorithm contains its stable name, a display label, description, cross-cutting search tags, inputs (each input slot has a name, accepted types, description, required flag and optional variadic flag), output type, and parameters. The `run` function is not serialized. Pass ?locale=fr to get French label/description/input/parameter text (each field falls back to English when untranslated).
      *     summary: Gets analysis algorithms grouped by category
      *     tags:
      *       - Analysis
+     *     parameters:
+     *       - in: query
+     *         name: locale
+     *         required: false
+     *         schema:
+     *           type: string
+     *           enum: [en, fr]
+     *         description: Language for label/description text (default en). Untranslated fields fall back to English.
      *     responses:
      *       200:
      *         description: Success
@@ -58,13 +66,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/analysis/algorithms", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const serialize = (a) => ({
-                name: a.name,
-                description: a.description,
-                inputs: a.inputs,
-                outputType: a.outputType,
-                parameters: a.parameters,
-            });
+            // Optional ?locale=fr — localizeAlgorithm merges the locale bundle over the
+            // English metadata (per-field fallback) and carries the algorithm's tags.
+            const locale = typeof req.query.locale === 'string' ? req.query.locale : undefined;
+            const serialize = (a) => (0, spinal_model_analysis_1.localizeAlgorithm)(a, locale);
             const categorized = [
                 ...spinal_model_analysis_1.NUMBER_ALGORITHMS,
                 ...spinal_model_analysis_1.NODE_ALGORITHMS,
