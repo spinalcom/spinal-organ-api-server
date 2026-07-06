@@ -44,14 +44,6 @@ module.exports = {
     //   category: '',        // Category name (or use categoryId)
     //   groups: [],          // Group names to filter on (empty = every group of the category)
     //   staticDetails: false // preload static details of the resulting items
-    // },
-
-    {
-      ids: [25434496],             // Floor dynamic ids (server_id)
-      context: 'Gestion des équipements',         // Group context name (or use contextId)
-      category: 'Typologie',        // Category name (or use categoryId)
-      groups: [],          // Group names to filter on (empty = every group of the category)
-      staticDetails: true // preload static details of the resulting items
-    },
+    // }
   ],
 };
