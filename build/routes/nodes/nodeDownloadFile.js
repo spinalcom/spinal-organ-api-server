@@ -24,7 +24,8 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../utilities/requestUtilities");
-const mime = require('mime-types');
+const mime = require("mime-types");
+const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -58,67 +59,85 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Error in downloading file
      */
-    app.use('/api/v1/node/:id/download_file', async (req, res, next) => {
+    app.use("/api/v1/node/:id/download_file", async (req, res, next) => {
         try {
             await spinalAPIMiddleware.getGraph();
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             const { http, hubUri } = getHost(spinalAPIMiddleware.config);
-            const encoding = req.query.encoding || 'binary';
+            const encoding = req.query.encoding || "binary";
             await down(node, http, hubUri, res, encoding);
         }
         catch (error) {
             console.log(error);
-            res.status(400).send('ko');
+            res.status(400).send("ko");
         }
     });
 };
-function down(file, http, hubUri, res, encoding) {
-    return new Promise((resolve, reject) => {
-        file.load((argPath) => {
-            // const p = `${__dirname}/${path.name.get()}`;
-            // const f = fs.createWriteStream(p);
-            http.get(`${hubUri}/sceen/_?u=${argPath._server_id}`, function (response) {
-                const type = mime.lookup(file?.name?.get()) || 'application/octet-stream';
-                if (encoding === 'base64') {
-                    // Change response type for base64
-                    const chunks = [];
-                    response.on('data', (chunk) => {
-                        chunks.push(chunk);
-                    });
-                    response.on('end', () => {
-                        const binary = Buffer.concat(chunks);
-                        const base64 = binary.toString('base64');
-                        res.set('Content-Type', 'text/plain');
-                        res.send(base64);
-                        resolve();
-                    });
-                }
-                else {
-                    // Handle binary response
-                    res.set('Content-Type', type);
-                    response.pipe(res);
-                    response.on('end', () => {
-                        resolve();
-                    });
-                }
-                response.on('error', function (err) {
-                    console.log(err);
-                    reject(err);
-                });
-            });
+async function down(file, http, hubUri, res, encoding) {
+    const bufferData = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.convertFileToSpecialFormat(file, "buffer", hubUri);
+    if (encoding === "base64") {
+        const base64Data = bufferData.data.toString("base64");
+        res.set("Content-Type", "text/plain");
+        res.send(base64Data);
+    }
+    else {
+        // const fileName = file?.info?.name?.get() || file?.name?.get();
+        // const type = mime.lookup(fileName) || "application/octet-stream";
+        // res.set("Content-Type", type);
+        // res.send(bufferData.data);
+        const fileName = file?.info?.name?.get() || file?.name?.get();
+        res.set({
+            "Cache-Control": "no-cache",
+            "Content-Type": mime.lookup(fileName) || "application/octet-stream",
+            "Content-Disposition": `attachment; filename="${fileName}"`,
         });
-    });
+        res.send(bufferData.data);
+    }
+    // return new Promise((resolve, reject) => {
+    // 	file.load((argPath) => {
+    // 		// const p = `${__dirname}/${path.name.get()}`;
+    // 		// const f = fs.createWriteStream(p);
+    // 		http.get(`${hubUri}/sceen/_?u=${argPath._server_id}`, function (response) {
+    // 			const type = mime.lookup(file?.name?.get()) || "application/octet-stream";
+    // 			if (encoding === "base64") {
+    // 				// Change response type for base64
+    // 				const chunks = [];
+    // 				response.on("data", (chunk) => {
+    // 					chunks.push(chunk);
+    // 				});
+    // 				response.on("end", () => {
+    // 					const binary = Buffer.concat(chunks);
+    // 					const base64 = binary.toString("base64");
+    // 					res.set("Content-Type", "text/plain");
+    // 					res.send(base64);
+    // 					resolve();
+    // 				});
+    // 			} else {
+    // 				// Handle binary response
+    // 				res.set("Content-Type", type);
+    // 				response.pipe(res);
+    // 				response.on("end", () => {
+    // 					resolve();
+    // 				});
+    // 			}
+    // 			response.on("error", function (err) {
+    // 				console.log(err);
+    // 				reject(err);
+    // 			});
+    // 		});
+    // 	});
+    // });
 }
 function getHost(config) {
     let http;
     let hubUri;
-    if (config.spinalConnector.protocol === 'https') {
-        http = require('https');
+    if (config.spinalConnector.protocol === "https") {
+        http = require("https");
         hubUri = `https://${config.spinalConnector.host}`;
     }
     else {
-        http = require('http');
+        http = require("http");
         hubUri = `http://${config.spinalConnector.host}`;
     }
     if (config.spinalConnector.port) {

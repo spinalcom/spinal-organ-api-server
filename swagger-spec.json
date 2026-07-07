@@ -3399,8 +3399,8 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "Node successfully deleted"
+          "200": {
+            "description": "File successfully deleted"
           },
           "400": {
             "description": "Bad request"
