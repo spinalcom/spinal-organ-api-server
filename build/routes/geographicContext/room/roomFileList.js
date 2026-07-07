@@ -24,6 +24,8 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+// import getFiles from "../../../utilities/getFiles";
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
@@ -57,37 +59,47 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/room/:id/file_list', async (req, res, next) => {
+    app.get("/api/v1/room/:id/file_list", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            //@ts-ignore
+            if (!room) {
+                return res.status(400).send(`No room found with id ${req.params.id}`);
+            }
+            if (room.getType().get() !== "geographicRoom") {
+                return res.status(400).send(`Node with id ${req.params.id} is not of type geographicRoom`);
+            }
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
-            if (room.getType().get() === 'geographicRoom') {
-                // Files
-                var _files = [];
-                const fileNode = (await room.getChildren('hasFiles'))[0];
-                if (fileNode) {
-                    const filesfromElement = await fileNode.element.load();
-                    for (let index = 0; index < filesfromElement.length; index++) {
-                        const infoFiles = {
-                            dynamicId: filesfromElement[index]._server_id,
-                            Name: filesfromElement[index].name.get(),
-                        };
-                        _files.push(infoFiles);
-                    }
-                }
-            }
-            else {
-                res.status(400).send('node is not of type geographic room');
-            }
+            const files = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getFileLinkedToNode(room);
+            const filesFormatted = files.map((file) => ({
+                dynamicId: file._server_id,
+                Name: file?.info?.name?.get() || file.name?.get(),
+            }));
+            return res.json(filesFormatted);
+            // if (room.getType().get() === "geographicRoom") {
+            // 	// Files
+            // 	var _files = [];
+            // 	const fileNode = (await room.getChildren("hasFiles"))[0];
+            // 	if (fileNode) {
+            // 		const filesfromElement = await fileNode.element.load();
+            // 		for (let index = 0; index < filesfromElement.length; index++) {
+            // 			const infoFiles = {
+            // 				dynamicId: filesfromElement[index]._server_id,
+            // 				Name: filesfromElement[index].name.get(),
+            // 			};
+            // 			_files.push(infoFiles);
+            // 		}
+            // 	}
+            // } else {
+            // 	res.status(400).send("node is not of type geographic room");
+            // }
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send('ko');
+            res.status(400).send("ko");
         }
-        res.json(_files);
+        // res.json(_files);
     });
 };
 //# sourceMappingURL=roomFileList.js.map

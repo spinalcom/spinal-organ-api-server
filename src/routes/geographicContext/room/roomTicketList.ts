@@ -21,73 +21,65 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from "spinal-env-viewer-graph-service";
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
-import * as express from 'express';
-import { Room } from '../interfacesGeoContext';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import getFiles from '../../../utilities/getFiles';
-import { LOGS_EVENTS } from 'spinal-service-ticket/dist/Constants';
-import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
-import { getTicketListInfo } from '../../../utilities/getTicketListInfo';
+import * as express from "express";
+import { Room } from "../interfacesGeoContext";
+import { serviceTicketPersonalized } from "spinal-service-ticket";
+import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
+// import getFiles from '../../../utilities/getFiles';
+import { LOGS_EVENTS } from "spinal-service-ticket/dist/Constants";
+import { getProfileId } from "../../../utilities/requestUtilities";
+import { ISpinalAPIMiddleware } from "../../../interfaces";
+import { getTicketListInfo } from "../../../utilities/getTicketListInfo";
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: ISpinalAPIMiddleware
-) {
-  /**
-   * @swagger
-   * /api/v1/room/{id}/ticket_list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Returns list of tickets of room
-   *     summary: Get list of tickets of room
-   *     tags:
-   *       - Geographic Context
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/Ticket'
-   *       400:
-   *         description: Bad request
-   */
-  app.get('/api/v1/room/:id/ticket_list', async (req, res, next) => {
-    try {
-      const profileId = getProfileId(req);
-      const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(room);
-      if (!(room.getType().get() == 'geographicRoom')) {
-        res.status(400).send('node is not of type geographicRoom');
-        return;
-      }
-      const result = await getTicketListInfo(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10), true);
-      return res.json(result);
-    } catch (error) {
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send('ko');
-    }
-  });
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+	/**
+	 * @swagger
+	 * /api/v1/room/{id}/ticket_list:
+	 *   get:
+	 *     security:
+	 *       - bearerAuth:
+	 *         - readOnly
+	 *     description: Returns list of tickets of room
+	 *     summary: Get list of tickets of room
+	 *     tags:
+	 *       - Geographic Context
+	 *     parameters:
+	 *      - in: path
+	 *        name: id
+	 *        description: use the dynamic ID
+	 *        required: true
+	 *        schema:
+	 *          type: integer
+	 *          format: int64
+	 *     responses:
+	 *       200:
+	 *         description: Success
+	 *         content:
+	 *           application/json:
+	 *             schema:
+	 *               type: array
+	 *               items:
+	 *                $ref: '#/components/schemas/Ticket'
+	 *       400:
+	 *         description: Bad request
+	 */
+	app.get("/api/v1/room/:id/ticket_list", async (req, res, next) => {
+		try {
+			const profileId = getProfileId(req);
+			const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
+			//@ts-ignore
+			SpinalGraphService._addNode(room);
+			if (!(room.getType().get() == "geographicRoom")) {
+				res.status(400).send("node is not of type geographicRoom");
+				return;
+			}
+			const result = await getTicketListInfo(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10), true);
+			return res.json(result);
+		} catch (error) {
+			if (error.code && error.message) return res.status(error.code).send(error.message);
+			res.status(400).send("ko");
+		}
+	});
 };

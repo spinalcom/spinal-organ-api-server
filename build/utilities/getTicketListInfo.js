@@ -32,7 +32,7 @@ async function getTicketListInfo(spinalAPIMiddleware, profileId, dynamicId, incl
     const node = await spinalAPIMiddleware.load(dynamicId, profileId);
     //@ts-ignore
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-    const ticketList = await node.getChildren('SpinalSystemServiceTicketHasTicket');
+    const ticketList = await node.getChildren("SpinalSystemServiceTicketHasTicket");
     for (const ticket of ticketList) {
         //@ts-ignore
         spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(ticket);

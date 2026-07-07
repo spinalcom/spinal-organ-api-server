@@ -24,6 +24,8 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+// import getFiles from "../../utilities/getFiles";
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
@@ -57,32 +59,40 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/node/:id/file_list', async (req, res, next) => {
+    app.get("/api/v1/node/:id/file_list", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            //@ts-ignore
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            // Files
-            var _files = [];
-            const fileNode = (await node.getChildren('hasFiles'))[0];
-            if (fileNode) {
-                const filesfromElement = await fileNode.element.load();
-                for (let index = 0; index < filesfromElement.length; index++) {
-                    const infoFiles = {
-                        dynamicId: filesfromElement[index]._server_id,
-                        Name: filesfromElement[index].name.get(),
-                    };
-                    _files.push(infoFiles);
-                }
+            if (!node) {
+                return res.status(400).send(`No node found with id ${req.params.id}`);
             }
+            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
+            const filesNode = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getFileLinkedToNode(node);
+            const filesFormatted = filesNode.map((file) => ({
+                dynamicId: file._server_id,
+                Name: file?.info?.name?.get() || file.name?.get(),
+            }));
+            return res.json(filesFormatted);
+            // // Files
+            // var _files = [];
+            // const fileNode = (await node.getChildren("hasFiles"))[0];
+            // if (fileNode) {
+            // 	const filesfromElement = await fileNode.element.load();
+            // 	for (let index = 0; index < filesfromElement.length; index++) {
+            // 		const infoFiles = {
+            // 			dynamicId: filesfromElement[index]._server_id,
+            // 			Name: filesfromElement[index].name.get(),
+            // 		};
+            // 		_files.push(infoFiles);
+            // 	}
+            // }
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send('ko');
+            res.status(400).send("ko");
         }
-        res.json(_files);
+        // res.json(_files);
     });
 };
 //# sourceMappingURL=nodeFileList.js.map

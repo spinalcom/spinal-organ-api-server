@@ -22,79 +22,81 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from "spinal-env-viewer-graph-service";
 // import spinalAPIMiddleware from '../../spinalAPIMiddleware';
-import * as express from 'express';
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import getFiles from '../../utilities/getFiles';
-import { getProfileId } from '../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../interfaces';
+import * as express from "express";
+import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
+// import getFiles from "../../utilities/getFiles";
+import { getProfileId } from "../../utilities/requestUtilities";
+import { ISpinalAPIMiddleware } from "../../interfaces";
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: ISpinalAPIMiddleware
-) {
-  /**
-   * @swagger
-   * /api/v1/node/{id}/file_list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Returns files of node
-   *     summary: Get list files of node
-   *     tags:
-   *       - Nodes
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/File'
-   *       400:
-   *         description: Bad request
-   */
-  app.get('/api/v1/node/:id/file_list', async (req, res, next) => {
-    try {
-      const profileId = getProfileId(req);
-      const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      //@ts-ignore
-      SpinalGraphService._addNode(node);
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+	/**
+	 * @swagger
+	 * /api/v1/node/{id}/file_list:
+	 *   get:
+	 *     security:
+	 *       - bearerAuth:
+	 *         - readOnly
+	 *     description: Returns files of node
+	 *     summary: Get list files of node
+	 *     tags:
+	 *       - Nodes
+	 *     parameters:
+	 *      - in: path
+	 *        name: id
+	 *        description: use the dynamic ID
+	 *        required: true
+	 *        schema:
+	 *          type: integer
+	 *          format: int64
+	 *     responses:
+	 *       200:
+	 *         description: Success
+	 *         content:
+	 *           application/json:
+	 *             schema:
+	 *               type: array
+	 *               items:
+	 *                $ref: '#/components/schemas/File'
+	 *       400:
+	 *         description: Bad request
+	 */
+	app.get("/api/v1/node/:id/file_list", async (req, res, next) => {
+		try {
+			const profileId = getProfileId(req);
+			const node = await spinalAPIMiddleware.load<SpinalNode>(parseInt(req.params.id, 10), profileId);
 
-      // Files
-      var _files = [];
-      const fileNode = (await node.getChildren('hasFiles'))[0];
-      if (fileNode) {
-        const filesfromElement = await fileNode.element.load();
-        for (let index = 0; index < filesfromElement.length; index++) {
-          const infoFiles = {
-            dynamicId: filesfromElement[index]._server_id,
-            Name: filesfromElement[index].name.get(),
-          };
-          _files.push(infoFiles);
-        }
-      }
-    } catch (error) {
+			if (!node) {
+				return res.status(400).send(`No node found with id ${req.params.id}`);
+			}
 
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send('ko');
-    }
-    res.json(_files);
-  });
+			SpinalGraphService._addNode(node);
+			const filesNode = await serviceDocumentation.getFileLinkedToNode(node);
+			const filesFormatted = filesNode.map((file) => ({
+				dynamicId: file._server_id,
+				Name: file?.info?.name?.get() || file.name?.get(),
+			}));
+
+			return res.json(filesFormatted);
+
+			// // Files
+			// var _files = [];
+			// const fileNode = (await node.getChildren("hasFiles"))[0];
+			// if (fileNode) {
+			// 	const filesfromElement = await fileNode.element.load();
+			// 	for (let index = 0; index < filesfromElement.length; index++) {
+			// 		const infoFiles = {
+			// 			dynamicId: filesfromElement[index]._server_id,
+			// 			Name: filesfromElement[index].name.get(),
+			// 		};
+			// 		_files.push(infoFiles);
+			// 	}
+			// }
+		} catch (error: Error | any) {
+			if (error.code && error.message) return res.status(error.code).send(error.message);
+			res.status(400).send("ko");
+		}
+		// res.json(_files);
+	});
 };

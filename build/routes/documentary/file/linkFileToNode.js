@@ -65,7 +65,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 dynamicId: file._server_id,
                 ...file.info.get(),
             }));
-            return res.status(200).send({ message: "Files linked successfully", files: filesFormatted });
+            return res.status(200).send(filesFormatted);
         }
         catch (error) {
             if (error.code)

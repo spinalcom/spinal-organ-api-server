@@ -33,11 +33,11 @@ function getPriorityNumber(priority) {
         return 0; // default to 0 if priority is undefined or empty
     const normalizedPriority = String(priority).trim().toLowerCase();
     switch (normalizedPriority) {
-        case 'occasionally':
+        case "occasionally":
             return 0;
-        case 'normal':
+        case "normal":
             return 1;
-        case 'urgent':
+        case "urgent":
             return 2;
         // These three cases are for old tickets created by Spinalcom with mission
         default: {
@@ -52,7 +52,7 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includ
     const ticketData = await getTicketNodeTree(ticketId, profileId, spinalAPIMiddleware);
     const { contextNode, processNode, stepNode, ticketNode } = ticketData || {};
     if (!contextNode || !processNode || !stepNode || !ticketNode) {
-        throw new Error('Failed to retrieve ticket node tree');
+        throw new Error("Failed to retrieve ticket node tree");
     }
     const proms = [(0, spinal_service_ticket_1.getNodeFromTicket)(ticketNode), (0, spinal_service_ticket_1.getTicketInfo)(ticketNode)];
     if (includeAttachedItems) {
@@ -69,11 +69,9 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includ
         name: ticketNode.info.name.get(),
         type: ticketNode.info.type.get(),
         priority: getPriorityNumber(ticketNodeInfo.priority),
-        creationDate: ticketNode.info.creationDate?.get() ||
-            Number(ticketNodeInfo.creationDate) ||
-            NaN,
+        creationDate: ticketNode.info.creationDate?.get() || Number(ticketNodeInfo.creationDate) || NaN,
         elementSelected: elementSelected === undefined
-            ? ''
+            ? ""
             : {
                 dynamicId: elementSelected._server_id,
                 staticId: elementSelected.info.id.get(),
@@ -81,7 +79,7 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includ
                 type: elementSelected.info.type.get(),
             },
         process: processNode === undefined
-            ? ''
+            ? ""
             : {
                 dynamicId: processNode._server_id,
                 staticId: processNode.info.id.get(),
@@ -89,7 +87,7 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includ
                 type: processNode.info.type.get(),
             },
         step: stepNode === undefined
-            ? ''
+            ? ""
             : {
                 dynamicId: stepNode._server_id,
                 staticId: stepNode.info.id.get(),
@@ -152,9 +150,9 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includ
     //   workflowName: contextNode?.info.name.get(),
     // };
     if (includeAttachedItems) {
-        info['note_list'] = await proms[2];
-        info['file_list'] = await proms[3];
-        info['log_list'] = await proms[4];
+        info["note_list"] = await proms[2];
+        info["file_list"] = await proms[3];
+        info["log_list"] = await proms[4];
     }
     return info;
 }
@@ -169,51 +167,51 @@ async function getTicketLogDetails(ticketNode, processNode, contextNode) {
     return logRes;
 }
 async function formatEvent(log, processNode, contextNode) {
-    let texte = '';
+    let texte = "";
     if (log.event == spinal_service_ticket_1.LOGS_EVENTS.creation) {
-        texte = 'created';
+        texte = "created";
     }
     else if (log.event == spinal_service_ticket_1.LOGS_EVENTS.archived) {
-        texte = 'archived';
+        texte = "archived";
     }
     else if (log.event == spinal_service_ticket_1.LOGS_EVENTS.unarchive) {
-        texte = 'unarchived';
+        texte = "unarchived";
     }
     else {
-        const [step1, step2] = await Promise.all([
-            (0, spinal_service_ticket_1.getStepFromProcessByStepId)(contextNode, processNode, log.steps[0]),
-            (0, spinal_service_ticket_1.getStepFromProcessByStepId)(contextNode, processNode, log.steps[1]),
-        ]);
+        const [step1, step2] = await Promise.all([(0, spinal_service_ticket_1.getStepFromProcessByStepId)(contextNode, processNode, log.steps[0]), (0, spinal_service_ticket_1.getStepFromProcessByStepId)(contextNode, processNode, log.steps[1])]);
         const stepName1 = step1?.info.name.get();
         const stepName2 = step2?.info.name.get();
         const pre = log.event == spinal_service_ticket_1.LOGS_EVENTS.moveToNext ? true : false;
-        texte = pre
-            ? `Passed from ${stepName1} to ${stepName2}`
-            : `Backward from ${stepName1} to ${stepName2}`;
+        texte = pre ? `Passed from ${stepName1} to ${stepName2}` : `Backward from ${stepName1} to ${stepName2}`;
     }
     return texte;
 }
 async function getTicketFiles(ticketNode) {
-    const _files = [];
-    const fileNode = (await ticketNode.getChildren('hasFiles'))?.[0];
-    if (fileNode) {
-        const filesfromElement = await fileNode.element.load();
-        for (let index = 0; index < filesfromElement.length; index++) {
-            const infoFiles = {
-                dynamicId: filesfromElement[index]._server_id,
-                Name: filesfromElement[index].name.get(),
-            };
-            _files.push(infoFiles);
-        }
-    }
-    return _files;
+    const files = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getFileLinkedToNode(ticketNode);
+    return files.map((file) => ({
+        dynamicId: file._server_id,
+        Name: file?.info?.name?.get() || file.name?.get(),
+    }));
+    // const _files = [];
+    // const fileNode = (await ticketNode.getChildren('hasFiles'))?.[0];
+    // if (fileNode) {
+    //   const filesfromElement = await fileNode.element.load();
+    //   for (let index = 0; index < filesfromElement.length; index++) {
+    //     const infoFiles = {
+    //       dynamicId: filesfromElement[index]._server_id,
+    //       Name: filesfromElement[index].name.get(),
+    //     };
+    //     _files.push(infoFiles);
+    //   }
+    // }
+    // return _files;
 }
 async function getTicketNoteNodes(ticketNode) {
     const notes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getNotes(ticketNode);
     const _notes = [];
     for (const note of notes) {
         const infoNote = {
-            userName: note.element.username === undefined ? '' : note.element.username.get(),
+            userName: note.element.username === undefined ? "" : note.element.username.get(),
             date: note.element.date.get(),
             type: note.element.type.get(),
             message: note.element.message.get(),

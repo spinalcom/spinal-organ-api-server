@@ -24,6 +24,8 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+// import getFiles from "../../../utilities/getFiles";
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
@@ -57,37 +59,48 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/equipement/:id/file_list', async (req, res, next) => {
+    app.get("/api/v1/equipement/:id/file_list", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-            //@ts-ignore
+            if (!equipement) {
+                res.status(400).send({ message: `No equipement found with ID ${req.params.id}` });
+                return;
+            }
+            if (equipement.getType().get() !== "BIMObject") {
+                res.status(400).send({ message: `Node with ID ${req.params.id} is not of type BIMObject` });
+                return;
+            }
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(equipement);
-            if (equipement.getType().get() === 'BIMObject') {
-                // Files
-                var _files = [];
-                const fileNode = (await equipement.getChildren('hasFiles'))[0];
-                if (fileNode) {
-                    const filesfromElement = await fileNode.element.load();
-                    for (let index = 0; index < filesfromElement.length; index++) {
-                        const infoFiles = {
-                            dynamicId: filesfromElement[index]._server_id,
-                            Name: filesfromElement[index].name.get(),
-                        };
-                        _files.push(infoFiles);
-                    }
-                }
-            }
-            else {
-                res.status(400).send('node is not of type  BIMObject');
-            }
+            const files = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getFileLinkedToNode(equipement);
+            const filesFormatted = files.map((file) => ({
+                dynamicId: file._server_id,
+                Name: file?.info?.name?.get() || file.name?.get(),
+            }));
+            return res.json(filesFormatted);
+            // if (equipement.getType().get() === "BIMObject") {
+            // 	// Files
+            // 	var _files = [];
+            // 	const fileNode = (await equipement.getChildren("hasFiles"))[0];
+            // 	if (fileNode) {
+            // 		const filesfromElement = await fileNode.element.load();
+            // 		for (let index = 0; index < filesfromElement.length; index++) {
+            // 			const infoFiles = {
+            // 				dynamicId: filesfromElement[index]._server_id,
+            // 				Name: filesfromElement[index].name.get(),
+            // 			};
+            // 			_files.push(infoFiles);
+            // 		}
+            // 	}
+            // } else {
+            // 	res.status(400).send("node is not of type  BIMObject");
+            // }
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send('ko');
+            res.status(400).send("ko");
         }
-        res.json(_files);
     });
 };
 //# sourceMappingURL=equipementFileList.js.map

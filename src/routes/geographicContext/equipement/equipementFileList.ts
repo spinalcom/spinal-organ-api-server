@@ -22,85 +22,93 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalContext,
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
+import { SpinalContext, SpinalNode, SpinalGraphService } from "spinal-env-viewer-graph-service";
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
-import * as express from 'express';
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
-import getFiles from '../../../utilities/getFiles';
-import { getProfileId } from '../../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../../interfaces';
+import * as express from "express";
+import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
+// import getFiles from "../../../utilities/getFiles";
+import { getProfileId } from "../../../utilities/requestUtilities";
+import { ISpinalAPIMiddleware } from "../../../interfaces";
+import { ServiceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
 
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: ISpinalAPIMiddleware
-) {
-  /**
-   * @swagger
-   * /api/v1/equipement/{id}/file_list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Returns files of equipement
-   *     summary: Get list files of equipement
-   *     tags:
-   *       - Geographic Context
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/File'
-   *       400:
-   *         description: Bad request
-   */
-  app.get('/api/v1/equipement/:id/file_list', async (req, res, next) => {
-    try {
-      const profileId = getProfileId(req);
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+	/**
+	 * @swagger
+	 * /api/v1/equipement/{id}/file_list:
+	 *   get:
+	 *     security:
+	 *       - bearerAuth:
+	 *         - readOnly
+	 *     description: Returns files of equipement
+	 *     summary: Get list files of equipement
+	 *     tags:
+	 *       - Geographic Context
+	 *     parameters:
+	 *      - in: path
+	 *        name: id
+	 *        description: use the dynamic ID
+	 *        required: true
+	 *        schema:
+	 *          type: integer
+	 *          format: int64
+	 *     responses:
+	 *       200:
+	 *         description: Success
+	 *         content:
+	 *           application/json:
+	 *             schema:
+	 *               type: array
+	 *               items:
+	 *                $ref: '#/components/schemas/File'
+	 *       400:
+	 *         description: Bad request
+	 */
+	app.get("/api/v1/equipement/:id/file_list", async (req, res, next) => {
+		try {
+			const profileId = getProfileId(req);
 
-      const equipement = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10), profileId
-      );
-      //@ts-ignore
-      SpinalGraphService._addNode(equipement);
-      if (equipement.getType().get() === 'BIMObject') {
-        // Files
-        var _files = [];
-        const fileNode = (await equipement.getChildren('hasFiles'))[0];
-        if (fileNode) {
-          const filesfromElement = await fileNode.element.load();
-          for (let index = 0; index < filesfromElement.length; index++) {
-            const infoFiles = {
-              dynamicId: filesfromElement[index]._server_id,
-              Name: filesfromElement[index].name.get(),
-            };
-            _files.push(infoFiles);
-          }
-        }
-      } else {
-        res.status(400).send('node is not of type  BIMObject');
-      }
-    } catch (error) {
+			const equipement = await spinalAPIMiddleware.load<SpinalNode>(parseInt(req.params.id, 10), profileId);
 
-      if (error.code && error.message) return res.status(error.code).send(error.message);
-      res.status(400).send('ko');
-    }
-    res.json(_files);
-  });
+			if (!equipement) {
+				res.status(400).send({ message: `No equipement found with ID ${req.params.id}` });
+				return;
+			}
+
+			if (equipement.getType().get() !== "BIMObject") {
+				res.status(400).send({ message: `Node with ID ${req.params.id} is not of type BIMObject` });
+				return;
+			}
+
+			SpinalGraphService._addNode(equipement);
+			const files = await serviceDocumentation.getFileLinkedToNode(equipement);
+
+			const filesFormatted = files.map((file) => ({
+				dynamicId: file._server_id,
+				Name: file?.info?.name?.get() || file.name?.get(),
+			}));
+
+			return res.json(filesFormatted);
+
+			// if (equipement.getType().get() === "BIMObject") {
+			// 	// Files
+			// 	var _files = [];
+			// 	const fileNode = (await equipement.getChildren("hasFiles"))[0];
+			// 	if (fileNode) {
+			// 		const filesfromElement = await fileNode.element.load();
+			// 		for (let index = 0; index < filesfromElement.length; index++) {
+			// 			const infoFiles = {
+			// 				dynamicId: filesfromElement[index]._server_id,
+			// 				Name: filesfromElement[index].name.get(),
+			// 			};
+			// 			_files.push(infoFiles);
+			// 		}
+			// 	}
+			// } else {
+			// 	res.status(400).send("node is not of type  BIMObject");
+			// }
+		} catch (error: Error | any) {
+			if (error.code && error.message) return res.status(error.code).send(error.message);
+			res.status(400).send("ko");
+		}
+	});
 };

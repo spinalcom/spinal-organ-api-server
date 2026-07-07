@@ -58,14 +58,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       400:
      *         description: Bad request
      */
-    app.get('/api/v1/room/:id/ticket_list', async (req, res, next) => {
+    app.get("/api/v1/room/:id/ticket_list", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const room = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(room);
-            if (!(room.getType().get() == 'geographicRoom')) {
-                res.status(400).send('node is not of type geographicRoom');
+            if (!(room.getType().get() == "geographicRoom")) {
+                res.status(400).send("node is not of type geographicRoom");
                 return;
             }
             const result = await (0, getTicketListInfo_1.getTicketListInfo)(spinalAPIMiddleware, profileId, parseInt(req.params.id, 10), true);
@@ -74,7 +74,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
-            res.status(400).send('ko');
+            res.status(400).send("ko");
         }
     });
 };

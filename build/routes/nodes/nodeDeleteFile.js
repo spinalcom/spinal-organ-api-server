@@ -24,7 +24,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../utilities/requestUtilities");
-const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -53,43 +53,51 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *          type: integer
      *          format: int64
      *     responses:
-     *       204:
-     *         description: Node successfully deleted
+     *       200:
+     *         description: File successfully deleted
      *       400:
      *         description: Bad request
      */
-    app.delete('/api/v1/node/:id/delete_file/:fileServerId', async (req, res, next) => {
+    app.delete("/api/v1/node/:id/delete_file/:fileServerId", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const nodeId = req.params.id;
             const fileId = req.params.fileServerId;
             const node = await spinalAPIMiddleware.load(parseInt(nodeId, 10), profileId);
-            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-            const fileNode = await node.getChildren('hasFiles');
-            if (fileNode.length == 0) {
-                return res.status(400).send('Node has no files');
+            const fileNode = await spinalAPIMiddleware.load(parseInt(fileId, 10), profileId);
+            if (!node) {
+                return res.status(400).send(`No node found with id ${nodeId}`);
             }
-            const directory = await fileNode[0].getElement();
-            let index = -1;
-            for (const [key, value] of Object.entries(directory)) {
-                const castedValue = value;
-                if (castedValue._server_id == fileId) {
-                    index = parseInt(key);
-                    break;
-                }
+            if (!fileNode) {
+                return res.status(400).send(`No file found with id ${fileId}`);
             }
-            if (index == -1) {
-                return res.status(400).send('File not found');
-            }
-            directory.splice(index, 1);
-            return res.status(200).send('File successfully deleted');
+            await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.unlinkFileFromNode(node, fileNode);
+            return res.status(200).send({ message: "File successfully deleted", success: true });
+            // 	SpinalGraphService._addNode(node);
+            // 	const fileNode = await node.getChildren("hasFiles");
+            // 	if (fileNode.length == 0) {
+            // 		return res.status(400).send("Node has no files");
+            // 	}
+            // 	const directory = await fileNode[0].getElement();
+            // 	let index = -1;
+            // 	for (const [key, value] of Object.entries(directory)) {
+            // 		const castedValue: any = value;
+            // 		if (castedValue._server_id == fileId) {
+            // 			index = parseInt(key);
+            // 			break;
+            // 		}
+            // 	}
+            // 	if (index == -1) {
+            // 		return res.status(400).send("File not found");
+            // 	}
+            // 	directory.splice(index, 1);
+            // 	return res.status(200).send("File successfully deleted");
         }
         catch (error) {
             if (error.code && error.message)
                 return res.status(error.code).send(error.message);
             res.status(500).send(error.message);
         }
-        res.json();
     });
 };
 //# sourceMappingURL=nodeDeleteFile.js.map

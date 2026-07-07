@@ -22,39 +22,24 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  SpinalNode,
-  SpinalGraphService,
-} from 'spinal-env-viewer-graph-service';
-import { ISpinalAPIMiddleware } from '../interfaces';
-import { getTicketDetails } from '../utilities/workflow/getTicketDetails';
+import { SpinalNode, SpinalGraphService } from "spinal-env-viewer-graph-service";
+import { ISpinalAPIMiddleware } from "../interfaces";
+import { getTicketDetails } from "../utilities/workflow/getTicketDetails";
 
-async function getTicketListInfo(
-  spinalAPIMiddleware: ISpinalAPIMiddleware,
-  profileId: string,
-  dynamicId: number,
-  includeAttachedItems = false
-) {
-  const nodes = [];
-  await spinalAPIMiddleware.getGraph();
-  const node: SpinalNode = await spinalAPIMiddleware.load(dynamicId, profileId);
-  //@ts-ignore
-  SpinalGraphService._addNode(node);
-  const ticketList = await node.getChildren(
-    'SpinalSystemServiceTicketHasTicket'
-  );
-  for (const ticket of ticketList) {
-    //@ts-ignore
-    SpinalGraphService._addNode(ticket);
-    const info = await getTicketDetails(
-      spinalAPIMiddleware,
-      profileId,
-      ticket._server_id,
-      includeAttachedItems
-    );
-    nodes.push(info);
-  }
-  return nodes;
+async function getTicketListInfo(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, dynamicId: number, includeAttachedItems = false) {
+	const nodes = [];
+	await spinalAPIMiddleware.getGraph();
+	const node: SpinalNode = await spinalAPIMiddleware.load(dynamicId, profileId);
+	//@ts-ignore
+	SpinalGraphService._addNode(node);
+	const ticketList = await node.getChildren("SpinalSystemServiceTicketHasTicket");
+	for (const ticket of ticketList) {
+		//@ts-ignore
+		SpinalGraphService._addNode(ticket);
+		const info = await getTicketDetails(spinalAPIMiddleware, profileId, ticket._server_id, includeAttachedItems);
+		nodes.push(info);
+	}
+	return nodes;
 }
 
 export { getTicketListInfo };

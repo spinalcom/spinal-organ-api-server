@@ -22,89 +22,89 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import * as express from 'express';
-import { CreateNode } from '../interface/CreateNode';
-import { getProfileId } from '../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../interfaces';
-import {
-  SpinalGraphService,
-  SpinalNode,
-  SpinalContext,
-} from 'spinal-env-viewer-graph-service';
-module.exports = function (
-  logger,
-  app: express.Express,
-  spinalAPIMiddleware: ISpinalAPIMiddleware
-) {
-  /**
-   * @swagger
-   * /api/v1/node/{id}/delete_file/{fileServerId}:
-   *   delete:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Delete a file from a node
-   *     summary: Delete a file from a node
-   *     tags:
-   *       - Nodes
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: fileServerId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       204:
-   *         description: Node successfully deleted
-   *       400:
-   *         description: Bad request
-   */
+import * as express from "express";
+import { CreateNode } from "../interface/CreateNode";
+import { getProfileId } from "../../utilities/requestUtilities";
+import { ISpinalAPIMiddleware } from "../../interfaces";
+import { SpinalGraphService, SpinalNode, SpinalContext } from "spinal-env-viewer-graph-service";
+import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
 
-  app.delete(
-    '/api/v1/node/:id/delete_file/:fileServerId',
-    async (req, res, next) => {
-      try {
-        const profileId = getProfileId(req);
-        const nodeId = req.params.id;
-        const fileId = req.params.fileServerId;
-        const node: SpinalNode<any> = await spinalAPIMiddleware.load(
-          parseInt(nodeId, 10),
-          profileId
-        );
-        SpinalGraphService._addNode(node);
-        const fileNode = await node.getChildren('hasFiles');
-        if (fileNode.length == 0) {
-          return res.status(400).send('Node has no files');
-        }
-        const directory = await fileNode[0].getElement();
-        let index = -1;
-        for (const [key, value] of Object.entries(directory)) {
-          const castedValue: any = value;
-          if (castedValue._server_id == fileId) {
-            index = parseInt(key);
-            break;
-          }
-        }
-        if (index == -1) {
-          return res.status(400).send('File not found');
-        }
-        directory.splice(index, 1);
-        return res.status(200).send('File successfully deleted');
-      } catch (error) {
-        if (error.code && error.message)
-          return res.status(error.code).send(error.message);
-        res.status(500).send(error.message);
-      }
-      res.json();
-    }
-  );
+module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+	/**
+	 * @swagger
+	 * /api/v1/node/{id}/delete_file/{fileServerId}:
+	 *   delete:
+	 *     security:
+	 *       - bearerAuth:
+	 *         - readOnly
+	 *     description: Delete a file from a node
+	 *     summary: Delete a file from a node
+	 *     tags:
+	 *       - Nodes
+	 *     parameters:
+	 *      - in: path
+	 *        name: id
+	 *        description: use the dynamic ID
+	 *        required: true
+	 *        schema:
+	 *          type: integer
+	 *          format: int64
+	 *      - in: path
+	 *        name: fileServerId
+	 *        description: use the dynamic ID
+	 *        required: true
+	 *        schema:
+	 *          type: integer
+	 *          format: int64
+	 *     responses:
+	 *       200:
+	 *         description: File successfully deleted
+	 *       400:
+	 *         description: Bad request
+	 */
+
+	app.delete("/api/v1/node/:id/delete_file/:fileServerId", async (req, res, next) => {
+		try {
+			const profileId = getProfileId(req);
+			const nodeId = req.params.id;
+			const fileId = req.params.fileServerId;
+			const node: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(nodeId, 10), profileId);
+			const fileNode: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(fileId, 10), profileId);
+
+			if (!node) {
+				return res.status(400).send(`No node found with id ${nodeId}`);
+			}
+
+			if (!fileNode) {
+				return res.status(400).send(`No file found with id ${fileId}`);
+			}
+
+			await serviceDocumentation.unlinkFileFromNode(node, fileNode);
+
+			return res.status(200).send({ message: "File successfully deleted", success: true });
+
+			// 	SpinalGraphService._addNode(node);
+			// 	const fileNode = await node.getChildren("hasFiles");
+			// 	if (fileNode.length == 0) {
+			// 		return res.status(400).send("Node has no files");
+			// 	}
+			// 	const directory = await fileNode[0].getElement();
+			// 	let index = -1;
+			// 	for (const [key, value] of Object.entries(directory)) {
+			// 		const castedValue: any = value;
+			// 		if (castedValue._server_id == fileId) {
+			// 			index = parseInt(key);
+			// 			break;
+			// 		}
+			// 	}
+			// 	if (index == -1) {
+			// 		return res.status(400).send("File not found");
+			// 	}
+			// 	directory.splice(index, 1);
+			// 	return res.status(200).send("File successfully deleted");
+		} catch (error: Error | any) {
+			if (error.code && error.message) return res.status(error.code).send(error.message);
+			res.status(500).send(error.message);
+		}
+	});
 };
