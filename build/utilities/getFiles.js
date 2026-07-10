@@ -24,12 +24,12 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 async function getFiles(nodeorigin) {
-    const FileDirs = await nodeorigin.getChildren('hasFiles');
+    const FileDirs = await nodeorigin.getChildren("hasFiles");
     const dirProm = FileDirs.map((nodeDir) => {
         return nodeDir.getElement().then((dir) => {
             return {
                 directory: dir,
-                node: nodeDir
+                node: nodeDir,
             };
         });
     });
@@ -41,7 +41,7 @@ async function getFiles(nodeorigin) {
             const file = directory[idx];
             files.push({
                 fileName: file.name.get(),
-                targetServerId: file._ptr.data.value // for the get to download
+                targetServerId: file._ptr.data.value, // for the get to download
             });
         }
     }

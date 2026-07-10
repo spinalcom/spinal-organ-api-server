@@ -49,6 +49,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
             if (!userGraph)
                 return res.status(406).send({ message: `No graph found for ${profileId}` });
+            let contextAlreadyExist = await graph.getContext(name);
+            if (contextAlreadyExist)
+                return res.status(400).send({ message: `Context with name ${name} already exists` });
             const context = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.createDocumentaryContext(graph, name);
             if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && graph._server_id !== userGraph._server_id) {
                 await userGraph.addContext(context);

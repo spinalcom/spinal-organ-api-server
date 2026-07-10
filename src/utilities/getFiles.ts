@@ -23,27 +23,27 @@
  */
 
 async function getFiles(nodeorigin) {
-  const FileDirs = await nodeorigin.getChildren('hasFiles')
-  const dirProm = FileDirs.map((nodeDir) => {
-    return nodeDir.getElement().then((dir) => {
-      return {
-        directory: dir,
-        node: nodeDir
-      }
-    })
-  })
-  const dirs = await Promise.all(dirProm)
-  const files = []
-  // @ts-ignore
-  for (const { directory } of dirs) {
-    for (let idx = 0; idx < directory.length; idx++) {
-      const file = directory[idx];
-      files.push({
-        fileName: file.name.get(),
-        targetServerId: file._ptr.data.value // for the get to download
-      })
-    }
-  }
-  return files
+	const FileDirs = await nodeorigin.getChildren("hasFiles");
+	const dirProm = FileDirs.map((nodeDir) => {
+		return nodeDir.getElement().then((dir) => {
+			return {
+				directory: dir,
+				node: nodeDir,
+			};
+		});
+	});
+	const dirs = await Promise.all(dirProm);
+	const files = [];
+	// @ts-ignore
+	for (const { directory } of dirs) {
+		for (let idx = 0; idx < directory.length; idx++) {
+			const file = directory[idx];
+			files.push({
+				fileName: file.name.get(),
+				targetServerId: file._ptr.data.value, // for the get to download
+			});
+		}
+	}
+	return files;
 }
 export default getFiles;

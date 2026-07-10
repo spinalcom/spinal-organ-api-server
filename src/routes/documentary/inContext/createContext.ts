@@ -52,6 +52,9 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 
 			if (!userGraph) return res.status(406).send({ message: `No graph found for ${profileId}` });
 
+			let contextAlreadyExist = await graph.getContext(name);
+			if (contextAlreadyExist) return res.status(400).send({ message: `Context with name ${name} already exists` });
+
 			const context = await serviceDocumentation.createDocumentaryContext(graph, name);
 			if (context instanceof SpinalContext && graph._server_id !== userGraph._server_id) {
 				await userGraph.addContext(context);

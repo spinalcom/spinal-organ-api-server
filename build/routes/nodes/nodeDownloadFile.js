@@ -82,10 +82,6 @@ async function down(file, http, hubUri, res, encoding) {
         res.send(base64Data);
     }
     else {
-        // const fileName = file?.info?.name?.get() || file?.name?.get();
-        // const type = mime.lookup(fileName) || "application/octet-stream";
-        // res.set("Content-Type", type);
-        // res.send(bufferData.data);
         const fileName = file?.info?.name?.get() || file?.name?.get();
         res.set({
             "Cache-Control": "no-cache",

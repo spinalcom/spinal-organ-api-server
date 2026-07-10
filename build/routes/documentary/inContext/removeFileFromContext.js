@@ -29,15 +29,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       500:
      *         description: Internal server error.
      */
-    app.delete("/api/v1/documentary/file/remove_from_context/:documentId", async (req, res, next) => {
+    app.delete("/api/v1/documentary/file/remove_from_context/:contextId/:documentId", async (req, res, next) => {
         try {
+            const contextId = parseInt(req.params.contextId, 10);
+            if (isNaN(contextId))
+                return res.status(400).send({ message: "contextId must be a number" });
             const documentId = parseInt(req.params.documentId, 10);
             if (isNaN(documentId))
                 return res.status(400).send({ message: "fileId must be a number" });
+            const contextNode = await spinalAPIMiddleware.load(contextId);
+            if (!contextNode)
+                return res.status(400).send({ message: "contextId not found" });
             const fileNode = await spinalAPIMiddleware.load(documentId);
             if (!fileNode)
                 return res.status(400).send({ message: "fileId not found" });
-            const removed = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.removeFileFromContext(fileNode);
+            const removed = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.removeFileFromContext(fileNode, contextNode);
             const statusCode = removed ? 200 : 400;
             const message = removed ? "File removed from context successfully" : "Failed to remove file from context";
             return res.status(statusCode).send({ status: removed, message, data: { ...fileNode.info.get(), dynamicId: fileNode._server_id } });
