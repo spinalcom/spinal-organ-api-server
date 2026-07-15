@@ -209,8 +209,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               value:
      *                 dynamicId: [24062000, 24062104]
      *                 equipements:
-     *                   - contextName: BIMObject Context
-     *                     categoryName: Zone
+     *                   - contextName: Gestion des équipements
+     *                     categoryName: Typologie
      *                     groupNames: ["CVC", "Plomberie"]
      *     responses:
      *       200:

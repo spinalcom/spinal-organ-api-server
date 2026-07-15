@@ -8254,8 +8254,8 @@
                     ],
                     "equipements": [
                       {
-                        "contextName": "BIMObject Context",
-                        "categoryName": "Zone",
+                        "contextName": "Gestion des équipements",
+                        "categoryName": "Typologie",
                         "groupNames": [
                           "CVC",
                           "Plomberie"
