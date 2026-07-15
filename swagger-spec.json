@@ -795,36 +795,54 @@
       },
       "ViewInfoNode": {
         "type": "object",
-        "description": "Flattened node representing a geographic graph element.",
+        "description": "One entry of the `nodes` map returned by `POST /api/v1/geographicContext/viewInfo2`.\n\nThe node's own dynamicId is the key it is stored under, so it is not repeated inside the\nvalue. Reconstruct the tree by starting at the entries whose `parentId` is `null` and\nfollowing `children`.\n",
         "properties": {
-          "dynamicId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Unique Spinal dynamic ID of the node",
-            "example": 24063840
-          },
           "parentId": {
             "type": "integer",
             "format": "int64",
             "nullable": true,
-            "description": "Parent dynamicId.  \nNull when the node is a root.\n",
+            "description": "dynamicId of the parent, i.e. the key of the entry this node hangs from.\nNull when the node is one of the traversal roots.\n",
             "example": 24062000
+          },
+          "children": {
+            "type": "array",
+            "description": "dynamicIds of the direct children, each one a key of the same `nodes` map. Lists only\nthe children actually traversed, so it reflects the `floorRef` / `roomRef` /\n`equipements` flags of the request and the equipment group filter, not the full graph.\nEmpty for leaves.\n",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": [
+              24063912,
+              24063988
+            ]
           },
           "dbId": {
             "type": "integer",
             "nullable": true,
-            "description": "dbId of the BIM object (only for equipment/reference)",
+            "description": "Id of the object inside its BIM file, used to address it in the viewer.\nSet only on `BIMObject`, `geographicReference`, `roomRef` and `floorRef` nodes;\nnull on the purely geographic ones.\n",
             "example": 3365
           },
           "bimFileAlias": {
             "type": "integer",
             "nullable": true,
-            "description": "Mapped integer alias for BIM file identifiers",
+            "description": "Alias of the BIM file this object comes from, to be resolved against the response's\n`bimFileAlias` dictionary. That dictionary is keyed by BIM file id with the alias as\nvalue, so going from this number back to a file id means inverting it.\nNull wherever `dbId` is null.\n",
             "example": 1
           },
           "type": {
             "type": "string",
-            "description": "SpinalGraph type of the node",
+            "description": "Type of the node. Usually its SpinalGraph type, with two exceptions the route\nsubstitutes to record how the node was reached: reference objects found under a room\nvia `hasReferenceObject.ROOM` are reported as `roomRef`, and those found under a floor\nvia `hasReferenceObject` as `floorRef`.\n",
+            "enum": [
+              "geographicContext",
+              "geographicSite",
+              "geographicBuilding",
+              "geographicFloor",
+              "geographicZone",
+              "geographicRoom",
+              "geographicReference",
+              "BIMObject",
+              "roomRef",
+              "floorRef"
+            ],
             "example": "geographicRoom"
           }
         }
@@ -8121,8 +8139,8 @@
             ]
           }
         ],
-        "description": "Fetches view information based on the geographical context for specified IDs and options",
-        "summary": "Fetch view information for geographical context",
+        "summary": "Fetch a flattened geographic tree for the 3D viewer",
+        "description": "Walks the geographic context from one or more starting nodes and returns the\nsub-tree flattened into a lookup map, together with a dictionary that compresses the\nrepeated BIM file identifiers into small integers.\n\nUnlike `/api/v1/geographicContext/viewInfo`, which returns a nested array, this route\nreturns `nodes` as an **object keyed by dynamicId**. Walk it by following `children`\nfrom the roots (the entries whose `parentId` is `null`).\n\n**What gets traversed**\n\nBuilding, Floor and Room relations are always followed. The `floorRef`,\n`roomRef` and `equipements` flags add reference and BIM-object relations on top of that,\nso they widen the tree rather than filter it. A starting node is skipped if it cannot be\nloaded under the caller's profile, or if its type is not a geographic one — if none of the\nids qualify the response is a successful `200` with empty `nodes`, not an error.\n",
         "tags": [
           "Geographic Context"
         ],
@@ -8131,24 +8149,36 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "dynamicId"
-                ],
                 "properties": {
                   "dynamicId": {
-                    "type": "integer",
-                    "format": "int64",
-                    "description": "Unique identifier for the node"
+                    "description": "Node(s) to start the traversal from. Accepts a single dynamicId or an array of\nthem; each one is traversed independently and all results are merged into the\nsame `nodes` map. Only geographic nodes are accepted as roots\n(`geographicBuilding`, `geographicFloor`, `geographicRoom`, `BIMObject`);\nanything else is ignored.\n\nOmit it to fall back to the whole building: the first `geographicBuilding` of\nthe first geographic context visible to the profile, with `floorRef`, `roomRef`\nand `equipements` all forced to `true`. Any flags sent alongside an omitted\n`dynamicId` are overridden.\n",
+                    "oneOf": [
+                      {
+                        "type": "integer",
+                        "format": "int64"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "format": "int64"
+                        }
+                      }
+                    ],
+                    "example": 24062000
                   },
                   "floorRef": {
                     "type": "boolean",
-                    "description": "Flag to include floor reference, defaults to false"
+                    "default": false,
+                    "description": "Follow `hasReferenceObject` from floors, adding the floor's reference BIM\nobjects to the tree as nodes of type `floorRef`.\n"
                   },
                   "roomRef": {
                     "type": "boolean",
-                    "description": "Flag to include room reference, defaults to true"
+                    "default": false,
+                    "description": "Follow `hasReferenceObject.ROOM` from rooms, adding the room's reference BIM\nobjects to the tree as nodes of type `roomRef`.\n"
                   },
                   "equipements": {
+                    "description": "Follow `hasBimObject` from rooms, adding the room's equipment as nodes of type\n`BIMObject`.\n\nPass `true` for every piece of equipment, `false` (default) for none, or an\narray of group filters to keep only the equipment belonging to the named\ngroups. Filters are resolved once up front into a set of allowed group ids;\na piece of equipment survives if any of its `groupHasBIMObject` parents is in\nthat set, so filters are additive — an item matching any one of them is kept.\nA filter naming a context, category or group that does not exist contributes\nnothing and is silently ignored, so an array that matches nothing yields a\ntree with no equipment at all.\n",
                     "oneOf": [
                       {
                         "type": "boolean"
@@ -8164,23 +8194,74 @@
                           ],
                           "properties": {
                             "contextName": {
-                              "type": "string"
+                              "type": "string",
+                              "description": "Name of the context holding the groups, matched exactly.",
+                              "example": "BIMObject Context"
                             },
                             "categoryName": {
-                              "type": "string"
+                              "type": "string",
+                              "description": "Name of the category inside that context, matched exactly.",
+                              "example": "Zone"
                             },
                             "groupNames": {
                               "type": "array",
+                              "description": "Names of the groups to keep, matched exactly. An empty array means\nevery group in the category.\n",
                               "items": {
                                 "type": "string"
                               },
-                              "description": "List of group names to filter by. Empty array means all groups in the category."
+                              "example": [
+                                "CVC",
+                                "Plomberie"
+                              ]
                             }
                           }
                         }
                       }
                     ],
-                    "description": "Boolean to include all equipment, or array of group filters to include only matching equipment"
+                    "default": false
+                  }
+                }
+              },
+              "examples": {
+                "wholeBuilding": {
+                  "summary": "Whole building (no dynamicId)",
+                  "description": "Falls back to the first building, with every reference and all equipment.",
+                  "value": {}
+                },
+                "singleFloorWithRefs": {
+                  "summary": "One floor, references only",
+                  "value": {
+                    "dynamicId": 24062000,
+                    "floorRef": true,
+                    "roomRef": true
+                  }
+                },
+                "floorWithEquipment": {
+                  "summary": "One floor, room references and all equipment",
+                  "description": "Both flags default to false, so each one has to be asked for explicitly.\n",
+                  "value": {
+                    "dynamicId": 24062000,
+                    "roomRef": true,
+                    "equipements": true
+                  }
+                },
+                "filteredEquipment": {
+                  "summary": "Two floors, equipment restricted to two groups",
+                  "value": {
+                    "dynamicId": [
+                      24062000,
+                      24062104
+                    ],
+                    "equipements": [
+                      {
+                        "contextName": "BIMObject Context",
+                        "categoryName": "Zone",
+                        "groupNames": [
+                          "CVC",
+                          "Plomberie"
+                        ]
+                      }
+                    ]
                   }
                 }
               }
@@ -8189,7 +8270,7 @@
         },
         "responses": {
           "200": {
-            "description": "Flattened geographic tree with BIM alias dictionary",
+            "description": "Flattened geographic tree with its BIM file dictionary.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8197,27 +8278,58 @@
                   "properties": {
                     "bimFileAlias": {
                       "type": "object",
+                      "description": "Dictionary of the BIM files referenced by the tree, keyed by BIM file id with\nthe alias as value. Aliases are assigned in traversal order starting at 1 and\nare only meaningful within this response.\n\nNote the direction: nodes carry the **alias**, so resolving a node back to its\nBIM file id means inverting this map client-side.\n",
                       "additionalProperties": {
-                        "type": "string"
+                        "type": "integer"
                       },
                       "example": {
-                        "1": "SpinalNode-7cc0401e-31fc-40c8-385d-c618d1df8bd2",
-                        "2": "SpinalNode-a39ef912-7df0-11ee-995d-afa741c67b94"
+                        "SpinalNode-7cc0401e-31fc-40c8-385d-c618d1df8bd2": 1,
+                        "SpinalNode-a39ef912-7df0-11ee-995d-afa741c67b94": 2
                       }
                     },
                     "nodes": {
-                      "type": "array",
-                      "items": {
+                      "type": "object",
+                      "description": "Every visited node, keyed by its dynamicId. Empty when no starting node\nresolved to a geographic node.\n",
+                      "additionalProperties": {
                         "$ref": "#/components/schemas/ViewInfoNode"
                       }
+                    }
+                  }
+                },
+                "example": {
+                  "bimFileAlias": {
+                    "SpinalNode-7cc0401e-31fc-40c8-385d-c618d1df8bd2": 1
+                  },
+                  "nodes": {
+                    "24062000": {
+                      "parentId": null,
+                      "children": [
+                        24063840
+                      ],
+                      "dbId": null,
+                      "bimFileAlias": null,
+                      "type": "geographicFloor"
+                    },
+                    "24063840": {
+                      "parentId": 24062000,
+                      "children": [
+                        24063912
+                      ],
+                      "dbId": null,
+                      "bimFileAlias": null,
+                      "type": "geographicRoom"
+                    },
+                    "24063912": {
+                      "parentId": 24063840,
+                      "children": [],
+                      "dbId": 3365,
+                      "bimFileAlias": 1,
+                      "type": "BIMObject"
                     }
                   }
                 }
               }
             }
-          },
-          "400": {
-            "description": "Invalid request (missing dynamicId)"
           },
           "500": {
             "description": "Internal server error"
