@@ -461,6 +461,7 @@ function routes(logger: any, app: express.Application, spinalAPIMiddleware: ISpi
 	require("./documentary/file/linkFileToNodeById")(logger, app, spinalAPIMiddleware);
 	require("./documentary/file/unlinkFileFromNode")(logger, app, spinalAPIMiddleware);
 	require("./documentary/file/getFileLinkedToNode")(logger, app, spinalAPIMiddleware);
+	require("./documentary/file/getFileParents")(logger, app, spinalAPIMiddleware);
 	require("./documentary/file/getFileVersions")(logger, app, spinalAPIMiddleware);
 	require("./documentary/file/linkFileToNode")(logger, app, spinalAPIMiddleware);
 	require("./documentary/file/updateFileVersion")(logger, app, spinalAPIMiddleware);
