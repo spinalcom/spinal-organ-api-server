@@ -28,6 +28,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         schema:
      *           type: integer
      *           format: int64
+     *       - in: query
+     *         name: unlink
+     *         required: false
+     *         description: If set to true or 1, the file node will be unlinked from its parent nodes after being removed from the context.
+     *         schema:
+     *           type: boolean
+     *
      *     responses:
      *       200:
      *         description: File removed successfully.
@@ -50,7 +57,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const fileNode = await spinalAPIMiddleware.load(documentId);
             if (!fileNode)
                 return res.status(400).send({ message: "documentId not found" });
+            // remove the file from the context
             const removed = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.removeFileFromContext(fileNode, contextNode);
+            const unLinkQuery = req.query.unlink;
+            // If the unlink query parameter is set to true or 1, get the parent nodes of the file node
+            // and unlink the file node from its parents. This is useful for cleaning up references to the file node in the graph.
+            if (unLinkQuery && (unLinkQuery === "true" || unLinkQuery === "1")) {
+                //@ts-ignore
+                const parentNodes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getFileParents(fileNode);
+                const unlinkPromises = parentNodes.map(async (parentNode) => spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.unlinkFileFromNode(parentNode, fileNode));
+                await Promise.allSettled(unlinkPromises);
+            }
             const statusCode = removed ? 200 : 400;
             const message = removed ? "File removed from context successfully" : "Failed to remove file from context";
             return res.status(statusCode).send({ status: removed, message, data: { ...fileNode.info.get(), dynamicId: fileNode._server_id } });

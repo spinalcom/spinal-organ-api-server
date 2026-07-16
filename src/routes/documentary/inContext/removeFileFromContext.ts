@@ -30,6 +30,13 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 	 *         schema:
 	 *           type: integer
 	 *           format: int64
+	 *       - in: query
+	 *         name: unlink
+	 *         required: false
+	 *         description: If set to true or 1, the file node will be unlinked from its parent nodes after being removed from the context.
+	 *         schema:
+	 *           type: boolean
+	 *
 	 *     responses:
 	 *       200:
 	 *         description: File removed successfully.
@@ -52,7 +59,19 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			const fileNode = await spinalAPIMiddleware.load<SpinalNode>(documentId);
 			if (!fileNode) return res.status(400).send({ message: "documentId not found" });
 
+			// remove the file from the context
 			const removed = await serviceDocumentation.removeFileFromContext(fileNode, contextNode);
+			const unLinkQuery = req.query.unlink;
+
+			// If the unlink query parameter is set to true or 1, get the parent nodes of the file node
+			// and unlink the file node from its parents. This is useful for cleaning up references to the file node in the graph.
+			if (unLinkQuery && (unLinkQuery === "true" || unLinkQuery === "1")) {
+				//@ts-ignore
+				const parentNodes = await serviceDocumentation.getFileParents(fileNode);
+				const unlinkPromises = parentNodes.map(async (parentNode: SpinalNode) => serviceDocumentation.unlinkFileFromNode(parentNode, fileNode));
+				await Promise.allSettled(unlinkPromises);
+			}
+
 			const statusCode = removed ? 200 : 400;
 			const message = removed ? "File removed from context successfully" : "Failed to remove file from context";
 
