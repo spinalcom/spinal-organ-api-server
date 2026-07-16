@@ -59,13 +59,15 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			if (!fileNode) return res.status(404).send({ message: `No file found with id ${fileDynamicId}` });
 
 			// Get all versions of the file node and find the one that matches the versionName parameter
-			const versions = await serviceDocumentation.getFileVersions(fileNode);
-			if (!versions || versions.length === 0) return res.status(404).send({ message: `No versions found for file with id ${fileDynamicId}` });
-
 			const versionName = req.params.versionName;
 
-			const versionFound = versions.find((version) => version.id.get() == versionName || version.version.get() == versionName);
+			const versionFound = await serviceDocumentation.getFileVersionByName(fileNode, versionName);
 			if (!versionFound) return res.status(404).send({ message: `No version found with name ${versionName}` });
+
+			// const versionName = req.params.versionName;
+
+			// const versionFound = versions.find((version) => version.id.get() == versionName || version.version.get() == versionName);
+			// if (!versionFound) return res.status(404).send({ message: `No version found with name ${versionName}` });
 
 			// format the version data using the _formatFileVersion utility function
 			const fileName = fileNode?.info?.name?.get() || fileNode?.name?.get();

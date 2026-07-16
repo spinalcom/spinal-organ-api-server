@@ -454,6 +454,7 @@ function routes(logger: any, app: express.Application, spinalAPIMiddleware: ISpi
 	require("./documentary/inContext/moveDocumentInContext")(logger, app, spinalAPIMiddleware);
 	require("./documentary/inContext/removeFileFromContext")(logger, app, spinalAPIMiddleware);
 	require("./documentary/inContext/uploadFileInContext")(logger, app, spinalAPIMiddleware);
+	require("./documentary/inContext/linkFileToNodeInContext")(logger, app, spinalAPIMiddleware);
 
 	// documentary routes files
 	require("./documentary/file/getFileData")(logger, app, spinalAPIMiddleware);
@@ -463,6 +464,7 @@ function routes(logger: any, app: express.Application, spinalAPIMiddleware: ISpi
 	require("./documentary/file/getFileLinkedToNode")(logger, app, spinalAPIMiddleware);
 	require("./documentary/file/getFileParents")(logger, app, spinalAPIMiddleware);
 	require("./documentary/file/getFileVersions")(logger, app, spinalAPIMiddleware);
+	require("./documentary/file/removeFileVersionByName")(logger, app, spinalAPIMiddleware);
 	require("./documentary/file/linkFileToNode")(logger, app, spinalAPIMiddleware);
 	require("./documentary/file/updateFileVersion")(logger, app, spinalAPIMiddleware);
 }

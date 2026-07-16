@@ -63,7 +63,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             // If the unlink query parameter is set to true or 1, get the parent nodes of the file node
             // and unlink the file node from its parents. This is useful for cleaning up references to the file node in the graph.
             if (unLinkQuery && (unLinkQuery === "true" || unLinkQuery === "1")) {
-                //@ts-ignore
                 const parentNodes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getFileParents(fileNode);
                 const unlinkPromises = parentNodes.map(async (parentNode) => spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.unlinkFileFromNode(parentNode, fileNode));
                 await Promise.allSettled(unlinkPromises);

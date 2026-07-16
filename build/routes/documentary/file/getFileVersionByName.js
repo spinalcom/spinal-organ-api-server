@@ -57,13 +57,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!fileNode)
                 return res.status(404).send({ message: `No file found with id ${fileDynamicId}` });
             // Get all versions of the file node and find the one that matches the versionName parameter
-            const versions = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getFileVersions(fileNode);
-            if (!versions || versions.length === 0)
-                return res.status(404).send({ message: `No versions found for file with id ${fileDynamicId}` });
             const versionName = req.params.versionName;
-            const versionFound = versions.find((version) => version.id.get() == versionName || version.version.get() == versionName);
+            const versionFound = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getFileVersionByName(fileNode, versionName);
             if (!versionFound)
                 return res.status(404).send({ message: `No version found with name ${versionName}` });
+            // const versionName = req.params.versionName;
+            // const versionFound = versions.find((version) => version.id.get() == versionName || version.version.get() == versionName);
+            // if (!versionFound) return res.status(404).send({ message: `No version found with name ${versionName}` });
             // format the version data using the _formatFileVersion utility function
             const fileName = fileNode?.info?.name?.get() || fileNode?.name?.get();
             let versionData = (0, utils_1._formatFileVersion)(versionFound, fileName);

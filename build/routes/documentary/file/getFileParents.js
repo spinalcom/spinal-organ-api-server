@@ -48,7 +48,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const node = await spinalAPIMiddleware.load(fileId, profileId);
             if (!node)
                 return res.status(404).send({ message: `No file found with id ${fileId}` });
-            //@ts-ignore
             const nodes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getFileParents(node);
             const formattedNodes = nodes.map((parentNode) => ({
                 dynamicId: parentNode._server_id,
