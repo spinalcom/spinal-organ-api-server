@@ -6,7 +6,7 @@ import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-ser
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 	/**
 	 * @swagger
-	 * /api/v1/documentary/file/remove_from_context/{documentId}:
+	 * /api/v1/documentary/file/remove_from_context/{contextId}/{documentId}:
 	 *   delete:
 	 *     security:
 	 *       - bearerAuth:
@@ -16,6 +16,13 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 	 *     tags:
 	 *       - Documentary
 	 *     parameters:
+	 *       - in: path
+	 *         name: contextId
+	 *         required: true
+	 *         description: Dynamic id of the documentary context node.
+	 *         schema:
+	 *           type: integer
+	 *           format: int64
 	 *       - in: path
 	 *         name: documentId
 	 *         required: true
@@ -37,13 +44,13 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			if (isNaN(contextId)) return res.status(400).send({ message: "contextId must be a number" });
 
 			const documentId = parseInt(req.params.documentId, 10);
-			if (isNaN(documentId)) return res.status(400).send({ message: "fileId must be a number" });
+			if (isNaN(documentId)) return res.status(400).send({ message: "documentId must be a number" });
 
 			const contextNode = await spinalAPIMiddleware.load<SpinalNode>(contextId);
 			if (!contextNode) return res.status(400).send({ message: "contextId not found" });
 
 			const fileNode = await spinalAPIMiddleware.load<SpinalNode>(documentId);
-			if (!fileNode) return res.status(400).send({ message: "fileId not found" });
+			if (!fileNode) return res.status(400).send({ message: "documentId not found" });
 
 			const removed = await serviceDocumentation.removeFileFromContext(fileNode, contextNode);
 			const statusCode = removed ? 200 : 400;

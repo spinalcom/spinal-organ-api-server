@@ -4,7 +4,7 @@ const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-vie
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
-     * /api/v1/documentary/file/remove_from_context/{documentId}:
+     * /api/v1/documentary/file/remove_from_context/{contextId}/{documentId}:
      *   delete:
      *     security:
      *       - bearerAuth:
@@ -14,6 +14,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     tags:
      *       - Documentary
      *     parameters:
+     *       - in: path
+     *         name: contextId
+     *         required: true
+     *         description: Dynamic id of the documentary context node.
+     *         schema:
+     *           type: integer
+     *           format: int64
      *       - in: path
      *         name: documentId
      *         required: true
@@ -36,13 +43,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(400).send({ message: "contextId must be a number" });
             const documentId = parseInt(req.params.documentId, 10);
             if (isNaN(documentId))
-                return res.status(400).send({ message: "fileId must be a number" });
+                return res.status(400).send({ message: "documentId must be a number" });
             const contextNode = await spinalAPIMiddleware.load(contextId);
             if (!contextNode)
                 return res.status(400).send({ message: "contextId not found" });
             const fileNode = await spinalAPIMiddleware.load(documentId);
             if (!fileNode)
-                return res.status(400).send({ message: "fileId not found" });
+                return res.status(400).send({ message: "documentId not found" });
             const removed = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.removeFileFromContext(fileNode, contextNode);
             const statusCode = removed ? 200 : 400;
             const message = removed ? "File removed from context successfully" : "Failed to remove file from context";
