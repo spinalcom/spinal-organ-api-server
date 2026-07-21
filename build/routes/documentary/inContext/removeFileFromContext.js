@@ -56,21 +56,23 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const contextNode = await spinalAPIMiddleware.load(contextId, profileId);
             if (!contextNode)
                 return res.status(400).send({ message: "contextId not found" });
-            const fileNode = await spinalAPIMiddleware.load(documentId, profileId);
+            let fileNode = await spinalAPIMiddleware.load(documentId, profileId);
             if (!fileNode)
                 return res.status(400).send({ message: "documentId not found" });
             // remove the file from the context
-            const removed = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.removeFileFromContext(fileNode, contextNode);
-            const unLinkQuery = req.query.unlink;
-            // If the unlink query parameter is set to true or 1, get the parent nodes of the file node
-            // and unlink the file node from its parents. This is useful for cleaning up references to the file node in the graph.
-            if (unLinkQuery && (unLinkQuery === "true" || unLinkQuery === "1")) {
-                const parentNodes = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.getFileParents(fileNode);
-                const unlinkPromises = parentNodes.map(async (parentNode) => spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.unlinkFileFromNode(parentNode, fileNode));
-                await Promise.allSettled(unlinkPromises);
-            }
+            const unLinkQuery = req.query.unlink === "true" || req.query.unlink === "1";
+            const removed = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.removeFileFromContext(fileNode, contextNode, unLinkQuery);
+            // // If the unlink query parameter is set to true or 1, get the parent nodes of the file node
+            // // and unlink the file node from its parents. This is useful for cleaning up references to the file node in the graph.
+            // if (unLinkQuery && (unLinkQuery === "true" || unLinkQuery === "1")) {
+            // 	const parentNodes = await serviceDocumentation.getFileParents(fileNode);
+            // 	const unlinkPromises = parentNodes.map(async (parentNode: SpinalNode) => serviceDocumentation.unlinkFileFromNode(parentNode, fileNode));
+            // 	await Promise.allSettled(unlinkPromises);
+            // }
             const statusCode = removed ? 200 : 400;
             const message = removed ? "File removed from context successfully" : "Failed to remove file from context";
+            if (fileNode instanceof spinal_env_viewer_plugin_documentation_service_1.SpinalDocument)
+                fileNode = (await fileNode.getNode());
             return res.status(statusCode).send({ status: removed, message, data: { ...fileNode.info.get(), dynamicId: fileNode._server_id } });
         }
         catch (error) {

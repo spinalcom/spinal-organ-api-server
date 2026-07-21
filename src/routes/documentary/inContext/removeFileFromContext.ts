@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { SpinalNode } from "spinal-env-viewer-graph-service";
-import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
+import { serviceDocumentation, SpinalDocument } from "spinal-env-viewer-plugin-documentation-service";
 import { getProfileId } from "../../../utilities/requestUtilities";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
@@ -58,23 +58,24 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			const contextNode = await spinalAPIMiddleware.load<SpinalNode>(contextId, profileId);
 			if (!contextNode) return res.status(400).send({ message: "contextId not found" });
 
-			const fileNode = await spinalAPIMiddleware.load<SpinalNode>(documentId, profileId);
+			let fileNode = await spinalAPIMiddleware.load<SpinalNode>(documentId, profileId);
 			if (!fileNode) return res.status(400).send({ message: "documentId not found" });
 
 			// remove the file from the context
-			const removed = await serviceDocumentation.removeFileFromContext(fileNode, contextNode);
-			const unLinkQuery = req.query.unlink;
+			const unLinkQuery = req.query.unlink === "true" || req.query.unlink === "1";
+			const removed = await serviceDocumentation.removeFileFromContext(fileNode, contextNode, unLinkQuery);
 
-			// If the unlink query parameter is set to true or 1, get the parent nodes of the file node
-			// and unlink the file node from its parents. This is useful for cleaning up references to the file node in the graph.
-			if (unLinkQuery && (unLinkQuery === "true" || unLinkQuery === "1")) {
-				const parentNodes = await serviceDocumentation.getFileParents(fileNode);
-				const unlinkPromises = parentNodes.map(async (parentNode: SpinalNode) => serviceDocumentation.unlinkFileFromNode(parentNode, fileNode));
-				await Promise.allSettled(unlinkPromises);
-			}
+			// // If the unlink query parameter is set to true or 1, get the parent nodes of the file node
+			// // and unlink the file node from its parents. This is useful for cleaning up references to the file node in the graph.
+			// if (unLinkQuery && (unLinkQuery === "true" || unLinkQuery === "1")) {
+			// 	const parentNodes = await serviceDocumentation.getFileParents(fileNode);
+			// 	const unlinkPromises = parentNodes.map(async (parentNode: SpinalNode) => serviceDocumentation.unlinkFileFromNode(parentNode, fileNode));
+			// 	await Promise.allSettled(unlinkPromises);
+			// }
 
 			const statusCode = removed ? 200 : 400;
 			const message = removed ? "File removed from context successfully" : "Failed to remove file from context";
+			if (fileNode instanceof SpinalDocument) fileNode = (await fileNode.getNode()) as SpinalNode;
 
 			return res.status(statusCode).send({ status: removed, message, data: { ...fileNode.info.get(), dynamicId: fileNode._server_id } });
 		} catch (error: any) {
