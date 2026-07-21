@@ -2,6 +2,7 @@ import type { Express } from "express";
 import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
 import { SpinalNode } from "spinal-env-viewer-graph-service";
+import { getProfileId } from "../../../utilities/requestUtilities";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 	/**
@@ -53,16 +54,17 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 	 */
 	app.post("/api/v1/documentary/move_document_in_context", async (req, res, next) => {
 		try {
+			const profileId = getProfileId(req);
 			let { sourceId, targetId, contextId, documentId } = req.body;
 			if (!sourceId) return res.status(400).send({ message: "sourceId is required" });
 			if (!targetId) return res.status(400).send({ message: "targetId is required" });
 			if (!contextId) return res.status(400).send({ message: "contextId is required" });
 			if (!documentId) return res.status(400).send({ message: "documentId is required" });
 
-			const sourceNode = await spinalAPIMiddleware.load<SpinalNode>(parseInt(sourceId, 10));
-			const targetNode = await spinalAPIMiddleware.load<SpinalNode>(parseInt(targetId, 10));
-			const contextNode = await spinalAPIMiddleware.load<SpinalNode>(parseInt(contextId, 10));
-			const documentNode = await spinalAPIMiddleware.load<SpinalNode>(parseInt(documentId, 10));
+			const sourceNode = await spinalAPIMiddleware.load<SpinalNode>(parseInt(sourceId, 10), profileId);
+			const targetNode = await spinalAPIMiddleware.load<SpinalNode>(parseInt(targetId, 10), profileId);
+			const contextNode = await spinalAPIMiddleware.load<SpinalNode>(parseInt(contextId, 10), profileId);
+			const documentNode = await spinalAPIMiddleware.load<SpinalNode>(parseInt(documentId, 10), profileId);
 
 			if (!sourceNode) return res.status(400).send({ message: "sourceId not found" });
 			if (!targetNode) return res.status(400).send({ message: "targetId not found" });

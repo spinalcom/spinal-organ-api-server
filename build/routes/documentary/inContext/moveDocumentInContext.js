@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -51,6 +52,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      */
     app.post("/api/v1/documentary/move_document_in_context", async (req, res, next) => {
         try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
             let { sourceId, targetId, contextId, documentId } = req.body;
             if (!sourceId)
                 return res.status(400).send({ message: "sourceId is required" });
@@ -60,10 +62,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(400).send({ message: "contextId is required" });
             if (!documentId)
                 return res.status(400).send({ message: "documentId is required" });
-            const sourceNode = await spinalAPIMiddleware.load(parseInt(sourceId, 10));
-            const targetNode = await spinalAPIMiddleware.load(parseInt(targetId, 10));
-            const contextNode = await spinalAPIMiddleware.load(parseInt(contextId, 10));
-            const documentNode = await spinalAPIMiddleware.load(parseInt(documentId, 10));
+            const sourceNode = await spinalAPIMiddleware.load(parseInt(sourceId, 10), profileId);
+            const targetNode = await spinalAPIMiddleware.load(parseInt(targetId, 10), profileId);
+            const contextNode = await spinalAPIMiddleware.load(parseInt(contextId, 10), profileId);
+            const documentNode = await spinalAPIMiddleware.load(parseInt(documentId, 10), profileId);
             if (!sourceNode)
                 return res.status(400).send({ message: "sourceId not found" });
             if (!targetNode)

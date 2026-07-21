@@ -2,6 +2,7 @@ import type { Express } from "express";
 import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { SpinalNode } from "spinal-env-viewer-graph-service";
 import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
+import { getProfileId } from "../../../utilities/requestUtilities";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 	/**
@@ -47,16 +48,17 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 	 */
 	app.delete("/api/v1/documentary/file/remove_from_context/:contextId/:documentId", async (req, res, next) => {
 		try {
+			const profileId = getProfileId(req);
 			const contextId = parseInt(req.params.contextId, 10);
 			if (isNaN(contextId)) return res.status(400).send({ message: "contextId must be a number" });
 
 			const documentId = parseInt(req.params.documentId, 10);
 			if (isNaN(documentId)) return res.status(400).send({ message: "documentId must be a number" });
 
-			const contextNode = await spinalAPIMiddleware.load<SpinalNode>(contextId);
+			const contextNode = await spinalAPIMiddleware.load<SpinalNode>(contextId, profileId);
 			if (!contextNode) return res.status(400).send({ message: "contextId not found" });
 
-			const fileNode = await spinalAPIMiddleware.load<SpinalNode>(documentId);
+			const fileNode = await spinalAPIMiddleware.load<SpinalNode>(documentId, profileId);
 			if (!fileNode) return res.status(400).send({ message: "documentId not found" });
 
 			// remove the file from the context
