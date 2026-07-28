@@ -49,6 +49,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                       type: array
      *                       items:
      *                         type: object
+     *                     EXCEL:
+     *                       type: array
+     *                       items:
+     *                         type: object
      *                     OTHER:
      *                       type: array
      *                       items:
@@ -84,6 +88,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 ...spinal_model_analysis_1.TIMESERIES_ALGORITHMS,
                 ...spinal_model_analysis_1.HTTP_ALGORITHMS,
                 ...spinal_model_analysis_1.TICKET_ALGORITHMS,
+                ...spinal_model_analysis_1.EXCEL_ALGORITHMS,
             ];
             const categorizedNames = new Set(categorized.map(a => a.name));
             const other = spinal_model_analysis_1.ALGORITHM_DEFINITIONS.filter(a => !categorizedNames.has(a.name));
@@ -101,6 +106,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 TIMESERIES: spinal_model_analysis_1.TIMESERIES_ALGORITHMS.map(serialize),
                 HTTP: spinal_model_analysis_1.HTTP_ALGORITHMS.map(serialize),
                 TICKET: spinal_model_analysis_1.TICKET_ALGORITHMS.map(serialize),
+                EXCEL: spinal_model_analysis_1.EXCEL_ALGORITHMS.map(serialize),
                 OTHER: other.map(serialize),
             };
             const count = Object.values(data).reduce((acc, arr) => acc + arr.length, 0);

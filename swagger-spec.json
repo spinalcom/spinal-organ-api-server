@@ -18629,6 +18629,12 @@
                             "type": "object"
                           }
                         },
+                        "EXCEL": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
                         "OTHER": {
                           "type": "array",
                           "items": {

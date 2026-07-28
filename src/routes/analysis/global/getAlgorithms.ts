@@ -16,6 +16,7 @@ import {
   TIMESERIES_ALGORITHMS,
   HTTP_ALGORITHMS,
   TICKET_ALGORITHMS,
+  EXCEL_ALGORITHMS,
   AlgorithmDefinition,
   localizeAlgorithm,
   VERSION,
@@ -69,6 +70,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *                       type: array
    *                       items:
    *                         type: object
+   *                     EXCEL:
+   *                       type: array
+   *                       items:
+   *                         type: object
    *                     OTHER:
    *                       type: array
    *                       items:
@@ -107,6 +112,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         ...TIMESERIES_ALGORITHMS,
         ...HTTP_ALGORITHMS,
         ...TICKET_ALGORITHMS,
+        ...EXCEL_ALGORITHMS,
       ];
       const categorizedNames = new Set(categorized.map(a => a.name));
       const other = ALGORITHM_DEFINITIONS.filter(a => !categorizedNames.has(a.name));
@@ -125,6 +131,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         TIMESERIES: TIMESERIES_ALGORITHMS.map(serialize),
         HTTP: HTTP_ALGORITHMS.map(serialize),
         TICKET: TICKET_ALGORITHMS.map(serialize),
+        EXCEL: EXCEL_ALGORITHMS.map(serialize),
         OTHER: other.map(serialize),
       };
 
