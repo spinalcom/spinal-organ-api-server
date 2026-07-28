@@ -402,5 +402,9 @@ module.exports = [
   "../src/routes/documentary/inContext/removeFileFromContext.ts",
   "../src/routes/documentary/inContext/uploadFileInContext.ts",
   "../src/routes/documentary/utils/index.ts",
-  "../src/routes/documentary/file/getFileData.ts"
+  "../src/routes/documentary/file/getFileData.ts",
+  "../src/routes/documentary/file/getFileParents.ts",
+  "../src/routes/documentary/file/removeFileVersionByName.ts",
+  "../src/routes/documentary/inContext/getPathsInTree.ts",
+  "../src/routes/documentary/inContext/linkFileToNodeInContext.ts"
 ]

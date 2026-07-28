@@ -407,10 +407,12 @@ function routes(logger, app, spinalAPIMiddleware) {
     require("./documentary/inContext/createContext")(logger, app, spinalAPIMiddleware);
     require("./documentary/inContext/createDirectoryInContext")(logger, app, spinalAPIMiddleware);
     require("./documentary/inContext/getFilesInTree")(logger, app, spinalAPIMiddleware);
+    require("./documentary/inContext/getPathsInTree")(logger, app, spinalAPIMiddleware);
+    require("./documentary/inContext/linkFileToNodeInContext")(logger, app, spinalAPIMiddleware);
     require("./documentary/inContext/moveDocumentInContext")(logger, app, spinalAPIMiddleware);
     require("./documentary/inContext/removeFileFromContext")(logger, app, spinalAPIMiddleware);
     require("./documentary/inContext/uploadFileInContext")(logger, app, spinalAPIMiddleware);
-    require("./documentary/inContext/linkFileToNodeInContext")(logger, app, spinalAPIMiddleware);
+    require("./documentary/file/downgradeFileVersion")(logger, app, spinalAPIMiddleware);
     // documentary routes files
     require("./documentary/file/getFileData")(logger, app, spinalAPIMiddleware);
     require("./documentary/file/getFileVersionByName")(logger, app, spinalAPIMiddleware);
