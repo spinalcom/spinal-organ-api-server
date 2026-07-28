@@ -406,5 +406,7 @@ module.exports = [
   "../src/routes/documentary/file/getFileParents.ts",
   "../src/routes/documentary/file/removeFileVersionByName.ts",
   "../src/routes/documentary/inContext/getPathsInTree.ts",
-  "../src/routes/documentary/inContext/linkFileToNodeInContext.ts"
+  "../src/routes/documentary/inContext/linkFileToNodeInContext.ts",
+  "../src/routes/analysis/global/getAnalyticOptions.ts",
+  "../src/routes/documentary/file/downgradeFileVersion.ts"
 ]

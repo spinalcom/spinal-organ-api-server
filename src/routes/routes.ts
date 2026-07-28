@@ -388,6 +388,7 @@ function routes(logger: any, app: express.Application, spinalAPIMiddleware: ISpi
 	require("./analysis/global/getInputTypes")(logger, app, spinalAPIMiddleware);
 	require("./analysis/global/getTriggerTypes")(logger, app, spinalAPIMiddleware);
 	require("./analysis/global/getAlgorithms")(logger, app, spinalAPIMiddleware);
+	require("./analysis/global/getAnalyticOptions")(logger, app, spinalAPIMiddleware);
 	require("./analysis/contexts/createContext")(logger, app, spinalAPIMiddleware);
 
 	require("./analysis/contexts/getContexts")(logger, app, spinalAPIMiddleware);
@@ -403,6 +404,8 @@ function routes(logger: any, app: express.Application, spinalAPIMiddleware: ISpi
 	require("./analysis/analytics/getAnalytic")(logger, app, spinalAPIMiddleware);
 	require("./analysis/analytics/executeAnalytic")(logger, app, spinalAPIMiddleware);
 	require("./analysis/analytics/deleteAnalytic")(logger, app, spinalAPIMiddleware);
+	require("./analysis/analytics/modifyAnalytic")(logger, app, spinalAPIMiddleware);
+	require("./analysis/analytics/patchAnalytic")(logger, app, spinalAPIMiddleware);
 	// command
 	require("./command/roomListCommandEnable")(logger, app, spinalAPIMiddleware);
 	require("./command/roomCommandLight")(logger, app, spinalAPIMiddleware);

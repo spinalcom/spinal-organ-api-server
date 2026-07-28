@@ -1,5 +1,11 @@
 # CHANGELOG
 
+# 07-07-2027 -> v1.1.17
+
+# 06-07-2026 -> v1.1.16
+- Most analysis routes are done
+- Added inventory in preload_config
+
 # 10-06-2026 -> v1.1.15
 - Building inventory goes through gorup context instead of spatial context
 

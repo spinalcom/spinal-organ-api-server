@@ -12,8 +12,12 @@ import {
   BOOLEAN_ALGORITHMS,
   CONVERSION_ALGORITHMS,
   OBJECT_ALGORITHMS,
+  STRING_ALGORITHMS,
   TIMESERIES_ALGORITHMS,
+  HTTP_ALGORITHMS,
+  TICKET_ALGORITHMS,
   AlgorithmDefinition,
+  localizeAlgorithm,
   VERSION,
 } from "spinal-model-analysis";
 
@@ -26,10 +30,18 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns analysis algorithms grouped by category. Each algorithm contains its name, description, inputs (each input slot has a name, accepted types, description, required flag and optional variadic flag), output type, and parameters. The `run` function is not serialized.
+   *     description: Returns analysis algorithms grouped by category. Each algorithm contains its stable name, a display label, description, cross-cutting search tags, inputs (each input slot has a name, accepted types, description, required flag and optional variadic flag), output type, and parameters. The `run` function is not serialized. Pass ?locale=fr to get French label/description/input/parameter text (each field falls back to English when untranslated).
    *     summary: Gets analysis algorithms grouped by category
    *     tags:
    *       - Analysis
+   *     parameters:
+   *       - in: query
+   *         name: locale
+   *         required: false
+   *         schema:
+   *           type: string
+   *           enum: [en, fr]
+   *         description: Language for label/description text (default en). Untranslated fields fall back to English.
    *     responses:
    *       200:
    *         description: Success
@@ -76,13 +88,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
     try {
       const profileId = getProfileId(req);
 
-      const serialize = (a: AlgorithmDefinition) => ({
-        name: a.name,
-        description: a.description,
-        inputs: a.inputs,
-        outputType: a.outputType,
-        parameters: a.parameters,
-      });
+      // Optional ?locale=fr — localizeAlgorithm merges the locale bundle over the
+      // English metadata (per-field fallback) and carries the algorithm's tags.
+      const locale = typeof req.query.locale === 'string' ? req.query.locale : undefined;
+      const serialize = (a: AlgorithmDefinition) => localizeAlgorithm(a, locale);
 
       const categorized: AlgorithmDefinition[] = [
         ...NUMBER_ALGORITHMS,
@@ -94,7 +103,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         ...BOOLEAN_ALGORITHMS,
         ...CONVERSION_ALGORITHMS,
         ...OBJECT_ALGORITHMS,
+        ...STRING_ALGORITHMS,
         ...TIMESERIES_ALGORITHMS,
+        ...HTTP_ALGORITHMS,
+        ...TICKET_ALGORITHMS,
       ];
       const categorizedNames = new Set(categorized.map(a => a.name));
       const other = ALGORITHM_DEFINITIONS.filter(a => !categorizedNames.has(a.name));
@@ -109,7 +121,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         BOOLEAN: BOOLEAN_ALGORITHMS.map(serialize),
         CONVERSION: CONVERSION_ALGORITHMS.map(serialize),
         OBJECT: OBJECT_ALGORITHMS.map(serialize),
+        STRING: STRING_ALGORITHMS.map(serialize),
         TIMESERIES: TIMESERIES_ALGORITHMS.map(serialize),
+        HTTP: HTTP_ALGORITHMS.map(serialize),
+        TICKET: TICKET_ALGORITHMS.map(serialize),
         OTHER: other.map(serialize),
       };
 

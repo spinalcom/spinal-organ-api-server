@@ -16,10 +16,30 @@ function serializeNode(node) {
     };
 }
 function serializeValue(value) {
+    if (value === null || value === undefined)
+        return value;
     if (value instanceof spinal_model_graph_1.SpinalNode)
         return serializeNode(value);
     if (isSpinalNodeArray(value))
         return value.map(serializeNode);
+    if (Array.isArray(value))
+        return value.map(serializeValue);
+    // spinal-core Model (Val / Str / Bool / SpinalBmsEndpoint / ...): registers can hold a
+    // bindable model (e.g. ENDPOINT_NODE_CURRENT_VALUE_MODEL). Never emit the raw model — its
+    // _parents form a cycle that breaks JSON.stringify. Expose its primitive value if it has
+    // one, otherwise a safe descriptor of the model type.
+    if (typeof value === 'object' && typeof value.get === 'function') {
+        try {
+            const got = value.get();
+            const t = typeof got;
+            if (got === null || t === 'string' || t === 'number' || t === 'boolean')
+                return got;
+        }
+        catch {
+            /* fall through to the descriptor */
+        }
+        return { _model: value.constructor?.name ?? 'Model' };
+    }
     return value;
 }
 function serializeRecord(record) {

@@ -23,7 +23,6 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const corseChildrenAndParentNode_1 = require("../../utilities/corseChildrenAndParentNode");
 const spinal_model_graph_1 = require("spinal-model-graph");
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
@@ -67,17 +66,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 relation instanceof spinal_model_graph_1.SpinalRelationPtrLst ||
                 relation instanceof spinal_model_graph_1.SpinalRelationRef) {
                 parent = await relation.getParent();
-                const children_node = (0, corseChildrenAndParentNode_1.childrensNode)(parent);
-                const parent_node = await (0, corseChildrenAndParentNode_1.parentsNode)(parent);
+                //const children_node = childrensNode(parent);
+                //const parent_node = await parentsNode(parent);
                 const info = {
                     dynamicId: parent._server_id,
                     staticId: parent.getId().get(),
                     name: parent.getName().get(),
                     type: parent.getType().get(),
-                    children_relation_list: children_node,
-                    parent_relation_list: parent_node,
+                    //parent_relation_list: parent_node,
                 };
-                res.json(info);
+                return res.json(info);
+            }
+            else {
+                return res.status(400).send('The given id is not an expected relation instance');
             }
         }
         catch (error) {
@@ -85,7 +86,6 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(error.code).send(error.message);
             res.status(500).send(error.message);
         }
-        res.status(400).send('ko');
     });
 };
 //# sourceMappingURL=relationParentNode.js.map

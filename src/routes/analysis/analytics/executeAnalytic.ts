@@ -19,8 +19,26 @@ function serializeNode(node: SpinalNode<any>) {
 }
 
 function serializeValue(value: unknown): unknown {
+  if (value === null || value === undefined) return value;
   if (value instanceof SpinalNode) return serializeNode(value);
   if (isSpinalNodeArray(value)) return value.map(serializeNode);
+  if (Array.isArray(value)) return value.map(serializeValue);
+
+  // spinal-core Model (Val / Str / Bool / SpinalBmsEndpoint / ...): registers can hold a
+  // bindable model (e.g. ENDPOINT_NODE_CURRENT_VALUE_MODEL). Never emit the raw model — its
+  // _parents form a cycle that breaks JSON.stringify. Expose its primitive value if it has
+  // one, otherwise a safe descriptor of the model type.
+  if (typeof value === 'object' && typeof (value as any).get === 'function') {
+    try {
+      const got = (value as any).get();
+      const t = typeof got;
+      if (got === null || t === 'string' || t === 'number' || t === 'boolean') return got;
+    } catch {
+      /* fall through to the descriptor */
+    }
+    return { _model: (value as any).constructor?.name ?? 'Model' };
+  }
+
   return value;
 }
 

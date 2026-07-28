@@ -89,24 +89,26 @@ module.exports = function (
       ) {
         nodes = await relation.getChildren();
         for (let index = 0; index < nodes.length; index++) {
-          const children_node = childrensNode(nodes[index]);
-          const parent_node = await parentsNode(nodes[index]);
-          const info: Node = {
+          // const children_node = childrensNode(nodes[index]);
+          // const parent_node = await parentsNode(nodes[index]);
+          const info = {
             dynamicId: nodes[index]._server_id!,
             staticId: nodes[index].getId().get(),
             name: nodes[index].getName().get(),
             type: nodes[index].getType().get(),
-            children_relation_list: children_node,
-            parent_relation_list: parent_node,
+            // children_relation_list: children_node,
+            // parent_relation_list: parent_node,
           };
           node_list.push(info);
         }
+        return res.json(node_list);
+      } else {
+        return res.status(400).send('The given id is not an expected relation instance');
       }
     } catch (error: any) {
       if (error.code && error.message)
         return res.status(error.code).send(error.message);
       res.status(500).send(error.message);
     }
-    res.json(node_list);
   });
 };
