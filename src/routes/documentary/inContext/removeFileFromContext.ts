@@ -61,9 +61,17 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			let fileNode = await spinalAPIMiddleware.load<SpinalNode>(documentId, profileId);
 			if (!fileNode) return res.status(400).send({ message: "documentId not found" });
 
+			const unlinkParams = req.query.unlink || req.body.unlink;
+			const removeChildrenParams = req.query.remove_children || req.body.remove_children;
+
 			// remove the file from the context
-			const unLinkQuery = req.query.unlink === "true" || req.query.unlink === "1";
-			const removed = await serviceDocumentation.removeFileFromContext(fileNode, contextNode, unLinkQuery);
+			const unLinkQuery = unlinkParams === "true" || unlinkParams === "1";
+			const removeChildrenQuery = removeChildrenParams === "true" || removeChildrenParams === "1";
+
+			const removed = await serviceDocumentation.removeFileFromContext(fileNode, contextNode, {
+				unlinkRefs: unLinkQuery,
+				removeChildren: removeChildrenQuery,
+			});
 
 			// // If the unlink query parameter is set to true or 1, get the parent nodes of the file node
 			// // and unlink the file node from its parents. This is useful for cleaning up references to the file node in the graph.
