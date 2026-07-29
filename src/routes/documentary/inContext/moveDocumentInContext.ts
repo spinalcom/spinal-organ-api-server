@@ -71,8 +71,21 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			if (!contextNode) return res.status(400).send({ message: "contextId not found" });
 			if (!documentNode) return res.status(400).send({ message: "documentId not found" });
 
-			await serviceDocumentation.moveDocumentInContext(documentNode, sourceNode, targetNode, contextNode);
-			return res.status(200).send({ status: true, message: "Document moved successfully", data: { ...documentNode.info.get(), dynamicId: documentNode._server_id } });
+			return serviceDocumentation
+				.moveDocumentInContext(documentNode, sourceNode, targetNode, contextNode)
+				.then((moved) => {
+					const statusCode = moved ? 200 : 400;
+					const response: any = { status: moved, message: moved ? "Document moved successfully" : "Failed to move document" };
+
+					if (moved) {
+						const documentInfo = documentNode.info.get();
+						response.data = { ...documentInfo, dynamicId: documentNode._server_id };
+					}
+					return res.status(statusCode).send(response);
+				})
+				.catch((error) => {
+					return res.status(400).send({ message: error.message || "Failed to move document please check the provided IDs" });
+				});
 		} catch (error: any) {
 			if (error.code) return res.status(error.code).send({ message: error.message });
 			return res.status(500).send({ message: error.message });

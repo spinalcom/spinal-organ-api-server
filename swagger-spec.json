@@ -22508,7 +22508,16 @@
             "in": "query",
             "name": "unlink",
             "required": false,
-            "description": "If set to true or 1, the file node will be unlinked from its parent nodes after being removed from the context.",
+            "description": "If set to true or 1, unlink all references to the file after removing it from the context.",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "remove_children",
+            "required": false,
+            "description": "If set to true or 1, remove the file children while removing it from the context.",
             "schema": {
               "type": "boolean"
             }
@@ -22516,10 +22525,10 @@
         ],
         "responses": {
           "200": {
-            "description": "File removed successfully."
+            "description": "File removed from context successfully."
           },
           "400": {
-            "description": "Invalid file id or operation failed."
+            "description": "Invalid context/document id, context/document not found, or operation failed."
           },
           "500": {
             "description": "Internal server error."
