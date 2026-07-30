@@ -76,11 +76,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(400).send({ message: "documentId not found" });
             return spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation
                 .moveDocumentInContext(documentNode, sourceNode, targetNode, contextNode)
-                .then((moved) => {
+                .then(async (moved) => {
                 const statusCode = moved ? 200 : 400;
                 const response = { status: moved, message: moved ? "Document moved successfully" : "Failed to move document" };
                 if (moved) {
-                    const documentInfo = documentNode.info.get();
+                    const node = documentNode instanceof spinal_env_viewer_plugin_documentation_service_1.SpinalDocument ? await documentNode.getNode() : documentNode;
+                    const documentInfo = node?.info.get() || {};
                     response.data = { ...documentInfo, dynamicId: documentNode._server_id };
                 }
                 return res.status(statusCode).send(response);

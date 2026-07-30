@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import type { ISpinalAPIMiddleware } from "../../../interfaces";
-import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
+import { serviceDocumentation, SpinalDocument } from "spinal-env-viewer-plugin-documentation-service";
 import { SpinalNode } from "spinal-env-viewer-graph-service";
 import { getProfileId } from "../../../utilities/requestUtilities";
 
@@ -73,12 +73,13 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 
 			return serviceDocumentation
 				.moveDocumentInContext(documentNode, sourceNode, targetNode, contextNode)
-				.then((moved) => {
+				.then(async (moved) => {
 					const statusCode = moved ? 200 : 400;
 					const response: any = { status: moved, message: moved ? "Document moved successfully" : "Failed to move document" };
 
 					if (moved) {
-						const documentInfo = documentNode.info.get();
+						const node = documentNode instanceof SpinalDocument ? await documentNode.getNode() : documentNode;
+						const documentInfo = node?.info.get() || {};
 						response.data = { ...documentInfo, dynamicId: documentNode._server_id };
 					}
 					return res.status(statusCode).send(response);
