@@ -408,5 +408,6 @@ module.exports = [
   "../src/routes/documentary/inContext/getPathsInTree.ts",
   "../src/routes/documentary/inContext/linkFileToNodeInContext.ts",
   "../src/routes/analysis/global/getAnalyticOptions.ts",
-  "../src/routes/documentary/file/downgradeFileVersion.ts"
+  "../src/routes/documentary/file/downgradeFileVersion.ts",
+  "../src/routes/analysis/organs/manageOrganAssignments.ts"
 ]
