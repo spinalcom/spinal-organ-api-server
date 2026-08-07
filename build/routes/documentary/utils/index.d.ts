@@ -1,8 +1,11 @@
 import { ISpinalAPIMiddleware } from "../../../interfaces";
-import { SpinalNode } from "spinal-env-viewer-graph-service";
+import { SpinalContext, SpinalGraph, SpinalNode } from "spinal-env-viewer-graph-service";
 import { File as SpinalFile } from "spinal-core-connectorjs_type";
 import { SpinalDocument } from "spinal-env-viewer-plugin-documentation-service";
 export declare function getHubUrl(spinalAPIMiddleware: ISpinalAPIMiddleware): string;
 export declare function waitUntilServerIdNotDefined(node: any): Promise<boolean>;
 export declare function _formatFileNode(node: SpinalNode | SpinalFile | SpinalDocument): any;
 export declare function _formatFileVersion(version: any, fileName: string): any;
+export declare function getFileAttributes(node: SpinalNode): Promise<any[]>;
+export declare function getContexts(filenode: SpinalNode, graph: SpinalGraph): Promise<SpinalContext[]>;
+export declare function getParents(node: SpinalNode, contexts: SpinalContext[]): Promise<any[]>;

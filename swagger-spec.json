@@ -23300,6 +23300,48 @@
           }
         }
       }
+    },
+    "/api/v1/documentary/file/{fileId}/details": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Get file details",
+        "description": "Returns basic details of a documentary file.",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileId",
+            "required": true,
+            "description": "Dynamic identifier of the file node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File details returned successfully."
+          },
+          "400": {
+            "description": "Invalid file id."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
     }
   }
 }
