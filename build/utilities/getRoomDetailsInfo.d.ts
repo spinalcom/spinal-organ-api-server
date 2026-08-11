@@ -2,6 +2,7 @@ import { ISpinalAPIMiddleware } from '../interfaces';
 declare function getRoomDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, dynamicId: number): Promise<{
     area: number;
     bimFileId: string;
+    externalId: any;
     _bimObjects: any[];
 }>;
 export { getRoomDetailsInfo };

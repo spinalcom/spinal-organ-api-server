@@ -55,6 +55,7 @@ async function getRoomDetailsInfo(
   return {
     area: area,
     bimFileId: bimFileId,
+    externalId: room.info.externalId?.get(),
     _bimObjects: _bimObjects,
   };
 }

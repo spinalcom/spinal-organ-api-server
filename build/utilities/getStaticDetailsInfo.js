@@ -134,6 +134,7 @@ async function getRoomStaticDetailsInfo(spinalAPIMiddleware, profileId, roomId) 
             name: room.getName().get(),
             type: room.getType().get(),
             bimFileId: room.info.bimFileId?.get(),
+            externalId: room.info.externalId?.get(),
             dbid: room.info.dbid?.get(),
             color: room.info.color?.get(),
             attributsList: CategorieAttributsList,

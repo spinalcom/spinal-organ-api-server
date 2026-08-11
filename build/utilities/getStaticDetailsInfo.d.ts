@@ -79,6 +79,7 @@ declare function getRoomStaticDetailsInfo(spinalAPIMiddleware: ISpinalAPIMiddlew
     name: string;
     type: string;
     bimFileId: any;
+    externalId: any;
     dbid: any;
     color: any;
     attributsList: IAttr[];

@@ -41,6 +41,7 @@ async function getRoomDetailsInfo(spinalAPIMiddleware, profileId, dynamicId) {
     return {
         area: area,
         bimFileId: bimFileId,
+        externalId: room.info.externalId?.get(),
         _bimObjects: _bimObjects,
     };
 }
