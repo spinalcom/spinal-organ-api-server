@@ -152,7 +152,7 @@ export function useLogger(
     morgan.token('body-req', (req) => {
       return req.method === 'POST' || req.method === 'PUT'
         ? // @ts-ignore
-          JSON.stringify(req.body, null, 2)
+        JSON.stringify(req.body, null, 2)
         : '';
     });
     app.use(
@@ -183,11 +183,15 @@ function APIServer(
   const bodyParserDefault = bodyParser.json();
   const bodyParserTicket = bodyParser.json({ limit: '500mb' });
 
+  const largeBodyRoutes = [
+    '/api/v1/node/convert_base_64',
+    '/api/v1/ticket/create_ticket',
+  ];
+
   app.use((req, res, next) => {
-    if (
-      req.originalUrl === '/api/v1/node/convert_base_64' ||
-      req.originalUrl === '/api/v1/ticket/create_ticket'
-    )
+    // originalUrl carries the query string, compare on the pathname only
+    const pathname = req.originalUrl.split('?')[0];
+    if (largeBodyRoutes.includes(pathname))
       return bodyParserTicket(req, res, next);
     return bodyParserDefault(req, res, next);
   });
@@ -196,8 +200,12 @@ function APIServer(
       return res
         .status(400)
         .send('Invalid JSON in request body : ' + error.message);
+    } else if (error?.type === 'entity.too.large') {
+      return res
+        .status(413)
+        .send('Request body too large : ' + error.message);
     } else {
-      next();
+      next(error);
     }
   });
 

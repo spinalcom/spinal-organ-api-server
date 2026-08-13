@@ -1,6 +1,7 @@
 # CHANGELOG
 
-# 07-07-2027 -> v1.1.17
+# 13-08-2026 -> v1.1.19
+- Fixed json parsing on create_ticket route that allowed parsing of bigger requests
 
 # 06-07-2026 -> v1.1.16
 - Most analysis routes are done
