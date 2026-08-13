@@ -154,9 +154,14 @@ function APIServer(logger, spinalAPIMiddleware) {
     app.use(body_parser_1.default.urlencoded({ extended: true }));
     const bodyParserDefault = body_parser_1.default.json();
     const bodyParserTicket = body_parser_1.default.json({ limit: '500mb' });
+    const largeBodyRoutes = [
+        '/api/v1/node/convert_base_64',
+        '/api/v1/ticket/create_ticket',
+    ];
     app.use((req, res, next) => {
-        if (req.originalUrl === '/api/v1/node/convert_base_64' ||
-            req.originalUrl === '/api/v1/ticket/create_ticket')
+        // originalUrl carries the query string, compare on the pathname only
+        const pathname = req.originalUrl.split('?')[0];
+        if (largeBodyRoutes.includes(pathname))
             return bodyParserTicket(req, res, next);
         return bodyParserDefault(req, res, next);
     });
@@ -166,8 +171,13 @@ function APIServer(logger, spinalAPIMiddleware) {
                 .status(400)
                 .send('Invalid JSON in request body : ' + error.message);
         }
+        else if (error?.type === 'entity.too.large') {
+            return res
+                .status(413)
+                .send('Request body too large : ' + error.message);
+        }
         else {
-            next();
+            next(error);
         }
     });
     // app.use(logRequestStart);
