@@ -402,6 +402,9 @@ module.exports = function (
       //@ts-ignore
       FileSystem._send_data_to_hub_func();
 
+
+      const creationDate = Date.now();
+
       await awaitSync(ticketNode);
       const info: Record<string, string | number> = {
         dynamicId: ticketNode._server_id!,
@@ -412,6 +415,7 @@ module.exports = function (
         description: ticketInfo.description,
         priority: ticketInfo.priority,
         declarer_id: ticketInfo.declarer_id,
+        creationDate,
       };
 
       const images = Array.isArray(req.body.images) ? req.body.images : [];
