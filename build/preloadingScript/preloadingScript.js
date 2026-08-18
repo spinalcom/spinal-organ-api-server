@@ -31,6 +31,7 @@ const getTicketListInfo_1 = require("../utilities/getTicketListInfo");
 const getNodeInfo_1 = require("../utilities/getNodeInfo");
 const getTicketDetails_1 = require("../utilities/workflow/getTicketDetails");
 const getInventory_1 = require("../utilities/getInventory");
+const getTimeSeriesData_1 = require("../utilities/getTimeSeriesData");
 const BUILDING_TYPE = 'geographicBuilding';
 const FLOOR_TYPE = 'geographicFloor';
 const ROOM_TYPE = 'geographicRoom';
@@ -109,9 +110,42 @@ async function preloadingScript(spinalAPIMiddleware, profileId, scriptOptions) {
             });
         }
     }
+    if (Array.isArray(scriptOptions.timeSeries) &&
+        scriptOptions.timeSeries.length > 0) {
+        console.log('START PRELOAD TIME SERIES');
+        for (let i = 0; i < scriptOptions.timeSeries.length; i += 1) {
+            statusMsg = `timeSeries : processing entry ${i + 1} of ${scriptOptions.timeSeries.length}.`;
+            await processTimeSeries(spinalAPIMiddleware, profileId, scriptOptions.timeSeries[i], (msg) => {
+                statusMsg = msg;
+            });
+        }
+    }
     const endingTime = Date.now();
     clearInterval(intervalId);
     console.log(`--- Preloading Script ended at : ${new Date(endingTime).toLocaleString()} , total time ${endingTime - startingTime} ms ---`);
+}
+async function processTimeSeries(spinalAPIMiddleware, profileId, entry, setStatus) {
+    if (!entry || !Array.isArray(entry.ids) || entry.ids.length === 0)
+        return;
+    if (!(entry.timeWindow > 0)) {
+        console.warn(`[warn] timeSeries : invalid timeWindow (%s), it must be a positive number of milliseconds`, entry.timeWindow);
+        return;
+    }
+    const end = Date.now();
+    const start = end - entry.timeWindow;
+    const timeSeriesIntervalDate = { start, end };
+    // Time series are heavy to load
+    const timeSeriesChunkSize = 20;
+    for (let i = 0; i < entry.ids.length; i += timeSeriesChunkSize) {
+        const chunk = entry.ids.slice(i, i + timeSeriesChunkSize);
+        setStatus(`timeSeries : ${new Date(start).toLocaleString()} -> ${new Date(end).toLocaleString()}, processing chunk starting at index ${i} to ${i + timeSeriesChunkSize - 1} of ${entry.ids.length}.`);
+        const results = await Promise.allSettled(chunk.map((dynamicId) => (0, getTimeSeriesData_1.getTimeSeriesData)(spinalAPIMiddleware, profileId, dynamicId, timeSeriesIntervalDate)));
+        results.forEach((result, index) => {
+            if (result.status === 'rejected') {
+                console.warn(`[warn] timeSeries : failed for endpoint server_id %d : %s`, chunk[index], result.reason?.message ?? result.reason);
+            }
+        });
+    }
 }
 async function processInventory(spinalAPIMiddleware, profileId, entry, setStatus) {
     if (!entry || !Array.isArray(entry.ids) || entry.ids.length === 0)

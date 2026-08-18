@@ -35,6 +35,7 @@ import { getTicketListInfo } from '../utilities/getTicketListInfo';
 import { getNodeInfo } from '../utilities/getNodeInfo';
 import { getTicketDetails } from '../utilities/workflow/getTicketDetails';
 import { getFloorInventory } from '../utilities/getInventory';
+import { getTimeSeriesData } from '../utilities/getTimeSeriesData';
 
 /**
  * A floor inventory to preload : the inventory is run on every floor id, then,
@@ -62,6 +63,21 @@ export interface IInventoryPreload {
   staticDetails: boolean;
 }
 
+/**
+ * A time series window to preload : mirrors GET /api/v1/endpoint/{id}/timeSeries/read/{begin}/{end}
+ * on every endpoint id, over the [now - timeWindow, now] range. The read data
+ * itself is discarded (only the loading matters).
+ *
+ * @export
+ * @interface ITimeSeriesPreload
+ */
+export interface ITimeSeriesPreload {
+  /** Endpoint dynamic ids (server_id) to read the time series of */
+  ids: number[];
+  /** Window size in milliseconds, ending at the time the preload runs */
+  timeWindow: number;
+}
+
 export interface IPreloadingScript {
 
   /**
@@ -84,6 +100,11 @@ export interface IPreloadingScript {
    * @memberof IPreloadingScript
    */
   inventories: IInventoryPreload[];
+  /**
+   * @type {ITimeSeriesPreload[]} array of endpoint time series ranges to preload
+   * @memberof IPreloadingScript
+   */
+  timeSeries: ITimeSeriesPreload[];
 }
 
 const BUILDING_TYPE = 'geographicBuilding';
@@ -207,6 +228,24 @@ export async function preloadingScript(
       );
     }
   }
+  if (
+    Array.isArray(scriptOptions.timeSeries) &&
+    scriptOptions.timeSeries.length > 0
+  ) {
+    console.log('START PRELOAD TIME SERIES');
+    for (let i = 0; i < scriptOptions.timeSeries.length; i += 1) {
+      statusMsg = `timeSeries : processing entry ${i + 1} of ${scriptOptions.timeSeries.length}.`;
+      await processTimeSeries(
+        spinalAPIMiddleware,
+        profileId,
+        scriptOptions.timeSeries[i],
+        (msg: string) => {
+          statusMsg = msg;
+        }
+      );
+    }
+  }
+
   const endingTime = Date.now();
   clearInterval(intervalId);
   console.log(
@@ -215,6 +254,54 @@ export async function preloadingScript(
     ).toLocaleString()} , total time ${endingTime - startingTime} ms ---`
   );
 }
+async function processTimeSeries(
+  spinalAPIMiddleware: ISpinalAPIMiddleware,
+  profileId: string,
+  entry: ITimeSeriesPreload,
+  setStatus: (msg: string) => void
+): Promise<void> {
+  if (!entry || !Array.isArray(entry.ids) || entry.ids.length === 0) return;
+
+  if (!(entry.timeWindow > 0)) {
+    console.warn(
+      `[warn] timeSeries : invalid timeWindow (%s), it must be a positive number of milliseconds`,
+      entry.timeWindow
+    );
+    return;
+  }
+  const end = Date.now();
+  const start = end - entry.timeWindow;
+  const timeSeriesIntervalDate = { start, end };
+
+  // Time series are heavy to load
+  const timeSeriesChunkSize = 20;
+  for (let i = 0; i < entry.ids.length; i += timeSeriesChunkSize) {
+    const chunk = entry.ids.slice(i, i + timeSeriesChunkSize);
+    setStatus(
+      `timeSeries : ${new Date(start).toLocaleString()} -> ${new Date(end).toLocaleString()}, processing chunk starting at index ${i} to ${i + timeSeriesChunkSize - 1} of ${entry.ids.length}.`
+    );
+    const results = await Promise.allSettled(
+      chunk.map((dynamicId) =>
+        getTimeSeriesData(
+          spinalAPIMiddleware,
+          profileId,
+          dynamicId,
+          timeSeriesIntervalDate
+        )
+      )
+    );
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.warn(
+          `[warn] timeSeries : failed for endpoint server_id %d : %s`,
+          chunk[index],
+          result.reason?.message ?? result.reason
+        );
+      }
+    });
+  }
+}
+
 async function processInventory(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string,

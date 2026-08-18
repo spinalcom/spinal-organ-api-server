@@ -24,6 +24,20 @@ export interface IInventoryPreload {
     /** When true, preload static details + ticket lists of every item found */
     staticDetails: boolean;
 }
+/**
+ * A time series window to preload : mirrors GET /api/v1/endpoint/{id}/timeSeries/read/{begin}/{end}
+ * on every endpoint id, over the [now - timeWindow, now] range. The read data
+ * itself is discarded (only the loading matters).
+ *
+ * @export
+ * @interface ITimeSeriesPreload
+ */
+export interface ITimeSeriesPreload {
+    /** Endpoint dynamic ids (server_id) to read the time series of */
+    ids: number[];
+    /** Window size in milliseconds, ending at the time the preload runs */
+    timeWindow: number;
+}
 export interface IPreloadingScript {
     /**
      * @type {number[]} array of server_id to preload the viewInfo of
@@ -45,5 +59,10 @@ export interface IPreloadingScript {
      * @memberof IPreloadingScript
      */
     inventories: IInventoryPreload[];
+    /**
+     * @type {ITimeSeriesPreload[]} array of endpoint time series ranges to preload
+     * @memberof IPreloadingScript
+     */
+    timeSeries: ITimeSeriesPreload[];
 }
 export declare function preloadingScript(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, scriptOptions: IPreloadingScript): Promise<void>;

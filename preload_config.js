@@ -46,4 +46,14 @@ module.exports = {
     //   staticDetails: false // preload static details of the resulting items
     // }
   ],
+  // array of endpoint time series to preload. Each entry reads the time series
+  // (like GET /api/v1/endpoint/{id}/timeSeries/read/{begin}/{end}) of every
+  // endpoint id over the window [now - timeWindow, now], now being the moment
+  // the preload runs. The data itself is discarded, only the loading matters.
+  timeSeries: [
+    // {
+    //   ids: [],                             // Endpoint dynamic ids (server_id)
+    //   timeWindow: 1000 * 60 * 60 * 24 * 365 // Window size in ms (here : last year)
+    // }
+  ],
 };
