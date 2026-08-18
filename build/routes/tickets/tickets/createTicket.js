@@ -298,6 +298,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             spinal_core_connectorjs_type_1.FileSystem._objects_to_send.set(ticketNode.model_id, ticketNode);
             //@ts-ignore
             spinal_core_connectorjs_type_1.FileSystem._send_data_to_hub_func();
+            const creationDate = Date.now();
             await (0, awaitSync_1.awaitSync)(ticketNode);
             const info = {
                 dynamicId: ticketNode._server_id,
@@ -308,6 +309,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 description: ticketInfo.description,
                 priority: ticketInfo.priority,
                 declarer_id: ticketInfo.declarer_id,
+                creationDate,
             };
             const images = Array.isArray(req.body.images) ? req.body.images : [];
             const additionalAttributes = req.body.additionalAttributes || null;
