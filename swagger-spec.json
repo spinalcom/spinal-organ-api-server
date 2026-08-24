@@ -22934,8 +22934,8 @@
             ]
           }
         ],
-        "description": "Returns the analytic-level option metadata used to build the analysis form: the available work-node concurrency modes (with their configurable fields and which is the default) and the available lifecycle statuses (with which is the default). Lets clients render concurrency/status selectors generically, the same way triggerTypes drives the trigger form. Single source of truth for the selectable values of `concurrency` and `status` in IAnalysisConfigJSON.\n",
-        "summary": "Gets the selectable concurrency modes and lifecycle statuses for an analytic",
+        "description": "Returns the analytic-level option metadata used to build the analysis form: the available work-node concurrency modes (with their configurable fields and which is the default), the available lifecycle statuses (with which is the default), and the available error policies (with which is the default). Lets clients render concurrency/status/errorPolicy selectors generically, the same way triggerTypes drives the trigger form. Single source of truth for the selectable values of `concurrency`, `status` and `errorPolicy` in IAnalysisConfigJSON.\n",
+        "summary": "Gets the selectable concurrency modes, lifecycle statuses and error policies for an analytic",
         "tags": [
           "Analysis"
         ],
@@ -23011,6 +23011,28 @@
                                 "enum": [
                                   "Active",
                                   "Inactive"
+                                ]
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "default": {
+                                "type": "boolean",
+                                "description": "Whether this is the value applied when none is specified"
+                              }
+                            }
+                          }
+                        },
+                        "errorPolicies": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "string",
+                                "enum": [
+                                  "continue",
+                                  "stop"
                                 ]
                               },
                               "description": {
