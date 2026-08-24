@@ -387,5 +387,6 @@ module.exports = [
   "../src/routes/userGroup/group/getUserGroup.ts",
   "../src/routes/userGroup/group/getUserGroupById.ts",
   "../src/routes/userGroup/group/updateUserGroup.ts",
-  "../src/routes/analysis/global/getAnalyticOptions.ts"
+  "../src/routes/analysis/global/getAnalyticOptions.ts",
+  "../src/routes/analysis/organs/manageOrganAssignments.ts"
 ]

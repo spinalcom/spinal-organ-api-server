@@ -1,66 +1,13 @@
 import * as express from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
-import { spinalAnalysisExecutionService, VERSION, AnalysisExecutionResult } from "spinal-model-analysis";
+import { spinalAnalysisExecutionService, VERSION, serializeExecutionResult } from "spinal-model-analysis";
 import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { SpinalNode } from 'spinal-model-graph';
 
-function isSpinalNodeArray(value: unknown): value is SpinalNode<any>[] {
-  return Array.isArray(value) && value.length > 0 && value.every(v => v instanceof SpinalNode);
-}
-
-function serializeNode(node: SpinalNode<any>) {
-  return {
-    id: node?.getId?.()?.get?.(),
-    name: node?.getName?.()?.get?.(),
-    type: node?.getType?.()?.get?.(),
-    server_id: (node as any)?._server_id,
-  };
-}
-
-function serializeValue(value: unknown): unknown {
-  if (value === null || value === undefined) return value;
-  if (value instanceof SpinalNode) return serializeNode(value);
-  if (isSpinalNodeArray(value)) return value.map(serializeNode);
-  if (Array.isArray(value)) return value.map(serializeValue);
-
-  // spinal-core Model (Val / Str / Bool / SpinalBmsEndpoint / ...): registers can hold a
-  // bindable model (e.g. ENDPOINT_NODE_CURRENT_VALUE_MODEL). Never emit the raw model — its
-  // _parents form a cycle that breaks JSON.stringify. Expose its primitive value if it has
-  // one, otherwise a safe descriptor of the model type.
-  if (typeof value === 'object' && typeof (value as any).get === 'function') {
-    try {
-      const got = (value as any).get();
-      const t = typeof got;
-      if (got === null || t === 'string' || t === 'number' || t === 'boolean') return got;
-    } catch {
-      /* fall through to the descriptor */
-    }
-    return { _model: (value as any).constructor?.name ?? 'Model' };
-  }
-
-  return value;
-}
-
-function serializeRecord(record: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
-  if (!record) return record;
-  const out: Record<string, unknown> = {};
-  for (const key of Object.keys(record)) {
-    out[key] = serializeValue(record[key]);
-  }
-  return out;
-}
-
-function serializeExecutionResult(result: AnalysisExecutionResult) {
-  return {
-    ...result,
-    results: result.results.map(r => ({
-      ...r,
-      inputRegisters: serializeRecord(r.inputRegisters),
-      executionOutputs: serializeRecord(r.executionOutputs),
-    })),
-  };
-}
+// Execution-result serialization now lives in spinal-model-analysis (serializeExecutionResult),
+// so this route no longer needs to know how a block output (SpinalNode, spinal Model, Excel
+// workbook handle, Buffer, …) turns into JSON — the module owns those shapes and keeps it correct.
 
 module.exports = function (logger: any, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 

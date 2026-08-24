@@ -3,64 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_model_analysis_1 = require("spinal-model-analysis");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const spinal_model_graph_1 = require("spinal-model-graph");
-function isSpinalNodeArray(value) {
-    return Array.isArray(value) && value.length > 0 && value.every(v => v instanceof spinal_model_graph_1.SpinalNode);
-}
-function serializeNode(node) {
-    return {
-        id: node?.getId?.()?.get?.(),
-        name: node?.getName?.()?.get?.(),
-        type: node?.getType?.()?.get?.(),
-        server_id: node?._server_id,
-    };
-}
-function serializeValue(value) {
-    if (value === null || value === undefined)
-        return value;
-    if (value instanceof spinal_model_graph_1.SpinalNode)
-        return serializeNode(value);
-    if (isSpinalNodeArray(value))
-        return value.map(serializeNode);
-    if (Array.isArray(value))
-        return value.map(serializeValue);
-    // spinal-core Model (Val / Str / Bool / SpinalBmsEndpoint / ...): registers can hold a
-    // bindable model (e.g. ENDPOINT_NODE_CURRENT_VALUE_MODEL). Never emit the raw model — its
-    // _parents form a cycle that breaks JSON.stringify. Expose its primitive value if it has
-    // one, otherwise a safe descriptor of the model type.
-    if (typeof value === 'object' && typeof value.get === 'function') {
-        try {
-            const got = value.get();
-            const t = typeof got;
-            if (got === null || t === 'string' || t === 'number' || t === 'boolean')
-                return got;
-        }
-        catch {
-            /* fall through to the descriptor */
-        }
-        return { _model: value.constructor?.name ?? 'Model' };
-    }
-    return value;
-}
-function serializeRecord(record) {
-    if (!record)
-        return record;
-    const out = {};
-    for (const key of Object.keys(record)) {
-        out[key] = serializeValue(record[key]);
-    }
-    return out;
-}
-function serializeExecutionResult(result) {
-    return {
-        ...result,
-        results: result.results.map(r => ({
-            ...r,
-            inputRegisters: serializeRecord(r.inputRegisters),
-            executionOutputs: serializeRecord(r.executionOutputs),
-        })),
-    };
-}
+// Execution-result serialization now lives in spinal-model-analysis (serializeExecutionResult),
+// so this route no longer needs to know how a block output (SpinalNode, spinal Model, Excel
+// workbook handle, Buffer, …) turns into JSON — the module owns those shapes and keeps it correct.
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -128,7 +73,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(analysisNode);
             const result = await spinal_model_analysis_1.spinalAnalysisExecutionService.executeAnalysis(analysisNode);
             return res.json({
-                data: serializeExecutionResult(result),
+                data: (0, spinal_model_analysis_1.serializeExecutionResult)(result),
                 meta: {
                     analysisModuleVersion: spinal_model_analysis_1.VERSION
                 }

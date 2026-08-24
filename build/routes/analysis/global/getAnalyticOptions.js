@@ -13,11 +13,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     description: >
      *       Returns the analytic-level option metadata used to build the analysis form:
      *       the available work-node concurrency modes (with their configurable fields and
-     *       which is the default) and the available lifecycle statuses (with which is the
-     *       default). Lets clients render concurrency/status selectors generically, the
-     *       same way triggerTypes drives the trigger form. Single source of truth for the
-     *       selectable values of `concurrency` and `status` in IAnalysisConfigJSON.
-     *     summary: Gets the selectable concurrency modes and lifecycle statuses for an analytic
+     *       which is the default), the available lifecycle statuses (with which is the
+     *       default), and the available error policies (with which is the default). Lets
+     *       clients render concurrency/status/errorPolicy selectors generically, the same way
+     *       triggerTypes drives the trigger form. Single source of truth for the selectable
+     *       values of `concurrency`, `status` and `errorPolicy` in IAnalysisConfigJSON.
+     *     summary: Gets the selectable concurrency modes, lifecycle statuses and error policies for an analytic
      *     tags:
      *       - Analysis
      *     responses:
@@ -73,6 +74,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                           default:
      *                             type: boolean
      *                             description: Whether this is the value applied when none is specified
+     *                     errorPolicies:
+     *                       type: array
+     *                       items:
+     *                         type: object
+     *                         properties:
+     *                           value:
+     *                             type: string
+     *                             enum: [continue, stop]
+     *                           description:
+     *                             type: string
+     *                           default:
+     *                             type: boolean
+     *                             description: Whether this is the value applied when none is specified
      *                 meta:
      *                   type: object
      *                   properties:
@@ -87,6 +101,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const data = {
                 concurrencyModes: spinal_model_analysis_1.CONCURRENCY_MODE_DEFINITIONS,
                 statuses: spinal_model_analysis_1.ANALYSIS_STATUS_DEFINITIONS,
+                errorPolicies: spinal_model_analysis_1.ERROR_POLICY_DEFINITIONS,
             };
             return res.json({
                 data,

@@ -1256,7 +1256,7 @@ function routes(
     app,
     spinalAPIMiddleware
   );
-
+  require('./analysis/organs/manageOrganAssignments')(logger, app, spinalAPIMiddleware);
 
 
   // command
