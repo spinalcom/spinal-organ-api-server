@@ -15,14 +15,15 @@ module.exports = function (logger: any, app: express.Express, spinalAPIMiddlewar
    *     security:
    *       - bearerAuth:
    *           - write
-   *     summary: Partially update an analytic's metadata (name / description / concurrency / status)
+   *     summary: Partially update an analytic's metadata (name / description / concurrency / status / errorPolicy)
    *     description: >
    *       Updates only the metadata fields present in the body — analysisName, description,
-   *       concurrency and/or status — leaving the workflows, anchor and triggers untouched.
-   *       Use the PUT route for a full replace (which rebuilds the workflows). Unlike PUT, this
-   *       does not bump the analysis revision: none of these fields require the organ to rebuild
-   *       triggers/bindings (status is handled by the active-gate, concurrency is read per run).
-   *       Any other fields in the body (workflows, anchor, triggers) are ignored.
+   *       concurrency, status and/or errorPolicy — leaving the workflows, anchor and triggers
+   *       untouched. Use the PUT route for a full replace (which rebuilds the workflows). Unlike
+   *       PUT, this does not bump the analysis revision: none of these fields require the organ to
+   *       rebuild triggers/bindings (status is handled by the active-gate, concurrency and
+   *       errorPolicy are read per run). Any other fields in the body (workflows, anchor,
+   *       triggers) are ignored.
    *     tags:
    *       - Analysis
    *     parameters:
@@ -48,6 +49,9 @@ module.exports = function (logger: any, app: express.Express, spinalAPIMiddlewar
    *               status:
    *                 type: string
    *                 enum: [Active, Inactive]
+   *               errorPolicy:
+   *                 type: string
+   *                 enum: [continue, stop]
    *     responses:
    *       200:
    *         description: Analytic successfully patched (returns the updated details)
@@ -78,11 +82,12 @@ module.exports = function (logger: any, app: express.Express, spinalAPIMiddlewar
       SpinalGraphService._addNode(analyticNode);
 
       // Only the metadata fields are patchable here; everything else is ignored.
-      const patch: Partial<Pick<IAnalysisConfigJSON, 'analysisName' | 'description' | 'concurrency' | 'status'>> = {};
+      const patch: Partial<Pick<IAnalysisConfigJSON, 'analysisName' | 'description' | 'concurrency' | 'status' | 'errorPolicy'>> = {};
       if (body.analysisName !== undefined) patch.analysisName = body.analysisName;
       if (body.description !== undefined) patch.description = body.description;
       if (body.concurrency !== undefined) patch.concurrency = body.concurrency;
       if (body.status !== undefined) patch.status = body.status;
+      if (body.errorPolicy !== undefined) patch.errorPolicy = body.errorPolicy;
 
       await spinalAnalysisFactoryService.patchAnalysis(analyticNode, patch);
       await awaitSync(analyticNode);
