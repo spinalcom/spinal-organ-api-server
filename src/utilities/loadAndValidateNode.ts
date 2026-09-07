@@ -25,6 +25,47 @@
 import type { ISpinalAPIMiddleware } from '../interfaces/ISpinalAPIMiddleware';
 import { SpinalNode } from 'spinal-model-graph';
 
+export async function loadAndValidateNodeMultiple(
+  spinalAPIMiddleware: ISpinalAPIMiddleware,
+  serverIds: number[],
+  profileId: string,
+  nodeType?: string
+): Promise<{ successful: SpinalNode[]; failedServerIds: number[] }> {
+  if (!Array.isArray(serverIds))
+    throw createErrorResponse(
+      400,
+      `Invalid input: serverIds should be an array of numbers`
+    );
+
+  const successfulNodes: SpinalNode[] = [];
+  const failedServerIds: number[] = [];
+
+  await Promise.allSettled(
+    serverIds.map(async (serverId) => {
+      if (
+        (typeof serverId === 'number' && isNaN(serverId)) ||
+        (typeof serverId === 'string' && isNaN(Number(serverId)))
+      ) {
+        failedServerIds.push(serverId);
+        return;
+      }
+      try {
+        const node = await loadAndValidateNode(
+          spinalAPIMiddleware,
+          serverId,
+          profileId,
+          nodeType
+        );
+        successfulNodes.push(node);
+      } catch (error) {
+        failedServerIds.push(serverId);
+      }
+    })
+  );
+
+  return { successful: successfulNodes, failedServerIds };
+}
+
 export async function loadAndValidateNode(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   serverId: number,

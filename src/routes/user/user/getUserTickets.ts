@@ -28,7 +28,6 @@ import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import type { Express } from 'express';
 import { SpinalNode } from 'spinal-model-graph';
 import { getProfileId } from '../../../utilities/requestUtilities';
-import { getUserData } from '../../../utilities/getUserData';
 import getTicketDetails from '../../../utilities/workflow/getTicketDetails';
 
 module.exports = function (

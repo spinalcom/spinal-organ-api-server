@@ -407,6 +407,28 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./userGroup/group/deleteUserGroup')(logger, app, spinalAPIMiddleware);
     require('./userGroup/group/getUserGroupById')(logger, app, spinalAPIMiddleware);
     require('./userGroup/group/updateUserGroup')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/user/addUsersInGroup')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/user/deleteUserInGroup')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/user/getUserInGroup')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/user/moveUsersInGroup')(logger, app, spinalAPIMiddleware);
+    require('./organization/context/createOrganizationContext')(logger, app, spinalAPIMiddleware);
+    require('./organization/context/getOrganizationContextById')(logger, app, spinalAPIMiddleware);
+    require('./organization/context/getOrganizationContext')(logger, app, spinalAPIMiddleware);
+    require('./organization/context/updateOrganizationContext')(logger, app, spinalAPIMiddleware);
+    require('./organization/organization/createOrganization')(logger, app, spinalAPIMiddleware);
+    require('./organization/organization/getOrganizationById')(logger, app, spinalAPIMiddleware);
+    require('./organization/organization/getOrganizationFromContext')(logger, app, spinalAPIMiddleware);
+    require('./organization/organization/getOrganizationParents')(logger, app, spinalAPIMiddleware);
+    require('./organization/organization/deleteOrganization')(logger, app, spinalAPIMiddleware);
+    require('./organization/organization/getOrganizationContextParents')(logger, app, spinalAPIMiddleware);
+    require('./organization/organization/getOrganizationFromOrganization')(logger, app, spinalAPIMiddleware);
+    require('./organization/organization/updateOrganizations')(logger, app, spinalAPIMiddleware);
+    require('./organization/userGroup/addUserGroupFromOrganization')(logger, app, spinalAPIMiddleware);
+    require('./organization/userGroup/deleteUserGroupFromOrganization')(logger, app, spinalAPIMiddleware);
+    require('./organization/userGroup/getUserGroupFromOrganization')(logger, app, spinalAPIMiddleware);
+    require('./organization/roomGroup/addRoomGroupFromOrganization')(logger, app, spinalAPIMiddleware);
+    require('./organization/roomGroup/deleteRoomGroupFromOrganization')(logger, app, spinalAPIMiddleware);
+    require('./organization/roomGroup/getRoomGroupsFromOrganization')(logger, app, spinalAPIMiddleware);
 }
 exports.default = routes;
 //# sourceMappingURL=routes.js.map

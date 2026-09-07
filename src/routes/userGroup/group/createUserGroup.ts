@@ -29,7 +29,6 @@ import validate from 'express-zod-safe';
 import {
   createSpinalUserGroup,
   getGroupingCategory,
-  getSpinalUserGroup,
   getSpinalUserGroupContext,
 } from 'spinal-model-user-service';
 import { getProfileId } from '../../../utilities/requestUtilities';

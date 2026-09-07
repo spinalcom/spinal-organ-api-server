@@ -29,6 +29,7 @@ import type { Express } from 'express';
 import { SpinalNode } from 'spinal-model-graph';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { getUserData } from '../../../utilities/getUserData';
+import type { IUser } from '../../interface/IUser';
 
 module.exports = function (
   logger: any,
@@ -52,9 +53,9 @@ module.exports = function (
    *           schema:
    *             type: object
    *             required:
-   *               - userIds
+   *               - userDynamicIds
    *             properties:
-   *               userIds:
+   *               userDynamicIds:
    *                 type: array
    *                 items:
    *                   type: integer
@@ -94,7 +95,7 @@ module.exports = function (
     '/api/v1/user/multiple',
     validate({
       body: z.strictObject({
-        userIds: z.array(z.coerce.number().positive()).min(1).max(100),
+        userDynamicIds: z.array(z.coerce.number().positive()).min(1).max(100),
         attributes: z.coerce.boolean().optional().default(false),
         groups: z.coerce.boolean().optional().default(false),
         organizations: z.coerce.boolean().optional().default(false),
@@ -106,11 +107,17 @@ module.exports = function (
         const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
         if (!userGraph)
           throw { code: 401, message: `No graph found for ${profileId}` };
-        const { userIds, attributes, groups, organizations } = req.body;
-        const results = [];
-        // Process userIds in batches of 25
-        for (let i = 0; i < userIds.length; i += 25) {
-          const batch = userIds.slice(i, i + 25);
+        const { userDynamicIds, attributes, groups, organizations } = req.body;
+        const results: (
+          | IUser
+          | {
+              dynamicId: number;
+              error: string;
+            }
+        )[] = [];
+        // Process userDynamicIds in batches of 25
+        for (let i = 0; i < userDynamicIds.length; i += 25) {
+          const batch = userDynamicIds.slice(i, i + 25);
           const batchResults = await Promise.all(
             batch.map(async (userId) => {
               try {

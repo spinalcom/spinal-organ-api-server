@@ -23,8 +23,30 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.loadAndValidateNodeMultiple = loadAndValidateNodeMultiple;
 exports.loadAndValidateNode = loadAndValidateNode;
 const spinal_model_graph_1 = require("spinal-model-graph");
+async function loadAndValidateNodeMultiple(spinalAPIMiddleware, serverIds, profileId, nodeType) {
+    if (!Array.isArray(serverIds))
+        throw createErrorResponse(400, `Invalid input: serverIds should be an array of numbers`);
+    const successfulNodes = [];
+    const failedServerIds = [];
+    await Promise.allSettled(serverIds.map(async (serverId) => {
+        if ((typeof serverId === 'number' && isNaN(serverId)) ||
+            (typeof serverId === 'string' && isNaN(Number(serverId)))) {
+            failedServerIds.push(serverId);
+            return;
+        }
+        try {
+            const node = await loadAndValidateNode(spinalAPIMiddleware, serverId, profileId, nodeType);
+            successfulNodes.push(node);
+        }
+        catch (error) {
+            failedServerIds.push(serverId);
+        }
+    }));
+    return { successful: successfulNodes, failedServerIds };
+}
 async function loadAndValidateNode(spinalAPIMiddleware, serverId, profileId, nodeType) {
     if ((typeof serverId === 'number' && isNaN(serverId)) ||
         (typeof serverId === 'string' && isNaN(Number(serverId))))

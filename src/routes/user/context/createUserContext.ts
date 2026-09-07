@@ -29,7 +29,6 @@ import type { Express } from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { createSpinalUserContext } from 'spinal-model-user-service';
 import { createBasicNodeSync } from '../../../utilities/createBasicNode';
-import { atLeastOne } from '../../../utilities/zodAtLeastOne';
 
 module.exports = function (
   logger: any,
@@ -80,15 +79,13 @@ module.exports = function (
   app.post(
     '/api/v1/user/context',
     validate({
-      body: atLeastOne(
-        z.strictObject({
-          name: z.string().max(200).min(1),
-          color: z
-            .string()
-            .regex(/^#([A-Fa-f0-9]{6})$/)
-            .optional(),
-        })
-      ),
+      body: z.strictObject({
+        name: z.string().max(200).min(1),
+        color: z
+          .string()
+          .regex(/^#([A-Fa-f0-9]{6})$/)
+          .optional(),
+      }),
     }),
     async (req, res) => {
       try {

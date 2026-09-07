@@ -22,16 +22,26 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import type { Model } from 'spinal-core-connectorjs';
+import { type Model, Str, Val, Bool } from 'spinal-core-connectorjs';
 
 export function safeSetAttr<T extends Model>(
   model: T,
   attrName: string,
-  value: any | undefined
+  value: number | string | boolean | undefined
 ): void {
   if (value === undefined || value === null) return; // Do not set undefined or null values
   if (model[attrName] !== undefined) {
-    model[attrName].set(value);
+    // test type of existing attribute to prevent type errors
+    const existingAttr = model[attrName];
+    if (
+      (existingAttr instanceof Str && typeof value === 'string') ||
+      (existingAttr instanceof Val && typeof value === 'number') ||
+      (existingAttr instanceof Bool && typeof value === 'boolean')
+    ) {
+      existingAttr.set(value);
+    } else {
+      model.mod_attr(attrName, value);
+    }
   } else if (typeof attrName === 'string') {
     model.add_attr(attrName, value);
   } else
