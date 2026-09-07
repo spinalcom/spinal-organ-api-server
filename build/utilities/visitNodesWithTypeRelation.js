@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.visitNodesWithTypeRelation = void 0;
+exports.visitNodesWithTypeRelation = visitNodesWithTypeRelation;
 const Utilities_1 = require("spinal-model-graph/dist/Utilities");
 async function* visitNodesWithTypeRelation(root, relationMap) {
     const seen = new Set([root]);
@@ -54,5 +54,4 @@ async function* visitNodesWithTypeRelation(root, relationMap) {
         }
     }
 }
-exports.visitNodesWithTypeRelation = visitNodesWithTypeRelation;
 //# sourceMappingURL=visitNodesWithTypeRelation.js.map

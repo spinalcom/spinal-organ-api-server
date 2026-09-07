@@ -22,11 +22,14 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
-const moment = require("moment");
+const moment_1 = __importDefault(require("moment"));
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
 const awaitSync_1 = require("../../../utilities/awaitSync");
@@ -128,17 +131,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 groupId: groupNodeRef.id?.get(),
                 categoryId: categoryNodeRef.id?.get(),
                 nodeId: ticketNode.info.id?.get(),
-                startDate: moment(req.body.startDate, 'DD MM YYYY HH:mm:ss', true).toString(),
+                startDate: (0, moment_1.default)(req.body.startDate, 'DD MM YYYY HH:mm:ss', true).toString(),
                 description: req.body.description,
-                endDate: moment(req.body.endDate, 'DD MM YYYY HH:mm:ss', true).toString(),
+                endDate: (0, moment_1.default)(req.body.endDate, 'DD MM YYYY HH:mm:ss', true).toString(),
                 periodicity: {
                     count: req.body.count,
                     period: spinal_env_viewer_task_service_1.Period[req.body.period],
                 },
                 repeat: req.body.repeat,
                 name: req.body.name,
-                creationDate: moment(new Date().toISOString()).toString(),
-                repeatEnd: moment(req.body.repeatEnd, 'DD MM YYYY HH:mm:ss', true).toString(),
+                creationDate: (0, moment_1.default)(new Date().toISOString()).toString(),
+                repeatEnd: (0, moment_1.default)(req.body.repeatEnd, 'DD MM YYYY HH:mm:ss', true).toString(),
             };
             const userInfo = {
                 username: req.body.user.userName,

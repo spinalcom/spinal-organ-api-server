@@ -22,53 +22,56 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const spinalTimeSeries_1 = require("../spinalTimeSeries");
-const moment = require("moment");
+const spinalTimeSeries_1 = __importDefault(require("../spinalTimeSeries"));
+const moment_1 = __importDefault(require("moment"));
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/endpoint/{id}/timeSeries/insert:
-   *   post:
-   *     security:
-   *       - bearerAuth:
-   *         - read
-   *     description: insert new value
-   *     summary: insert new value
-   *     tags:
-   *       - IoTNetwork & Time Series
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     requestBody:
-   *       description: the date format is "DD-MM-YYYY HH:mm:ss" or "DD MM YYYY HH:mm:ss" or "DD/MM/YYYY HH:mm:ss"
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - newValue
-   *               - date
-   *             properties:
-   *                newValue:
-   *                 type: number
-   *                date:
-   *                 type: string
-   *     responses:
-   *       200:
-   *         description: Create Successfully
-   *       400:
-   *         description: Bad request
-  */
-    app.post("/api/v1/endpoint/:id/timeSeries/insert", async (req, res, next) => {
+     * @swagger
+     * /api/v1/endpoint/{id}/timeSeries/insert:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - read
+     *     description: insert new value
+     *     summary: insert new value
+     *     tags:
+     *       - IoTNetwork & Time Series
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: use the dynamic ID
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     requestBody:
+     *       description: the date format is "DD-MM-YYYY HH:mm:ss" or "DD MM YYYY HH:mm:ss" or "DD/MM/YYYY HH:mm:ss"
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - newValue
+     *               - date
+     *             properties:
+     *                newValue:
+     *                 type: number
+     *                date:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: Create Successfully
+     *       400:
+     *         description: Bad request
+     */
+    app.post('/api/v1/endpoint/:id/timeSeries/insert', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
@@ -76,7 +79,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             const timeseries = await (0, spinalTimeSeries_1.default)().getOrCreateTimeSeries(node.getId().get());
             const newValue = req.body.newValue;
-            const date = moment(req.body.date, ["DD-MM-YYYY HH:mm:ss", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY HH:mm:ss"], true);
+            const date = (0, moment_1.default)(req.body.date, ['DD-MM-YYYY HH:mm:ss', 'DD MM YYYY HH:mm:ss', 'DD/MM/YYYY HH:mm:ss'], true);
             await timeseries.insert(newValue, date.toDate());
         }
         catch (error) {

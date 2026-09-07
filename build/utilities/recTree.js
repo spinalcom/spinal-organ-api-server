@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.recTreeDepth = exports.recTreeDetails = exports.recTree = void 0;
+exports.recTree = recTree;
+exports.recTreeDetails = recTreeDetails;
+exports.recTreeDepth = recTreeDepth;
 async function recTree(node, context = node) {
     const childrenIds = await node.getChildrenInContext(context);
     if (childrenIds.length > 0) {
@@ -22,7 +24,6 @@ async function recTree(node, context = node) {
         return [];
     }
 }
-exports.recTree = recTree;
 async function recTreeDetails(node, context = node) {
     const childrenIds = await node.getChildrenInContext(context);
     if (childrenIds.length > 0) {
@@ -41,7 +42,6 @@ async function recTreeDetails(node, context = node) {
         return [];
     }
 }
-exports.recTreeDetails = recTreeDetails;
 async function recTreeDepth(node, context = node, depth) {
     const childrenIds = await node.getChildrenInContext(context);
     if (childrenIds.length > 0 && depth > 0) {
@@ -61,5 +61,4 @@ async function recTreeDepth(node, context = node, depth) {
         return [];
     }
 }
-exports.recTreeDepth = recTreeDepth;
 //# sourceMappingURL=recTree.js.map

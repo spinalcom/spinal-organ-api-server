@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.awaitSync = void 0;
+exports.awaitSync = awaitSync;
 /*
  * Copyright 2021 SpinalCom - www.spinalcom.com
  *
@@ -39,5 +39,4 @@ function awaitSync(model) {
         }, 300);
     });
 }
-exports.awaitSync = awaitSync;
 //# sourceMappingURL=awaitSync.js.map

@@ -6,12 +6,13 @@
     "build": "rm -rf build declarations && tsc",
     "start": "npm run build && node index.js",
     "dev": "npm run build && NODE_ENV=dev nodemon index.js",
+    "export-docs": "npm run build && node build/scripts/exportDocs.js",
     "test": "NODE_ENV=test mocha --check-leaks -r ts-node/register -r tsconfig-paths/register \"test/**/*.spec.ts\""
   },
   "author": "SpinalCom",
   "types": "build/lib/index.d.ts",
   "license": "UNLICENSED",
-  "version": "1.1.12",
+  "version": "1.1.19",
   "main": "build/lib/index.js",
   "dependencies": {
     "body-parser": "^1.19.0",
@@ -22,6 +23,7 @@
     "express-fileupload": "^1.2.1",
     "express-gateway": "^1.16.10",
     "express-http-proxy": "^1.6.2",
+    "express-zod-safe": "^3.2.1",
     "flatted": "^3.0.2",
     "get-file-object-from-local-path": "^1.0.2",
     "install": "^0.13.0",
@@ -39,7 +41,7 @@
     "stringify": "^5.2.0",
     "swagger-jsdoc": "^4.0.0",
     "swagger-ui-express": "^4.1.4",
-    "typescript": "^4.8.4",
+    "typescript": "^5.9.3",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
@@ -79,7 +81,7 @@
     "spinal-organ-api-pubsub": "spinal-organ-api-pubsub",
     "spinal-organ-network_sample": "spinal-organ-network_sample",
     "spinal-service-ticket": "spinal-service-ticket",
-    "spinal-service-user": "spinal-service-user",
+    "spinal-model-user-service": "spinal-model-user-service",
     "spinal-model-analysis": "spinal-model-analysis"
   }
 }

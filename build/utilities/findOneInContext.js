@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.findOneInContext = void 0;
+exports.findOneInContext = findOneInContext;
 async function findOneInContext(node, context, predicate) {
     if (typeof predicate !== 'function') {
         throw new Error('The predicate function must be a function');
@@ -59,5 +59,4 @@ async function findOneInContext(node, context, predicate) {
     // }
     return undefined;
 }
-exports.findOneInContext = findOneInContext;
 //# sourceMappingURL=findOneInContext.js.map

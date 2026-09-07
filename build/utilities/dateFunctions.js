@@ -22,20 +22,36 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendDate = exports.verifDate = void 0;
-const moment = require("moment");
+exports.verifDate = verifDate;
+exports.sendDate = sendDate;
+const moment_1 = __importDefault(require("moment"));
 function verifDate(date) {
-    const res = moment(date, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], 'fr', true); // uses 'fr' locale and strict parsing
+    const res = (0, moment_1.default)(date, [
+        'DD-MM-YYYY',
+        'DD-MM-YYYY HH:mm:ss',
+        'DD MM YYYY',
+        'DD MM YYYY HH:mm:ss',
+        'DD/MM/YYYY',
+        'DD/MM/YYYY HH:mm:ss',
+    ], 'fr', true); // uses 'fr' locale and strict parsing
     if (!res.isValid())
         return 1;
     else
         return res.toDate();
 }
-exports.verifDate = verifDate;
 function sendDate(date) {
-    const res = moment(date, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], 'fr', true); // uses 'fr' locale and strict parsing
+    const res = (0, moment_1.default)(date, [
+        'DD-MM-YYYY',
+        'DD-MM-YYYY HH:mm:ss',
+        'DD MM YYYY',
+        'DD MM YYYY HH:mm:ss',
+        'DD/MM/YYYY',
+        'DD/MM/YYYY HH:mm:ss',
+    ], 'fr', true); // uses 'fr' locale and strict parsing
     return res;
 }
-exports.sendDate = sendDate;
 //# sourceMappingURL=dateFunctions.js.map

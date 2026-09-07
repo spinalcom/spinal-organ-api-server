@@ -57,7 +57,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const groupContext = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(groupContext);
-            await spinal_env_viewer_graph_service_1.SpinalGraphService.removeFromGraph(groupContext.getId().get());
+            if (!groupContext || !(groupContext instanceof spinal_env_viewer_graph_service_1.SpinalContext)) {
+                res.status(400).send("groupContext not found");
+                return;
+            }
+            const categoryList = await groupContext.getChildren("hasCategory");
+            for (const category of categoryList) {
+                const groupList = await category.getChildren("hasGroup");
+                await Promise.allSettled(groupList.map(async (group) => {
+                    await group.removeFromGraph();
+                }));
+                await category.removeFromGraph();
+            }
+            await groupContext.removeFromGraph();
+            res.status(200).send("Deleted Successfully");
         }
         catch (error) {
             if (error.code && error.message)

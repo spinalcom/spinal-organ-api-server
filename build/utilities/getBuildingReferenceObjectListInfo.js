@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBuildingReferenceObjectsListInfo = void 0;
+exports.getBuildingReferenceObjectsListInfo = getBuildingReferenceObjectsListInfo;
 async function getBuildingReferenceObjectsListInfo(spinalAPIMiddleware, profileId) {
     const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
     const contexts = await graph.getChildren("hasContext");
@@ -32,6 +32,5 @@ async function getBuildingReferenceObjectsListInfo(spinalAPIMiddleware, profileI
         infoReferencesObjects: _objects
     };
 }
-exports.getBuildingReferenceObjectsListInfo = getBuildingReferenceObjectsListInfo;
 exports.default = getBuildingReferenceObjectsListInfo;
 //# sourceMappingURL=getBuildingReferenceObjectListInfo.js.map

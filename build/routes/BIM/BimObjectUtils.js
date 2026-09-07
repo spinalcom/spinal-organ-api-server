@@ -35,15 +35,15 @@ module.exports = (_a = class BimObjectUtils {
         }
         static getInstance(spinalAPIMiddleware) {
             this.spinalAPIMiddleware = spinalAPIMiddleware;
-            return typeof BimObjectUtils.instance !== 'undefined'
-                ? BimObjectUtils.instance
-                : (BimObjectUtils.instance = new BimObjectUtils());
+            return typeof _a.instance !== 'undefined'
+                ? _a.instance
+                : (_a.instance = new _a());
         }
         getContext() {
             if (this.context)
                 return this.context;
             this.context = new Promise(async (resolve) => {
-                const graph = await BimObjectUtils.spinalAPIMiddleware.getGraph();
+                const graph = await _a.spinalAPIMiddleware.getGraph();
                 resolve(graph.getContext(BIM_FILE_CONTEXT_NAME));
             });
             return this.context;

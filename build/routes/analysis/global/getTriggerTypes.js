@@ -10,8 +10,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
        *     security:
        *       - bearerAuth:
        *         - readOnly
-       *     description: Returns a list of trigger type strings for analysis
-       *     summary: Gets analysis trigger types
+       *     description: Returns the available analysis trigger types along with the fields required to configure each one. Each field has a name, primitive type, description, and whether it is required.
+       *     summary: Gets analysis trigger types and their configuration fields
        *     tags:
        *       - Analysis
        *     responses:
@@ -25,7 +25,28 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
        *                 data:
        *                   type: array
        *                   items:
-       *                     type: string
+       *                     type: object
+       *                     properties:
+       *                       type:
+       *                         type: string
+       *                         description: The trigger type identifier (e.g. INTERVAL_TIME, CRON, COV)
+       *                       description:
+       *                         type: string
+       *                         description: When/how this trigger fires
+       *                       fields:
+       *                         type: array
+       *                         items:
+       *                           type: object
+       *                           properties:
+       *                             name:
+       *                               type: string
+       *                             type:
+       *                               type: string
+       *                               enum: [string, number, boolean]
+       *                             description:
+       *                               type: string
+       *                             required:
+       *                               type: boolean
        *                 meta:
        *                   type: object
        *                   properties:
@@ -39,14 +60,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.get("/api/v1/analysis/triggerTypes", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const data = spinal_model_analysis_1.CONSTANTS.TRIGGER_TYPE
-                ? Object.values(spinal_model_analysis_1.CONSTANTS.TRIGGER_TYPE)
-                : [];
+            const data = spinal_model_analysis_1.TRIGGER_TYPE_DEFINITIONS;
             return res.json({
                 data,
                 meta: {
                     count: data.length,
-                    analysisModuleVersion: spinal_model_analysis_1.VERSION
+                    analysisModuleVersion: spinal_model_analysis_1.VERSION,
                 }
             });
         }

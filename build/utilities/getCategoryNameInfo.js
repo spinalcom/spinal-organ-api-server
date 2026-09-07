@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCategoryNamesInfo = exports.getCategoryNameInfo = void 0;
+exports.getCategoryNameInfo = getCategoryNameInfo;
+exports.getCategoryNamesInfo = getCategoryNamesInfo;
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 async function getCategoryNameInfo(spinalAPIMiddleware, profileId, dynamicId, categoryName) {
     const node = await spinalAPIMiddleware.load(dynamicId, profileId);
@@ -17,7 +18,6 @@ async function getCategoryNameInfo(spinalAPIMiddleware, profileId, dynamicId, ca
         };
     }
 }
-exports.getCategoryNameInfo = getCategoryNameInfo;
 async function getCategoryNamesInfo(spinalAPIMiddleware, profileId, dynamicId, categoryNames) {
     const node = await spinalAPIMiddleware.load(dynamicId, profileId);
     const result = [];
@@ -37,5 +37,4 @@ async function getCategoryNamesInfo(spinalAPIMiddleware, profileId, dynamicId, c
     }
     return result;
 }
-exports.getCategoryNamesInfo = getCategoryNamesInfo;
 //# sourceMappingURL=getCategoryNameInfo.js.map

@@ -22,12 +22,15 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
 // get the config
-const config_1 = require("./config");
+const config_1 = __importDefault(require("./config"));
 const spinalIOMiddleware_1 = require("./spinalIOMiddleware");
 class SpinalAPIMiddleware {
     // singleton class

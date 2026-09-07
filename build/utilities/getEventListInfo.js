@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getEventListInfo = void 0;
+exports.getEventListInfo = getEventListInfo;
 const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service");
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 async function getEventListInfo(spinalAPIMiddleware, profileId, dynamicId) {
@@ -32,6 +32,5 @@ async function getEventListInfo(spinalAPIMiddleware, profileId, dynamicId) {
     }
     return nodes;
 }
-exports.getEventListInfo = getEventListInfo;
 exports.default = getEventListInfo;
 //# sourceMappingURL=getEventListInfo.js.map

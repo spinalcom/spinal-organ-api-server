@@ -88,8 +88,23 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - read
-     *     description: Fetches view information based on the geographical context for specified IDs and options
-     *     summary: Fetch view information for geographical context
+     *     summary: Fetch a flattened geographic tree for the 3D viewer
+     *     description: |
+     *       Walks the geographic context from one or more starting nodes and returns the
+     *       sub-tree flattened into a lookup map, together with a dictionary that compresses the
+     *       repeated BIM file identifiers into small integers.
+     *
+     *       Unlike `/api/v1/geographicContext/viewInfo`, which returns a nested array, this route
+     *       returns `nodes` as an **object keyed by dynamicId**. Walk it by following `children`
+     *       from the roots (the entries whose `parentId` is `null`).
+     *
+     *       **What gets traversed**
+     *
+     *       Building, Floor and Room relations are always followed. The `floorRef`,
+     *       `roomRef` and `equipements` flags add reference and BIM-object relations on top of that,
+     *       so they widen the tree rather than filter it. A starting node is skipped if it cannot be
+     *       loaded under the caller's profile, or if its type is not a geographic one — if none of the
+     *       ids qualify the response is a successful `200` with empty `nodes`, not an error.
      *     tags:
      *       - Geographic Context
      *     requestBody:
@@ -97,25 +112,109 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         application/json:
      *           schema:
      *             type: object
-     *             required:
-     *               - dynamicId
      *             properties:
      *               dynamicId:
-     *                 type: integer
-     *                 format: int64
-     *                 description: Unique identifier for the node
+     *                 description: |
+     *                   Node(s) to start the traversal from. Accepts a single dynamicId or an array of
+     *                   them; each one is traversed independently and all results are merged into the
+     *                   same `nodes` map. Only geographic nodes are accepted as roots
+     *                   (`geographicBuilding`, `geographicFloor`, `geographicRoom`, `BIMObject`);
+     *                   anything else is ignored.
+     *
+     *                   Omit it to fall back to the whole building: the first `geographicBuilding` of
+     *                   the first geographic context visible to the profile, with `floorRef`, `roomRef`
+     *                   and `equipements` all forced to `true`. Any flags sent alongside an omitted
+     *                   `dynamicId` are overridden.
+     *                 oneOf:
+     *                   - type: integer
+     *                     format: int64
+     *                   - type: array
+     *                     items:
+     *                       type: integer
+     *                       format: int64
+     *                 example: 24062000
      *               floorRef:
      *                 type: boolean
-     *                 description: Flag to include floor reference, defaults to false
+     *                 default: false
+     *                 description: |
+     *                   Follow `hasReferenceObject` from floors, adding the floor's reference BIM
+     *                   objects to the tree as nodes of type `floorRef`.
      *               roomRef:
      *                 type: boolean
-     *                 description: Flag to include room reference, defaults to true
+     *                 default: false
+     *                 description: |
+     *                   Follow `hasReferenceObject.ROOM` from rooms, adding the room's reference BIM
+     *                   objects to the tree as nodes of type `roomRef`.
      *               equipements:
-     *                 type: boolean
-     *                 description: Flag to include equipment details, defaults to false
+     *                 description: |
+     *                   Follow `hasBimObject` from rooms, adding the room's equipment as nodes of type
+     *                   `BIMObject`.
+     *
+     *                   Pass `true` for every piece of equipment, `false` (default) for none, or an
+     *                   array of group filters to keep only the equipment belonging to the named
+     *                   groups. Filters are resolved once up front into a set of allowed group ids;
+     *                   a piece of equipment survives if any of its `groupHasBIMObject` parents is in
+     *                   that set, so filters are additive — an item matching any one of them is kept.
+     *                   A filter naming a context, category or group that does not exist contributes
+     *                   nothing and is silently ignored, so an array that matches nothing yields a
+     *                   tree with no equipment at all.
+     *                 oneOf:
+     *                   - type: boolean
+     *                   - type: array
+     *                     items:
+     *                       type: object
+     *                       required:
+     *                         - contextName
+     *                         - categoryName
+     *                         - groupNames
+     *                       properties:
+     *                         contextName:
+     *                           type: string
+     *                           description: Name of the context holding the groups, matched exactly.
+     *                           example: BIMObject Context
+     *                         categoryName:
+     *                           type: string
+     *                           description: Name of the category inside that context, matched exactly.
+     *                           example: Zone
+     *                         groupNames:
+     *                           type: array
+     *                           description: |
+     *                             Names of the groups to keep, matched exactly. An empty array means
+     *                             every group in the category.
+     *                           items:
+     *                             type: string
+     *                           example: ["CVC", "Plomberie"]
+     *                 default: false
+     *           examples:
+     *             wholeBuilding:
+     *               summary: Whole building (no dynamicId)
+     *               description: Falls back to the first building, with every reference and all equipment.
+     *               value: {}
+     *             singleFloorWithRefs:
+     *               summary: One floor, references only
+     *               value:
+     *                 dynamicId: 24062000
+     *                 floorRef: true
+     *                 roomRef: true
+     *             floorWithEquipment:
+     *               summary: One floor, room references and all equipment
+     *               description: |
+     *                 Both flags default to false, so each one has to be asked for explicitly.
+     *               value:
+     *                 dynamicId: 24062000
+     *                 roomRef: true
+     *                 equipements: true
+     *             filteredEquipment:
+     *               summary: Two floors, equipment restricted to two groups
+     *               value:
+     *                 dynamicId: [24062000, 24062104]
+     *                 equipements:
+     *                   - contextName: Gestion des équipements
+     *                     categoryName: Typologie
+     *                     groupNames: ["CVC", "Plomberie"]
      *     responses:
      *       200:
-     *         description: Flattened geographic tree with BIM alias dictionary
+     *         description: Flattened geographic tree with its BIM file dictionary.
      *         content:
      *           application/json:
      *             schema:
@@ -123,17 +222,47 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               properties:
      *                 bimFileAlias:
      *                   type: object
+     *                   description: |
+     *                     Dictionary of the BIM files referenced by the tree, keyed by BIM file id with
+     *                     the alias as value. Aliases are assigned in traversal order starting at 1 and
+     *                     are only meaningful within this response.
+     *
+     *                     Note the direction: nodes carry the **alias**, so resolving a node back to its
+     *                     BIM file id means inverting this map client-side.
      *                   additionalProperties:
-     *                     type: string
+     *                     type: integer
      *                   example:
-     *                     "1": "SpinalNode-7cc0401e-31fc-40c8-385d-c618d1df8bd2"
-     *                     "2": "SpinalNode-a39ef912-7df0-11ee-995d-afa741c67b94"
+     *                     "SpinalNode-7cc0401e-31fc-40c8-385d-c618d1df8bd2": 1
+     *                     "SpinalNode-a39ef912-7df0-11ee-995d-afa741c67b94": 2
      *                 nodes:
-     *                   type: array
-     *                   items:
+     *                   type: object
+     *                   description: |
+     *                     Every visited node, keyed by its dynamicId. Empty when no starting node
+     *                     resolved to a geographic node.
+     *                   additionalProperties:
      *                     $ref: "#/components/schemas/ViewInfoNode"
-     *       "400":
-     *         description: Invalid request (missing dynamicId)
+     *             example:
+     *               bimFileAlias:
+     *                 "SpinalNode-7cc0401e-31fc-40c8-385d-c618d1df8bd2": 1
+     *               nodes:
+     *                 "24062000":
+     *                   parentId: null
+     *                   children: [24063840]
+     *                   dbId: null
+     *                   bimFileAlias: null
+     *                   type: geographicFloor
+     *                 "24063840":
+     *                   parentId: 24062000
+     *                   children: [24063912]
+     *                   dbId: null
+     *                   bimFileAlias: null
+     *                   type: geographicRoom
+     *                 "24063912":
+     *                   parentId: 24063840
+     *                   children: []
+     *                   dbId: 3365
+     *                   bimFileAlias: 1
+     *                   type: BIMObject
      *       "500":
      *         description: Internal server error
      */
@@ -143,10 +272,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         const options = {
             dynamicId: body.dynamicId,
             floorRef: body.floorRef || false,
-            roomRef: body.roomRef || true,
+            roomRef: body.roomRef || false,
             equipements: body.equipements || false,
         };
-        // Default behavior: if no dynamicId → return whole building
+        // Default behavior: if no dynamicId -> return whole building
         if (!options.dynamicId) {
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
             const contexts = await graph.getChildren("hasContext");
@@ -157,6 +286,35 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             options.floorRef = true;
             options.roomRef = true;
             options.equipements = true;
+        }
+        // PRELOAD allowed group node IDs when equipements is an array filter
+        let allowedGroupIds = null;
+        if (Array.isArray(options.equipements)) {
+            allowedGroupIds = new Set();
+            const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
+            const allContexts = await graph.getChildren('hasContext');
+            for (const filter of options.equipements) {
+                const ctx = allContexts.find((c) => c.info.name.get() === filter.contextName);
+                if (!ctx)
+                    continue;
+                const categories = await ctx.getChildren('hasCategory');
+                const cat = categories.find((c) => c.info.name.get() === filter.categoryName);
+                if (!cat)
+                    continue;
+                const groups = await cat.getChildren('hasGroup');
+                if (filter.groupNames.length === 0) {
+                    // empty groupNames means all groups in this category
+                    for (const g of groups)
+                        allowedGroupIds.add(g.getId().get());
+                }
+                else {
+                    for (const g of groups) {
+                        if (filter.groupNames.includes(g.info.name.get())) {
+                            allowedGroupIds.add(g.getId().get());
+                        }
+                    }
+                }
+            }
         }
         // LOAD ROOT NODES
         const roots = await getRootNodes(options.dynamicId, profileId);
@@ -191,6 +349,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 }
                 else if (relation === constants_1.REFERENCE_RELATION && parent?.info.type.get() === constants_1.FLOOR_TYPE) {
                     type = 'floorRef'; // Floor reference objects
+                }
+                // Filter equipment by allowed groups when using array filter
+                if (type === constants_1.EQUIPMENT_TYPE && allowedGroupIds !== null) {
+                    const parentGroups = await node.getParents('groupHasBIMObject');
+                    const belongsToAllowed = parentGroups.some((g) => allowedGroupIds.has(g.getId().get()));
+                    if (!belongsToAllowed)
+                        continue;
                 }
                 let dbId = null;
                 let alias = null;

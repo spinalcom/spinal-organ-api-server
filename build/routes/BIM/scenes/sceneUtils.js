@@ -23,7 +23,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isNodeId = exports.getFolderPath = exports.sceneGetItems = exports.getScenes = void 0;
+exports.getScenes = getScenes;
+exports.sceneGetItems = sceneGetItems;
+exports.getFolderPath = getFolderPath;
+exports.isNodeId = isNodeId;
 const SCENE_CONTEXT_NAME = 'Scenes';
 const SCENE_RELATIONS = ['hasScene'];
 const SCENE_PART_RELATIONS = ['hasParts'];
@@ -32,7 +35,6 @@ async function getScenes(spinalAPIMiddleware) {
     const scenesContext = await graph.getContext(SCENE_CONTEXT_NAME);
     return scenesContext.getChildren(SCENE_RELATIONS);
 }
-exports.getScenes = getScenes;
 async function sceneGetItems(sceneNode, spinalAPIMiddleware) {
     const res = [];
     const parts = await sceneNode.getChildren(SCENE_PART_RELATIONS);
@@ -74,17 +76,14 @@ async function sceneGetItems(sceneNode, spinalAPIMiddleware) {
     }
     return res;
 }
-exports.sceneGetItems = sceneGetItems;
 function getFolderPath(itemPath) {
     console.log('itemPath', itemPath);
     return itemPath.split('/')[0];
 }
-exports.getFolderPath = getFolderPath;
 function isNodeId(node, id) {
     // @ts-ignore
     if (isNaN(id))
         return id === node.info.id.get();
     return id == node._server_id;
 }
-exports.isNodeId = isNodeId;
 //# sourceMappingURL=sceneUtils.js.map

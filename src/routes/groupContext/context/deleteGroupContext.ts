@@ -62,7 +62,22 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       const groupContext: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore
       SpinalGraphService._addNode(groupContext)
-      await SpinalGraphService.removeFromGraph(groupContext.getId().get())
+
+      if (!groupContext || !(groupContext instanceof SpinalContext)) {
+        res.status(400).send("groupContext not found");
+        return;
+      }
+      const categoryList = await groupContext.getChildren("hasCategory");
+      for (const category of categoryList) {
+        const groupList = await category.getChildren("hasGroup");
+        await Promise.allSettled(groupList.map(async (group) => {
+          await group.removeFromGraph();
+        }))
+        await category.removeFromGraph();
+      }
+      await groupContext.removeFromGraph();
+      res.status(200).send("Deleted Successfully");
+
     } catch (error) {
 
       if (error.code && error.message) return res.status(error.code).send(error.message);

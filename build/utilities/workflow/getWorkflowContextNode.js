@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getWorkflowContextNode = void 0;
+exports.getWorkflowContextNode = getWorkflowContextNode;
 const spinal_model_graph_1 = require("spinal-model-graph");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const loadAndValidateNode_1 = require("../loadAndValidateNode");
@@ -36,5 +36,4 @@ async function getWorkflowContextNode(spinalAPIMiddleware, profileId, workflowSe
         };
     return workflowContextNode;
 }
-exports.getWorkflowContextNode = getWorkflowContextNode;
 //# sourceMappingURL=getWorkflowContextNode.js.map

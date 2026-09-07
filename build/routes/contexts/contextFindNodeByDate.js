@@ -22,75 +22,96 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const moment = require("moment");
+const moment_1 = __importDefault(require("moment"));
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/find_node_in_context_by_date:
-   *   post:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Find node object in a specific context by date
-   *     summary: Gets Node
-   *     tags:
-   *      - Contexts/ontologies
-   *     requestBody:
-   *       description: => (context) use the dynamic ID <br>  => both fields (beginDate/endDate) are converted to GMT, so your search is a standard GMT query mechanism <br> => Date Format is "DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss" <br> => the filter is applied to the directModifictionDate field <br> => directModificationDate is date of direct change on the node, example = declare a ticket on the piece node <br> => indirectModificationDate is change of a child or parent of the node, example = change a state of the ticket node linked to a piece node,
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - contextId
-   *               - beginDate
-   *               - endDate
-   *             properties:
-   *               beginDate:
-   *                 type: string
-   *               endDate:
-   *                 type: string
-   *               contextId:
-   *                 type: string
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/NodeWithDate'
-   *       400:
-   *         description: Bad request
-    */
-    app.post("/api/v1/find_node_in_context_by_date", async (req, res, next) => {
+     * @swagger
+     * /api/v1/find_node_in_context_by_date:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     description: Find node object in a specific context by date
+     *     summary: Gets Node
+     *     tags:
+     *      - Contexts/ontologies
+     *     requestBody:
+     *       description: => (context) use the dynamic ID <br>  => both fields (beginDate/endDate) are converted to GMT, so your search is a standard GMT query mechanism <br> => Date Format is "DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss" <br> => the filter is applied to the directModifictionDate field <br> => directModificationDate is date of direct change on the node, example = declare a ticket on the piece node <br> => indirectModificationDate is change of a child or parent of the node, example = change a state of the ticket node linked to a piece node,
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - contextId
+     *               - beginDate
+     *               - endDate
+     *             properties:
+     *               beginDate:
+     *                 type: string
+     *               endDate:
+     *                 type: string
+     *               contextId:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: Success
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                $ref: '#/components/schemas/NodeWithDate'
+     *       400:
+     *         description: Bad request
+     */
+    app.post('/api/v1/find_node_in_context_by_date', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const context = await spinalAPIMiddleware.load(parseInt(req.body.contextId, 10), profileId);
             // @ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(context);
-            const beginDateTimeZone = moment(req.body.beginDate, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], true);
-            const endDateTimeZone = moment(req.body.endDate, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], true);
+            const beginDateTimeZone = (0, moment_1.default)(req.body.beginDate, [
+                'DD-MM-YYYY',
+                'DD-MM-YYYY HH:mm:ss',
+                'DD MM YYYY',
+                'DD MM YYYY HH:mm:ss',
+                'DD/MM/YYYY',
+                'DD/MM/YYYY HH:mm:ss',
+            ], true);
+            const endDateTimeZone = (0, moment_1.default)(req.body.endDate, [
+                'DD-MM-YYYY',
+                'DD-MM-YYYY HH:mm:ss',
+                'DD MM YYYY',
+                'DD MM YYYY HH:mm:ss',
+                'DD/MM/YYYY',
+                'DD/MM/YYYY HH:mm:ss',
+            ], true);
             const beginDate = beginDateTimeZone.utc();
             const endDate = endDateTimeZone.utc();
             var tab = [];
             await spinal_env_viewer_graph_service_1.SpinalGraphService.findInContext(context.getId().get(), context.getId().get(), (node) => {
                 if (node.info.directModificationDate) {
-                    const nodeDate = moment(node.info.directModificationDate.get());
-                    const test = moment(nodeDate).isBetween(beginDate, endDate);
+                    const nodeDate = (0, moment_1.default)(node.info.directModificationDate.get());
+                    const test = (0, moment_1.default)(nodeDate).isBetween(beginDate, endDate);
                     if (test == true) {
                         const info = {
                             dynamicId: node._server_id,
                             staticId: node.getId().get(),
                             name: node.getName().get(),
                             type: node.getType().get(),
-                            directModificationDate: node.info.directModificationDate === undefined ? "" : node.info.directModificationDate.get(),
-                            indirectModificationDate: node.info.indirectModificationDate === undefined ? "" : node.info.directModificationDate.get()
+                            directModificationDate: node.info.directModificationDate === undefined
+                                ? ''
+                                : node.info.directModificationDate.get(),
+                            indirectModificationDate: node.info.indirectModificationDate === undefined
+                                ? ''
+                                : node.info.directModificationDate.get(),
                         };
                         tab.push(info);
                     }

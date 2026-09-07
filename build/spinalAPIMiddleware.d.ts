@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { Server } from 'http';
 import { FileSystem, type Model, type Ptr, File, type Pbr } from 'spinal-core-connectorjs';
 import type { SpinalGraph } from 'spinal-model-graph';

@@ -25,8 +25,8 @@
 import { Application } from 'express';
 import { writeFile } from 'fs';
 import { resolve } from 'path';
-import * as swaggerUi from 'swagger-ui-express';
-import * as swaggerJSDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJSDoc from 'swagger-jsdoc';
 import { swaggerOption } from './swaggerOption';
 const redoc = require('redoc-express');
 

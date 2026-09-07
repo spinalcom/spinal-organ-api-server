@@ -23,11 +23,12 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTicketDetails = void 0;
+exports.getTicketDetails = getTicketDetails;
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 const loadAndValidateNode_1 = require("../loadAndValidateNode");
 function getPriorityNumber(priority) {
+    // compatibility with old tickets by spinalcom
     if (!priority)
         return 0; // default to 0 if priority is undefined or empty
     const normalizedPriority = String(priority).trim().toLowerCase();
@@ -39,7 +40,8 @@ function getPriorityNumber(priority) {
         case 'urgent':
             return 2;
         // These three cases are for old tickets created by Spinalcom with mission
-        default: { // All future tickets should have number parsable prioirity, but in case of tickets with unparsable priority, we default to 0
+        default: {
+            // All future tickets should have number parsable prioirity, but in case of tickets with unparsable priority, we default to 0
             const parsedPriority = Number(normalizedPriority);
             return Number.isFinite(parsedPriority) ? parsedPriority : 0;
         }
@@ -47,7 +49,8 @@ function getPriorityNumber(priority) {
 }
 async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includeAttachedItems = true) {
     await spinalAPIMiddleware.getGraph();
-    const { contextNode, processNode, stepNode, ticketNode } = await getTicketNodeTree(ticketId, profileId, spinalAPIMiddleware);
+    const ticketData = await getTicketNodeTree(ticketId, profileId, spinalAPIMiddleware);
+    const { contextNode, processNode, stepNode, ticketNode } = ticketData || {};
     if (!contextNode || !processNode || !stepNode || !ticketNode) {
         throw new Error('Failed to retrieve ticket node tree');
     }
@@ -66,7 +69,9 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includ
         name: ticketNode.info.name.get(),
         type: ticketNode.info.type.get(),
         priority: getPriorityNumber(ticketNodeInfo.priority),
-        creationDate: ticketNode.info.creationDate?.get() || Number(ticketNodeInfo.creationDate) || NaN,
+        creationDate: ticketNode.info.creationDate?.get() ||
+            Number(ticketNodeInfo.creationDate) ||
+            NaN,
         elementSelected: elementSelected === undefined
             ? ''
             : {
@@ -153,7 +158,6 @@ async function getTicketDetails(spinalAPIMiddleware, profileId, ticketId, includ
     }
     return info;
 }
-exports.getTicketDetails = getTicketDetails;
 async function getTicketLogDetails(ticketNode, processNode, contextNode) {
     const logs = await (0, spinal_service_ticket_1.getTicketLogs)(ticketNode);
     const logRes = await Promise.all(logs.map(async (log) => ({

@@ -22,12 +22,17 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import type { SpinalContext } from 'spinal-model-graph';
-
+import {
+  type SpinalContext,
+  SPINAL_RELATION_PTR_LST_TYPE,
+} from 'spinal-model-graph';
 import type { Lst } from 'spinal-core-connectorjs';
 import { FileSystem } from 'spinal-core-connectorjs_type';
 import type { ISpinalAPIMiddleware } from '../../../interfaces/ISpinalAPIMiddleware';
-import { SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service';
+import {
+  SpinalGraphService,
+  SpinalNode,
+} from 'spinal-env-viewer-graph-service';
 import * as express from 'express';
 import {
   addTicket,
@@ -44,9 +49,15 @@ import { awaitSync } from '../../../utilities/awaitSync';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { getSpatialContext } from '../../../utilities/getSpatialContext';
 import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
+import {
+  createSpinalUser,
+  createSpinalUserContext,
+  getSpinalUser,
+  getSpinalUserContexts,
+} from 'spinal-model-user-service';
 
 module.exports = function (
-  logger,
+  logger: any,
   app: express.Express,
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
@@ -73,7 +84,7 @@ module.exports = function (
    *           default: regular
    *         description: Ticket creation mode. `regular` keeps the current full synchronous behavior. `fast` uses the new fast path.
    *     requestBody:
-   *       description: For the two parameters *workflow* and *process* you can use either the dynamicId or the name. To associate the ticket with an element, please fill in the dynamicId parameter
+   *       description: For the two parameters *workflow* and *process* you can use either the dynamicId or the name. To associate the ticket with an element, provide either *nodeDynamicId* or *nodeStaticId*.
    *       required: true
    *       content:
    *         application/json:
@@ -82,7 +93,6 @@ module.exports = function (
    *             required:
    *               - workflow
    *               - process
-   *               - nodeDynamicId
    *               - name
    *               - priority
    *               - description
@@ -99,7 +109,10 @@ module.exports = function (
    *                   - type: integer
    *               nodeDynamicId:
    *                 type: integer
-   *                 description: The node's target dynamicId
+   *                 description: The node's target dynamicId. Provide either this or nodeStaticId.
+   *               nodeStaticId:
+   *                 type: string
+   *                 description: The node's target staticId. Used when nodeDynamicId is not provided.
    *               name:
    *                 type: string
    *                 description: The ticket's name
@@ -112,6 +125,9 @@ module.exports = function (
    *               declarer_id:
    *                 type: string
    *                 description: Optional - The declarer's identifier
+   *               email:
+   *                 type: string
+   *                 description: Optional - The email of the ticket's declarer
    *               images:
    *                 type: array
    *                 description: Optional - Array of images to attach to the ticket
@@ -162,24 +178,30 @@ module.exports = function (
       workflow,
       process,
       nodeDynamicId,
+      nodeStaticId,
       name,
       priority,
       description,
+      email,
     } = req.body;
     const missing: string[] = [];
     if (!workflow) missing.push('workflow');
     if (!process) missing.push('process');
-    if (!nodeDynamicId) {
-      missing.push('nodeDynamicId (required)');
-    } else if (isNaN(+nodeDynamicId)) {
+    // a target node must be provided via either nodeDynamicId or nodeStaticId
+    if (!nodeDynamicId && !nodeStaticId) {
+      missing.push('nodeDynamicId or nodeStaticId (one is required)');
+    } else if (nodeDynamicId && isNaN(+nodeDynamicId)) {
       missing.push('nodeDynamicId (must be a number)');
+    } else if (!nodeDynamicId && typeof nodeStaticId !== 'string') {
+      missing.push('nodeStaticId (must be a string)');
     }
     if (priority === undefined) missing.push('priority');
     if (!name || typeof name !== 'string')
       missing.push('name (must be a string)');
     if (!description || typeof description !== 'string')
       missing.push('description (must be a string)');
-
+    if (email && typeof email !== 'string')
+      missing.push('email (must be a string)');
     if (missing.length > 0) {
       return res
         .status(400)
@@ -259,7 +281,13 @@ module.exports = function (
       };
     }
 
-    return { profileId, ticketInfo, workflowNode, processNode };
+    return {
+      profileId,
+      ticketInfo,
+      workflowNode,
+      processNode,
+      email: req.body.email,
+    };
   }
 
   async function routeTicketCreationByMode(
@@ -270,7 +298,7 @@ module.exports = function (
       const mode = parseTicketCreationMode(req.query.mode);
       if (mode === 'fast') return createTicketFast(req, res);
       return createTicketRegular(req, res);
-    } catch (error) {
+    } catch (error: any) {
       if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
       return res.status(400).send({ ko: error });
@@ -282,9 +310,8 @@ module.exports = function (
     res: express.Response
   ) {
     try {
-      const { profileId, ticketInfo, workflowNode, processNode } =
+      const { profileId, ticketInfo, workflowNode, processNode, email } =
         await getTicketCreationPrerequisites(req);
-
 
       const targetNode = await fetchSpinalNodeTarget(
         spinalAPIMiddleware,
@@ -324,11 +351,11 @@ module.exports = function (
       await awaitSync(ticketCreatedNode);
       const infoFromTicket = await getTicketInfo(ticketCreatedNode);
       const info: Record<string, string | number> = {
-        dynamicId: ticketCreatedNode._server_id,
+        dynamicId: ticketCreatedNode._server_id!,
         staticId: ticketCreatedNode.info.id.get(),
         name: infoFromTicket.name || ticketCreatedNode.info.name.get(),
         type: ticketCreatedNode.info.type.get(),
-        elementSelected: targetNode._server_id,
+        elementSelected: targetNode._server_id!,
         priority: +infoFromTicket.priority,
         description: infoFromTicket.description,
         declarer_id: infoFromTicket.declarer_id,
@@ -351,9 +378,11 @@ module.exports = function (
           req.body.additionalAttributes
         );
       }
-
+      if (email) {
+        addTicketToUser(profileId, email, ticketCreatedNode);
+      }
       return res.status(201).json(info);
-    } catch (error) {
+    } catch (error: any) {
       if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
       return res.status(400).send({ ko: error });
@@ -362,26 +391,31 @@ module.exports = function (
 
   async function createTicketFast(req: express.Request, res: express.Response) {
     try {
-      const { profileId, ticketInfo, workflowNode, processNode } =
+      const { profileId, ticketInfo, workflowNode, processNode, email } =
         await getTicketCreationPrerequisites(req);
       //@ts-ignore
       const ticketNode = new SpinalNode(
-        ticketInfo.name, 'SpinalSystemServiceTicketTypeTicket'
+        ticketInfo.name,
+        'SpinalSystemServiceTicketTypeTicket'
       );
       FileSystem._objects_to_send.set(ticketNode.model_id, ticketNode);
       //@ts-ignore
       FileSystem._send_data_to_hub_func();
 
+
+      const creationDate = Date.now();
+
       await awaitSync(ticketNode);
       const info: Record<string, string | number> = {
-        dynamicId: ticketNode._server_id,
+        dynamicId: ticketNode._server_id!,
         staticId: ticketNode.info.id.get(),
         name: ticketNode.info.name.get(),
         type: ticketNode.info.type.get(),
-        elementSelected: req.body.nodeDynamicId,
+        elementSelected: req.body.nodeDynamicId ?? req.body.nodeStaticId,
         description: ticketInfo.description,
         priority: ticketInfo.priority,
-        declarer_id: ticketInfo.declarer_id
+        declarer_id: ticketInfo.declarer_id,
+        creationDate,
       };
 
       const images = Array.isArray(req.body.images) ? req.body.images : [];
@@ -394,12 +428,14 @@ module.exports = function (
         processNode,
         ticketNode,
         req.body.nodeDynamicId,
+        req.body.nodeStaticId,
+        email,
         images,
         additionalAttributes
       );
 
       return res.status(201).json(info);
-    } catch (error) {
+    } catch (error: any) {
       if (error?.code && error?.message)
         return res.status(error.code).send(error.message);
       return res.status(400).send({ ko: error });
@@ -418,6 +454,8 @@ module.exports = function (
     processNode: SpinalNode,
     ticketNode: SpinalNode,
     nodeDynamicId: number,
+    nodeStaticId: string | undefined,
+    email: string | undefined,
     images: any[] = [],
     additionalAttributes: any = null
   ) {
@@ -425,11 +463,12 @@ module.exports = function (
       const targetNode = await fetchSpinalNodeTarget(
         spinalAPIMiddleware,
         profileId,
-        nodeDynamicId
+        nodeDynamicId,
+        nodeStaticId
       );
       if (!targetNode) {
         console.error(
-          '[createTicketFast] invalid nodeDynamicId in deferred creation'
+          '[createTicketFast] invalid nodeDynamicId or nodeStaticId in deferred creation'
         );
         return;
       }
@@ -459,10 +498,20 @@ module.exports = function (
       // Add additional attributes if provided
       if (additionalAttributes) {
         try {
-          await applyAdditionalAttributes(ticketCreatedNode, additionalAttributes);
+          await applyAdditionalAttributes(
+            ticketCreatedNode,
+            additionalAttributes
+          );
         } catch (error) {
-          console.error('[createTicketFast] error applying additional attributes:', error);
+          console.error(
+            '[createTicketFast] error applying additional attributes:',
+            error
+          );
         }
+      }
+
+      if (email) {
+        addTicketToUser(profileId, email, ticketCreatedNode);
       }
     } catch (error) {
       console.error('[createTicketFast] deferred creation failed:', error);
@@ -485,8 +534,11 @@ module.exports = function (
       };
       try {
         const imageBufferData = processImageBase64(image.value as string);
-        await FileExplorer.uploadFiles(ticketNode, { name: image.name, buffer: imageBufferData });
-        // await serviceDocumentation.addFileAsNote( // BAD PERFORMANCE, ADDING NOTES TURNED OUT TO BE VERY COSTLY BECAUSE THEY ARE ALL STORED IN SAME SPACE :c 
+        await FileExplorer.uploadFiles(ticketNode, {
+          name: image.name,
+          buffer: imageBufferData,
+        });
+        // await serviceDocumentation.addFileAsNote( // BAD PERFORMANCE, ADDING NOTES TURNED OUT TO BE VERY COSTLY BECAUSE THEY ARE ALL STORED IN SAME SPACE :c
         //   ticketNode,
         //   { name: image.name, buffer: imageBufferData },
         //   user
@@ -517,22 +569,47 @@ module.exports = function (
       }
     }
   }
+
+  async function addTicketToUser(
+    profileId: string,
+    email: string,
+    ticketNode: SpinalNode
+  ) {
+    const graph = await spinalAPIMiddleware.getGraph();
+    const userContexts = await getSpinalUserContexts(graph);
+    let userContext = userContexts[0]; // Assuming the first context is the relevant one, adjust as needed
+    if (!userContext) {
+      const contextName = 'Default User Context';
+      const contextData = await createSpinalUserContext(graph, contextName);
+      userContext = contextData.context;
+      const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
+      if (userGraph && userGraph !== graph)
+        await userGraph.addContext(userContext);
+    }
+    // get user in context by email
+    let user = await getSpinalUser(userContext, email);
+    // if not found create a new user with this email
+    if (!user) {
+      user = await createSpinalUser(userContext, email);
+    }
+    // add the ticket to the user with a 'UserHasTicket' relation
+    await user.addChild(
+      ticketNode,
+      'UserHasTicket',
+      SPINAL_RELATION_PTR_LST_TYPE
+    );
+  }
 };
 
 /**
  * Helper function to process base64 image string, stripping data URL prefix if present.
  */
-function processImageBase64(base64Image: string): Buffer {
+function processImageBase64(base64Image: string): Buffer | undefined {
   // check if data base64
   if (/^data:image\/\w+;base64,/.test(base64Image) === true) {
-    const imageData = base64Image.replace(
-      /^data:image\/\w+;base64,/,
-      ''
-    );
+    const imageData = base64Image.replace(/^data:image\/\w+;base64,/, '');
     const imageBufferData = Buffer.from(imageData, 'base64');
     return imageBufferData;
-
-
   }
 }
 
@@ -557,7 +634,7 @@ async function getWorkflowNode(
   workflowIdOrName: string | number,
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string
-) {
+): Promise<SpinalNode | undefined> {
   try {
     const workflowId = +workflowIdOrName;
     if (!isNaN(workflowId)) {
@@ -585,7 +662,7 @@ async function getProcessNode(
   processIdOrName: string | number,
   spinalAPIMiddleware: ISpinalAPIMiddleware,
   profileId: string
-): Promise<SpinalNode> {
+): Promise<SpinalNode | undefined> {
   try {
     const processId = +processIdOrName;
     if (!isNaN(processId)) {
@@ -613,7 +690,7 @@ async function fetchSpinalNodeTarget(
   profileId: string,
   dynamicId?: number,
   staticId?: string
-): Promise<SpinalNode> {
+): Promise<SpinalNode | undefined> {
   if (dynamicId) {
     try {
       const node: SpinalNode = await loadAndValidateNode(

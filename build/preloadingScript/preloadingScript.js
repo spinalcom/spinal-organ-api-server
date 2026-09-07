@@ -23,13 +23,15 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.preloadingScript = void 0;
+exports.preloadingScript = preloadingScript;
 const spinal_model_graph_1 = require("spinal-model-graph");
 const viewInfo_func_1 = require("../routes/geographicContext/viewInfo_func");
 const getStaticDetailsInfo_1 = require("../utilities/getStaticDetailsInfo");
 const getTicketListInfo_1 = require("../utilities/getTicketListInfo");
 const getNodeInfo_1 = require("../utilities/getNodeInfo");
 const getTicketDetails_1 = require("../utilities/workflow/getTicketDetails");
+const getInventory_1 = require("../utilities/getInventory");
+const getTimeSeriesData_1 = require("../utilities/getTimeSeriesData");
 const BUILDING_TYPE = 'geographicBuilding';
 const FLOOR_TYPE = 'geographicFloor';
 const ROOM_TYPE = 'geographicRoom';
@@ -98,11 +100,106 @@ async function preloadingScript(spinalAPIMiddleware, profileId, scriptOptions) {
             await processTicketList(spinalAPIMiddleware, profileId, chunk);
         }
     }
+    if (Array.isArray(scriptOptions.inventories) &&
+        scriptOptions.inventories.length > 0) {
+        console.log('START PRELOAD FLOOR INVENTORIES');
+        for (let i = 0; i < scriptOptions.inventories.length; i += 1) {
+            statusMsg = `inventories : processing entry ${i + 1} of ${scriptOptions.inventories.length}.`;
+            await processInventory(spinalAPIMiddleware, profileId, scriptOptions.inventories[i], (msg) => {
+                statusMsg = msg;
+            });
+        }
+    }
+    if (Array.isArray(scriptOptions.timeSeries) &&
+        scriptOptions.timeSeries.length > 0) {
+        console.log('START PRELOAD TIME SERIES');
+        for (let i = 0; i < scriptOptions.timeSeries.length; i += 1) {
+            statusMsg = `timeSeries : processing entry ${i + 1} of ${scriptOptions.timeSeries.length}.`;
+            await processTimeSeries(spinalAPIMiddleware, profileId, scriptOptions.timeSeries[i], (msg) => {
+                statusMsg = msg;
+            });
+        }
+    }
     const endingTime = Date.now();
     clearInterval(intervalId);
     console.log(`--- Preloading Script ended at : ${new Date(endingTime).toLocaleString()} , total time ${endingTime - startingTime} ms ---`);
 }
-exports.preloadingScript = preloadingScript;
+async function processTimeSeries(spinalAPIMiddleware, profileId, entry, setStatus) {
+    if (!entry || !Array.isArray(entry.ids) || entry.ids.length === 0)
+        return;
+    if (!(entry.timeWindow > 0)) {
+        console.warn(`[warn] timeSeries : invalid timeWindow (%s), it must be a positive number of milliseconds`, entry.timeWindow);
+        return;
+    }
+    const end = Date.now();
+    const start = end - entry.timeWindow;
+    const timeSeriesIntervalDate = { start, end };
+    // Time series are heavy to load
+    const timeSeriesChunkSize = 20;
+    for (let i = 0; i < entry.ids.length; i += timeSeriesChunkSize) {
+        const chunk = entry.ids.slice(i, i + timeSeriesChunkSize);
+        setStatus(`timeSeries : ${new Date(start).toLocaleString()} -> ${new Date(end).toLocaleString()}, processing chunk starting at index ${i} to ${i + timeSeriesChunkSize - 1} of ${entry.ids.length}.`);
+        const results = await Promise.allSettled(chunk.map((dynamicId) => (0, getTimeSeriesData_1.getTimeSeriesData)(spinalAPIMiddleware, profileId, dynamicId, timeSeriesIntervalDate)));
+        results.forEach((result, index) => {
+            if (result.status === 'rejected') {
+                console.warn(`[warn] timeSeries : failed for endpoint server_id %d : %s`, chunk[index], result.reason?.message ?? result.reason);
+            }
+        });
+    }
+}
+async function processInventory(spinalAPIMiddleware, profileId, entry, setStatus) {
+    if (!entry || !Array.isArray(entry.ids) || entry.ids.length === 0)
+        return;
+    const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
+    const contexts = await graph.getChildren('hasContext');
+    const groupContext = contexts.find((e) => entry.contextId !== undefined
+        ? e._server_id === entry.contextId
+        : e.getName().get() === entry.context);
+    if (!groupContext) {
+        console.warn(`[warn] inventories : context not found (%s)`, entry.contextId ?? entry.context);
+        return;
+    }
+    // Collect the dynamic ids of every item returned across all the floors of this
+    // entry ; dedup them so an item shared by several floors is only detailed once.
+    const itemIds = new Set();
+    for (let i = 0; i < entry.ids.length; i += 1) {
+        const floorId = entry.ids[i];
+        setStatus(`inventories : floor ${i + 1} of ${entry.ids.length} (server_id ${floorId}).`);
+        // onlyDynamicId keeps the intermediate result light : we only need the item
+        // ids here, the details are preloaded afterwards through processStaticDetails.
+        const reqInfo = {
+            context: entry.context,
+            contextId: entry.contextId,
+            category: entry.category,
+            categoryId: entry.categoryId,
+            groups: entry.groups,
+            groupIds: entry.groupIds,
+            onlyDynamicId: true,
+        };
+        try {
+            const inventory = await (0, getInventory_1.getFloorInventory)(spinalAPIMiddleware, profileId, groupContext, floorId, reqInfo);
+            for (const group of inventory ?? []) {
+                for (const item of group?.groupItems ?? []) {
+                    if (typeof item?.dynamicId === 'number')
+                        itemIds.add(item.dynamicId);
+                }
+            }
+        }
+        catch (err) {
+            console.warn(`[warn] inventories : failed for floor server_id %d : %s`, floorId, err?.message ?? err);
+        }
+    }
+    if (!entry.staticDetails || itemIds.size === 0)
+        return;
+    const ids = Array.from(itemIds);
+    const chunkSize = 100;
+    console.log(`START PRELOAD INVENTORY STATIC DETAILS (${ids.length} items)`);
+    for (let i = 0; i < ids.length; i += chunkSize) {
+        const chunk = ids.slice(i, i + chunkSize);
+        setStatus(`inventories staticDetails : processing chunk starting at index ${i} to ${i + chunkSize - 1} of ${ids.length}.`);
+        await Promise.allSettled(chunk.map((server_id) => processStaticDetails(spinalAPIMiddleware, profileId, server_id)));
+    }
+}
 async function processTicketList(spinalAPIMiddleware, profileId, server_ids) {
     const promises = server_ids.map(async (server_id) => {
         const node = await spinalAPIMiddleware.load(server_id, profileId);

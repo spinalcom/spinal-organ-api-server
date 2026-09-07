@@ -1,7 +1,34 @@
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
+/*
+ * Copyright 2026 SpinalCom - www.spinalcom.com
+ *
+ * This file is part of SpinalCore.
+ *
+ * Please read all of the following terms and conditions
+ * of the Software license Agreement ("Agreement")
+ * carefully.
+ *
+ * This Agreement is a legally binding contract between
+ * the Licensee (as defined below) and SpinalCom that
+ * sets forth the terms and conditions that govern your
+ * use of the Program. By installing and/or using the
+ * Program, you agree to abide by all the terms and
+ * conditions stated or referenced herein.
+ *
+ * If you do not agree to abide by these terms and
+ * conditions, do not demonstrate your acceptance and do
+ * not install or use the Program.
+ * You should have received a copy of the license along
+ * with this file. If not, see
+ * <http://resources.spinalcom.com/licenses.pdf>.
+ */
+
+import {
+  SpinalContext,
+  SpinalGraphService,
+} from 'spinal-env-viewer-graph-service';
 import spinalServiceTimeSeries from '../spinalTimeSeries';
 import * as express from 'express';
-import * as moment from 'moment';
+import moment from 'moment';
 import * as XLSX from 'xlsx';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
@@ -27,7 +54,6 @@ module.exports = function (
   app: express.Express,
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
-
   /**
    * @swagger
    * /api/v1/endpoint/{id}/timeSeries/bulk-insert:
@@ -84,145 +110,156 @@ module.exports = function (
    *       422:
    *         description: Validation errors
    */
-  app.post(
-    '/api/v1/endpoint/:id/timeSeries/bulk-insert',
-    async (req, res) => {
-      try {
-        const f: any = (req as any).files?.file;
-        if (!f) return res.status(400).json({ error: "Missing file field 'file'" });
-        
-        const profileId = getProfileId(req);
-        const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-        // @ts-ignore
-        SpinalGraphService._addNode(node);
+  app.post('/api/v1/endpoint/:id/timeSeries/bulk-insert', async (req, res) => {
+    try {
+      const f: any = (req as any).files?.file;
+      if (!f)
+        return res.status(400).json({ error: "Missing file field 'file'" });
 
-        const timeseries = await spinalServiceTimeSeries().getOrCreateTimeSeries(node.getId().get());
+      const profileId = getProfileId(req);
+      const node = await spinalAPIMiddleware.load(
+        parseInt(req.params.id, 10),
+        profileId
+      );
+      // @ts-ignore
+      SpinalGraphService._addNode(node);
 
-        const dateCol = String(req.query.dateCol || 'date');
-        const valueCol = String(req.query.valueCol || 'value');
-        const requestedSheet = req.query.sheet ? String(req.query.sheet) : undefined;
-        const dryRun = String(req.query.dryRun || 'false').toLowerCase() === 'true';
+      const timeseries = await spinalServiceTimeSeries().getOrCreateTimeSeries(
+        node.getId().get()
+      );
 
-        // Read workbook
-        const wb = XLSX.read(f.data, {
-          type: 'buffer',
-          cellDates: true, // try to keep dates as Date objects when possible
+      const dateCol = String(req.query.dateCol || 'date');
+      const valueCol = String(req.query.valueCol || 'value');
+      const requestedSheet = req.query.sheet
+        ? String(req.query.sheet)
+        : undefined;
+      const dryRun =
+        String(req.query.dryRun || 'false').toLowerCase() === 'true';
+
+      // Read workbook
+      const wb = XLSX.read(f.data, {
+        type: 'buffer',
+        cellDates: true, // try to keep dates as Date objects when possible
+      });
+
+      const sheetName = requestedSheet || wb.SheetNames[0];
+      if (!sheetName)
+        return res.status(400).json({ error: 'No sheets found in workbook' });
+
+      const ws = wb.Sheets[sheetName];
+      if (!ws)
+        return res.status(400).json({ error: `Sheet not found: ${sheetName}` });
+
+      // Parse rows
+      const rows = XLSX.utils.sheet_to_json<Record<string, any>>(ws, {
+        defval: null, // keep empty cells as null
+        raw: true, // keep native types (Date, number for serial, etc.)
+      });
+
+      if (!rows.length) {
+        return res.status(422).json({ error: 'No data rows found in sheet' });
+      }
+
+      // Validate columns exist
+      const first = rows[0];
+      const missingCols = [dateCol, valueCol].filter((k) => !(k in first));
+      if (missingCols.length) {
+        return res.status(422).json({
+          error: 'Missing required columns',
+          missing: missingCols,
+          availableColumns: Object.keys(first),
         });
+      }
 
-        const sheetName = requestedSheet || wb.SheetNames[0];
-        if (!sheetName) return res.status(400).json({ error: 'No sheets found in workbook' });
+      // Convert & validate each row
+      const acceptedDateFormats = [
+        'DD-MM-YYYY HH:mm:ss',
+        'DD MM YYYY HH:mm:ss',
+        'DD/MM/YYYY HH:mm:ss',
+      ];
 
-        const ws = wb.Sheets[sheetName];
-        if (!ws) return res.status(400).json({ error: `Sheet not found: ${sheetName}` });
+      type ParsedRow = { idx: number; date: Date; value: number };
+      const ok: ParsedRow[] = [];
+      const errors: Array<{ idx: number; error: string }> = [];
 
-        // Parse rows
-        const rows = XLSX.utils.sheet_to_json<Record<string, any>>(ws, {
-          defval: null, // keep empty cells as null
-          raw: true,    // keep native types (Date, number for serial, etc.)
+      for (let i = 0; i < rows.length; i++) {
+        const idx = i + 2; // +2 (header row is row 1)
+        const r = rows[i];
+
+        const d: any = r[dateCol];
+        const v: any = r[valueCol];
+
+        // Coerce value
+        const value =
+          typeof v === 'string' ? Number(v.replace(',', '.')) : Number(v);
+        if (!Number.isFinite(value)) {
+          errors.push({ idx, error: `Invalid number in '${valueCol}': ${v}` });
+          continue;
+        }
+
+        // Coerce date
+        let dateObj: Date | null = null;
+
+        if (d instanceof Date) {
+          // Excel cell already parsed as Date
+          dateObj = d;
+        } else if (typeof d === 'number') {
+          // Excel date serial
+          dateObj = excelSerialToDate(d);
+        } else if (typeof d === 'string') {
+          const m = moment(d, acceptedDateFormats, true);
+          if (m.isValid()) dateObj = m.toDate();
+        }
+
+        if (!dateObj || isNaN(dateObj.getTime())) {
+          errors.push({ idx, error: `Invalid date in '${dateCol}': ${d}` });
+          continue;
+        }
+
+        ok.push({ idx, date: dateObj, value });
+      }
+
+      if (!ok.length) {
+        return res.status(422).json({
+          error: 'No valid rows',
+          rowErrors: errors.slice(0, 100), // cap error list
+          totalRows: rows.length,
         });
+      }
 
-        if (!rows.length) {
-          return res.status(422).json({ error: 'No data rows found in sheet' });
-        }
-
-        // Validate columns exist 
-        const first = rows[0];
-        const missingCols = [dateCol, valueCol].filter((k) => !(k in first));
-        if (missingCols.length) {
-          return res.status(422).json({
-            error: 'Missing required columns',
-            missing: missingCols,
-            availableColumns: Object.keys(first),
-          });
-        }
-
-        // Convert & validate each row
-        const acceptedDateFormats = [
-          'DD-MM-YYYY HH:mm:ss',
-          'DD MM YYYY HH:mm:ss',
-          'DD/MM/YYYY HH:mm:ss',
-        ];
-
-        type ParsedRow = { idx: number; date: Date; value: number };
-        const ok: ParsedRow[] = [];
-        const errors: Array<{ idx: number; error: string }> = [];
-
-        for (let i = 0; i < rows.length; i++) {
-          const idx = i + 2; // +2 (header row is row 1)
-          const r = rows[i];
-
-          const d: any = r[dateCol];
-          const v: any = r[valueCol];
-
-          // Coerce value
-          const value = typeof v === 'string' ? Number(v.replace(',', '.')) : Number(v);
-          if (!Number.isFinite(value)) {
-            errors.push({ idx, error: `Invalid number in '${valueCol}': ${v}` });
-            continue;
-          }
-
-          // Coerce date
-          let dateObj: Date | null = null;
-
-          if (d instanceof Date) {
-            // Excel cell already parsed as Date
-            dateObj = d;
-          } else if (typeof d === 'number') {
-            // Excel date serial
-            dateObj = excelSerialToDate(d);
-          } else if (typeof d === 'string') {
-            const m = moment(d, acceptedDateFormats, true);
-            if (m.isValid()) dateObj = m.toDate();
-          }
-
-          if (!dateObj || isNaN(dateObj.getTime())) {
-            errors.push({ idx, error: `Invalid date in '${dateCol}': ${d}` });
-            continue;
-          }
-
-          ok.push({ idx, date: dateObj, value });
-        }
-
-        if (!ok.length) {
-          return res.status(422).json({
-            error: 'No valid rows',
-            rowErrors: errors.slice(0, 100), // cap error list
-            totalRows: rows.length,
-          });
-        }
-
-        // Dry run? Just report
-        if (dryRun) {
-          return res.json({
-            sheet: sheetName,
-            parsed: ok.length,
-            skipped: errors.length,
-            totalRows: rows.length,
-            sample: ok.slice(0, 5), // preview first 5 rows
-            rowErrors: errors.slice(0, 20),
-            dryRun: true,
-          });
-        }
-
-        let inserted = 0;
-        for (const r of ok) {
-          await timeseries.insert(r.value, r.date);
-          inserted++;
-        }
-
+      // Dry run? Just report
+      if (dryRun) {
         return res.json({
           sheet: sheetName,
-          inserted,
+          parsed: ok.length,
           skipped: errors.length,
           totalRows: rows.length,
-          rowErrors: errors.slice(0, 50),
+          sample: ok.slice(0, 5), // preview first 5 rows
+          rowErrors: errors.slice(0, 20),
+          dryRun: true,
         });
-      } catch (error: any) {
-        if (error?.code && error?.message) {
-          return res.status(error.code).send(error.message);
-        }
-        return res.status(400).json({ error: error?.message ?? 'Bulk insert failed' });
       }
+
+      let inserted = 0;
+      for (const r of ok) {
+        await timeseries.insert(r.value, r.date);
+        inserted++;
+      }
+
+      return res.json({
+        sheet: sheetName,
+        inserted,
+        skipped: errors.length,
+        totalRows: rows.length,
+        rowErrors: errors.slice(0, 50),
+      });
+    } catch (error: any) {
+      if (error?.code && error?.message) {
+        return res.status(error.code).send(error.message);
+      }
+      return res
+        .status(400)
+        .json({ error: error?.message ?? 'Bulk insert failed' });
     }
-  );
+  });
 };

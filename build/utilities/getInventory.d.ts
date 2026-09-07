@@ -11,6 +11,7 @@ type InventoryRequestInfo = {
     includeArea?: boolean;
     onlyDynamicId?: boolean;
     includeUnassignedItems?: boolean;
+    onlyCounts?: boolean;
 };
 declare function getRoomInventory(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, groupContext: SpinalNode<any>, dynamicId: number, reqInfo: InventoryRequestInfo): Promise<any[]>;
 declare function getBuildingInventory(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId: string, groupContext: SpinalNode<any>, dynamicId: number, reqInfo: InventoryRequestInfo): Promise<any[]>;

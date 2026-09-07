@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getControlEndpointsInfo = void 0;
+exports.getControlEndpointsInfo = getControlEndpointsInfo;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_control_endpoint_service_1 = require("spinal-env-viewer-plugin-control-endpoint-service");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
@@ -82,6 +82,5 @@ async function getControlEndpointsInfo(spinalAPIMiddleware, profilId, dynamicId,
     });
     return await Promise.all(promises);
 }
-exports.getControlEndpointsInfo = getControlEndpointsInfo;
 exports.default = getControlEndpointsInfo;
 //# sourceMappingURL=getControlEndpointsInfo.js.map

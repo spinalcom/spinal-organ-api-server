@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2026 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -22,15 +22,18 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
+import { z } from 'zod';
+import validate from 'express-zod-safe';
 import type { ISpinalAPIMiddleware } from '../../../interfaces';
-// import { createTicketContext, type ITicketStep } from 'spinal-service-ticket';
-// import { getProfileId } from '../../../utilities/requestUtilities';
-// import { awaitSync } from '../../../utilities/awaitSync';
-import * as express from 'express';
+import type { Express } from 'express';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { createSpinalUserContext } from 'spinal-model-user-service';
+import { createBasicNodeSync } from '../../../utilities/createBasicNode';
+import { atLeastOne } from '../../../utilities/zodAtLeastOne';
 
 module.exports = function (
-  logger,
-  app: express.Express,
+  logger: any,
+  app: Express,
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
@@ -39,93 +42,92 @@ module.exports = function (
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: create a user context
-   *     summary: create a user context
+   *         - write
+   *     summary: Create a user context
+   *     description: Create a user context
    *     tags:
-   *       - User Context
+   *       - User
    *     requestBody:
    *       content:
    *         application/json:
    *           schema:
    *             type: object
    *             required:
-   *               - nameWorkflow
+   *               - name
    *             properties:
-   *               nameWorkflow:
+   *               name:
    *                 type: string
-   *                 description: name of the workflow
-   *               steps:
-   *                 type: array
-   *                 description: optionnal default steps that will be created in the workflow process, steps start at order 1
-   *                 items:
-   *                   type: object
-   *                   required:
-   *                     - name
-   *                     - order
-   *                   properties:
-   *                     name:
-   *                       type: string
-   *                       description: name of the step
-   *                     color:
-   *                       type: string
-   *                       description: color of the step
-   *                     order:
-   *                       type: integer
-   *                       description: order of the step, starts at 1
+   *                 maxLength: 200
+   *                 minLength: 1
+   *                 description: name of the user context to create
+   *               color:
+   *                 type: string
+   *                 pattern: '^#([A-Fa-f0-9]{6})$'
+   *                 description: Hexadecimal color code for the user context (e.g., #RRGGBB)
    *     responses:
-   *       200:
+   *       201:
    *         description: Create Successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               $ref: '#/components/schemas/BasicNodeWithColor'
    *       400:
-   *         description: create not Successfully
+   *         description: failed to create user context
+   *       401:
+   *         description: no graph found for the user
    */
-  app.post('/api/v1/user/context', async (req, res) => {
-    // try {
-    //   if (typeof req.body.nameWorkflow !== 'string') {
-    //     return res.status(400).send('string nameWorkflow is invalide name');
-    //   }
-    //   const profileId = getProfileId(req);
-    //   const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
-    //   const graph = await spinalAPIMiddleware.getGraph();
-    //   // search if the context name already exists
-    //   const contextNodes = await graph.getChildren('hasContext');
-    //   if (
-    //     contextNodes.some(
-    //       (child) => child.info.name?.get() === req.body.nameWorkflow
-    //     )
-    //   )
-    //     return res.status(400).send('the name context already exists');
-    //   const steps: ITicketStep[] = [];
-    //   if (req.body.steps && Array.isArray(req.body.steps)) {
-    //     for (const step of req.body.steps) {
-    //       if (step.name && typeof step.order === 'number') {
-    //         steps.push({
-    //           name: step.name,
-    //           color: step.color || undefined,
-    //           order: step.order,
-    //         });
-    //       }
-    //     }
-    //     steps.sort((a, b) => a.order - b.order);
-    //   }
-    //   const contextTicketNode = await createTicketContext(
-    //     req.body.nameWorkflow,
-    //     steps
-    //   );
-    //   if (userGraph._server_id != graph._server_id) {
-    //     await userGraph.addContext(contextTicketNode);
-    //   }
-    //   await awaitSync(contextTicketNode);
-    //   return res.status(200).json({
-    //     dynamicId: contextTicketNode._server_id,
-    //     name: contextTicketNode.info.name.get() || undefined,
-    //     type: contextTicketNode.info.type.get() || undefined,
-    //     staticId: contextTicketNode.info.id.get() || undefined,
-    //   });
-    // } catch (error) {
-    //   if (error?.code && error?.message)
-    //     return res.status(error.code).send(error.message);
-    //   return res.status(500).send(error?.message);
-    // }
-  });
+  app.post(
+    '/api/v1/user/context',
+    validate({
+      body: atLeastOne(
+        z.strictObject({
+          name: z.string().max(200).min(1),
+          color: z
+            .string()
+            .regex(/^#([A-Fa-f0-9]{6})$/)
+            .optional(),
+        })
+      ),
+    }),
+    async (req, res) => {
+      try {
+        const profileId = getProfileId(req);
+        const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
+        if (!userGraph)
+          throw { code: 401, message: `No graph found for ${profileId}` };
+        const { name, color } = req.body;
+        const graph = await spinalAPIMiddleware.getGraph();
+
+        try {
+          const userContextAndGroups = await createSpinalUserContext(
+            graph,
+            name,
+            color
+          );
+          if (userGraph !== graph)
+            await userGraph.addContext(userContextAndGroups.context);
+          const result = await createBasicNodeSync(
+            userContextAndGroups.context,
+            ['color'] as const
+          );
+          res.status(201).json(result);
+        } catch (error) {
+          throw {
+            code: 400,
+            message:
+              error instanceof Error
+                ? error.message
+                : 'Failed to create user context',
+          };
+        }
+      } catch (error: any) {
+        if (error?.code && error?.message)
+          return res.status(error.code).send(error.message);
+        return res
+          .status(500)
+          .send('An unexpected error occurred while creating the user context');
+      }
+    }
+  );
 };

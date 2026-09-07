@@ -531,37 +531,70 @@ export interface Note {
 *   schemas:
 *     ViewInfoNode:
 *       type: object
-*       description: Flattened node representing a geographic graph element.
-*       properties:
-*         dynamicId:
-*           type: integer
-*           format: int64
-*           description: Unique Spinal dynamic ID of the node
-*           example: 24063840
+*       description: |
+*         One entry of the `nodes` map returned by `POST /api/v1/geographicContext/viewInfo2`.
 *
+*         The node's own dynamicId is the key it is stored under, so it is not repeated inside the
+*         value. Reconstruct the tree by starting at the entries whose `parentId` is `null` and
+*         following `children`.
+*       properties:
 *         parentId:
 *           type: integer
 *           format: int64
 *           nullable: true
 *           description: |
-*             Parent dynamicId.
-*             Null when the node is a root.
+*             dynamicId of the parent, i.e. the key of the entry this node hangs from.
+*             Null when the node is one of the traversal roots.
 *           example: 24062000
+*
+*         children:
+*           type: array
+*           description: |
+*             dynamicIds of the direct children, each one a key of the same `nodes` map. Lists only
+*             the children actually traversed, so it reflects the `floorRef` / `roomRef` /
+*             `equipements` flags of the request and the equipment group filter, not the full graph.
+*             Empty for leaves.
+*           items:
+*             type: integer
+*             format: int64
+*           example: [24063912, 24063988]
 *
 *         dbId:
 *           type: integer
 *           nullable: true
-*           description: dbId of the BIM object (only for equipment/reference)
+*           description: |
+*             Id of the object inside its BIM file, used to address it in the viewer.
+*             Set only on `BIMObject`, `geographicReference`, `roomRef` and `floorRef` nodes;
+*             null on the purely geographic ones.
 *           example: 3365
 *
 *         bimFileAlias:
 *           type: integer
 *           nullable: true
-*           description: Mapped integer alias for BIM file identifiers
+*           description: |
+*             Alias of the BIM file this object comes from, to be resolved against the response's
+*             `bimFileAlias` dictionary. That dictionary is keyed by BIM file id with the alias as
+*             value, so going from this number back to a file id means inverting it.
+*             Null wherever `dbId` is null.
 *           example: 1
 *
 *         type:
 *           type: string
-*           description: SpinalGraph type of the node
+*           description: |
+*             Type of the node. Usually its SpinalGraph type, with two exceptions the route
+*             substitutes to record how the node was reached: reference objects found under a room
+*             via `hasReferenceObject.ROOM` are reported as `roomRef`, and those found under a floor
+*             via `hasReferenceObject` as `floorRef`.
+*           enum:
+*             - geographicContext
+*             - geographicSite
+*             - geographicBuilding
+*             - geographicFloor
+*             - geographicZone
+*             - geographicRoom
+*             - geographicReference
+*             - BIMObject
+*             - roomRef
+*             - floorRef
 *           example: geographicRoom
 */

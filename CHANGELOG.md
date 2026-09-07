@@ -1,5 +1,21 @@
 # CHANGELOG
 
+# 13-08-2026 -> v1.1.19
+- Fixed json parsing on create_ticket route that allowed parsing of bigger requests
+
+# 06-07-2026 -> v1.1.16
+- Most analysis routes are done
+- Added inventory in preload_config
+
+# 10-06-2026 -> v1.1.15
+- Building inventory goes through gorup context instead of spatial context
+
+# 13-05-2026 -> v1.1.14
+- New analysis module and update routes
+
+## 11-05-2026 -> v1.1.13
+- fix groupContext/list
+
 ## 16-04-2026 -> v1.1.12
 - added building/inventory
 

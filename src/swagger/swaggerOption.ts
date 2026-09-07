@@ -31,7 +31,7 @@ export const swaggerOption = {
       title: 'SpinalCore Graph API',
       version: '1.0.0',
       description:
-        'Welcome to the reference documentation for the Spinalcore Digital Twin REST API! </br></br>To learn about the common use cases and concept of Spinalcore REST APIs, check out our resource center  (https://resourcecenter.fr.spinalcom.com/ressources-d%C3%A9veloppeur).</br></br>In addition to Spinalcore API Reference, we also provide complete documentation for integrator that need to install and implement Spinalcore Digital Twin Operating System on their built environment (https://resourcecenter.fr.spinalcom.com/ressources-int%C3%A9grateur)',
+        'Welcome to the reference documentation for the Spinalcore Digital Twin REST API! <br><br>To learn about the common use cases and concept of Spinalcore REST APIs, check out our <a href="https://resourcecenter.fr.spinalcom.com/ressources-d%C3%A9veloppeur" target="_blank">resource center</a>.<br><br>In addition to Spinalcore API Reference, we also provide complete documentation for integrators that need to install and implement Spinalcore Digital Twin Operating System on their built environment: <a href="https://resourcecenter.fr.spinalcom.com/ressources-int%C3%A9grateur" target="_blank">Integrator Documentation</a>.',
       termsOfService: 'http://resources.spinalcom.com/licenses.pdf',
       contact: {
         email: 'developers@spinalcom.com',

@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { Application } from 'express';
 import { Server } from 'http';
 import { ISpinalAPIMiddleware } from '../interfaces';

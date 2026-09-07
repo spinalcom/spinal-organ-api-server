@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getNodeInfo = void 0;
+exports.getNodeInfo = getNodeInfo;
 const corseChildrenAndParentNode_1 = require("./corseChildrenAndParentNode");
 async function getNodeInfo(spinalAPIMiddleware, profileId, dynamicId, includeChildrenRelations, includeParentRelations) {
     const node = await spinalAPIMiddleware.load(dynamicId, profileId);
@@ -49,6 +49,5 @@ async function getNodeInfo(spinalAPIMiddleware, profileId, dynamicId, includeChi
     };
     return info;
 }
-exports.getNodeInfo = getNodeInfo;
 exports.default = getNodeInfo;
 //# sourceMappingURL=getNodeInfo.js.map

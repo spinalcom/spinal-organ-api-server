@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 /*
  * Copyright 2020 SpinalCom - www.spinalcom.com
@@ -24,10 +27,40 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const spinalTimeSeries_1 = require("../spinalTimeSeries");
+const spinalTimeSeries_1 = __importDefault(require("../spinalTimeSeries"));
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
-    app.get("/api/v1/endpoint/:id/timeSeries/readFromLast24H", async (req, res, next) => {
+    /**
+    /**
+   * @swagger
+   * /api/v1/endpoint/{id}/timeSeries/readFromLast24H:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     description: get time series
+   *     summary: get time series
+   *     tags:
+   *       - IoTNetwork & Time Series
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: use the dynamic ID
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: Success
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/Timeserie'
+   *       400:
+   *         description: Bad request
+    */
+    app.get('/api/v1/endpoint/:id/timeSeries/readFromLast24H', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const node = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getEquipmentListInfo = void 0;
+exports.getEquipmentListInfo = getEquipmentListInfo;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 async function getEquipmentListInfo(spinalAPIMiddleware, profileId, roomId) {
     const nodes = [];
@@ -26,6 +26,5 @@ async function getEquipmentListInfo(spinalAPIMiddleware, profileId, roomId) {
     }
     return nodes;
 }
-exports.getEquipmentListInfo = getEquipmentListInfo;
 exports.default = getEquipmentListInfo;
 //# sourceMappingURL=getEquipmentListInfo.js.map

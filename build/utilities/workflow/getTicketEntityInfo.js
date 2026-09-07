@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTicketEntityInfo = void 0;
+exports.getTicketEntityInfo = getTicketEntityInfo;
 const loadAndValidateNode_1 = require("../loadAndValidateNode");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 async function getTicketEntityInfo(spinalAPIMiddleware, profileId, ticketId) {
@@ -39,6 +39,5 @@ async function getTicketEntityInfo(spinalAPIMiddleware, profileId, ticketId) {
     };
     return info;
 }
-exports.getTicketEntityInfo = getTicketEntityInfo;
 exports.default = getTicketEntityInfo;
 //# sourceMappingURL=getTicketEntityInfo.js.map

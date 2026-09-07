@@ -1,12 +1,11 @@
 "use strict";
-/* eslint-disable @typescript-eslint/no-var-requires */
 /*
- * Copyright 2020 SpinalCom - www.spinalcom.com
+ * Copyright 2026 SpinalCom - www.spinalcom.com
  *
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -356,12 +355,19 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./analysis/global/getInputTypes')(logger, app, spinalAPIMiddleware);
     require('./analysis/global/getTriggerTypes')(logger, app, spinalAPIMiddleware);
     require('./analysis/global/getAlgorithms')(logger, app, spinalAPIMiddleware);
+    require('./analysis/global/getAnalyticOptions')(logger, app, spinalAPIMiddleware);
     require('./analysis/contexts/createContext')(logger, app, spinalAPIMiddleware);
     require('./analysis/contexts/getContexts')(logger, app, spinalAPIMiddleware);
     require('./analysis/contexts/getContext')(logger, app, spinalAPIMiddleware);
+    require('./analysis/contexts/deleteContext')(logger, app, spinalAPIMiddleware);
     require('./analysis/contexts/getAnalytics')(logger, app, spinalAPIMiddleware);
     require('./analysis/contexts/createAnalytics')(logger, app, spinalAPIMiddleware);
     require('./analysis/analytics/getAnalytic')(logger, app, spinalAPIMiddleware);
+    require('./analysis/analytics/executeAnalytic')(logger, app, spinalAPIMiddleware);
+    require('./analysis/analytics/deleteAnalytic')(logger, app, spinalAPIMiddleware);
+    require('./analysis/analytics/modifyAnalytic')(logger, app, spinalAPIMiddleware);
+    require('./analysis/analytics/patchAnalytic')(logger, app, spinalAPIMiddleware);
+    require('./analysis/organs/manageOrganAssignments')(logger, app, spinalAPIMiddleware);
     // command
     require('./command/roomListCommandEnable')(logger, app, spinalAPIMiddleware);
     require('./command/roomCommandLight')(logger, app, spinalAPIMiddleware);
@@ -375,6 +381,32 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./health/healthStatus')(logger, app, spinalAPIMiddleware);
     require('./health/organStatus')(logger, app, spinalAPIMiddleware);
     require('./health/testTimeout')(logger, app, spinalAPIMiddleware);
+    require('./user/context/createUserContext')(logger, app, spinalAPIMiddleware);
+    require('./user/context/getUserContextById')(logger, app, spinalAPIMiddleware);
+    require('./user/context/getUserContext')(logger, app, spinalAPIMiddleware);
+    require('./user/context/updateUserContext')(logger, app, spinalAPIMiddleware);
+    require('./user/user/createUser')(logger, app, spinalAPIMiddleware);
+    require('./user/user/deleteUser')(logger, app, spinalAPIMiddleware);
+    require('./user/user/getUser')(logger, app, spinalAPIMiddleware);
+    require('./user/user/getUserById')(logger, app, spinalAPIMiddleware);
+    require('./user/user/getUserMultiple')(logger, app, spinalAPIMiddleware);
+    require('./user/user/updateUser')(logger, app, spinalAPIMiddleware);
+    require('./user/user/getUserTickets')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/category/createUserCategoryGroup')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/category/deleteUserCategoryGroup')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/category/getUserCategoryGroup')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/category/getUserCategoryGroupById')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/category/updateUserCategoryGroup')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/context/createUserGroupContext')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/context/deleteUserGroupContext')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/context/getUserGroupContext')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/context/getUserGroupContextById')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/context/updateUserGroupContext')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/group/getUserGroup')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/group/createUserGroup')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/group/deleteUserGroup')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/group/getUserGroupById')(logger, app, spinalAPIMiddleware);
+    require('./userGroup/group/updateUserGroup')(logger, app, spinalAPIMiddleware);
 }
 exports.default = routes;
 //# sourceMappingURL=routes.js.map

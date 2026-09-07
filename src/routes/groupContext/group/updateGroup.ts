@@ -98,21 +98,36 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       //@ts-ignore
       SpinalGraphService._addNode(group)
 
-      if (context instanceof SpinalContext && category.belongsToContext(context) && group.belongsToContext(context)) {
-        const dataObject = {
-          name: req.body.newNameGroup,
-          color: req.body.newNameColor
-        }
-        groupManagerService.updateGroup(group.getId().get(), dataObject)
-      } else {
-        res.status(400).send("category or group not found in context");
+      if (!context || !(context instanceof SpinalContext)) {
+        res.status(400).send("context not found");
+        return;
       }
+
+      if (!category || !category.belongsToContext(context)) {
+        res.status(400).send("category not found");
+        return;
+      }
+
+      if (!group || !group.belongsToContext(context)) {
+        res.status(400).send("group not found");
+        return;
+      }
+
+      const dataObject = {
+        name: req.body.newNameGroup,
+        color: req.body.newNameColor
+      }
+      const nodeRef = await groupManagerService.updateGroup(group.getId().get(), dataObject)
+      return res.status(200).json({
+        id: nodeRef.id.get(),
+        name: nodeRef.name.get(),
+        color: nodeRef.color.get()
+      })
     } catch (error) {
       if (error.code && error.message) return res.status(error.code).send(error.message);
 
       res.status(400).send(error.message)
     }
-    res.json();
   })
 
 }

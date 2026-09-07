@@ -34,4 +34,26 @@ module.exports = {
   // array of server_id (STEP) to preload ticket; do a getchildren then a getTicketDetails
   runTicketLists: [
   ],
+  // array of floor inventories to preload. Each entry runs the floor inventory
+  // (like POST /api/v1/floor/{id}/inventory) on every floor id, then, when
+  // staticDetails is true, preloads the static details of every item found.
+  inventories: [
+    // {
+    //   ids: [],             // Floor dynamic ids (server_id)
+    //   context: '',         // Group context name (or use contextId)
+    //   category: '',        // Category name (or use categoryId)
+    //   groups: [],          // Group names to filter on (empty = every group of the category)
+    //   staticDetails: false // preload static details of the resulting items
+    // }
+  ],
+  // array of endpoint time series to preload. Each entry reads the time series
+  // (like GET /api/v1/endpoint/{id}/timeSeries/read/{begin}/{end}) of every
+  // endpoint id over the window [now - timeWindow, now], now being the moment
+  // the preload runs. The data itself is discarded, only the loading matters.
+  timeSeries: [
+    // {
+    //   ids: [],                             // Endpoint dynamic ids (server_id)
+    //   timeWindow: 1000 * 60 * 60 * 24 * 365 // Window size in ms (here : last year)
+    // }
+  ],
 };

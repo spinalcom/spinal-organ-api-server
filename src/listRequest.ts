@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import * as origList from '../finalList';
+import origList from '../finalList';
 import { relative, join, sep, resolve } from 'path';
 import { readdirSync, statSync, writeFile } from 'fs';
 
@@ -112,5 +112,6 @@ function getCategoryInFilePath(filePath: string): string | undefined {
 function getIndexCat(filePath: string, orderCat: string[]): number {
   const dir = getCategoryInFilePath(filePath);
   if (!dir) return 9999;
-  return orderCat.indexOf(dir);
+  const idx = orderCat.indexOf(dir);
+  return idx === -1 ? 9999 : idx;
 }

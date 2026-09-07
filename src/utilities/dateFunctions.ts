@@ -22,15 +22,39 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import * as moment from 'moment';
+import moment from 'moment';
 
-export function verifDate(date: string):  number | Date| string {
-  const res = moment(date, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], 'fr', true); // uses 'fr' locale and strict parsing
+export function verifDate(date: string): number | Date | string {
+  const res = moment(
+    date,
+    [
+      'DD-MM-YYYY',
+      'DD-MM-YYYY HH:mm:ss',
+      'DD MM YYYY',
+      'DD MM YYYY HH:mm:ss',
+      'DD/MM/YYYY',
+      'DD/MM/YYYY HH:mm:ss',
+    ],
+    'fr',
+    true
+  ); // uses 'fr' locale and strict parsing
   if (!res.isValid()) return 1;
   else return res.toDate();
 }
 
 export function sendDate(date: string) {
-  const res = moment(date, ["DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss"], 'fr', true); // uses 'fr' locale and strict parsing
-  return res
+  const res = moment(
+    date,
+    [
+      'DD-MM-YYYY',
+      'DD-MM-YYYY HH:mm:ss',
+      'DD MM YYYY',
+      'DD MM YYYY HH:mm:ss',
+      'DD/MM/YYYY',
+      'DD/MM/YYYY HH:mm:ss',
+    ],
+    'fr',
+    true
+  ); // uses 'fr' locale and strict parsing
+  return res;
 }

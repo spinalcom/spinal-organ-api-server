@@ -23,7 +23,8 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parentsNode = exports.childrensNode = void 0;
+exports.childrensNode = childrensNode;
+exports.parentsNode = parentsNode;
 function childrensNode(node) {
     const childs = node.children;
     const res = [];
@@ -41,7 +42,6 @@ function childrensNode(node) {
     }
     return res;
 }
-exports.childrensNode = childrensNode;
 async function parentsNode(node) {
     const parents = node.parents;
     const auxtab = [];
@@ -63,5 +63,4 @@ async function parentsNode(node) {
     });
     return res;
 }
-exports.parentsNode = parentsNode;
 //# sourceMappingURL=corseChildrenAndParentNode.js.map

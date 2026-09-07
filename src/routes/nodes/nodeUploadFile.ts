@@ -23,23 +23,17 @@
  */
 
 import {
-  SpinalContext,
   SpinalNode,
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
-import { FileSystem } from 'spinal-core-connectorjs_type';
-// import spinalAPIMiddleware from '../../spinalAPIMiddleware';
-import * as express from 'express';
-import { serviceTicketPersonalized } from 'spinal-service-ticket';
+import type { Express } from 'express';
 import { FileExplorer } from 'spinal-env-viewer-plugin-documentation-service';
-import { ServiceUser } from 'spinal-service-user';
-import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import { getProfileId } from '../../utilities/requestUtilities';
-import { ISpinalAPIMiddleware } from '../../interfaces';
+import type { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (
-  logger,
-  app: express.Express,
+  logger: any,
+  app: Express,
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
@@ -83,7 +77,8 @@ module.exports = function (
     try {
       const profileId = getProfileId(req);
       const node: SpinalNode<any> = await spinalAPIMiddleware.load(
-        parseInt(req.params.id, 10), profileId
+        parseInt(req.params.id, 10),
+        profileId
       );
       //@ts-ignore
       SpinalGraphService._addNode(node);
@@ -117,8 +112,8 @@ module.exports = function (
         });
       }
     } catch (error) {
-
-      if (error.code && error.message) return res.status(error.code).send(error.message);
+      if (error.code && error.message)
+        return res.status(error.code).send(error.message);
       res.status(400).send('ko');
     }
     // res.json();

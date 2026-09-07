@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.viewInfo_func = void 0;
+exports.viewInfo_func = viewInfo_func;
 const constants_1 = require("spinal-env-viewer-context-geographic-service/build/constants");
 const visitNodesWithTypeRelation_1 = require("../../utilities/visitNodesWithTypeRelation");
 const spinal_model_graph_1 = require("spinal-model-graph");
@@ -112,7 +112,6 @@ async function viewInfo_func(spinalAPIMiddleware, profilId, options = {}, progre
         return { code: 500, dataType: 'text', data: e.message };
     }
 }
-exports.viewInfo_func = viewInfo_func;
 function errorHandler(error) {
     const e = ErrorsRecord[error];
     // res.status(e.code).send(e.message);

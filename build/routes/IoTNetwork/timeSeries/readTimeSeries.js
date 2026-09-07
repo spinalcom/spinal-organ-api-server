@@ -22,9 +22,12 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
-const spinalTimeSeries_1 = require("../spinalTimeSeries");
+const spinalTimeSeries_1 = __importDefault(require("../spinalTimeSeries"));
 const dateFunctions_1 = require("../../../utilities/dateFunctions");
 const aggregationUtils_1 = require("../../../utilities/aggregationUtils");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");

@@ -67,12 +67,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const category = await spinalAPIMiddleware.load(parseInt(req.params.categoryId, 10), profileId);
             //@ts-ignore
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
-            if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && category.belongsToContext(context)) {
-                await spinal_env_viewer_graph_service_1.SpinalGraphService.removeFromGraph(category.getId().get());
+            if (!context || !(context instanceof spinal_env_viewer_graph_service_1.SpinalContext)) {
+                res.status(400).send("context not found");
+                return;
             }
-            else {
-                res.status(400).send("category not found in context");
+            if (!category || !category.belongsToContext(context)) {
+                res.status(400).send("category not found");
+                return;
             }
+            const groups = await category.getChildren("hasGroup");
+            await Promise.allSettled(groups.map(group => group.removeFromGraph()));
+            await category.removeFromGraph();
+            res.status(200).send("Deleted Successfully");
         }
         catch (error) {
             if (error.code && error.message)
