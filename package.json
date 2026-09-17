@@ -6,6 +6,7 @@
     "build": "rm -rf build declarations && tsc",
     "start": "npm run build && node index.js",
     "dev": "npm run build && NODE_ENV=dev nodemon index.js",
+    "export-docs": "npm run build && node build/scripts/exportDocs.js",
     "test": "NODE_ENV=test mocha --check-leaks -r ts-node/register -r tsconfig-paths/register \"test/**/*.spec.ts\""
   },
   "author": "SpinalCom",
