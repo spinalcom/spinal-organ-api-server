@@ -405,7 +405,6 @@ module.exports = [
   "../src/routes/userGroup/group/getUserGroup.ts",
   "../src/routes/userGroup/group/getUserGroupById.ts",
   "../src/routes/userGroup/group/updateUserGroup.ts",
-<<<<<<< HEAD
   "../src/routes/documentary/file/gerFileData.ts",
   "../src/routes/documentary/file/getFileLinkedToNode.ts",
   "../src/routes/documentary/file/getFileVersionByName.ts",
@@ -429,9 +428,7 @@ module.exports = [
   "../src/routes/analysis/global/getAnalyticOptions.ts",
   "../src/routes/documentary/file/downgradeFileVersion.ts",
   "../src/routes/analysis/organs/manageOrganAssignments.ts",
-  "../src/routes/documentary/file/readDetails.ts"
-]
-=======
+  "../src/routes/documentary/file/readDetails.ts",
   "../src/routes/analysis/global/getAnalyticOptions.ts",
   "../src/routes/analysis/organs/manageOrganAssignments.ts",
   "../src/routes/userGroup/user/addUsersInGroup.ts",
@@ -439,4 +436,3 @@ module.exports = [
   "../src/routes/userGroup/user/getUserInGroup.ts",
   "../src/routes/userGroup/user/moveUsersInGroup.ts"
 ];
->>>>>>> 39a049f367ec798110a59a9532bde9ca67465631
