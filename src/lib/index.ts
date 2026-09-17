@@ -64,7 +64,7 @@ export async function runServerRest(server: Server, app: Application, spinalAPIM
 	initApiServer(app, spinalAPIMiddleware, log_body);
 	const io = await runSocketServer(server as any, spinalIOMiddleware);
 
-	return registerMonitoringAgent(app, io);
+	await registerMonitoringAgent(app, io);
 	return { app, io };
 }
 

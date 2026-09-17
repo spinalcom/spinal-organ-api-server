@@ -73,7 +73,7 @@ function initApiServer(app, spinalAPIMiddleware, log_body = false) {
 async function runServerRest(server, app, spinalAPIMiddleware, spinalIOMiddleware, log_body = false) {
     initApiServer(app, spinalAPIMiddleware, log_body);
     const io = await (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
-    return (0, spinal_agent_monitoring_1.registerMonitoringAgent)(app, io);
+    await (0, spinal_agent_monitoring_1.registerMonitoringAgent)(app, io);
     return { app, io };
 }
 __exportStar(require("../interfaces"), exports);
