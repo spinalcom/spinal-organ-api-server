@@ -46,15 +46,16 @@ const express_fileupload_1 = __importDefault(require("express-fileupload"));
 const path_1 = __importDefault(require("path"));
 // import * as fileUpload from 'express-fileupload';
 // import * as path from 'path';
-const { version: API_SERVER_VERSION } = require('../../package.json');
+const { version: API_SERVER_VERSION } = require("../../package.json");
 const routes_1 = __importDefault(require("../routes/routes"));
 const api_server_1 = require("../api-server");
 const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
 __exportStar(require("../routes/geographicContext/viewInfo_func"), exports);
 __exportStar(require("../preloadingScript/preloadingScript"), exports);
+const spinal_agent_monitoring_1 = require("spinal-agent-monitoring");
 function initApiServer(app, spinalAPIMiddleware, log_body = false) {
     app.use((req, res, next) => {
-        res.setHeader('X-API-Version', API_SERVER_VERSION);
+        res.setHeader("X-API-Version", API_SERVER_VERSION);
         next();
     });
     app.use((0, express_fileupload_1.default)({ createParentPath: true }));
@@ -62,9 +63,9 @@ function initApiServer(app, spinalAPIMiddleware, log_body = false) {
     app.use((0, api_server_1.createLogRequestLifecycle)(log_body));
     //useLogger(app, log_body);
     (0, swagger_1.initSwagger)(app);
-    app.get('/logo.png', (req, res) => {
-        res.sendFile('spinalcore.png', {
-            root: path_1.default.resolve(__dirname + '../../../uploads'),
+    app.get("/logo.png", (req, res) => {
+        res.sendFile("spinalcore.png", {
+            root: path_1.default.resolve(__dirname + "../../../uploads"),
         });
     });
     (0, routes_1.default)({}, app, spinalAPIMiddleware);
@@ -72,6 +73,7 @@ function initApiServer(app, spinalAPIMiddleware, log_body = false) {
 async function runServerRest(server, app, spinalAPIMiddleware, spinalIOMiddleware, log_body = false) {
     initApiServer(app, spinalAPIMiddleware, log_body);
     const io = await (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
+    return (0, spinal_agent_monitoring_1.registerMonitoringAgent)(app, io);
     return { app, io };
 }
 __exportStar(require("../interfaces"), exports);
