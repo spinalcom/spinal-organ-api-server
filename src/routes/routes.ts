@@ -1289,6 +1289,8 @@ function routes(
   require('./health/organStatus')(logger, app, spinalAPIMiddleware);
   require('./health/testTimeout')(logger, app, spinalAPIMiddleware);
 
+  require('./snapshot/createNodeSnapshot')(logger, app, spinalAPIMiddleware);
+
   require('./user/context/createUserContext')(logger, app, spinalAPIMiddleware);
   require('./user/context/getUserContextById')(
     logger,
