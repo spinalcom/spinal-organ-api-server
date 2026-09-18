@@ -56,13 +56,29 @@ SPINAL_DTWIN_PATH="xxxxxxxxxxxxxxxxx"         # Path to the digital twin exemple
 
 ORGAN_NAME="xxxxxxxxxx"                       # Name of the organ. Used by monitoring platform and ecosystem. If possible make the name obvious which platform/client it belongs to. For exemple : ClientName-Api-Server | no need to add the port and spinalhub port in the name, as they are added automatically
 ORGAN_TYPE="api-server"                       # You can keep this as is. Used by monitoring platform to categorize the organs.
-PRELOAD_SCRIPT="1"                         # OPTIONAL | if set to "1"; call a preloading data script before starting to listen, fill the preload_config.js file```
+PRELOAD_SCRIPT="1"                         # OPTIONAL | if set to "1"; call a preloading data script before starting to listen, fill the preload_config.js file
+
+# /BIM/file local mode: when set to the spinalhub's `viewerForgeFiles` directory,
+# BIM/viewer files are served directly from disk instead of being proxied to the
+# hub (faster, offloads the hub). Files missing locally fall back to the proxy.
+BIM_FILE_LOCAL_PATH="../../nerve-center/memory/viewerForgeFiles"   #OPTIONAL
+
+# /BIM/file caching (applies to both local and proxy modes).
+# A viewer folder id embeds the model path + upload timestamp, so a given URL is
+# immutable (re-publishing a model creates a new id). 31536000s = 1 year +
+# `immutable` means browsers never re-request cached viewer files -> big offload.
+# Set BIM_FILE_CACHE_MAXAGE=0 (or remove it) to disable caching.
+BIM_FILE_CACHE_MAXAGE=31536000    #OPTIONAL
+# BIM_FILE_CACHE_IMMUTABLE=1   # default on when a max-age is set; set to 0 to drop `immutable`
+```
 
 you can disable monitoring if you add the `DISABLE_MONITORING` in the .env file
 
 ```bash
 DISABLE_MONITORING="true"                     # If not Commented will not enable monitoring
 ````
+
+
 
 ## Preloading : work hours and the node snapshot
 
@@ -71,9 +87,13 @@ decides how it preloads :
 
 - **outside the work hours** : the preloading script runs as before, blocking,
   before the server starts listening (fill `preload_config.js`).
-- **during the work hours** : the preloading script is skipped, the server
-  listens right away, and the nodes of the last snapshot are loaded back
-  progressively, a batch at a time, during the idle time between requests.
+- **during the work hours, with a snapshot** : the preloading script is
+  skipped, the server listens right away, and the nodes of the last snapshot
+  are loaded back progressively, a batch at a time, during the idle time
+  between requests.
+- **during the work hours, without a snapshot** (no file yet, or one that
+  cannot be read) : nothing to load back, so the preloading script runs as if
+  outside the work hours.
 
 The snapshot itself is written by `POST /api/v1/snapshot/nodes`, which walks
 `FileSystem._objects` and stores the `_server_id` of every loaded node. Take one

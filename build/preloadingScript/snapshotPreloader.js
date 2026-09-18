@@ -26,6 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.findNodeSnapshot = findNodeSnapshot;
 exports.runSnapshotPreloader = runSnapshotPreloader;
 const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
 const config_1 = __importDefault(require("../config"));
@@ -71,6 +72,23 @@ async function loadNode(spinalAPIMiddleware, profileId, server_id) {
     return true;
 }
 /**
+ * The node snapshot, when there is a usable one : null when the file is
+ * missing, or when it cannot be read (the reason is logged), so that a caller
+ * can fall back to another preloading strategy.
+ *
+ * @export
+ * @return {*}  {(Promise<ISnapshotFile | null>)}
+ */
+async function findNodeSnapshot() {
+    try {
+        return await (0, snapshotUtils_1.readNodeSnapshot)();
+    }
+    catch (error) {
+        console.warn(`[Snapshot Preloader] unusable snapshot file ${(0, snapshotUtils_1.getSnapshotFilePath)()} : ${error?.message ?? error}`);
+        return null;
+    }
+}
+/**
  * Loads every node id of the snapshot file back into the FileSystem, a batch
  * at a time, waiting for the API server to be idle between batches. Nothing is
  * kept from the loaded nodes : they stay in `FileSystem._objects`, which is
@@ -81,10 +99,12 @@ async function loadNode(spinalAPIMiddleware, profileId, server_id) {
  * @export
  * @param {ISpinalAPIMiddleware} spinalAPIMiddleware
  * @param {string} [profileId='any']
+ * @param {ISnapshotFile} [snapshot] an already read snapshot ; read from the
+ * snapshot file when omitted
  * @return {*}  {(Promise<ISnapshotPreloadStats | null>)} null when there is no
  * snapshot to load, or when a run is already in progress
  */
-async function runSnapshotPreloader(spinalAPIMiddleware, profileId = 'any') {
+async function runSnapshotPreloader(spinalAPIMiddleware, profileId = 'any', snapshot) {
     if (running) {
         console.warn('[Snapshot Preloader] already running, ignoring');
         return null;
@@ -93,14 +113,14 @@ async function runSnapshotPreloader(spinalAPIMiddleware, profileId = 'any') {
     // get past the check above
     running = true;
     try {
-        return await preload(spinalAPIMiddleware, profileId);
+        return await preload(spinalAPIMiddleware, profileId, snapshot);
     }
     finally {
         running = false;
     }
 }
-async function preload(spinalAPIMiddleware, profileId) {
-    const snapshot = await (0, snapshotUtils_1.readNodeSnapshot)();
+async function preload(spinalAPIMiddleware, profileId, givenSnapshot) {
+    const snapshot = givenSnapshot ?? (await (0, snapshotUtils_1.readNodeSnapshot)());
     if (!snapshot) {
         console.log(`[Snapshot Preloader] no snapshot file at ${(0, snapshotUtils_1.getSnapshotFilePath)()}, nothing to preload`);
         return null;

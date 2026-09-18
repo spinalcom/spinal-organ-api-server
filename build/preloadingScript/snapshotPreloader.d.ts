@@ -1,4 +1,5 @@
 import type { ISpinalAPIMiddleware } from '../interfaces/ISpinalAPIMiddleware';
+import { type ISnapshotFile } from '../routes/snapshot/snapshotUtils';
 /**
  * Outcome of a snapshot preloading run.
  *
@@ -18,6 +19,15 @@ export interface ISnapshotPreloadStats {
     durationMs: number;
 }
 /**
+ * The node snapshot, when there is a usable one : null when the file is
+ * missing, or when it cannot be read (the reason is logged), so that a caller
+ * can fall back to another preloading strategy.
+ *
+ * @export
+ * @return {*}  {(Promise<ISnapshotFile | null>)}
+ */
+export declare function findNodeSnapshot(): Promise<ISnapshotFile | null>;
+/**
  * Loads every node id of the snapshot file back into the FileSystem, a batch
  * at a time, waiting for the API server to be idle between batches. Nothing is
  * kept from the loaded nodes : they stay in `FileSystem._objects`, which is
@@ -28,7 +38,9 @@ export interface ISnapshotPreloadStats {
  * @export
  * @param {ISpinalAPIMiddleware} spinalAPIMiddleware
  * @param {string} [profileId='any']
+ * @param {ISnapshotFile} [snapshot] an already read snapshot ; read from the
+ * snapshot file when omitted
  * @return {*}  {(Promise<ISnapshotPreloadStats | null>)} null when there is no
  * snapshot to load, or when a run is already in progress
  */
-export declare function runSnapshotPreloader(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId?: string): Promise<ISnapshotPreloadStats | null>;
+export declare function runSnapshotPreloader(spinalAPIMiddleware: ISpinalAPIMiddleware, profileId?: string, snapshot?: ISnapshotFile): Promise<ISnapshotPreloadStats | null>;

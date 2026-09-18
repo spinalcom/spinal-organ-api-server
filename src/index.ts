@@ -28,7 +28,10 @@ import SpinalAPIMiddleware from './spinalAPIMiddleware';
 import { getSwaggerDocs, initSwagger } from './swagger';
 import ConfigFile from 'spinal-lib-organ-monitoring';
 import { preloadingScript } from './preloadingScript/preloadingScript';
-import { runSnapshotPreloader } from './preloadingScript/snapshotPreloader';
+import {
+  findNodeSnapshot,
+  runSnapshotPreloader,
+} from './preloadingScript/snapshotPreloader';
 import { formatWorkHours, isWithinWorkHours } from './utilities/workHours';
 const preload_config = require('../preload_config');
 
@@ -61,15 +64,22 @@ function Requests(logger) {
       const api = initApiServer(spinalAPIMiddleware);
       const port = config.api.port;
 
-      // Automatic API route call logic. Outside of the work hours the organ can
-      // afford the blocking preloading script ; during them it must answer
-      // right away, so the node snapshot is loaded progressively instead, in
-      // the idle time between requests (see runSnapshotPreloader below).
+      // Automatic API route call logic. During the work hours the organ must
+      // answer right away, so when a node snapshot is available it is loaded
+      // progressively instead, in the idle time between requests (see
+      // runSnapshotPreloader below). Outside of the work hours, or without a
+      // usable snapshot, the organ can afford the blocking preloading script.
       const preloadViewInfoEnabled = process.env.PRELOAD_SCRIPT === '1';
       const startedDuringWorkHours = isWithinWorkHours();
-      if (preloadViewInfoEnabled && !startedDuringWorkHours) {
+      const snapshot =
+        preloadViewInfoEnabled && startedDuringWorkHours
+          ? await findNodeSnapshot()
+          : null;
+      if (preloadViewInfoEnabled && !snapshot) {
         console.log(
-          `starting outside of the work hours (${formatWorkHours()}), running the preloading script`
+          startedDuringWorkHours
+            ? `starting during the work hours (${formatWorkHours()}) but without a node snapshot, running the preloading script`
+            : `starting outside of the work hours (${formatWorkHours()}), running the preloading script`
         );
         try {
           await preloadingScript(spinalAPIMiddleware, 'any', preload_config);
@@ -99,15 +109,20 @@ function Requests(logger) {
         );
       });
 
-      if (preloadViewInfoEnabled && startedDuringWorkHours) {
+      if (snapshot) {
         console.log(
-          `starting during the work hours (${formatWorkHours()}), skipping the preloading script ; the node snapshot will be loaded during idle time`
+          `starting during the work hours (${formatWorkHours()}), skipping the preloading script ; the ${snapshot.nodes.length} nodes of the snapshot will be loaded during idle time`
         );
         // not awaited on purpose : it runs in the background, in the gaps
         // between the requests the organ is answering
-        runSnapshotPreloader(spinalAPIMiddleware).catch((err) => {
-          console.error(`Error running the snapshot preloader:`, err.message);
-        });
+        runSnapshotPreloader(spinalAPIMiddleware, 'any', snapshot).catch(
+          (err) => {
+            console.error(
+              `Error running the snapshot preloader:`,
+              err.message
+            );
+          }
+        );
       }
 
       return SpinalAPIMiddleware.getInstance().runSocketServer(server);
