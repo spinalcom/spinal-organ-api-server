@@ -62,3 +62,11 @@ export declare function getSnapshotFilePath(): string;
  * @return {*}  {Promise<ISnapshotResult>}
  */
 export declare function writeNodeSnapshot(): Promise<ISnapshotResult>;
+/**
+ * Reads the snapshot file back. Returns null when there is none, so that a
+ * caller can simply skip its preloading.
+ *
+ * @export
+ * @return {*}  {(Promise<ISnapshotFile | null>)}
+ */
+export declare function readNodeSnapshot(): Promise<ISnapshotFile | null>;

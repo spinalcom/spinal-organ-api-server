@@ -28,6 +28,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSnapshotFilePath = getSnapshotFilePath;
 exports.writeNodeSnapshot = writeNodeSnapshot;
+exports.readNodeSnapshot = readNodeSnapshot;
 const fs_1 = require("fs");
 const path_1 = require("path");
 const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
@@ -108,5 +109,29 @@ async function writeNodeSnapshot() {
     }
     await fs_1.promises.rename(tmpPath, filePath);
     return { ...meta, file: filePath, durationMs: Date.now() - startedAt };
+}
+/**
+ * Reads the snapshot file back. Returns null when there is none, so that a
+ * caller can simply skip its preloading.
+ *
+ * @export
+ * @return {*}  {(Promise<ISnapshotFile | null>)}
+ */
+async function readNodeSnapshot() {
+    const filePath = getSnapshotFilePath();
+    let content;
+    try {
+        content = await fs_1.promises.readFile(filePath, 'utf8');
+    }
+    catch (error) {
+        if (error?.code === 'ENOENT')
+            return null;
+        throw error;
+    }
+    const snapshot = JSON.parse(content);
+    if (!Array.isArray(snapshot?.nodes)) {
+        throw new Error(`Invalid snapshot file ${filePath} : no "nodes" array`);
+    }
+    return snapshot;
 }
 //# sourceMappingURL=snapshotUtils.js.map

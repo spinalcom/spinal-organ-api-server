@@ -155,3 +155,26 @@ export async function writeNodeSnapshot(): Promise<ISnapshotResult> {
 
   return { ...meta, file: filePath, durationMs: Date.now() - startedAt };
 }
+
+/**
+ * Reads the snapshot file back. Returns null when there is none, so that a
+ * caller can simply skip its preloading.
+ *
+ * @export
+ * @return {*}  {(Promise<ISnapshotFile | null>)}
+ */
+export async function readNodeSnapshot(): Promise<ISnapshotFile | null> {
+  const filePath = getSnapshotFilePath();
+  let content: string;
+  try {
+    content = await fs.readFile(filePath, 'utf8');
+  } catch (error) {
+    if (error?.code === 'ENOENT') return null;
+    throw error;
+  }
+  const snapshot = JSON.parse(content) as ISnapshotFile;
+  if (!Array.isArray(snapshot?.nodes)) {
+    throw new Error(`Invalid snapshot file ${filePath} : no "nodes" array`);
+  }
+  return snapshot;
+}

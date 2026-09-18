@@ -26,7 +26,7 @@ module.exports = {
   // This file is is only used if PRELOAD_SCRIPT=1 in the .env file. It is used to preload data into the database when the server starts.
 
   // array of server_id to preload view info 
-  runViewInfo: [25434496
+  runViewInfo: [
   ],
   // array of server_id to preload static details + ticket list details
   runStaticDetails: [

@@ -28,6 +28,8 @@ import SpinalAPIMiddleware from './spinalAPIMiddleware';
 import { getSwaggerDocs, initSwagger } from './swagger';
 import ConfigFile from 'spinal-lib-organ-monitoring';
 import { preloadingScript } from './preloadingScript/preloadingScript';
+import { runSnapshotPreloader } from './preloadingScript/snapshotPreloader';
+import { formatWorkHours, isWithinWorkHours } from './utilities/workHours';
 const preload_config = require('../preload_config');
 
 function Requests(logger) {
@@ -59,9 +61,16 @@ function Requests(logger) {
       const api = initApiServer(spinalAPIMiddleware);
       const port = config.api.port;
 
-      // Automatic API route call logic
+      // Automatic API route call logic. Outside of the work hours the organ can
+      // afford the blocking preloading script ; during them it must answer
+      // right away, so the node snapshot is loaded progressively instead, in
+      // the idle time between requests (see runSnapshotPreloader below).
       const preloadViewInfoEnabled = process.env.PRELOAD_SCRIPT === '1';
-      if (preloadViewInfoEnabled) {
+      const startedDuringWorkHours = isWithinWorkHours();
+      if (preloadViewInfoEnabled && !startedDuringWorkHours) {
+        console.log(
+          `starting outside of the work hours (${formatWorkHours()}), running the preloading script`
+        );
         try {
           await preloadingScript(spinalAPIMiddleware, 'any', preload_config);
         } catch (err) {
@@ -89,6 +98,17 @@ function Requests(logger) {
           `  redoc :\thttp://localhost:${port}/spinalcom-api-redoc-docs`
         );
       });
+
+      if (preloadViewInfoEnabled && startedDuringWorkHours) {
+        console.log(
+          `starting during the work hours (${formatWorkHours()}), skipping the preloading script ; the node snapshot will be loaded during idle time`
+        );
+        // not awaited on purpose : it runs in the background, in the gaps
+        // between the requests the organ is answering
+        runSnapshotPreloader(spinalAPIMiddleware).catch((err) => {
+          console.error(`Error running the snapshot preloader:`, err.message);
+        });
+      }
 
       return SpinalAPIMiddleware.getInstance().runSocketServer(server);
     },

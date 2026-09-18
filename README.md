@@ -64,6 +64,31 @@ you can disable monitoring if you add the `DISABLE_MONITORING` in the .env file
 DISABLE_MONITORING="true"                     # If not Commented will not enable monitoring
 ````
 
+## Preloading : work hours and the node snapshot
+
+`PRELOAD_SCRIPT="1"` enables preloading, and the time of day the organ starts at
+decides how it preloads :
+
+- **outside the work hours** : the preloading script runs as before, blocking,
+  before the server starts listening (fill `preload_config.js`).
+- **during the work hours** : the preloading script is skipped, the server
+  listens right away, and the nodes of the last snapshot are loaded back
+  progressively, a batch at a time, during the idle time between requests.
+
+The snapshot itself is written by `POST /api/v1/snapshot/nodes`, which walks
+`FileSystem._objects` and stores the `_server_id` of every loaded node. Take one
+while the organ is warm (typically at the end of a working day) and the next
+restart will know what is worth loading back.
+
+```bash
+WORK_HOURS_START="8"                          # OPTIONAL | default 8  | start of the work hours, "HH" or "HH:MM", local time
+WORK_HOURS_END="19"                           # OPTIONAL | default 19 | end of the work hours, exclusive. A window ending before it starts wraps at midnight
+SNAPSHOT_FILE="snapshots/nodes.json"          # OPTIONAL | default snapshots/nodes.json | where the snapshot is written and read back from
+PRELOAD_IDLE_DELAY="2000"                     # OPTIONAL | default 2000 | ms without any request before the snapshot loader loads a batch. 0 disables the idle wait
+PRELOAD_BATCH_SIZE="20"                       # OPTIONAL | default 20   | nodes loaded per batch. A batch that has started runs to its end, so this is also how much work can overlap with an incoming request
+PRELOAD_BATCH_DELAY="50"                      # OPTIONAL | default 50   | ms between two batches
+```
+
 ## Running the API Server
 
 ```bash
