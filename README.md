@@ -95,6 +95,12 @@ decides how it preloads :
   cannot be read) : nothing to load back, so the preloading script runs as if
   outside the work hours.
 
+When nodes fail to load, the run logs them grouped by reason, with a few ids
+each, and writes the full list next to the snapshot
+(`snapshots/nodes.failures.json`). A host that checks the rights of a profile
+on load reports the nodes that profile may not read as `401 Unauthorized`, and
+the nodes deleted since the snapshot was taken as `404`.
+
 The snapshot itself is written by `POST /api/v1/snapshot/nodes`, which walks
 `FileSystem._objects` and stores the `_server_id` of every loaded node. Take one
 while the organ is warm (typically at the end of a working day) and the next

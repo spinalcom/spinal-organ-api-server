@@ -22,6 +22,8 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
+import { promises as fs } from 'fs';
+import { basename, dirname, extname, join } from 'path';
 import { FileSystem } from 'spinal-core-connectorjs';
 import config from '../config';
 import type { ISpinalAPIMiddleware } from '../interfaces/ISpinalAPIMiddleware';
@@ -47,14 +49,83 @@ export interface ISnapshotPreloadStats {
   cached: number;
   /** ids that could not be loaded (deleted node, hub error, ...) */
   failed: number;
+  /** what those failures were, grouped by the reason the load rejected with */
+  failures: IPreloadFailureGroup[];
   /** wall clock time of the run, idle waiting included */
   durationMs: number;
+}
+
+/**
+ * The ids that failed to load for one same reason. A node of the snapshot can
+ * be gone from the hub since it was taken (404), or be outside the contexts
+ * the profile is allowed to read (401), which is the usual reason a host that
+ * checks rights on load reports many failures.
+ *
+ * @export
+ * @interface IPreloadFailureGroup
+ */
+export interface IPreloadFailureGroup {
+  /** the code the load rejected with, when it had one */
+  code?: number | string;
+  /** the message the load rejected with */
+  message: string;
+  /** how many ids failed with this reason */
+  count: number;
+  /** the ids that failed, capped so that a huge run stays bounded in memory */
+  server_ids: number[];
+  /** true when `server_ids` was capped and holds only the first ones */
+  truncated: boolean;
 }
 
 /** only one preloading run at a time */
 let running = false;
 
 const PROGRESS_INTERVAL = 10000;
+
+/** ids kept per failure reason, so that a huge run stays bounded in memory */
+const MAX_FAILURE_IDS_PER_GROUP = 5000;
+
+/** ids listed per failure reason in the summary log */
+const LOGGED_FAILURE_IDS = 10;
+
+/**
+ * Describes what a load rejected with. Hosts reject with an `Error`, but also
+ * with plain `{ code, message }` objects (bos-config does), so neither shape
+ * can be assumed.
+ *
+ * @param {*} reason
+ * @return {*}  {{ code?: number | string; message: string }}
+ */
+function describeFailure(reason: any): {
+  code?: number | string;
+  message: string;
+} {
+  if (reason instanceof Error) return { message: reason.message };
+  if (reason && typeof reason === 'object') {
+    const message =
+      typeof reason.message === 'string'
+        ? reason.message
+        : JSON.stringify(reason);
+    return { code: reason.code, message };
+  }
+  return { message: String(reason) };
+}
+
+/**
+ * Where the detail of the failures is written, next to the snapshot file :
+ * `snapshots/nodes.json` -> `snapshots/nodes.failures.json`.
+ *
+ * @export
+ * @return {*}  {string}
+ */
+export function getFailuresFilePath(): string {
+  const filePath = getSnapshotFilePath();
+  const ext = extname(filePath);
+  return join(
+    dirname(filePath),
+    `${basename(filePath, ext)}.failures${ext || '.json'}`
+  );
+}
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -176,8 +247,12 @@ async function preload(
     loaded: 0,
     cached: 0,
     failed: 0,
+    failures: [],
     durationMs: 0,
   };
+  // keyed by code + message, so that the 500 nodes a profile may not read are
+  // reported as one line instead of 500
+  const failureGroups = new Map<string, IPreloadFailureGroup>();
 
   console.log(
     `--- Snapshot Preloader started at : ${new Date(
@@ -208,21 +283,110 @@ async function preload(
           loadNode(spinalAPIMiddleware, profileId, server_id)
         )
       );
-      for (const result of results) {
-        if (result.status === 'rejected') stats.failed += 1;
-        else if (result.value) stats.loaded += 1;
-        else stats.cached += 1;
-      }
+      results.forEach((result, index) => {
+        if (result.status !== 'rejected') {
+          if (result.value) stats.loaded += 1;
+          else stats.cached += 1;
+          return;
+        }
+        stats.failed += 1;
+        // allSettled keeps the order of the batch, so the id is recoverable
+        const server_id = batch[index];
+        const { code, message } = describeFailure(result.reason);
+        const key = `${code ?? ''}|${message}`;
+        let group = failureGroups.get(key);
+        if (!group) {
+          group = { code, message, count: 0, server_ids: [], truncated: false };
+          failureGroups.set(key, group);
+        }
+        group.count += 1;
+        if (group.server_ids.length < MAX_FAILURE_IDS_PER_GROUP) {
+          group.server_ids.push(server_id);
+        } else {
+          group.truncated = true;
+        }
+      });
       visited += batch.length;
       if (batchDelay > 0) await sleep(batchDelay);
     }
   } finally {
     clearInterval(intervalId);
+    stats.failures = Array.from(failureGroups.values()).sort(
+      (a, b) => b.count - a.count
+    );
     stats.durationMs = Date.now() - startedAt;
   }
 
   console.log(
     `--- Snapshot Preloader done in ${stats.durationMs} ms : ${stats.loaded} loaded, ${stats.cached} already there, ${stats.failed} failed, out of ${stats.total} ---`
   );
+  await reportFailures(stats, snapshot);
   return stats;
+}
+
+/**
+ * Logs the failures grouped by reason, with a few ids each, and writes the
+ * full detail next to the snapshot file. A stale report of a previous run is
+ * removed when everything loaded, so the file always describes the last run.
+ *
+ * @param {ISnapshotPreloadStats} stats
+ * @param {ISnapshotFile} snapshot
+ * @return {*}  {Promise<void>}
+ */
+async function reportFailures(
+  stats: ISnapshotPreloadStats,
+  snapshot: ISnapshotFile
+): Promise<void> {
+  const filePath = getFailuresFilePath();
+  if (stats.failed === 0) {
+    // nothing failed : drop the report of a previous run if there is one
+    await fs.unlink(filePath).catch(() => undefined);
+    return;
+  }
+
+  console.log(
+    '[Snapshot Preloader] %d failed, by reason :',
+    stats.failed
+  );
+  for (const group of stats.failures) {
+    const sample = group.server_ids.slice(0, LOGGED_FAILURE_IDS);
+    const rest = group.count - sample.length;
+    console.log(
+      '[Snapshot Preloader]   %s%s : %d nodes -- %s%s',
+      group.code === undefined ? '' : `${group.code} `,
+      group.message,
+      group.count,
+      sample.join(', '),
+      rest > 0 ? ` (+${rest} more)` : ''
+    );
+  }
+
+  try {
+    await fs.mkdir(dirname(filePath), { recursive: true });
+    await fs.writeFile(
+      filePath,
+      JSON.stringify(
+        {
+          createdAt: new Date().toISOString(),
+          snapshotCreatedAt: snapshot.createdAt,
+          total: stats.total,
+          loaded: stats.loaded,
+          cached: stats.cached,
+          failed: stats.failed,
+          failures: stats.failures,
+        },
+        null,
+        2
+      ) + '\n'
+    );
+    console.log(
+      `[Snapshot Preloader] the failing ids are listed in ${filePath}`
+    );
+  } catch (error) {
+    console.warn(
+      `[Snapshot Preloader] could not write ${filePath} : ${
+        error?.message ?? error
+      }`
+    );
+  }
 }

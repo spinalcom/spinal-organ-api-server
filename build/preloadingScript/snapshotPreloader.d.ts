@@ -15,9 +15,40 @@ export interface ISnapshotPreloadStats {
     cached: number;
     /** ids that could not be loaded (deleted node, hub error, ...) */
     failed: number;
+    /** what those failures were, grouped by the reason the load rejected with */
+    failures: IPreloadFailureGroup[];
     /** wall clock time of the run, idle waiting included */
     durationMs: number;
 }
+/**
+ * The ids that failed to load for one same reason. A node of the snapshot can
+ * be gone from the hub since it was taken (404), or be outside the contexts
+ * the profile is allowed to read (401), which is the usual reason a host that
+ * checks rights on load reports many failures.
+ *
+ * @export
+ * @interface IPreloadFailureGroup
+ */
+export interface IPreloadFailureGroup {
+    /** the code the load rejected with, when it had one */
+    code?: number | string;
+    /** the message the load rejected with */
+    message: string;
+    /** how many ids failed with this reason */
+    count: number;
+    /** the ids that failed, capped so that a huge run stays bounded in memory */
+    server_ids: number[];
+    /** true when `server_ids` was capped and holds only the first ones */
+    truncated: boolean;
+}
+/**
+ * Where the detail of the failures is written, next to the snapshot file :
+ * `snapshots/nodes.json` -> `snapshots/nodes.failures.json`.
+ *
+ * @export
+ * @return {*}  {string}
+ */
+export declare function getFailuresFilePath(): string;
 /**
  * The node snapshot, when there is a usable one : null when the file is
  * missing, or when it cannot be read (the reason is logged), so that a caller
