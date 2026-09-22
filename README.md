@@ -100,6 +100,27 @@ The snapshot itself is written by `POST /api/v1/snapshot/nodes`, which walks
 while the organ is warm (typically at the end of a working day) and the next
 restart will know what is worth loading back.
 
+### Embedding the API server in another organ
+
+An organ that mounts these routes through `runServerRest()` (bos-config) gets
+the snapshot route and the idle tracking for free, but it has to start the
+preloading itself. Call `runPreloading` where the blocking preloading script
+used to be called, before the server listens :
+
+```ts
+import { runPreloading } from "spinal-organ-api-server";
+
+// picks the strategy from the time of day, resolves right away when it went
+// for the snapshot, awaits the preloading script otherwise
+await runPreloading(spinalAPIMiddleware, adminProfileId, preload_config);
+```
+
+The settings come from `spinalAPIMiddleware.config.preload`, so a host controls
+the work hours and the batching through its own middleware config. The profile
+id matters : hosts that check the rights of a profile when loading a node must
+pass the same admin profile id they pass to the preloading script, otherwise
+every load is refused.
+
 ```bash
 WORK_HOURS_START="8"                          # OPTIONAL | default 8  | start of the work hours, "HH" or "HH:MM", local time
 WORK_HOURS_END="19"                           # OPTIONAL | default 19 | end of the work hours, exclusive. A window ending before it starts wraps at midnight

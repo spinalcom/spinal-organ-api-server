@@ -51,10 +51,12 @@ function minutesSinceMidnight(date = new Date()) {
  *
  * @export
  * @param {Date} [date=new Date()]
+ * @param {IPreloadConfig} [preload=config.preload] the window to use ; a host
+ * embedding the API server passes its own middleware config here
  * @return {*}  {boolean}
  */
-function isWithinWorkHours(date = new Date()) {
-    const { workHoursStart, workHoursEnd } = config_1.default.preload;
+function isWithinWorkHours(date = new Date(), preload = config_1.default.preload) {
+    const { workHoursStart, workHoursEnd } = preload;
     // an empty window is never inside, whichever side of it we are on
     if (workHoursStart === workHoursEnd)
         return false;
@@ -79,10 +81,11 @@ function formatTimeOfDay(minutes) {
  * The configured work hours, formatted for logs : "08:00 -> 19:00".
  *
  * @export
+ * @param {IPreloadConfig} [preload=config.preload]
  * @return {*}  {string}
  */
-function formatWorkHours() {
-    const { workHoursStart, workHoursEnd } = config_1.default.preload;
+function formatWorkHours(preload = config_1.default.preload) {
+    const { workHoursStart, workHoursEnd } = preload;
     return `${formatTimeOfDay(workHoursStart)} -> ${formatTimeOfDay(workHoursEnd)}`;
 }
 //# sourceMappingURL=workHours.js.map

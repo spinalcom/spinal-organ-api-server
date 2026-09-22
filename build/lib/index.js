@@ -50,9 +50,18 @@ const { version: API_SERVER_VERSION } = require('../../package.json');
 const routes_1 = __importDefault(require("../routes/routes"));
 const api_server_1 = require("../api-server");
 const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
+const requestActivity_1 = require("../preloadingScript/requestActivity");
 __exportStar(require("../routes/geographicContext/viewInfo_func"), exports);
 __exportStar(require("../preloadingScript/preloadingScript"), exports);
+__exportStar(require("../preloadingScript/runPreloading"), exports);
+__exportStar(require("../preloadingScript/snapshotPreloader"), exports);
+__exportStar(require("../preloadingScript/requestActivity"), exports);
+__exportStar(require("../routes/snapshot/snapshotUtils"), exports);
+__exportStar(require("../utilities/workHours"), exports);
 function initApiServer(app, spinalAPIMiddleware, log_body = false) {
+    // first in the chain : it measures the whole lifecycle of every request, and
+    // the snapshot preloader uses it to only work while the organ is idle
+    app.use(requestActivity_1.requestActivity.middleware);
     app.use((req, res, next) => {
         res.setHeader('X-API-Version', API_SERVER_VERSION);
         next();

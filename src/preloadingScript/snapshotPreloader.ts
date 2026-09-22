@@ -166,7 +166,10 @@ async function preload(
   }
 
   const startedAt = Date.now();
-  const { idleDelay, batchSize, batchDelay } = config.preload;
+  // the host embedding the API server fills its own preload config ; fall back
+  // to this organ's own config when it does not
+  const { idleDelay, batchSize, batchDelay } =
+    spinalAPIMiddleware.config?.preload ?? config.preload;
   const ids = snapshot.nodes;
   const stats: ISnapshotPreloadStats = {
     total: ids.length,

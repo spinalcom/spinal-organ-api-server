@@ -1,3 +1,4 @@
+import type { IPreloadConfig } from '../interfaces/IConfig';
 /**
  * Time of the day of a date, in minutes since midnight, in the local time of
  * the machine.
@@ -16,9 +17,11 @@ export declare function minutesSinceMidnight(date?: Date): number;
  *
  * @export
  * @param {Date} [date=new Date()]
+ * @param {IPreloadConfig} [preload=config.preload] the window to use ; a host
+ * embedding the API server passes its own middleware config here
  * @return {*}  {boolean}
  */
-export declare function isWithinWorkHours(date?: Date): boolean;
+export declare function isWithinWorkHours(date?: Date, preload?: IPreloadConfig): boolean;
 /**
  * Formats minutes since midnight back into "HH:MM", for logs.
  *
@@ -31,6 +34,7 @@ export declare function formatTimeOfDay(minutes: number): string;
  * The configured work hours, formatted for logs : "08:00 -> 19:00".
  *
  * @export
+ * @param {IPreloadConfig} [preload=config.preload]
  * @return {*}  {string}
  */
-export declare function formatWorkHours(): string;
+export declare function formatWorkHours(preload?: IPreloadConfig): string;

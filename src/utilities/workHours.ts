@@ -23,6 +23,7 @@
  */
 
 import config from '../config';
+import type { IPreloadConfig } from '../interfaces/IConfig';
 
 /**
  * Time of the day of a date, in minutes since midnight, in the local time of
@@ -45,10 +46,15 @@ export function minutesSinceMidnight(date: Date = new Date()): number {
  *
  * @export
  * @param {Date} [date=new Date()]
+ * @param {IPreloadConfig} [preload=config.preload] the window to use ; a host
+ * embedding the API server passes its own middleware config here
  * @return {*}  {boolean}
  */
-export function isWithinWorkHours(date: Date = new Date()): boolean {
-  const { workHoursStart, workHoursEnd } = config.preload;
+export function isWithinWorkHours(
+  date: Date = new Date(),
+  preload: IPreloadConfig = config.preload
+): boolean {
+  const { workHoursStart, workHoursEnd } = preload;
   // an empty window is never inside, whichever side of it we are on
   if (workHoursStart === workHoursEnd) return false;
   const now = minutesSinceMidnight(date);
@@ -74,9 +80,12 @@ export function formatTimeOfDay(minutes: number): string {
  * The configured work hours, formatted for logs : "08:00 -> 19:00".
  *
  * @export
+ * @param {IPreloadConfig} [preload=config.preload]
  * @return {*}  {string}
  */
-export function formatWorkHours(): string {
-  const { workHoursStart, workHoursEnd } = config.preload;
+export function formatWorkHours(
+  preload: IPreloadConfig = config.preload
+): string {
+  const { workHoursStart, workHoursEnd } = preload;
   return `${formatTimeOfDay(workHoursStart)} -> ${formatTimeOfDay(workHoursEnd)}`;
 }
