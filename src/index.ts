@@ -27,10 +27,9 @@ import APIServer from "./api-server";
 import SpinalAPIMiddleware from "./spinalAPIMiddleware";
 import { getSwaggerDocs, initSwagger } from "./swagger";
 import ConfigFile from "spinal-lib-organ-monitoring";
-import { preloadingScript } from "./preloadingScript/preloadingScript";
-import { registerMonitoringAgent } from "spinal-agent-monitoring";
-
+import { runPreloading } from "./preloadingScript/runPreloading";
 const preload_config = require("../preload_config");
+import { registerMonitoringAgent } from "spinal-agent-monitoring";
 
 function Requests(logger) {
 	async function initSpinalHub() {
@@ -61,14 +60,11 @@ function Requests(logger) {
 			const api = initApiServer(spinalAPIMiddleware);
 			const port = config.api.port;
 
-			// Automatic API route call logic
-			const preloadViewInfoEnabled = process.env.PRELOAD_SCRIPT === "1";
-			if (preloadViewInfoEnabled) {
-				try {
-					await preloadingScript(spinalAPIMiddleware, "any", preload_config);
-				} catch (err) {
-					console.error(`Error calling preloadViewInfo:`, err.message);
-				}
+			// Automatic API route call logic : the preloading picks its strategy
+			// from the time of day and from whether a node snapshot is available
+			// (see runPreloading).
+			if (process.env.PRELOAD_SCRIPT === "1") {
+				await runPreloading(spinalAPIMiddleware, "any", preload_config);
 			}
 
 			const server = api.listen(port, async () => {
@@ -83,7 +79,10 @@ function Requests(logger) {
 			});
 
 			const io = await SpinalAPIMiddleware.getInstance().runSocketServer(server);
-			return registerMonitoringAgent(api, io);
+			if (process.env.ENABLE_MONITORING_API) {
+				return registerMonitoringAgent(api, io, spinalAPIMiddleware.conn, process.env.MONITORING_AGENT_CONFIG_PATH);
+			}
+			return { app: api, io };
 		},
 
 		getSwaggerDocs,

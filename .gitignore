@@ -3,4 +3,9 @@ spinal-model-graph
 .env
 .parcel-cache
 TODO.md
+<<<<<<< HEAD
 postman
+=======
+docs-export
+snapshots
+>>>>>>> 04cb23c456184690b5abca82898e26e6e710d906

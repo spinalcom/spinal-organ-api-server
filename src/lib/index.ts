@@ -22,6 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
+import { registerMonitoringAgent } from "spinal-agent-monitoring";
 import { Application } from "express";
 import { Server } from "http";
 import { initSwagger } from "../swagger";
@@ -35,11 +36,19 @@ const { version: API_SERVER_VERSION } = require("../../package.json");
 import routes from "../routes/routes";
 import { createLogRequestLifecycle } from "../api-server";
 import { runSocketServer, ISpinalIOMiddleware } from "spinal-organ-api-pubsub";
+import { requestActivity } from "../preloadingScript/requestActivity";
 export * from "../routes/geographicContext/viewInfo_func";
 export * from "../preloadingScript/preloadingScript";
-import { registerMonitoringAgent } from "spinal-agent-monitoring";
+export * from "../preloadingScript/runPreloading";
+export * from "../preloadingScript/snapshotPreloader";
+export * from "../preloadingScript/requestActivity";
+export * from "../routes/snapshot/snapshotUtils";
+export * from "../utilities/workHours";
 
 function initApiServer(app: Application, spinalAPIMiddleware: ISpinalAPIMiddleware, log_body = false) {
+	// first in the chain : it measures the whole lifecycle of every request, and
+	// the snapshot preloader uses it to only work while the organ is idle
+	app.use(requestActivity.middleware);
 	app.use((req, res, next) => {
 		res.setHeader("X-API-Version", API_SERVER_VERSION);
 		next();
@@ -64,7 +73,10 @@ export async function runServerRest(server: Server, app: Application, spinalAPIM
 	initApiServer(app, spinalAPIMiddleware, log_body);
 	const io = await runSocketServer(server as any, spinalIOMiddleware);
 
-	await registerMonitoringAgent(app, io);
+	if (process.env.ENABLE_MONITORING_API) {
+		await registerMonitoringAgent(app, io, spinalAPIMiddleware.conn, process.env.MONITORING_AGENT_CONFIG_PATH);
+	}
+
 	return { app, io };
 }
 

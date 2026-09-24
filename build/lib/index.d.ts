@@ -4,6 +4,11 @@ import { ISpinalAPIMiddleware } from "../interfaces";
 import { ISpinalIOMiddleware } from "spinal-organ-api-pubsub";
 export * from "../routes/geographicContext/viewInfo_func";
 export * from "../preloadingScript/preloadingScript";
+export * from "../preloadingScript/runPreloading";
+export * from "../preloadingScript/snapshotPreloader";
+export * from "../preloadingScript/requestActivity";
+export * from "../routes/snapshot/snapshotUtils";
+export * from "../utilities/workHours";
 export declare function runServerRest(server: Server, app: Application, spinalAPIMiddleware: ISpinalAPIMiddleware, spinalIOMiddleware: ISpinalIOMiddleware, log_body?: boolean): Promise<{
     app: Application;
     io: import("socket.io").Server<import("socket.io").DefaultEventsMap, import("socket.io").DefaultEventsMap, import("socket.io").DefaultEventsMap, any>;

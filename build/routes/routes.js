@@ -407,6 +407,10 @@ function routes(logger, app, spinalAPIMiddleware) {
     require("./userGroup/group/deleteUserGroup")(logger, app, spinalAPIMiddleware);
     require("./userGroup/group/getUserGroupById")(logger, app, spinalAPIMiddleware);
     require("./userGroup/group/updateUserGroup")(logger, app, spinalAPIMiddleware);
+    require("./user/context/createUserContext")(logger, app, spinalAPIMiddleware);
+    require("./user/context/getUserContextById")(logger, app, spinalAPIMiddleware);
+    require("./user/context/getUserContext")(logger, app, spinalAPIMiddleware);
+    require("./user/context/updateUserContext")(logger, app, spinalAPIMiddleware);
     // documentary routes in context
     require("./documentary/inContext/createContext")(logger, app, spinalAPIMiddleware);
     require("./documentary/inContext/createDirectoryInContext")(logger, app, spinalAPIMiddleware);
@@ -418,6 +422,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require("./documentary/inContext/uploadFileInContext")(logger, app, spinalAPIMiddleware);
     require("./documentary/file/downgradeFileVersion")(logger, app, spinalAPIMiddleware);
     require("./documentary/file/readDetails")(logger, app, spinalAPIMiddleware);
+    require("./snapshot/createNodeSnapshot")(logger, app, spinalAPIMiddleware);
     // documentary routes files
     require("./documentary/file/getFileData")(logger, app, spinalAPIMiddleware);
     require("./documentary/file/getFileVersionByName")(logger, app, spinalAPIMiddleware);

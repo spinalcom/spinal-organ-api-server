@@ -24925,6 +24925,66 @@
           }
         }
       }
+    },
+    "/api/v1/snapshot/nodes": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Snapshot the nodes currently loaded in the FileSystem",
+        "description": "Walks FileSystem._objects and writes the dynamic id (_server_id) of every loaded node into a file, so that they can be preloaded later on. The file location defaults to snapshots/nodes.json and is overridable with the SNAPSHOT_FILE environment variable.",
+        "tags": [
+          "Snapshot"
+        ],
+        "responses": {
+          "200": {
+            "description": "Snapshot written",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": {
+                      "type": "number"
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "digitalTwinPath": {
+                      "type": "string"
+                    },
+                    "objectCount": {
+                      "type": "number",
+                      "description": "Number of objects held by the FileSystem"
+                    },
+                    "nodeCount": {
+                      "type": "number",
+                      "description": "Number of node ids written to the file"
+                    },
+                    "file": {
+                      "type": "string",
+                      "description": "Absolute path of the written file"
+                    },
+                    "durationMs": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A snapshot is already running"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
     }
   }
 }
