@@ -434,12 +434,7 @@ module.exports = [
   "../src/routes/userGroup/user/addUsersInGroup.ts",
   "../src/routes/userGroup/user/deleteUserInGroup.ts",
   "../src/routes/userGroup/user/getUserInGroup.ts",
-<<<<<<< HEAD
-  "../src/routes/userGroup/user/moveUsersInGroup.ts"
-];
-=======
   "../src/routes/userGroup/user/moveUsersInGroup.ts",
   "../src/routes/snapshot/createNodeSnapshot.ts",
   "../src/routes/snapshot/snapshotUtils.ts"
 ]
->>>>>>> 04cb23c456184690b5abca82898e26e6e710d906
