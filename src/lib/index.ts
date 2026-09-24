@@ -73,7 +73,7 @@ export async function runServerRest(server: Server, app: Application, spinalAPIM
 	initApiServer(app, spinalAPIMiddleware, log_body);
 	const io = await runSocketServer(server as any, spinalIOMiddleware);
 
-	if (process.env.ENABLE_MONITORING_API) {
+	if (process.env.ENABLE_MONITORING_API == "1" || process.env.ENABLE_MONITORING_API == "true") {
 		await registerMonitoringAgent(app, io, spinalAPIMiddleware.conn, process.env.MONITORING_AGENT_CONFIG_PATH);
 	}
 

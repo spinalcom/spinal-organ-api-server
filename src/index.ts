@@ -79,7 +79,7 @@ function Requests(logger) {
 			});
 
 			const io = await SpinalAPIMiddleware.getInstance().runSocketServer(server);
-			if (process.env.ENABLE_MONITORING_API) {
+			if (process.env.ENABLE_MONITORING_API == "1" || process.env.ENABLE_MONITORING_API == "true") {
 				return registerMonitoringAgent(api, io, spinalAPIMiddleware.conn, process.env.MONITORING_AGENT_CONFIG_PATH);
 			}
 			return { app: api, io };

@@ -74,7 +74,7 @@ function Requests(logger) {
                 console.log(`  redoc :\thttp://localhost:${port}/spinalcom-api-redoc-docs`);
             });
             const io = await spinalAPIMiddleware_1.default.getInstance().runSocketServer(server);
-            if (process.env.ENABLE_MONITORING_API) {
+            if (process.env.ENABLE_MONITORING_API == "1" || process.env.ENABLE_MONITORING_API == "true") {
                 return (0, spinal_agent_monitoring_1.registerMonitoringAgent)(api, io, spinalAPIMiddleware.conn, process.env.MONITORING_AGENT_CONFIG_PATH);
             }
             return { app: api, io };
