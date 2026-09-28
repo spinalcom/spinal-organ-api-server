@@ -38,23 +38,38 @@ module.exports = function (
    * /api/v1/healthStatus:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
-   *     description: Return list of health Status organ
-   *     summary: Gets a list of health Status organ
+   *     summary: Get the health of every organ of the platform
+   *     description: >-
+   *       Reads the monitoring directory of the hub (`/etc/Organs/Monitoring`) and returns every organ
+   *       it knows, with its boot time, the time of its last health report and its RSS memory use.
+   *
+   *
+   *       `state` is `ON` when the organ reported within the **last 5 minutes**, `OFF` otherwise. The
+   *       response also carries `bootTimestampBos`, the boot time of the platform itself.
+   *
+   *
+   *       `logList` is always returned empty.
    *     tags:
    *      - Health
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The platform boot time and the health of every known organ.
    *         content:
    *           application/json:
    *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/HealthStatus'
+   *               type: object
+   *               properties:
+   *                 bootTimestampBos:
+   *                   type: integer
+   *                   format: int64
+   *                 organsHealth:
+   *                   type: array
+   *                   items:
+   *                    $ref: '#/components/schemas/HealthStatus'
    *       400:
-   *         description: Bad request
+   *         description: The monitoring directory could not be read.
    */
 
   app.get('/api/v1/healthStatus', async (req, res, next) => {

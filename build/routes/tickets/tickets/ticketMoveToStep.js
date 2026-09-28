@@ -10,20 +10,28 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: move a Ticket to a specific step
-     *     summary: move a Ticket
+     *         - write
+     *     summary: Move a ticket to a chosen step
+     *     description: >-
+     *       Moves a ticket straight to a given step of its process, in either direction - unlike
+     *       `next_step` / `previous_step`, which advance one step at a time.
+     *
+     *
+     *       The target step is named either by its order number (`toStepOrder`) or by its name
+     *       (`toStepName`); at least one of the two is required. Note that the process is not passed
+     *       here : the step is looked up in the process the ticket currently belongs to.
      *     tags:
      *       - Workflow & ticket
      *     parameters:
      *       - in: path
      *         name: ticketId
-     *         description: use the dynamic ID
+     *         description: Dynamic ID of the ticket.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -33,17 +41,42 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               workflowDynamicId:
      *                 type: number
+     *                 description: Dynamic ID of the workflow context the ticket lives in.
      *               toStepOrder:
      *                 type: number
-     *                 description: "Order number of the target step (optional, required if toStepName is not provided)"
+     *                 description: Order number of the target step. Required when `toStepName` is not given.
      *               toStepName:
      *                 type: string
-     *                 description: "Name of the target step (optional, required if toStepOrderId is not provided)"
+     *                 description: Name of the target step. Required when `toStepOrder` is not given.
      *     responses:
      *       200:
-     *         description: move to next step Successfully
+     *         description: The ticket with the step it now sits in.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 dynamicId:
+     *                   type: integer
+     *                   format: int64
+     *                 staticId:
+     *                   type: string
+     *                 name:
+     *                   type: string
+     *                 type:
+     *                   type: string
+     *                 actuelStep:
+     *                   type: string
+     *                   description: Name of the step the ticket is in after the move.
      *       400:
-     *         description: move to next step not Successfully
+     *         description: >-
+     *           Neither `toStepOrder` nor `toStepName` was given ("Either toStepOrder or toStepName must
+     *           be provided."), no step matches ("Target step not found."), or the ticket does not belong
+     *           to the workflow.
+     *       401:
+     *         description: The profile is not allowed to write on the ticket.
+     *       500:
+     *         description: The workflow or the ticket could not be loaded, or is not of the expected type.
      */
     app.post('/api/v1/ticket/:ticketId/move_to_step', async (req, res) => {
         try {

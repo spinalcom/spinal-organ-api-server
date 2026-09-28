@@ -41,29 +41,51 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - write
-   *     description: create Rooms Group context
-   *     summary: create Rooms Group context
+   *     summary: Create a group context
+   *     description: >-
+   *       Creates a group context and adds it to the profile graph. `childrenType` says what kind of
+   *       item the groups of this context will hold.
+   *
+   *
+   *       Context names must be unique across the whole twin : a name already used by any context is
+   *       rejected with 400.
    *     tags:
    *       - Rooms Group
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
    *             type: object
    *             required:
    *               - contextName
+   *               - childrenType
    *             properties:
-   *                contextName:
+   *               contextName:
    *                 type: string
-   *                contextColor:
+   *                 description: Name of the context. Must not be used by any existing context.
+   *               childrenType:
    *                 type: string
-   *                contextIcon:
+   *                 description: Type of the items the groups of this context will hold.
+   *               contextColor:
    *                 type: string
+   *                 description: Optional display colour.
+   *               contextIcon:
+   *                 type: string
+   *                 description: Optional display icon.
    *     responses:
    *       200:
-   *         description: Create Successfully
+   *         description: The created context.
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/Context'
    *       400:
-   *         description: Bad request
+   *         description: The name is already taken ("Context name already exists"), or a required field is missing.
+   *       401:
+   *         description: The profile is not allowed to write on the graph.
+   *       406:
+   *         description: No graph was found for the caller's profile.
    */
 
   app.post('/api/v1/roomsGroup/create', async (req, res, next) => {

@@ -33,13 +33,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Return list of workflows
-     *     summary: Gets a list of workflows
+     *     summary: List the workflows
+     *     description: >-
+     *       Returns every workflow context the profile can reach - the roots of the ticketing part of the
+     *       twin. Use a returned `dynamicId` with `/api/v1/workflow/{id}/processList` to get its
+     *       processes.
      *     tags:
-     *      - Workflow & ticket
+     *       - Workflow & ticket
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The workflows (an empty array if there are none).
      *         content:
      *           application/json:
      *             schema:
@@ -47,7 +50,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                $ref: '#/components/schemas/Workflow'
      *       400:
-     *         description: Bad request
+     *         description: The profile graph could not be read ("list of worflows is not loaded").
+     *       401:
+     *         description: The profile is not allowed to read the graph.
      */
     app.get('/api/v1/workflow/list', async (req, res) => {
         try {

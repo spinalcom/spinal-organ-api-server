@@ -46,21 +46,24 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return list of room command enable
-   *     summary: Gets a list of room command enable
+   *     summary: List the rooms of a floor that accept commands
+   *     description: >-
+   *       Returns the rooms of a floor that carry a `Command` control-point profile, that is the ones
+   *       the `/api/v1/command/room/{id}/...` routes can act on. Rooms without command control points
+   *       are left out.
    *     tags:
-   *      - Command
+   *       - Command
    *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: id
+   *         description: Dynamic ID of the floor.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The commandable rooms of the floor (an empty array if none).
    *         content:
    *           application/json:
    *             schema:
@@ -68,7 +71,9 @@ module.exports = function (
    *               items:
    *                $ref: '#/components/schemas/Room'
    *       400:
-   *         description: Bad request
+   *         description: The floor could not be loaded ("list of room is not loaded").
+   *       401:
+   *         description: The profile is not allowed to read this floor.
    */
 
   app.get(

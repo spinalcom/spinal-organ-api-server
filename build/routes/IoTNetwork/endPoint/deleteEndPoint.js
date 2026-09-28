@@ -27,30 +27,39 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/endpoint/{id}/delete:
-   *   delete:
-   *     security:
-   *       - bearerAuth:
-   *         - read
-   *     description: delete endpoint
-   *     summary: delete endpoint
-   *     tags:
-   *       - IoTNetwork & Time Series
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Delete Successfully
-   *       400:
-   *         description: Bad request
-  */
+     * @swagger
+     * /api/v1/endpoint/{id}/delete:
+     *   delete:
+     *     security:
+     *       - bearerAuth:
+     *         - write
+     *     summary: Delete an endpoint
+     *     description: >-
+     *       Removes an endpoint from the graph. The node must be of type `BmsEndpoint`; any other type is
+     *       rejected, which protects devices and networks from being deleted through this route.
+     *
+     *
+     *       The time series recorded for this endpoint are not cleaned up by this call.
+     *     tags:
+     *       - IoTNetwork & Time Series
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the endpoint.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The endpoint was deleted. The body is empty.
+     *       400:
+     *         description: The node is not an endpoint ("this node is not of type BmsEndpoint").
+     *       401:
+     *         description: The profile is not allowed to delete this endpoint.
+     *       500:
+     *         description: The endpoint could not be loaded or removed.
+     */
     app.delete("/api/v1/endpoint/:id/delete", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

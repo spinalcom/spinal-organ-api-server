@@ -41,21 +41,24 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns list of tickets of equipement
-   *     summary: Get list of tickets of equipement
+   *     summary: List the tickets declared on an equipment
+   *     description: >-
+   *       Returns the tickets attached to a piece of equipment with their details : priority, creation
+   *       date, declarer, current process and step, workflow and attribute categories. The node must be
+   *       of type `BIMObject`.
    *     tags:
    *       - Geographic Context
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the equipment (a `BIMObject`).
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The requested list (empty when there is nothing).
    *         content:
    *           application/json:
    *             schema:
@@ -63,7 +66,9 @@ module.exports = function (
    *               items:
    *                $ref: '#/components/schemas/Ticket'
    *       400:
-   *         description: Bad request
+   *         description: The node is not a `BIMObject`, or its tickets could not be read (body is `ko`).
+   *       401:
+   *         description: The profile is not allowed to read this equipment.
    */
   app.get('/api/v1/equipement/:id/ticket_list', async (req, res, next) => {
     const nodes = [];

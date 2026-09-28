@@ -33,18 +33,27 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Read category attribute for multiple nodes
-     *     summary: Read category attribute for multiple nodes
+     *     summary: Read one category, by name, on several nodes at once
+     *     description: >-
+     *       Looks up the same category name on a batch of nodes. The body is an array of dynamic IDs and
+     *       the response holds one `{ dynamicId, categoryAttribute }` entry per ID, in the same order.
+     *
+     *
+     *       A node that does not carry this category is a failure for that entry : it becomes
+     *       `{ dynamicId, error }` and the whole response comes back with **206 Partial Content**. At
+     *       most 1000 IDs per call (configurable through `MULTIPLE_ROUTE_IDS_LIMIT`).
      *     tags:
-     *      - Node Attribut Categories
+     *       - Node Attribut Categories
      *     parameters:
-     *      - in: path
-     *        name: categoryName
-     *        required: true
-     *        schema:
-     *          type: string
+     *       - in: path
+     *         name: categoryName
+     *         description: Name of the category to look up on every node (exact match).
+     *         required: true
+     *         schema:
+     *           type: string
      *     requestBody:
      *       required: true
+     *       description: The dynamic IDs of the nodes to read.
      *       content:
      *         application/json:
      *           schema:
@@ -54,25 +63,36 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               format: int64
      *     responses:
      *       200:
-     *         description: Success - All attribute nodes info fetched
+     *         description: Every node carries the category.
      *         content:
      *           application/json:
      *             schema:
      *               type: array
      *               items:
-     *                 $ref: '#/components/schemas/CategoriesAttributeMultiple'
+     *                 type: object
+     *                 properties:
+     *                   dynamicId:
+     *                     type: integer
+     *                     format: int64
+     *                   categoryAttribute:
+     *                     $ref: '#/components/schemas/CategoriesAttribute'
      *       206:
-     *         description: Partial Content - Some attribute info could not be fetched
+     *         description: At least one node does not carry the category, or could not be read.
      *         content:
      *           application/json:
      *             schema:
      *               type: array
      *               items:
      *                 oneOf:
-     *                   - $ref: '#/components/schemas/CategoriesAttributeMultiple'
+     *                   - type: object
+     *                     properties:
+     *                       dynamicId:
+     *                         type: integer
+     *                       categoryAttribute:
+     *                         $ref: '#/components/schemas/CategoriesAttribute'
      *                   - $ref: '#/components/schemas/Error'
      *       400:
-     *         description: Bad request
+     *         description: The body is not an array, or it holds more IDs than the configured limit.
      */
     app.post('/api/v1/node/categoryByName/:categoryName/read_multiple', async (req, res, next) => {
         try {

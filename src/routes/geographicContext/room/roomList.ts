@@ -42,21 +42,27 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return list of room
-   *     summary: Gets a list of room
+   *     summary: List the rooms of a floor
+   *     description: >-
+   *       Returns the rooms attached to a floor through `hasGeographicRoom`, each with its attribute
+   *       categories and the attributes they hold.
+   *
+   *
+   *       The floor node is not type-checked here : calling this on another node simply returns the
+   *       children it has under that relation, usually an empty array.
    *     tags:
    *      - Geographic Context
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the floor.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The rooms of the floor, with their attribute categories.
    *         content:
    *           application/json:
    *             schema:
@@ -64,7 +70,9 @@ module.exports = function (
    *               items:
    *                $ref: '#/components/schemas/Room'
    *       400:
-   *         description: Bad request
+   *         description: The floor could not be loaded, or its rooms could not be read.
+   *       401:
+   *         description: The profile is not allowed to read this floor.
    */
 
   app.get('/api/v1/floor/:id/room_list', async (req, res, next) => {

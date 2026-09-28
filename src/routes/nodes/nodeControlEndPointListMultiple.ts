@@ -33,47 +33,78 @@ module.exports = function (
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
- * @swagger
- * /api/v1/node/control_endpoint_list_multiple:
- *   post:
- *     security:
- *       - bearerAuth:
- *         - readOnly
- *     description: Returns an array of lists of control endpoints for multiple nodes, or error details.
- *     summary: Gets lists of control endpoints for multiple nodes
- *     tags:
- *       - Nodes
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: array
- *             items:
- *               type: integer
- *               format: int64
- *     responses:
- *       200:
- *         description: Success - All control endpoint lists fetched successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/EndPointNode'
- *       206:
- *         description: Partial Content - Some control endpoint lists could not be fetched
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 oneOf:
- *                   - $ref: '#/components/schemas/EndPointNode'
- *                   - $ref: '#/components/schemas/Error'
- *       400:
- *         description: Bad request
- */
+   * @swagger
+   * /api/v1/node/control_endpoint_list_multiple:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the control endpoints of several nodes at once
+   *     description: >-
+   *       Batch version of `/api/v1/node/{id}/control_endpoint_list`. The body is an array of dynamic
+   *       IDs and the response has one slot per ID, in the same order.
+   *
+   *
+   *       Each successful slot is itself the **array of control-point profiles** of that node (the same
+   *       body the single-node route returns), so the successful part of the response is an array of
+   *       arrays. A node that cannot be read turns its slot into `{ dynamicId, error }` and the
+   *       response comes back with **206 Partial Content**.
+   *
+   *
+   *       Details are never read here (no `includeDetails`), so `controlValue` and
+   *       `timeseriesRetentionDays` are not filled. At most 1000 IDs per call (configurable through
+   *       `MULTIPLE_ROUTE_IDS_LIMIT`).
+   *     tags:
+   *       - Nodes
+   *     requestBody:
+   *       required: true
+   *       description: The dynamic IDs of the nodes to read.
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
+   *     responses:
+   *       200:
+   *         description: Every node was read. Each slot is the profile list of one node.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: array
+   *                 items:
+   *                   type: object
+   *                   description: One control-point profile attached to the node.
+   *                   properties:
+   *                     dynamicId:
+   *                       type: integer
+   *                       format: int64
+   *                       description: Dynamic ID of the node the profile was read from (the node passed in the request, not the profile itself).
+   *                     profileName:
+   *                       type: string
+   *                       description: Name of the control-point profile.
+   *                     endpoints:
+   *                       type: array
+   *                       items:
+   *                         $ref: '#/components/schemas/EndPointNode'
+   *       206:
+   *         description: At least one node could not be read; those slots hold an error object instead.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 oneOf:
+   *                   - type: array
+   *                     items:
+   *                       type: object
+   *                   - $ref: '#/components/schemas/Error'
+   *       400:
+   *         description: The body is not an array, or it holds more IDs than the configured limit.
+   */
 app.post('/api/v1/node/control_endpoint_list_multiple', async (req, res, next) => {
   try {
       const profileId = getProfileId(req);

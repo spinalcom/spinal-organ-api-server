@@ -1,5 +1,9 @@
 # CHANGELOG
 
+# 28-09-2026 -> v1.1.20
+- Re-write of the documentation for every route.
+- Command routes now also update directModificationDate
+
 # 13-08-2026 -> v1.1.19
 - Fixed json parsing on create_ticket route that allowed parsing of bigger requests
 

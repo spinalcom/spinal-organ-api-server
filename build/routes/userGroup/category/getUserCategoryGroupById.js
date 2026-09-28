@@ -40,7 +40,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - read
      *     summary: Get a user group category by ID
-     *     description: Get a user group category by ID
+     *     description: >-
+     *       Returns one user group category by its dynamic ID, with its name and display colour.
      *     tags:
      *       - User Group
      *     parameters:
@@ -61,6 +62,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               $ref: '#/components/schemas/BasicNodeWithColor'
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.get('/api/v1/user-group/category/:categoryId', (0, express_zod_safe_1.default)({
         params: zod_1.z.object({ categoryId: zod_1.z.coerce.number().positive() }),

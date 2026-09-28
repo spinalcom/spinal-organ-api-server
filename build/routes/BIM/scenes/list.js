@@ -32,19 +32,22 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Retrun the list of scenes
-     *     summary: Get scenes of the list
+     *     summary: List the BIM scenes
+     *     description: >-
+     *       Returns the scenes of the twin without their items : name, description, type, `autoLoad`,
+     *       alignment method and the two IDs. Use `/api/v1/BIM/scene/{id}` to get one scene with the
+     *       models it holds.
      *     tags:
      *       - BIM
      *     responses:
      *       200:
-     *         description: Array of scenes
+     *         description: The scenes of the twin.
      *         content:
      *           application/json:
      *             schema:
      *                $ref: '#/components/schemas/ISceneListReturn'
      *       500:
-     *         description: internal error
+     *         description: The scenes could not be read. The body is an empty object.
      */
     app.get('/api/v1/BIM/scene/list', async (req, res) => {
         try {

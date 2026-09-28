@@ -33,20 +33,23 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   put:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: change a node of Ticket, usualy a room or equipment
-     *     summary: change a node of Ticket
+     *         - write
+     *     summary: Move a ticket to another element
+     *     description: >-
+     *       Re-points a ticket at another node : it is detached from the element it was declared on and
+     *       attached to the one given in the body. The ticket keeps its workflow, process and step.
      *     tags:
      *       - Workflow & ticket
      *     parameters:
      *       - in: path
      *         name: ticketId
-     *         description: use the dynamic ID
+     *         description: Dynamic ID of the ticket.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -56,11 +59,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               nodeDynamicId:
      *                 type: number
+     *                 description: Dynamic ID of the element the ticket should now concern.
      *     responses:
      *       200:
-     *         description: change node Successfully
-     *       400:
-     *         description: change node not Successfully
+     *         description: The ticket was moved. The body holds a `success` flag set to true.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 success:
+     *                   type: boolean
+     *       401:
+     *         description: The profile is not allowed to write on the ticket or the element.
+     *       500:
+     *         description: The ticket or the element could not be loaded, or the ticket is not a ticket node.
      */
     app.put('/api/v1/ticket/:ticketId/change_node', async (req, res) => {
         try {

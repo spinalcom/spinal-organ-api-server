@@ -33,13 +33,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Return list of floor
-     *     summary: Gets a list of floor
+     *     summary: List the floors of the building
+     *     description: >-
+     *       Returns the floors of the **first building of the first geographic context** the profile can
+     *       reach, each with its attribute categories and their attributes.
+     *
+     *
+     *       Because both the context and the building are taken as the first one found, a twin holding
+     *       several geographic contexts or several buildings needs
+     *       `/api/v1/node/{id}/children` on the wanted building instead. When nothing matches, the
+     *       response is an empty array rather than an error.
      *     tags:
      *      - Geographic Context
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The floors of the building, with their attribute categories.
      *         content:
      *           application/json:
      *             schema:
@@ -47,7 +55,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                $ref: '#/components/schemas/Floor'
      *       400:
-     *         description: Bad request
+     *         description: The profile graph could not be read ("list of floor is not loaded").
+     *       401:
+     *         description: The profile is not allowed to read the graph.
      */
     app.get('/api/v1/floor/list', async (req, res, next) => {
         try {

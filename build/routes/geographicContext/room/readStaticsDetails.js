@@ -27,34 +27,47 @@ const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getStaticDetailsInfo_1 = require("../../../utilities/getStaticDetailsInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/room/{id}/read_static_details:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: read static details of room
-   *     summary: Gets static details of room
-   *     tags:
-   *       - Geographic Context
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-    *                $ref: '#/components/schemas/StaticDetailsRoom'
-   *       400:
-   *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/room/{id}/read_static_details:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: Get everything known about a room
+     *     description: >-
+     *       The full read of a room in one call : its identity and display fields, `attributsList` (its
+     *       attribute categories with their attributes), `controlEndpoint` (its control points),
+     *       `endpoints` (its BMS endpoints with their current values), `bimObjects` (the BIM objects it
+     *       holds) and `groupParents` (the floor and the groups it belongs to, the room context aside).
+     *
+     *
+     *       This is the heaviest room route - it walks all of the above in one pass. Prefer the
+     *       dedicated routes when you only need one of these lists.
+     *
+     *
+     *       The node must be of type `geographicRoom`; anything else fails with a 500.
+     *     tags:
+     *       - Geographic Context
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the room.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The complete static description of the room.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/StaticDetailsRoom'
+     *       401:
+     *         description: The profile is not allowed to read this room.
+     *       500:
+     *         description: The room could not be loaded, or the node is not a room ("node is not of type geographic room").
+     */
     app.get("/api/v1/room/:id/read_static_details", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

@@ -30,34 +30,39 @@ import { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/context/{id}/nodeTypeList:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: Return node type list of context
- *     summary: Get type list in context with given ID context
- *     tags:
- *       - Contexts/ontologies
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *              $ref: "#/components/schemas/ContextNodeTypeList"
- *       400:
- *         description: Bad request
- */
+   * @swagger
+   * /api/v1/context/{id}/nodeTypeList:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the node types found in a context
+   *     description: >-
+   *       Browses the whole context and returns the distinct node types it contains (for example
+   *       `geographicBuilding`, `geographicFloor`, `geographicRoom`). Use one of these types with
+   *       `/api/v1/context/{id}/nodesOfType/{type}` to get the matching nodes.
+   *     tags:
+   *       - Contexts/ontologies
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the context.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The distinct node types present in the context.
+   *         content:
+   *           application/json:
+   *             schema:
+   *              $ref: "#/components/schemas/ContextNodeTypeList"
+   *       400:
+   *         description: The context could not be loaded ("context not found").
+   *       401:
+   *         description: The profile is not allowed to read this context.
+   */
 
   app.get("/api/v1/context/:id/nodeTypeList", async (req, res, next) => {
 

@@ -71,7 +71,7 @@ module.exports = function (logger: any, app: express.Express, spinalAPIMiddlewar
    *                     analysisModuleVersion:
    *                       type: string
    *       400:
-   *         description: Bad request
+   *         description: The body is invalid, or the analytic could not be created in this context.
    */
 
   app.post("/api/v1/analysis/contexts/:contextId/analytics", async (req, res, next) => {

@@ -36,27 +36,34 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Return tree of workflow
-     *     summary: Get a tree workflow by ID
+     *     summary: Get the whole tree of a workflow
+     *     description: >-
+     *       Returns a workflow context with everything below it : its processes, their steps and the
+     *       tickets sitting in each step. On a busy workflow this response is large, since every ticket
+     *       appears in it.
      *     tags:
      *       - Workflow & ticket
      *     parameters:
-     *      - in: path
-     *        name: id
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
+     *       - in: path
+     *         name: id
+     *         description: Dynamic ID of the workflow context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The workflow and its descendants.
      *         content:
      *           application/json:
      *             schema:
      *                $ref: '#/components/schemas/ContextTree'
      *       400:
-     *         description: Bad request
+     *         description: The node is not a workflow context ("The ID is not a workflow").
+     *       401:
+     *         description: The profile is not allowed to read this workflow.
+     *       500:
+     *         description: The workflow could not be loaded or the tree could not be built.
      */
     app.get('/api/v1/workflow/:id/tree', async (req, res) => {
         try {

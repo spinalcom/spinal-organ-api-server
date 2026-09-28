@@ -33,21 +33,28 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Returns files of node
-     *     summary: Get list files of node
+     *     summary: List the documents attached to a node
+     *     description: >-
+     *       Returns the documents stored under the node's `hasFiles` child, as `{ dynamicId, Name }`
+     *       (note the capital N). The `dynamicId` of a file is what
+     *       `/api/v1/node/{id}/download_file` and `/api/v1/node/{id}/delete_file` expect - it designates
+     *       the file itself, not the node it hangs on.
+     *
+     *
+     *       A node with no document returns an empty array.
      *     tags:
      *       - Nodes
      *     parameters:
      *      - in: path
      *        name: id
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the node.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The documents attached to the node.
      *         content:
      *           application/json:
      *             schema:
@@ -55,7 +62,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                $ref: '#/components/schemas/File'
      *       400:
-     *         description: Bad request
+     *         description: The node could not be loaded or its documents could not be read.
+     *       401:
+     *         description: The profile is not allowed to read this node.
      */
     app.get('/api/v1/node/:id/file_list', async (req, res, next) => {
         try {

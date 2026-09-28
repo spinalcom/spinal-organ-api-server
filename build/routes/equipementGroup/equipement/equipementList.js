@@ -33,43 +33,50 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: read equipements List
-     *     summary: Get equipements List
+     *     summary: List the equipment assigned to a group
+     *     description: >-
+     *       Returns the BIM objects assigned to a group of an equipment group context, in their short
+     *       form. The context must be a `BIMObjectGroupContext`, and the category and the group must
+     *       belong to it.
      *     tags:
      *       - Equipements Group
      *     parameters:
-     *      - in: path
-     *        name: contextId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: categoryId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: groupId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the equipment group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: groupId
+     *         description: Dynamic ID of the group, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The equipment of the group (an empty array if none is assigned).
      *         content:
      *           application/json:
      *             schema:
      *               type: array
      *               items:
-     *                $ref: '#/components/schemas/BasicNode'
+     *                 $ref: '#/components/schemas/BasicNode'
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           The context is not a `BIMObjectGroupContext`, or the category or the group does not
+     *           belong to it ("category or group not found in context").
+     *       401:
+     *         description: The profile is not allowed to read this context.
      */
     app.get('/api/v1/equipementsGroup/:contextId/category/:categoryId/group/:groupId/equipementList', async (req, res, next) => {
         try {

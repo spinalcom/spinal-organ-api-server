@@ -47,29 +47,37 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return parents of relation node
-   *     summary: Gets parents of relation with given ID node
+   *     summary: Get the node that owns a relation
+   *     description: >-
+   *       Takes the dynamic ID of a **relation** (not of a node) and returns the single node that owns
+   *       it - the parent side of the relation. The response is one object, not an array.
+   *
+   *
+   *       The ID must designate a `SpinalRelationLstPtr`, `SpinalRelationPtrLst` or
+   *       `SpinalRelationRef`; any other model is rejected with 400.
    *     tags:
    *       - Nodes
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the relation.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The node that owns the relation.
    *         content:
    *           application/json:
    *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/Node'
+   *              $ref: '#/components/schemas/BasicNode'
    *       400:
-   *         description: Bad request
+   *         description: The given ID is not a relation ("The given id is not an expected relation instance").
+   *       401:
+   *         description: The profile is not allowed to read this relation.
+   *       500:
+   *         description: The relation could not be loaded or read.
    */
 
   app.get('/api/v1/relation/:id/parent_node', async (req, res, next) => {

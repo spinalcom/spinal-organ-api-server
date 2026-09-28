@@ -30,50 +30,58 @@ import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/endPointsGroup/{contextId}/category/{categoryId}/update:
- *   put:
- *     security: 
- *       - bearerAuth: 
- *         - read
- *     description: update category endPoints Group
- *     summary: update category endPoints Group
- *     tags:
- *       - EndPoints Group
- *     parameters:
- *      - in: path
- *        name: contextId
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *      - in: path
- *        name: categoryId
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - newNameCategory
- *               - newNameIcon
- *             properties:
- *                newNameCategory:
- *                 type: string
- *                newNameIcon:
- *                 type: string
- *     responses:
- *       200:
- *         description: Update Successfully
- *       400:
- *         description: Bad request
-*/
+   * @swagger
+   * /api/v1/endPointsGroup/{contextId}/category/{categoryId}/update:
+   *   put:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Rename a category of a group context
+   *     description: >-
+   *       Renames a category and sets its icon. The category must belong to the given context.
+   *
+   *
+   *       Both fields are applied, so send the current icon to keep it. A successful call answers
+   *       **200 with an empty body**.
+   *     tags:
+   *       - EndPoints Group
+   *     parameters:
+   *       - in: path
+   *         name: contextId
+   *         description: Dynamic ID of the group context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: categoryId
+   *         description: Dynamic ID of the category, which must belong to that context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - newNameCategory
+   *             properties:
+   *               newNameCategory:
+   *                 type: string
+   *               newNameIcon:
+   *                 type: string
+   *                 description: New display icon.
+   *     responses:
+   *       200:
+   *         description: The category was renamed. The body is empty.
+   *       400:
+   *         description: The category does not belong to the context ("category not found in context").
+   *       401:
+   *         description: The profile is not allowed to write on this context.
+   */
 
 
 

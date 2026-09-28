@@ -34,34 +34,41 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Return tree of node in context
-     *     summary: Get a tree of node context with given IDcontext and IDnode
+     *     summary: Get the subtree of a node inside a context
+     *     description: >-
+     *       Returns a node with all of its descendants, following only the relations that belong to the
+     *       given context. The node must belong to that context, otherwise the request fails. This is the
+     *       per-node counterpart of `/api/v1/context/{id}/tree`.
      *     tags:
      *       - Contexts/ontologies
      *     parameters:
      *      - in: path
      *        name: idContext
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the context that defines which relations are followed.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *      - in: path
      *        name: idNode
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the node to start from. It must belong to the context.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The node and its descendants inside the context.
      *         content:
      *           application/json:
      *             schema:
      *                $ref: '#/components/schemas/ContextTree'
      *       400:
-     *         description: Bad request
+     *         description: The node does not belong to the context, or one of the two IDs is not a node/context ("node not found in context").
+     *       401:
+     *         description: The profile is not allowed to read the context or the node.
+     *       500:
+     *         description: The context or the node could not be loaded.
      */
     app.get("/api/v1/context/:idContext/node/:idNode/tree", async (req, res, next) => {
         let tree;

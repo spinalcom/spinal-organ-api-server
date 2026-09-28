@@ -37,20 +37,28 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   put:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: update event
-     *     summary: update event
+     *         - write
+     *     summary: Update a calendar event
+     *     description: >-
+     *       Rewrites the fields of an event : name, description, dates and recurrence. The event must
+     *       belong to the context given as `contextId`.
+     *
+     *
+     *       Every listed field is applied, so send the current value for anything that should not change.
+     *       Dates use the format `DD MM YYYY HH:mm:ss`, and `repeatEnd` matters only when `repeat` is
+     *       true.
      *     tags:
      *       - Calendar & Event
      *     parameters:
      *      - in: path
      *        name: eventId
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the event.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -64,29 +72,43 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               contextId:
      *                 type: integer
+     *                 description: Dynamic ID of the event context the event belongs to.
      *               name:
      *                 type: string
+     *               description:
+     *                 type: string
+     *               repeat:
+     *                 type: boolean
      *               startDate:
      *                 type: string
      *                 default: DD MM YYYY HH:mm:ss
      *               endDate:
      *                 type: string
      *                 default: DD MM YYYY HH:mm:ss
-     *               repeat:
-     *                 type: boolean
+     *               repeatEnd:
+     *                 type: string
+     *                 default: DD MM YYYY HH:mm:ss
+     *                 description: When the recurrence stops. Used when `repeat` is true.
      *               count:
      *                 type: number
+     *                 description: Number of `period` units between two occurrences.
      *               period:
-     *                 type: number
-     *                 default: day|week|month|year
-     *               repeatEnd:
-     *                 type: number
-     *                 default: DD MM YYYY HH:mm:ss
+     *                 type: string
+     *                 description: Unit of the recurrence.
+     *                 enum: [day, week, month, year]
      *     responses:
      *       200:
-     *         description: Updated successfully
+     *         description: The updated event.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/Event'
      *       400:
-     *         description: Bad request
+     *         description: The event does not belong to the given context ("node not found in context").
+     *       401:
+     *         description: The profile is not allowed to write on this event.
+     *       500:
+     *         description: The event or the context could not be loaded.
      */
     app.put('/api/v1/event/:eventId/update', async (req, res, next) => {
         try {

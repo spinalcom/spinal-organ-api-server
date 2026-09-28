@@ -30,26 +30,31 @@ const spinal_env_viewer_plugin_group_manager_service_1 = __importDefault(require
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/groupContext/type_list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return list of type of groupContext
-   *     summary: Gets a list of type of groupContext
-   *     tags:
-   *      - Group Context
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/TypeListGroupContext'
-   *       400:
-   *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/groupContext/type_list:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the group context types
+     *     description: >-
+     *       Returns the group context types known to the group manager - the values accepted by
+     *       `/api/v1/groupContext/contextsOfType/{type}`, and the families the dedicated routes cover
+     *       (rooms, equipment, endpoints, nomenclature).
+     *     tags:
+     *      - Group Context
+     *     responses:
+     *       200:
+     *         description: The known group context types.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/TypeListGroupContext'
+     *       400:
+     *         description: The type list could not be read ("list of type of context is not loaded").
+     *       401:
+     *         description: The profile is not allowed to read the graph.
+     */
     app.get("/api/v1/groupContext/type_list", async (req, res, next) => {
         const types = [];
         try {

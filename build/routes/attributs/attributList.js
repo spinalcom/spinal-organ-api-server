@@ -50,6 +50,42 @@ const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-vie
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 const getAttributeListInfo_1 = require("../../utilities/getAttributeListInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
+    /**
+     * @swagger
+     * /api/v1/node/{id}/attributsList:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the attributes of a node (deprecated alias)
+     *     description: >-
+     *       Kept for backwards compatibility. Identical result to
+     *       `/api/v1/node/{id}/attribute_list`, which should be used instead.
+     *     deprecated: true
+     *     tags:
+     *       - Node Attributs
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the node.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The attribute categories of the node.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                $ref: '#/components/schemas/NodeAttribut'
+     *       400:
+     *         description: The node could not be loaded (unknown or stale dynamic ID).
+     *       401:
+     *         description: The profile is not allowed to read this node.
+     */
     //deprecated
     app.get('/api/v1/node/:id/attributsList', async (req, res, next) => {
         try {
@@ -83,21 +119,29 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Returns list of attributs
-     *     summary: Get list of attributs
+     *     summary: List the attributes of a node
+     *     description: >-
+     *       Returns the attribute categories attached to a node, each with its attributes. Attributes are
+     *       always grouped by category in Spinal, so the response is one entry per category, holding the
+     *       category's own `dynamicId` / `staticId` / `name` and its `attributs` array
+     *       (`label`, `value`, `type`, `unit`).
+     *
+     *
+     *       The category `dynamicId` is what the create / update / delete attribute routes expect as
+     *       `IdCategory`.
      *     tags:
      *       - Node Attributs
      *     parameters:
      *      - in: path
      *        name: id
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the node.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The attribute categories of the node (an empty array if it has none).
      *         content:
      *           application/json:
      *             schema:
@@ -105,7 +149,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                $ref: '#/components/schemas/NodeAttribut'
      *       400:
-     *         description: Bad request
+     *         description: The node could not be loaded (unknown or stale dynamic ID).
+     *       401:
+     *         description: The profile is not allowed to read this node.
      */
     app.get('/api/v1/node/:id/attribute_list', async (req, res, next) => {
         try {

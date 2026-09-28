@@ -101,6 +101,8 @@ module.exports = function (
    *                   description: array of dynamic IDs of the users that failed to be added to the user group
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.post(
     '/api/v1/user-group/context/:contextId/group/:groupId/user',

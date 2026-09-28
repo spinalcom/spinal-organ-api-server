@@ -5,34 +5,43 @@ const recTree_1 = require("../../utilities/recTree");
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/context/{id}/tree:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return tree of context
-   *     summary: Get a tree context by ID
-   *     tags:
-   *       - Contexts/ontologies
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/ContextTree'
-   *       400:
-   *         description: Bad request
-   */
+     * @swagger
+     * /api/v1/context/{id}/tree:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: Get the whole tree of a context
+     *     description: >-
+     *       Recursively walks a context and returns it with all of its descendants, following only the
+     *       relations that belong to that context. The traversal is not depth-limited, so on a large
+     *       context (a full geographic context, for instance) the response can be very large and slow to
+     *       build - prefer `/api/v1/context/{id}/tree/{numberOfLevel}/depth` when you only need the
+     *       first levels.
+     *     tags:
+     *       - Contexts/ontologies
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the context.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: >-
+     *           The context and its descendants. Note that when the requested node is not a
+     *           SpinalContext the body is `null` with a 200 status.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/ContextTree'
+     *       401:
+     *         description: The profile is not allowed to read this context.
+     *       500:
+     *         description: The context could not be loaded or the tree could not be built.
+     */
     app.get("/api/v1/context/:id/tree", async (req, res, next) => {
         let contexts;
         try {

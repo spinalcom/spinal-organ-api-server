@@ -42,7 +42,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - write
      *     summary: Update an Organization Context by ID
-     *     description: Update a specific Organization Context by its ID
+     *     description: >-
+     *       Renames an organization context. Only the fields present in the body are applied, so this is a
+     *       partial update; the organizations it holds are untouched.
      *     tags:
      *       - Organization
      *     parameters:
@@ -83,6 +85,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Organization context not found
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.patch('/api/v1/organization/context/:contextId', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({

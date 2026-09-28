@@ -118,6 +118,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: User context not found
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.get('/api/v1/user/context/:contextId/user', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({

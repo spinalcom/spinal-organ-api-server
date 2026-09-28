@@ -77,6 +77,8 @@ module.exports = function (
    *                 $ref: '#/components/schemas/BasicNodeWithColor'
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.get(
     '/api/v1/user-group/context/:contextId/category/:categoryId/group',

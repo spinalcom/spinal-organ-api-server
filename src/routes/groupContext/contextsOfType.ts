@@ -31,33 +31,44 @@ import { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
-* @swagger
-* /api/v1/groupContext/contextsOfType/{type}:
-*   get:
-*     security: 
-*       - bearerAuth: 
-*         - readOnly
-*     description: Return nodes of type in context
-*     summary: Gets a nodes of type with given ID context and Type
-*     tags:
-*      - Group Context
-*     parameters:
-*        name: type
-*        required: true
-*        schema:
-*          type: string
-*     responses:
-*       200:
-*         description: Success
-*         content:
-*           application/json:
-*             schema: 
-*               type: array
-*               items: 
-*                $ref: '#/components/schemas/ContextNodeofTypes'
-*       400:
-*         description: Bad request
-*/
+   * @swagger
+   * /api/v1/groupContext/contextsOfType/{type}:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the group contexts of a given type
+   *     description: >-
+   *       Returns the group contexts of one type, which is how you find the contexts of a single family
+   *       rather than all of them like `/api/v1/groupContext/list` does.
+   *
+   *
+   *       `type` is one of the values returned by `/api/v1/groupContext/type_list`, for instance
+   *       `geographicRoomGroupContext`, `BIMObjectGroupContext`, `BmsEndpointGroupContext` or
+   *       `AttributeConfigurationGroupContext`.
+   *     tags:
+   *       - Group Context
+   *     parameters:
+   *       - in: path
+   *         name: type
+   *         description: Group context type to filter on.
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       200:
+   *         description: The group contexts of that type (an empty array if there are none).
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/ContextNodeofTypes'
+   *       401:
+   *         description: The profile is not allowed to read the graph.
+   *       500:
+   *         description: The profile graph could not be read.
+   */
 
   app.get("/api/v1/groupContext/contextsOfType/:type", async (req, res, next) => {
 

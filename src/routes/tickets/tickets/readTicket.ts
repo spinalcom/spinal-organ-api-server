@@ -39,27 +39,32 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return ticket
-   *     summary: Get ticket
+   *     summary: Read a ticket
+   *     description: >-
+   *       Returns a ticket with its full details : priority, creation date, declarer, description, the
+   *       element it concerns, the process and step it currently sits in, its workflow, and its
+   *       attribute categories.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
-   *      - in: path
-   *        name: ticketId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: ticketId
+   *         description: Dynamic ID of the ticket.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The ticket details.
    *         content:
    *           application/json:
    *             schema:
    *                $ref: '#/components/schemas/TicketDetails'
    *       400:
-   *         description: Bad request
+   *         description: The ticket could not be loaded or read (body is `ko`).
+   *       401:
+   *         description: The profile is not allowed to read this ticket.
    */
   app.get('/api/v1/ticket/:ticketId/read_details', async (req, res) => {
     try {

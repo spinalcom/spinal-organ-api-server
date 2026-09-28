@@ -33,12 +33,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Returns a list of attributes for multiple nodes, including error details where applicable.
-     *     summary: Get list of attributes for multiple nodes
+     *     summary: List the attributes of several nodes at once
+     *     description: >-
+     *       Batch version of `/api/v1/node/{id}/attribute_list` : the body is an array of dynamic IDs and
+     *       the response holds one `{ dynamicId, categoryAttributes }` entry per ID, in the same order.
+     *
+     *
+     *       Each node is read independently : a failure turns its entry into `{ dynamicId, error }` and
+     *       the response comes back with **206 Partial Content**. At most 1000 IDs per call (configurable
+     *       through `MULTIPLE_ROUTE_IDS_LIMIT`).
      *     tags:
      *       - Node Attributs
      *     requestBody:
      *       required: true
+     *       description: The dynamic IDs of the nodes to read.
      *       content:
      *         application/json:
      *           schema:
@@ -48,7 +56,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               format: int64
      *     responses:
      *       200:
-     *         description: Success - All attribute lists fetched
+     *         description: Every node was read.
      *         content:
      *           application/json:
      *             schema:
@@ -58,12 +66,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                 properties:
      *                   dynamicId:
      *                     type: integer
+     *                     format: int64
      *                   categoryAttributes:
      *                     type: array
      *                     items:
      *                       $ref: '#/components/schemas/NodeAttribut'
      *       206:
-     *         description: Partial Content - Some attributes could not be fetched
+     *         description: At least one node could not be read; those entries hold an error instead.
      *         content:
      *           application/json:
      *             schema:
@@ -80,7 +89,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                           $ref: '#/components/schemas/NodeAttribut'
      *                   - $ref: '#/components/schemas/Error'
      *       400:
-     *         description: Bad request
+     *         description: The body is not an array, or it holds more IDs than the configured limit.
      */
     app.post('/api/v1/node/attribute_list_multiple', async (req, res, next) => {
         try {

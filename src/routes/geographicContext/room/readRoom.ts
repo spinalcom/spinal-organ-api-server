@@ -44,27 +44,36 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: read room
-   *     summary: Gets room
+   *     summary: Read a room
+   *     description: >-
+   *       Returns the identity of a room : `dynamicId`, `staticId`, `name` and `type`, nothing more.
+   *       For its attributes, equipment or endpoints use `/api/v1/room/{id}/read_static_details`.
+   *
+   *
+   *       The node must be of type `geographicRoom`; anything else is rejected with 400.
    *     tags:
    *       - Geographic Context
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the room.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The room identity.
    *         content:
    *           application/json:
    *             schema:
    *                $ref: '#/components/schemas/Room'
    *       400:
-   *         description: Bad request
+   *         description: The node is not a room ("node is not of type geographic room").
+   *       401:
+   *         description: The profile is not allowed to read this room.
+   *       500:
+   *         description: The room could not be loaded.
    */
 
   app.get('/api/v1/room/:id/read', async (req, res, next) => {

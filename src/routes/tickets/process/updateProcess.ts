@@ -40,27 +40,33 @@ module.exports = function (
    *   put:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: update the process
-   *     summary: update the process
+   *         - write
+   *     summary: Rename a process
+   *     description: >-
+   *       Renames a process of a workflow. The process must belong to the given workflow, and the new
+   *       name must not be used by another process of the same workflow.
+   *
+   *
+   *       Only the name changes; the steps and the tickets in them are untouched.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
-   *      - in: path
-   *        name: workflowId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: processId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: workflowId
+   *         description: Dynamic ID of the workflow context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: processId
+   *         description: Dynamic ID of the process, which must belong to that workflow.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
@@ -68,13 +74,21 @@ module.exports = function (
    *             required:
    *               - newNameProcess
    *             properties:
-   *                newNameProcess:
+   *               newNameProcess:
    *                 type: string
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The process was renamed (body is `Success`).
+   *         content:
+   *           text/plain:
+   *             schema:
+   *               type: string
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           `newNameProcess` is not a string, the process does not belong to the workflow ("invalid
+   *           processId"), or the name is already taken ("The name of process already exists").
+   *       401:
+   *         description: The profile is not allowed to write on this workflow.
    */
 
   app.put(

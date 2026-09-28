@@ -32,9 +32,24 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - readOnly
-     *     description: Create a node and return its information
+     *         - write
      *     summary: Create a node
+     *     description: >-
+     *       Creates a node and attaches it to an existing parent through the relation named by
+     *       `parentToChildRelationName`. Every field of the body other than `parentId`,
+     *       `parentToChildRelationName`, `parentToChildRelationType`, `addInContext` and `contextId` is
+     *       copied as-is into the `info` of the new node (`name` and `type` included).
+     *
+     *
+     *       When `addInContext` is true and `contextId` is given, the node is added inside that context,
+     *       so it is reachable from the context traversal routes. Otherwise the node is only attached to
+     *       its parent and will not appear in a context tree.
+     *
+     *
+     *       The `dynamicId` returned is the freshly assigned `_server_id`. The hub assigns it
+     *       asynchronously, so the route waits up to 500 ms for it; in the rare case where it is still
+     *       not known the node is created but `dynamicId` comes back as `-1` (read the node again to get
+     *       it).
      *     tags:
      *       - Nodes
      *     requestBody:
@@ -45,13 +60,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             $ref: '#/components/schemas/CreateNode'
      *     responses:
      *       201:
-     *         description: Node created successfully
+     *         description: The node was created and attached to its parent.
      *         content:
      *           application/json:
      *             schema:
      *                $ref: '#/components/schemas/BasicNode'
      *       400:
-     *         description: Bad request
+     *         description: The parent or the context could not be loaded, or the body is malformed.
+     *       401:
+     *         description: The profile is not allowed to write on the parent node.
+     *       500:
+     *         description: The node could not be created or attached.
      */
     app.post('/api/v1/node/create', async (req, res, next) => {
         try {

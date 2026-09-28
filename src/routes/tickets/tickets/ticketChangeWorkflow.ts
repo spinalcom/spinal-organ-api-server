@@ -44,20 +44,27 @@ module.exports = function (
    *   put:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: change a wokflow of Ticket
-   *     summary: change a wokflow of Ticket
+   *         - write
+   *     summary: Move a ticket to another workflow
+   *     description: >-
+   *       Moves a ticket into a process of a different workflow, and places it in that process's first
+   *       step. Both the target workflow and the target process must be given, and the process must
+   *       belong to that workflow.
+   *
+   *
+   *       A successful call answers **200 with an empty body**.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
    *       - in: path
    *         name: ticketId
-   *         description: use the dynamic ID
+   *         description: Dynamic ID of the ticket.
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
@@ -68,13 +75,17 @@ module.exports = function (
    *             properties:
    *               workflowDynamicId:
    *                 type: number
+   *                 description: Dynamic ID of the target workflow context.
    *               processDynamicId:
    *                 type: number
+   *                 description: Dynamic ID of the target process, inside that workflow.
    *     responses:
    *       200:
-   *         description: change workflow Successfully
-   *       400:
-   *         description: change workflow not Successfully
+   *         description: The ticket was moved. The body is empty.
+   *       401:
+   *         description: The profile is not allowed to write on the ticket, the workflow or the process.
+   *       500:
+   *         description: One of the nodes could not be loaded, or is not of the expected type.
    */
   app.put('/api/v1/ticket/:ticketId/change_workflow', async (req, res) => {
     try {

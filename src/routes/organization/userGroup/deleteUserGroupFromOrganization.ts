@@ -49,7 +49,9 @@ module.exports = function (
    *       - bearerAuth:
    *         - write
    *     summary: Remove the user group from an Organization
-   *     description: Remove the user group linked to a specific Organization
+   *     description: >-
+   *       Removes the link between a user group and an organization. The user group itself and the users
+   *       in it are **not** deleted; they simply stop being attached to that organization.
    *     tags:
    *       - Organization
    *     parameters:
@@ -78,6 +80,8 @@ module.exports = function (
    *         description: Organization context not found
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.delete(
     '/api/v1/organization/context/:contextId/organization/:organizationId/user-group',

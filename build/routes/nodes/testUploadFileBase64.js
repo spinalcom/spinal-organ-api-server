@@ -32,12 +32,24 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: Find node object in a specific context
-     *     summary: Gets Node
+     *         - write
+     *     summary: Decode a base64 image (internal test route)
+     *     description: >-
+     *       Development helper : decodes a base64 data URL and writes it to `testImage1.jpg` in the
+     *       organ's working directory. It touches no node and returns no node - the response is the plain
+     *       string `"convert string to image with succes"`.
+     *
+     *
+     *       Nothing links the written file to the graph, and each call overwrites the previous one. Use
+     *       `/api/v1/node/{id}/upload_file` to actually attach a document to a node.
+     *
+     *
+     *       This route accepts a request body of up to 500 MB (most routes cap at the default body size).
+     *     deprecated: true
      *     tags:
      *       - Nodes
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -47,15 +59,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               imageString:
      *                 type: string
+     *                 description: The image as a base64 string, with or without the `data:image/...;base64,` prefix.
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The image was decoded and written to disk.
      *         content:
      *           application/json:
      *             schema:
-     *                $ref: '#/components/schemas/Node'
-     *       400:
-     *         description: Bad request
+     *               type: string
+     *               example: convert string to image with succes
+     *       500:
+     *         description: The body was missing `imageString`, or the image could not be decoded or written.
      */
     app.post('/api/v1/node/convert_base_64', async (req, res, next) => {
         try {

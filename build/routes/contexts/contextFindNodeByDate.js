@@ -37,12 +37,25 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Find node object in a specific context by date
-     *     summary: Gets Node
+     *     summary: Find the nodes of a context modified between two dates
+     *     description: >-
+     *       Browses a context and returns the nodes whose `directModificationDate` falls between
+     *       `beginDate` and `endDate` (both exclusive).
+     *
+     *
+     *       `directModificationDate` is the date of a change made on the node itself (declaring a ticket
+     *       on a room, for instance), while `indirectModificationDate` is the date of a change on one of
+     *       its parents or children (moving that ticket to another step). Only the direct date is used as
+     *       the filter; both are returned. Nodes that never carry a `directModificationDate` are skipped.
+     *
+     *
+     *       Both bounds are parsed in the server's local time and compared in UTC. Accepted formats are
+     *       `DD-MM-YYYY`, `DD-MM-YYYY HH:mm:ss`, `DD MM YYYY`, `DD MM YYYY HH:mm:ss`, `DD/MM/YYYY` and
+     *       `DD/MM/YYYY HH:mm:ss` - a date in any other format is rejected as invalid and the result is
+     *       an empty list.
      *     tags:
      *      - Contexts/ontologies
      *     requestBody:
-     *       description: => (context) use the dynamic ID <br>  => both fields (beginDate/endDate) are converted to GMT, so your search is a standard GMT query mechanism <br> => Date Format is "DD-MM-YYYY", "DD-MM-YYYY HH:mm:ss", "DD MM YYYY", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY", "DD/MM/YYYY HH:mm:ss" <br> => the filter is applied to the directModifictionDate field <br> => directModificationDate is date of direct change on the node, example = declare a ticket on the piece node <br> => indirectModificationDate is change of a child or parent of the node, example = change a state of the ticket node linked to a piece node,
      *       required: true
      *       content:
      *         application/json:
@@ -55,21 +68,28 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               beginDate:
      *                 type: string
+     *                 description: Lower bound, exclusive.
+     *                 example: 01-01-2024 00:00:00
      *               endDate:
      *                 type: string
+     *                 description: Upper bound, exclusive.
+     *                 example: 31-01-2024 23:59:59
      *               contextId:
      *                 type: string
+     *                 description: Dynamic ID of the context to browse.
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The nodes of the context modified inside the interval.
      *         content:
      *           application/json:
      *             schema:
      *               type: array
      *               items:
      *                $ref: '#/components/schemas/NodeWithDate'
-     *       400:
-     *         description: Bad request
+     *       401:
+     *         description: The profile is not allowed to read this context.
+     *       500:
+     *         description: The context could not be loaded or browsed.
      */
     app.post('/api/v1/find_node_in_context_by_date', async (req, res, next) => {
         try {

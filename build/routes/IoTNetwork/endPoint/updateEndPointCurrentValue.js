@@ -51,27 +51,48 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   put:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: Update the current value or control value of the endpoint
-     *     summary: Update the current value or control value of the endpoint
+     *         - write
+     *     summary: Write the current value or the control value of an endpoint
+     *     description: >-
+     *       Writes a new value on an endpoint. `updateType` picks which one :
+     *
+     *        * **`controlValue`** - writes the `controlValue` attribute of the endpoint's `default`
+     *          attribute category. The attribute must already exist, otherwise the request fails with
+     *          "The node has no controlValue attribute".
+     *
+     *        * **anything else, including an omitted `updateType`** - writes the current value of the
+     *          endpoint. Despite the parameter being marked required historically, leaving it out simply
+     *          falls back to this branch.
+     *
+     *
+     *       When the new value is a **number**, it is also pushed to the endpoint's time series (one is
+     *       created if needed) - except on a control point that has `saveTimeSeries` turned off. Values
+     *       that are not numbers are stored as the current value only.
+     *
+     *
+     *       Either way, `directModificationDate` of the node is set to now.
      *     tags:
      *       - IoTNetwork & Time Series
      *     parameters:
      *      - in: path
      *        name: id
-     *        description: Use the dynamic ID
+     *        description: Dynamic ID of the endpoint.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *      - in: query
      *        name: updateType
-     *        description: Choose between updating the current value or control value
-     *        required: true
+     *        description: >-
+     *          `controlValue` writes the control attribute; any other value, or none, writes the current
+     *          value.
+     *        required: false
      *        schema:
      *          type: string
      *          enum: [currentValue, controlValue]
+     *          default: currentValue
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -79,17 +100,27 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             required:
      *               - newValue
      *             properties:
-     *                newValue:
-     *                 type: number
+     *               newValue:
+     *                 description: >-
+     *                   The value to write. Numbers are also recorded in the time series; booleans and
+     *                   strings are accepted for the current value.
+     *                 oneOf:
+     *                   - type: number
+     *                   - type: boolean
+     *                   - type: string
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The value that was written, as `{ NewValue }`.
      *         content:
      *           application/json:
      *             schema:
      *                $ref: '#/components/schemas/NewValue'
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           The endpoint could not be loaded, it carries no element, or `controlValue` was asked for
+     *           on a node without that attribute.
+     *       401:
+     *         description: The profile is not allowed to write on this endpoint.
      */
     app.put('/api/v1/endpoint/:id/update', async (req, res, next) => {
         try {

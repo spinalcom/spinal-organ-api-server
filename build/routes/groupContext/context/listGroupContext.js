@@ -37,13 +37,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Return list of contexts
-     *     summary: Gets a list of contexts
+     *     summary: List the group contexts
+     *     description: >-
+     *       Returns every group context the profile can reach, with its name, type and display colour.
+     *       Use a returned `dynamicId` to reach its categories with `/api/v1/groupContext/{id}/category_list`.
+     *
+     *
+     *       Group contexts organise items into categories, and categories into groups.
+     *
      *     tags:
-     *      - Group Context
+     *       - Group Context
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The group contexts (an empty array if there are none).
      *         content:
      *           application/json:
      *             schema:
@@ -51,7 +57,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                $ref: '#/components/schemas/Context'
      *       400:
-     *         description: Bad request
+     *         description: The profile graph could not be read.
+     *       401:
+     *         description: The profile is not allowed to read the graph.
      */
     app.get('/api/v1/groupContext/list', async (req, res, next) => {
         const nodes = [];

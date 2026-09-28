@@ -30,36 +30,9 @@ import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-  /**
-* @swagger
-* /api/v1/groupContext/contextsOfType/{type}:
-*   get:
-*     security:
-*       - bearerAuth:
-*         - readOnly
-*     description: Return nodes of type in context
-*     summary: Gets a nodes of type with given ID context and Type
-*     tags:
-*      - Group Context
-*     parameters:
-*      - in: path
-*        name: type
-*        required: true
-*        schema:
-*          type: string
-*     responses:
-*       200:
-*         description: Success
-*         content:
-*           application/json:
-*             schema: 
-*               type: array
-*               items: 
-*                $ref: '#/components/schemas/ContextNodeofTypes'
-*       400:
-*         description: Bad request
-*/
-
+  // This handler is not mounted : routes.ts does not require this file, and
+  // GET /api/v1/groupContext/contextsOfType/{type} is served by groupContext/contextsOfType.ts.
+  // The OpenAPI block was removed from here so the published spec describes the route that runs.
   app.get("/api/v1/groupContext/contextsOfType/:type", async (req, res, next) => {
 
     const nodes = [];

@@ -43,7 +43,7 @@ module.exports = function (logger: any, app: express.Express, spinalAPIMiddlewar
    *                       type: string
    *                       description: Version of spinal-model-analysis used
    *       400:
-   *         description: Bad request
+   *         description: The context could not be loaded, or its analytics could not be read.
    */
 
   app.get("/api/v1/analysis/contexts/:contextId/analytics", async (req, res, next) => {

@@ -36,53 +36,63 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   delete:
      *     security:
      *       - bearerAuth:
-     *         - readOnly
-     *     description: read room list
-     *     summary: Get room list from rooms Group
+     *         - write
+     *     summary: Remove rooms from a group
+     *     description: >-
+     *       Takes rooms out of a group of a room group context. The body is an array of room dynamic IDs.
+     *
+     *
+     *       The rooms themselves are **not** deleted : they stay in the geographic context and only lose
+     *       this grouping. An empty array is rejected.
      *     tags:
      *       - Rooms Group
      *     parameters:
-     *      - in: path
-     *        name: contextId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: categoryId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: groupId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the room group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: groupId
+     *         description: Dynamic ID of the group, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
      *     requestBody:
-     *       description: array of string (dynamicId)
      *       required: true
+     *       description: The dynamic IDs of the rooms to remove.
      *       content:
      *         application/json:
      *           schema:
      *             type: array
      *             items:
-     *               type: number
+     *               type: integer
+     *               format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The rooms were removed from the group.
      *         content:
      *           application/json:
      *             schema:
      *               type: array
      *               items:
-     *                $ref: '#/components/schemas/BasicNode'
+     *                 $ref: '#/components/schemas/BasicNode'
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           The array is empty ("list of room id is empty"), or the category or the group does not
+     *           belong to the context ("category or group not found in context").
+     *       401:
+     *         description: The profile is not allowed to write on this context.
      */
     app.delete('/api/v1/roomsGroup/:contextId/category/:categoryId/group/:groupId/deleteRooms', async (req, res, next) => {
         try {

@@ -45,7 +45,9 @@ module.exports = function (
    *       - bearerAuth:
    *         - write
    *     summary: Update a user group context by its ID
-   *     description: Update a user group context by its ID
+   *     description: >-
+   *       Updates the name or the colour of a user group context. Only the fields present in the body are
+   *       applied, so this is a partial update; the categories and groups below are untouched.
    *     tags:
    *       - User Group
    *     parameters:
@@ -82,6 +84,8 @@ module.exports = function (
    *               $ref: '#/components/schemas/BasicNodeWithColor'
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.patch(
     '/api/v1/user-group/context/:contextId',

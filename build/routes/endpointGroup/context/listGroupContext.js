@@ -31,28 +31,37 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/endPointsGroup/list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return list of contexts endPoints Group
-   *     summary: Gets a list of contexts endPoints Group
-   *     tags:
-   *       - EndPoints Group
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/Context'
-   *       400:
-   *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/endPointsGroup/list:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the group contexts
+     *     description: >-
+     *       Returns every group context the profile can reach, with its name, type and display colour.
+     *       Use a returned `dynamicId` to reach its categories with `/api/v1/endPointsGroup/{id}/category_list`.
+     *
+     *
+     *       Note that this listing is **not filtered by type** : it returns the group contexts of every
+     *       family, not only the endpoint ones.
+     *
+     *     tags:
+     *       - EndPoints Group
+     *     responses:
+     *       200:
+     *         description: The group contexts (an empty array if there are none).
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                $ref: '#/components/schemas/Context'
+     *       400:
+     *         description: The profile graph could not be read.
+     *       401:
+     *         description: The profile is not allowed to read the graph.
+     */
     app.get("/api/v1/endPointsGroup/list", async (req, res, next) => {
         const nodes = [];
         try {

@@ -37,46 +37,61 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: create group equipements Group
-     *     summary: create group equipements Group
+     *         - write
+     *     summary: Create a group in a category
+     *     description: >-
+     *       Adds a group to a category of a group context. Items are then assigned to the group through
+     *       the assignment routes of this family.
+     *
+     *
+     *       The context must be of type `BIMObjectGroupContext`.
      *     tags:
      *       - Equipements Group
      *     parameters:
-     *      - in: path
-     *        name: contextId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: categoryId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
      *             type: object
      *             required:
      *               - groupName
-     *               - groupColor
      *             properties:
-     *                groupName:
+     *               groupName:
      *                 type: string
-     *                groupColor:
+     *               groupColor:
      *                 type: string
-     *                groupIcon:
+     *                 description: Optional display colour.
+     *               groupIcon:
      *                 type: string
+     *                 description: Optional display icon.
      *     responses:
      *       200:
-     *         description: Create Successfully
+     *         description: The created group.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/BasicNode'
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           `contextId` is not a context ("contextId does not refer to a SpinalContext"), or the
+     *           category does not belong to it ("categoryId does not belong to context provided").
+     *       401:
+     *         description: The profile is not allowed to write on this context.
      */
     app.post("/api/v1/equipementsGroup/:contextId/category/:categoryId/create_group", async (req, res, next) => {
         try {

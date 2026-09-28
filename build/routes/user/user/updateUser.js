@@ -42,7 +42,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - write
      *     summary: Update a SpinalUser by ID
-     *     description: Update a SpinalUser by their unique ID.
+     *     description: >-
+     *       Updates a SpinalUser. Only the fields present in the body are applied, so this is a partial
+     *       update; `attributes` is a map of attribute name to value, and the attributes it does not
+     *       mention are left in place.
      *     tags:
      *       - User
      *     parameters:
@@ -84,6 +87,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: User not found
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.patch('/api/v1/user/:userId', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({

@@ -33,47 +33,55 @@ module.exports = function (
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
- * @swagger
- * /api/v1/room/reference_object_list_multiple:
- *   post:
- *     security:
- *       - bearerAuth:
- *         - readOnly
- *     description: Return reference objects for multiple rooms
- *     summary: Gets reference objects for multiple rooms
- *     tags:
- *      - Geographic Context
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: array
- *             items:
- *               type: integer
- *               format: int64
- *     responses:
- *       200:
- *         description: Success - All reference objects fetched
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/RoomReferenceObjectResponse'
- *       206:
- *         description: Partial Content - Some reference objects could not be fetched
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 oneOf:
- *                   - $ref: '#/components/schemas/RoomReferenceObjectResponse'
- *                   - $ref: '#/components/schemas/Error'
- *       400:
- *         description: Bad request
- */
+   * @swagger
+   * /api/v1/room/reference_object_list_multiple:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the reference objects of several rooms at once
+   *     description: >-
+   *       Batch version of `GET /api/v1/room/{id}/reference_object_list` : the body is an array of room dynamic IDs and the response holds
+   *       one room with its reference objects per ID, in the same order.
+   *
+   *
+   *       Each room is read independently : a failure turns its slot into an error object and the
+   *       response comes back with **206 Partial Content**. At most 1000 IDs per call (configurable
+   *       through `MULTIPLE_ROUTE_IDS_LIMIT`).
+   *     tags:
+   *       - Geographic Context
+   *     requestBody:
+   *       required: true
+   *       description: The dynamic IDs of the rooms.
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
+   *     responses:
+   *       200:
+   *         description: Every room was read.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/RoomReferenceObjectResponse'
+   *       206:
+   *         description: At least one room could not be read; those slots hold an error object instead.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 oneOf:
+   *                   - $ref: '#/components/schemas/RoomReferenceObjectResponse'
+   *                   - $ref: '#/components/schemas/Error'
+   *       400:
+   *         description: The body is not an array, or it holds more IDs than the configured limit.
+   */
 app.post('/api/v1/room/reference_object_list_multiple', async (req, res, next) => {
   try {
     const profileId = getProfileId(req);

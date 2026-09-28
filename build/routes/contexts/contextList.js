@@ -32,13 +32,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Return list of contexts
-     *     summary: Gets a list of contexts
+     *     summary: List the contexts of the digital twin
+     *     description: >-
+     *       Returns every context (ontology root) the caller's profile can reach, by walking the
+     *       children of the profile graph. Each entry carries the context `dynamicId` (the volatile
+     *       `_server_id`, valid only for the lifetime of the current hub connection) and its
+     *       persistent `staticId`, plus the display `color` and `icon` when the context defines them.
+     *       Use the returned `dynamicId` with the other `/api/v1/context/{id}/...` routes.
      *     tags:
      *      - Contexts/ontologies
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The list of contexts reachable by the profile (an empty array if none).
      *         content:
      *           application/json:
      *             schema:
@@ -46,7 +51,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                $ref: '#/components/schemas/Context'
      *       400:
-     *         description: Bad request
+     *         description: The profile graph could not be read ("list of contexts is not loaded").
+     *       401:
+     *         description: The profile is not allowed to read the graph.
      */
     app.get("/api/v1/context/list", async (req, res, next) => {
         const nodes = [];

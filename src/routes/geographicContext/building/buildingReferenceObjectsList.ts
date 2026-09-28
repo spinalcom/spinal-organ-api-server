@@ -30,39 +30,51 @@ import { getBuildingReferenceObjectsListInfo } from '../../../utilities/getBuild
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/building/reference_object_list:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: Return reference objects of the building
- *     summary: Gets reference objects of the building
- *     tags:
- *      - Geographic Context
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *               type: "object"
- *               properties:
- *                 dynamicId:
- *                   type: "integer"
- *                 staticId:
- *                   type: "string"
- *                 name:
- *                   type: "string"
- *                 type:
- *                   type: "string"
- *                 infoReferencesObjects:
- *                   type: "array"
- *                   items: 
- *                    $ref: '#/components/schemas/Equipement'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/building/reference_object_list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the reference objects of the building
+   *     description: >-
+   *       Returns the objects attached through `hasReferenceObject` to the **first building of the
+   *       first geographic context** the profile can reach. As with `/api/v1/building/read`, there is
+   *       no building ID to pass.
+   *
+   *
+   *       Reference objects are BIM objects a node points at without owning them, typically shared
+   *       elements such as facades or structural parts.
+   *     tags:
+   *       - Geographic Context
+   *     responses:
+   *       200:
+   *         description: The building with its reference objects.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 dynamicId:
+   *                   type: integer
+   *                   format: int64
+   *                 staticId:
+   *                   type: string
+   *                 name:
+   *                   type: string
+   *                 type:
+   *                   type: string
+   *                 infoReferencesObjects:
+   *                   type: array
+   *                   items:
+   *                    $ref: '#/components/schemas/Equipement'
+   *       400:
+   *         description: >-
+   *           The profile graph could not be read, or the twin holds no geographic context or no
+   *           building ("list of reference_Objects is not loaded").
+   *       401:
+   *         description: The profile is not allowed to read the graph.
+   */
 
   app.get("/api/v1/building/reference_object_list", async (req, res, next) => {
 

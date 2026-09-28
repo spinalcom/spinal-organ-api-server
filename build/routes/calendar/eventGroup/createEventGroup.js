@@ -28,53 +28,65 @@ const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-  * @swagger
-  * /api/v1/eventContext/{ContextId}/eventCategory/{CategoryId}/create_group:
-  *   post:
-  *     security:
-  *       - bearerAuth:
-  *         - read
-  *     description: create event group
-  *     summary: create event group
-  *     tags:
-  *       - Calendar & Event
-  *     parameters:
-  *      - in: path
-  *        name: ContextId
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *      - in: path
-  *        name: CategoryId
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *     requestBody:
-  *       content:
-  *         application/json:
-  *           schema:
-  *             type: object
-  *             required:
-  *               - configEventGroup
-  *             properties:
-  *                groupName:
-  *                 type: string
-  *                color:
-  *                 type: string
-  *     responses:
-  *       200:
-  *         description: Success
-  *         content:
-  *           application/json:
-  *             schema:
-  *                $ref: '#/components/schemas/Context'
-  *       400:
-  *         description: Bad request
-  */
+     * @swagger
+     * /api/v1/eventContext/{ContextId}/eventCategory/{CategoryId}/create_group:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - write
+     *     summary: Create a group in an event category
+     *     description: >-
+     *       Adds a group to a category of a calendar. Events are created inside groups with
+     *       `/api/v1/event/create`, which takes this group's dynamic ID.
+     *
+     *
+     *       The context must be a `SpinalEventGroupContext` and the category must belong to it.
+     *     tags:
+     *       - Calendar & Event
+     *     parameters:
+     *       - in: path
+     *         name: ContextId
+     *         description: Dynamic ID of the event context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: CategoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - groupName
+     *             properties:
+     *               groupName:
+     *                 type: string
+     *               color:
+     *                 type: string
+     *                 description: Optional display colour.
+     *     responses:
+     *       200:
+     *         description: The created group.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/Context'
+     *       400:
+     *         description: >-
+     *           The category does not belong to the context ("node not found in context"), or the
+     *           context is not a `SpinalEventGroupContext` ("this context is not a
+     *           SpinalEventGroupContext").
+     *       401:
+     *         description: The profile is not allowed to write on this context.
+     */
     app.post("/api/v1/eventContext/:ContextId/eventCategory/:CategoryId/create_group", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

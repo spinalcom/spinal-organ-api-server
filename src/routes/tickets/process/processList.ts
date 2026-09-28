@@ -41,29 +41,33 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns list of process
-   *     summary: Get list of process
+   *     summary: List the processes of a workflow
+   *     description: >-
+   *       Returns the processes of a workflow context. A process is a ticket pipeline; its steps are
+   *       listed by `/api/v1/workflow/{workflowId}/process/{processId}/stepList`.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: id
+   *         description: Dynamic ID of the workflow context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The processes of the workflow (an empty array if there are none).
    *         content:
    *           application/json:
    *             schema:
    *               type: array
    *               items:
    *                $ref: '#/components/schemas/Process'
-   *       400:
-   *         description: Bad request
+   *       401:
+   *         description: The profile is not allowed to read this workflow.
+   *       500:
+   *         description: The workflow could not be loaded, or it is not a workflow context.
    */
   app.get('/api/v1/workflow/:id/processList', async (req, res) => {
     try {

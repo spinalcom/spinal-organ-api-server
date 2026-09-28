@@ -49,7 +49,7 @@ module.exports = function (logger: any, app: express.Express, spinalAPIMiddlewar
    *                       type: string
    *                       description: Version of spinal-model-analysis used
    *       400:
-   *         description: Bad request
+   *         description: The `contextName` field is missing, or the context could not be created.
    */
 
   app.post("/api/v1/analysis/contexts", async (req, res, next) => {

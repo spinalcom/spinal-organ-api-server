@@ -33,43 +33,48 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/equipementsGroup/{contextId}/category/{categoryId}/group_list:
- *   get:
- *     security:
- *       - bearerAuth:
- *         - readOnly
- *     description: Return list of group equipements Group
- *     summary: Gets a list of group equipements Group
- *     tags:
- *       - Equipements Group
- *     parameters:
- *      - in: path
- *        name: contextId
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *      - in: path
- *        name: categoryId
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *               type: array
- *               items: 
- *                $ref: '#/components/schemas/CategoryEvent'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/equipementsGroup/{contextId}/category/{categoryId}/group_list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the groups of a category
+   *     description: >-
+   *       Returns the groups of a category. The category must belong to the given context.
+   *     tags:
+   *       - Equipements Group
+   *     parameters:
+   *       - in: path
+   *         name: contextId
+   *         description: Dynamic ID of the group context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: categoryId
+   *         description: Dynamic ID of the category, which must belong to that context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     responses:
+   *       200:
+   *         description: The groups of the category (an empty array if there are none).
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/CategoryEvent'
+   *       400:
+   *         description: >-
+   *           `contextId` is not a context ("The context Id provided does not represent a context"), or
+   *           the category does not belong to it ("The category does not belong to the context").
+   *       401:
+   *         description: The profile is not allowed to read this context.
+   */
 
   app.get("/api/v1/equipementsGroup/:contextId/category/:categoryId/group_list", async (req, res, next) => {
 

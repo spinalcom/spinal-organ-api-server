@@ -37,21 +37,24 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns events of node
-   *     summary: Get list events of node
+   *     summary: List the calendar events attached to a node
+   *     description: >-
+   *       Returns the events linked to a node through the event service. Events are the scheduled or
+   *       recurring items of the calendar (maintenance rounds, interventions), not tickets - use
+   *       `/api/v1/node/{id}/ticket_list` for those.
    *     tags:
    *       - Nodes
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the node.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The events attached to the node (an empty array if there are none).
    *         content:
    *           application/json:
    *             schema:
@@ -59,7 +62,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *               items:
    *                $ref: '#/components/schemas/Event'
    *       400:
-   *         description: Bad request
+   *         description: The node could not be loaded (unknown or stale dynamic ID).
+   *       401:
+   *         description: The profile is not allowed to read this node.
+   *       500:
+   *         description: The events could not be read.
    */
   app.get("/api/v1/node/:id/event_list", async (req, res, next) => {
     try {

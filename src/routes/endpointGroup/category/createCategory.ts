@@ -31,43 +31,55 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/endPointsGroup/{id}/create_category:
- *   post:
- *     security:
- *       - bearerAuth:
- *         - read
- *     description: create category endpoint group
- *     summary: create category endpoint group
- *     tags:
- *       - EndPoints Group
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - categoryName
- *               - iconName
- *             properties:
- *                categoryName:
- *                 type: string
- *                iconName:
- *                 type: string
- *     responses:
- *       200:
- *         description: Create Successfully
- *       400:
- *         description: Bad request
-*/
+   * @swagger
+   * /api/v1/endPointsGroup/{id}/create_category:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Create a category in a group context
+   *     description: >-
+   *       Adds a category to a group context. Categories are the first level of the context; groups are
+   *       then created inside them with `/api/v1/endPointsGroup/{contextId}/category/{categoryId}/create_group`.
+   *     tags:
+   *       - EndPoints Group
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         description: Dynamic ID of the group context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - categoryName
+   *             properties:
+   *               categoryName:
+   *                 type: string
+   *               categoryIcon:
+   *                 type: string
+   *                 description: Optional display icon.
+   *               categoryColor:
+   *                 type: string
+   *                 description: Optional display colour, stored as a `color` attribute on the category.
+   *     responses:
+   *       200:
+   *         description: The created category.
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/BasicNode'
+   *       400:
+   *         description: The context could not be loaded, or the category could not be created.
+   *       401:
+   *         description: The profile is not allowed to write on this context.
+   */
 
   app.post("/api/v1/endPointsGroup/:id/create_category", async (req, res, next) => {
 

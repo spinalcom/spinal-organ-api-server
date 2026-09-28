@@ -40,7 +40,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - read
      *     summary: Retrieve a SpinalUser by ID
-     *     description: Retrieve a SpinalUser by their unique ID.
+     *     description: >-
+     *       Returns one SpinalUser by its dynamic ID. Pass `attributes`, `groups` or `organizations` to
+     *       also get the attributes it carries, the user groups it belongs to, and the organizations
+     *       reached through those groups - each one costs extra reads, so they are off by default.
      *     tags:
      *       - User
      *     parameters:
@@ -85,6 +88,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: User not found
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.get('/api/v1/user/:userId', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({

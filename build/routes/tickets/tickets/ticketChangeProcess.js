@@ -33,20 +33,24 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   put:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: change a process of Ticket
-     *     summary: change a process of Ticket
+     *         - write
+     *     summary: Move a ticket to another process of its workflow
+     *     description: >-
+     *       Moves a ticket into another process, inside the same workflow, and places it in that
+     *       process's first step. To move a ticket across workflows use
+     *       `/api/v1/ticket/{ticketId}/change_workflow`.
      *     tags:
      *       - Workflow & ticket
      *     parameters:
      *       - in: path
      *         name: ticketId
-     *         description: use the dynamic ID
+     *         description: Dynamic ID of the ticket.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -56,11 +60,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               processDynamicId:
      *                 type: number
+     *                 description: Dynamic ID of the target process.
      *     responses:
      *       200:
-     *         description: change process Successfully
-     *       400:
-     *         description: change process not Successfully
+     *         description: The ticket was moved. The body holds a `success` flag set to true.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 success:
+     *                   type: boolean
+     *       401:
+     *         description: The profile is not allowed to write on the ticket or the process.
+     *       500:
+     *         description: The ticket or the process could not be loaded, or is not of the expected type.
      */
     app.put('/api/v1/ticket/:ticketId/change_process', async (req, res) => {
         try {

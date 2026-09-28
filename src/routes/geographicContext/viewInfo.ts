@@ -102,6 +102,8 @@ export default function (
    *         description: Some retrieved informations were not found and are omitted from the response, content type same as 200
    *       400:
    *         description: Bad request, typically missing required 'dynamicId'
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.post(
     '/api/v1/geographicContext/viewInfo',

@@ -34,34 +34,43 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: read a node in workflow
-     *     summary: read a node in workflow
+     *     summary: Read a node of a workflow
+     *     description: >-
+     *       Returns the summary of a node of a workflow, looked up by its **static ID** in the graph
+     *       service.
+     *
+     *
+     *       Unlike `/api/v1/workflow/{workflowId}/node/{nodeId}/find`, it does not browse the workflow :
+     *       a node that is not currently loaded yields a `null` body with a 200 status.
      *     tags:
      *       - Workflow & ticket
      *     parameters:
      *       - in: path
      *         name: workflowId
-     *         description: use the dynamic ID
+     *         description: Dynamic ID of the workflow context.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *       - in: path
      *         name: nodeId
-     *         description: use the dynamic ID
+     *         description: Static ID of the node to read.
      *         required: true
      *         schema:
-     *           type: integer
-     *           format: int64
+     *           type: string
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The node summary, or `null` when the node is not currently loaded.
      *         content:
      *           application/json:
      *             schema:
      *                $ref: '#/components/schemas/Workflow'
      *       400:
-     *         description: Bad request
+     *         description: The node does not belong to this workflow ("this node is not valid in the workflow context").
+     *       401:
+     *         description: The profile is not allowed to read this workflow.
+     *       500:
+     *         description: The workflow could not be loaded, or it is not a workflow context.
      */
     app.get('/api/v1/workflow/:workflowId/node/:nodeId/read', async (req, res) => {
         try {

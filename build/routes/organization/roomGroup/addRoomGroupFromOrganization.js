@@ -40,7 +40,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - write
      *     summary: Add a room group to an Organization
-     *     description: Add a room group linked to a specific Organization
+     *     description: >-
+     *       Links an existing room group to an organization, which is how the rooms an organization is
+     *       responsible for are declared. Neither the group nor its rooms are copied - only the link is
+     *       created, and linking a group that is already linked changes nothing.
      *     tags:
      *       - Organization
      *     requestBody:
@@ -104,6 +107,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Organization context not found
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.post('/api/v1/organization/room-group', (0, express_zod_safe_1.default)({
         body: zod_1.z.strictObject({

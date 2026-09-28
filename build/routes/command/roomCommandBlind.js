@@ -33,27 +33,35 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Return blind state of a room
-     *     summary: Gets blind state of a room
+     *     summary: Read the blind command of a room
+     *     description: >-
+     *       Returns the current value of the `COMMAND_BLIND` control point of a room. The route walks the room's
+     *       `hasControlPoints` children, looks inside the profile named `Command`, and keeps the endpoint
+     *       named `COMMAND_BLIND`.
+     *
+     *
+     *       A room that carries no such control point answers 400 rather than an empty body.
      *     tags:
-     *      - Command
+     *       - Command
      *     parameters:
-     *      - in: path
-     *        name: id
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
+     *       - in: path
+     *         name: id
+     *         description: Dynamic ID of the room.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The current value of the command.
      *         content:
      *           application/json:
      *             schema:
      *                $ref: '#/components/schemas/Command'
      *       400:
-     *         description: Bad request
+     *         description: The room could not be loaded, or it has no `COMMAND_BLIND` control point.
+     *       401:
+     *         description: The profile is not allowed to read this room.
      */
     app.get('/api/v1/command/room/:id/blind', async (req, res, next) => {
         let info;

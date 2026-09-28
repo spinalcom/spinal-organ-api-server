@@ -31,48 +31,62 @@ module.exports = function (
   app: express.Express,
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
-/**
- * @swagger
- * /api/v1/room/inventory_multiple:
- *   post:
- *     security:
- *       - bearerAuth:
- *         - readOnly
- *     description: Returns inventory details for multiple rooms
- *     summary: Gets inventory for multiple rooms
- *     tags:
- *       - Geographic Context
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: array
- *             items:
- *               type: integer
- *               format: int64
- *     responses:
- *       200:
- *         description: Success - All room inventories fetched
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/InventoryRoomDetails'
- *       206:
- *         description: Partial Content - Some room inventories could not be fetched
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 oneOf:
- *                   - $ref: '#/components/schemas/InventoryRoomDetails'
- *                   - $ref: '#/components/schemas/Error'
- *       400:
- *         description: Bad request
- */
+  /**
+   * @swagger
+   * /api/v1/room/inventory_multiple:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: Get the inventory of several rooms at once (deprecated)
+   *     description: >-
+   *       Batch version of the **deprecated** `GET /api/v1/room/{id}/inventory` : the body is an array
+   *       of room dynamic IDs and the response holds one inventory per ID, in the same order, nested as
+   *       category -> group -> equipment across every group context.
+   *
+   *
+   *       There is no way to pick a group context here. For new integrations, call
+   *       `POST /api/v1/room/{id}/inventory` per room instead.
+   *
+   *
+   *       Each room is read independently : a failure turns its slot into `{ dynamicId, error }` and
+   *       the response comes back with **206 Partial Content**. At most 1000 IDs per call (configurable
+   *       through `MULTIPLE_ROUTE_IDS_LIMIT`).
+   *     deprecated: true
+   *     tags:
+   *       - Geographic Context
+   *     requestBody:
+   *       required: true
+   *       description: The dynamic IDs of the rooms.
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
+   *     responses:
+   *       200:
+   *         description: Every room was read.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/InventoryRoomDetails'
+   *       206:
+   *         description: At least one room could not be read; those slots hold an error object instead.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 oneOf:
+   *                   - $ref: '#/components/schemas/InventoryRoomDetails'
+   *                   - $ref: '#/components/schemas/Error'
+   *       400:
+   *         description: The body is not an array, or it holds more IDs than the configured limit.
+   */
 
   app.post("/api/v1/room/inventory_multiple", async (req, res, next) => {
     try {

@@ -92,6 +92,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                 $ref: '#/components/schemas/IUser'
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.get('/api/v1/user-group/context/:contextId/group/:groupId/user', (0, express_zod_safe_1.default)({
         params: zod_1.z.object({

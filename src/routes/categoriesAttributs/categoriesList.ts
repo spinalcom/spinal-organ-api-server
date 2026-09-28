@@ -40,29 +40,34 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns list of categories atrribut
-   *     summary: Get list of categories atrribut
+   *     summary: List the attribute categories of a node
+   *     description: >-
+   *       Returns the attribute categories attached to a node, **without** their attributes : only
+   *       `dynamicId`, `staticId`, `name` and `type` of each category. Use
+   *       `/api/v1/node/{id}/attribute_list` to get the categories together with their attributes.
    *     tags:
    *       - Node Attribut Categories
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the node.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The attribute categories of the node (an empty array if it has none).
    *         content:
    *           application/json:
    *             schema:
    *               type: array
    *               items:
    *                $ref: '#/components/schemas/CategoriesAttribute'
-   *       400:
-   *         description: Bad request
+   *       401:
+   *         description: The profile is not allowed to read this node.
+   *       500:
+   *         description: The node could not be loaded or its categories could not be read.
    */
 
   app.get('/api/v1/node/:id/categoriesList', async (req, res, next) => {

@@ -73,6 +73,8 @@ module.exports = function (
    *         description: user group context not found
    *       400:
    *         description: failed to delete the user group category
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.delete(
     '/api/v1/user-group/context/:contextId/category/:categoryId',

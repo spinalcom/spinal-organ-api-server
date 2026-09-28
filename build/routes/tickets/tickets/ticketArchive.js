@@ -33,20 +33,28 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: archive a Ticket
-     *     summary: archive a Ticket
+     *         - write
+     *     summary: Archive a ticket
+     *     description: >-
+     *       Takes a ticket out of the active steps of its process and files it under the archives of its
+     *       workflow. The ticket is not deleted and can be brought back with
+     *       `/api/v1/ticket/{ticketId}/unarchive`.
+     *
+     *
+     *       `workflowDynamicId` and `processDynamicId` must both be **numbers** here - a numeric string
+     *       is rejected. Both the process and the ticket must belong to that workflow.
      *     tags:
      *       - Workflow & ticket
      *     parameters:
      *       - in: path
      *         name: ticketId
-     *         description: use the dynamic ID
+     *         description: Dynamic ID of the ticket.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -57,13 +65,25 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               workflowDynamicId:
      *                 type: number
+     *                 description: Dynamic ID of the workflow context the ticket lives in.
      *               processDynamicId:
      *                 type: number
+     *                 description: Dynamic ID of the process, which must belong to that workflow.
      *     responses:
-     *       200:
-     *         description: Archive Successfully
+     *       202:
+     *         description: The ticket was archived ("Ticket archived successfully").
+     *         content:
+     *           text/plain:
+     *             schema:
+     *               type: string
      *       400:
-     *         description: Archive not Successfully
+     *         description: >-
+     *           A required field is missing, `workflowDynamicId` or `processDynamicId` is not a number,
+     *           or the process or the ticket does not belong to the workflow.
+     *       401:
+     *         description: The profile is not allowed to write on the ticket.
+     *       500:
+     *         description: One of the three nodes could not be loaded, or is not of the expected type.
      */
     app.post('/api/v1/ticket/:ticketId/archive', async (req, res) => {
         try {

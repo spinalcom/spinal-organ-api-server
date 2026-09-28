@@ -26,30 +26,36 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/IoTNetworkContext/{id}/delete:
-   *   delete:
-   *     security:
-   *       - bearerAuth:
-   *         - read
-   *     description: delete network context
-   *     summary: delete network context
-   *     tags:
-   *       - IoTNetwork & Time Series
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Delete Successfully
-   *       400:
-   *         description: Bad request
-  */
+     * @swagger
+     * /api/v1/IoTNetworkContext/{id}/delete:
+     *   delete:
+     *     security:
+     *       - bearerAuth:
+     *         - write
+     *     summary: Delete a network context
+     *     description: >-
+     *       Removes a context of type `Network` from the graph, with everything that hangs under it -
+     *       networks, devices and endpoints included. This is not reversible.
+     *     tags:
+     *       - IoTNetwork & Time Series
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the network context.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The context was deleted. The body is empty.
+     *       400:
+     *         description: The node is not a network context ("this context is not a Network").
+     *       401:
+     *         description: The profile is not allowed to delete this context.
+     *       500:
+     *         description: The context could not be loaded or removed.
+     */
     app.delete("/api/v1/IoTNetworkContext/:id/delete", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

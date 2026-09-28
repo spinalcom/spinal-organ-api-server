@@ -7,35 +7,9 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const spinal_env_viewer_plugin_group_manager_service_1 = __importDefault(require("spinal-env-viewer-plugin-group-manager-service"));
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
-    /**
-  * @swagger
-  * /api/v1/groupContext/contextsOfType/{type}:
-  *   get:
-  *     security:
-  *       - bearerAuth:
-  *         - readOnly
-  *     description: Return nodes of type in context
-  *     summary: Gets a nodes of type with given ID context and Type
-  *     tags:
-  *      - Group Context
-  *     parameters:
-  *      - in: path
-  *        name: type
-  *        required: true
-  *        schema:
-  *          type: string
-  *     responses:
-  *       200:
-  *         description: Success
-  *         content:
-  *           application/json:
-  *             schema:
-  *               type: array
-  *               items:
-  *                $ref: '#/components/schemas/ContextNodeofTypes'
-  *       400:
-  *         description: Bad request
-  */
+    // This handler is not mounted : routes.ts does not require this file, and
+    // GET /api/v1/groupContext/contextsOfType/{type} is served by groupContext/contextsOfType.ts.
+    // The OpenAPI block was removed from here so the published spec describes the route that runs.
     app.get("/api/v1/groupContext/contextsOfType/:type", async (req, res, next) => {
         const nodes = [];
         try {

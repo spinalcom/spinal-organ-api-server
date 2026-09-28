@@ -31,36 +31,40 @@ const spinal_env_viewer_plugin_group_manager_service_1 = __importDefault(require
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/equipementsGroup/{id}/category_list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return list of category equipements Group
-   *     summary: Gets a list of category equipements Group
-   *     tags:
-   *       - Equipements Group
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/CategoryEvent'
-   *       400:
-   *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/equipementsGroup/{id}/category_list:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the categories of a group context
+     *     description: >-
+     *       Returns the categories of a group context. Use a returned `dynamicId` with
+     *       `/api/v1/equipementsGroup/{contextId}/category/{categoryId}/group_list` to get its groups.
+     *     tags:
+     *       - Equipements Group
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         description: Dynamic ID of the group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     responses:
+     *       200:
+     *         description: The categories of the context (an empty array if there are none).
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                $ref: '#/components/schemas/CategoryEvent'
+     *       400:
+     *         description: The context could not be loaded ("list of category event is not loaded").
+     *       401:
+     *         description: The profile is not allowed to read this context.
+     */
     app.get("/api/v1/equipementsGroup/:id/category_list", async (req, res, next) => {
         const nodes = [];
         try {

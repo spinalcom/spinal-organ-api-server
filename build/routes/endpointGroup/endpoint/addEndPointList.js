@@ -36,51 +36,63 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - readOnly
-     *     description: add  endpoint to group
-     *     summary: add  endpoint to group
+     *         - write
+     *     summary: Assign endpoints to a group
+     *     description: >-
+     *       Adds BMS endpoints to a group of an endpoint group context. The body is an array of endpoint
+     *       dynamic IDs.
+     *
+     *
+     *       The category and the group must belong to the given context, and the array must not be empty.
      *     tags:
      *       - EndPoints Group
      *     parameters:
-     *      - in: path
-     *        name: contextId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: categoryId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: groupId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the endpoint group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: groupId
+     *         description: Dynamic ID of the group, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
      *     requestBody:
-     *       description: array of string (dynamicId)
      *       required: true
+     *       description: The dynamic IDs of the endpoints to assign.
      *       content:
      *         application/json:
      *           schema:
      *             type: array
      *             items:
-     *               type: number
+     *               type: integer
+     *               format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The endpoints were assigned to the group.
      *         content:
      *           application/json:
      *             schema:
-     *                $ref: '#/components/schemas/BasicNode'
+     *               type: array
+     *               items:
+     *                 $ref: '#/components/schemas/BasicNode'
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           One of the nodes is of the wrong type, the array is empty ("list of endpoint id is
+     *           empty"), or the category or the group does not belong to the context.
+     *       401:
+     *         description: The profile is not allowed to write on this context.
      */
     app.post('/api/v1/endPointsGroup/:contextId/category/:categoryId/group/:groupId/addEndpoint', async (req, res, next) => {
         try {

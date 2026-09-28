@@ -32,46 +32,53 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
-* @swagger
-* /api/v1/eventContext/{id}/create_category:
-*   post:
-*     security: 
-*       - bearerAuth: 
-*         - read
-*     description: create event category
-*     summary: create event category
-*     tags:
-*       - Calendar & Event
-*     parameters:
-*      - in: path
-*        name: id
-*        description: use the dynamic ID
-*        required: true
-*        schema:
-*          type: integer
-*          format: int64
-*     requestBody:
-*       content:
-*         application/json:
-*           schema:
-*             type: object
-*             required:
-*               - configEventCategory
-*             properties:
-*                categoryName:
-*                 type: string
-*                icon:
-*                 type: string
-*     responses:
-*       200:
-*         description: Success
-*         content:
-*           application/json:
-*             schema: 
-*                $ref: '#/components/schemas/Context'
-*       400:
-*         description: Bad request
-*/
+   * @swagger
+   * /api/v1/eventContext/{id}/create_category:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Create a category in an event context
+   *     description: >-
+   *       Adds a category to a calendar. Groups are then created inside it with
+   *       `/api/v1/eventContext/{ContextId}/eventCategory/{CategoryId}/create_group`, and events land
+   *       in those groups.
+   *     tags:
+   *       - Calendar & Event
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the event context.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - categoryName
+   *             properties:
+   *               categoryName:
+   *                 type: string
+   *               icon:
+   *                 type: string
+   *                 description: Optional display icon.
+   *     responses:
+   *       200:
+   *         description: The created category.
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/Context'
+   *       400:
+   *         description: The context could not be loaded, or the category could not be created.
+   *       401:
+   *         description: The profile is not allowed to write on this context.
+   */
 
 
 

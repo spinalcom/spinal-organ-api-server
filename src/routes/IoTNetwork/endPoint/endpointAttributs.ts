@@ -44,27 +44,37 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns list of attributs of endpoint
-   *     summary: Get list of attributs of endpoint
+   *     summary: List the attributes of an endpoint
+   *     description: >-
+   *       Returns the attribute categories of an endpoint with the attributes they hold - the same
+   *       shape as `/api/v1/node/{id}/attribute_list`, kept here for the IoT routes.
+   *
+   *
+   *       This is where the `controlValue` and `timeSeries maxDay` attributes of an endpoint can be
+   *       read. Despite the singular-looking schema, the response is an **array** of categories.
    *     tags:
    *       - IoTNetwork & Time Series
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the endpoint.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The attribute categories of the endpoint.
    *         content:
    *           application/json:
    *             schema:
-   *                $ref: '#/components/schemas/EndPointNodeAttribut'
-   *       400:
-   *         description: Bad request
+   *               type: array
+   *               items:
+   *                  $ref: '#/components/schemas/EndPointNodeAttribut'
+   *       401:
+   *         description: The profile is not allowed to read this endpoint.
+   *       500:
+   *         description: The endpoint could not be loaded or its attributes could not be read.
    */
 
   app.get('/api/v1/endpoint/:id/attributsList', async (req, res, next) => {

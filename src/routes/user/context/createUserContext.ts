@@ -43,7 +43,10 @@ module.exports = function (
    *       - bearerAuth:
    *         - write
    *     summary: Create a user context
-   *     description: Create a user context
+   *     description: >-
+   *       Creates a user context and adds it to the profile graph. A user context is the container the
+   *       SpinalUsers of the twin live in; users are then created inside it with
+   *       `POST /api/v1/user/context/{contextId}/user`.
    *     tags:
    *       - User
    *     requestBody:
@@ -75,6 +78,8 @@ module.exports = function (
    *         description: failed to create user context
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.post(
     '/api/v1/user/context',

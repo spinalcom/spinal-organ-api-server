@@ -30,49 +30,56 @@ import * as express from 'express';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
-/**
- * @swagger
- * /api/v1/endpoint/read_multiple:
- *   post:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: Reads the current values for multiple endpoints
- *     summary: Read the current values of multiple endpoints
- *     tags:
- *       - IoTNetwork & Time Series
- *     requestBody:
- *       description: An array of endpoint IDs to fetch the current values for
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: array
- *             items:
- *               type: integer
- *               format: int64
- *     responses:
- *       200:
- *         description: Success - All endpoints' current values fetched successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/CurrentValueWithId'
- *       206:
- *         description: Partial Content - Some endpoints' current values could not be fetched
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 oneOf:
- *                   - $ref: '#/components/schemas/CurrentValueWithId'
- *                   - $ref: '#/components/schemas/Error'
- *       400:
- *         description: Bad request - Incorrect request format or server error
- */
+  /**
+   * @swagger
+   * /api/v1/endpoint/read_multiple:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: Read the current value of several endpoints at once
+   *     description: >-
+   *       Batch version of `/api/v1/endpoint/{id}/read` : the body is an array of endpoint dynamic IDs
+   *       and the response holds one `{ dynamicId, currentValue }` entry per ID, in the same order.
+   *
+   *
+   *       Each endpoint is read independently : a failure turns its entry into `{ dynamicId, error }`
+   *       and the response comes back with **206 Partial Content**. At most 1000 IDs per call
+   *       (configurable through `MULTIPLE_ROUTE_IDS_LIMIT`).
+   *     tags:
+   *       - IoTNetwork & Time Series
+   *     requestBody:
+   *       required: true
+   *       description: The dynamic IDs of the endpoints.
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
+   *     responses:
+   *       200:
+   *         description: Every endpoint was read.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/CurrentValueWithId'
+   *       206:
+   *         description: At least one endpoint could not be read; those entries hold an error instead.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 oneOf:
+   *                   - $ref: '#/components/schemas/CurrentValueWithId'
+   *                   - $ref: '#/components/schemas/Error'
+   *       400:
+   *         description: The body is not an array, or it holds more IDs than the configured limit.
+   */
 app.post("/api/v1/endpoint/read_multiple", async (req, res, next) => {
   try {
       const profileId = getProfileId(req);

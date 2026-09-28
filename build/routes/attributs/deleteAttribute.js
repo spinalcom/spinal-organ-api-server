@@ -28,40 +28,54 @@ const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
-     * /api/v1/node/{idNode}/category/{idCategory}/attribut/{attributName}/delete:
+     * /api/v1/node/{IdNode}/category/{IdCategory}/attribut/{attributName}/delete:
      *   delete:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: Delete attribute
-     *     summary: delete an attribute
+     *         - write
+     *     summary: Delete an attribute of a node
+     *     description: >-
+     *       Removes the attribute whose label matches `attributName` from the given category. The
+     *       comparison ignores surrounding whitespace.
+     *
+     *
+     *       The route answers **200 `ok` whether or not anything was deleted** : an unknown attribute
+     *       label, or a category that is not attached to the node, both come back as a success. Read
+     *       `/api/v1/node/{id}/attribute_list` again to confirm the removal.
      *     tags:
      *       - Node Attributs
      *     parameters:
      *       - in: path
-     *         name: idNode
-     *         description: use the dynamic ID
+     *         name: IdNode
+     *         description: Dynamic ID of the node.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *       - in: path
-     *         name: idCategory
-     *         description: use the dynamic ID
+     *         name: IdCategory
+     *         description: Dynamic ID of the category holding the attribute.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *       - in: path
      *         name: attributName
+     *         description: Label of the attribute to delete.
      *         required: true
      *         schema:
      *           type: string
      *     responses:
      *       200:
-     *         description: Delete Successfully
+     *         description: The request was processed (body is `ok`). It does not guarantee a deletion.
+     *         content:
+     *           text/plain:
+     *             schema:
+     *               type: string
      *       400:
-     *         description: Bad request
+     *         description: The node or the category could not be loaded (body is `ko`).
+     *       401:
+     *         description: The profile is not allowed to write on this node.
      */
     app.delete('/api/v1/node/:IdNode/category/:IdCategory/attribut/:attributName/delete', async (req, res, next) => {
         try {

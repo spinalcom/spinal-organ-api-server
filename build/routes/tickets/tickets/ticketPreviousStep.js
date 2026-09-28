@@ -10,20 +10,27 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: move a Ticket
-     *     summary: move a Ticket
+     *         - write
+     *     summary: Move a ticket back to the previous step of its process
+     *     description: >-
+     *       Moves a ticket back by one step, following the order of the steps of its process. A ticket
+     *       already in the first step stays where it is.
+     *
+     *
+     *       The workflow and the process must be given in the body, and both the process and the ticket
+     *       must belong to that workflow.
      *     tags:
      *       - Workflow & ticket
      *     parameters:
      *       - in: path
      *         name: ticketId
-     *         description: use the dynamic ID
+     *         description: Dynamic ID of the ticket.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -34,13 +41,38 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               workflowDynamicId:
      *                 type: number
+     *                 description: Dynamic ID of the workflow context the ticket lives in.
      *               processDynamicId:
      *                 type: number
+     *                 description: Dynamic ID of the process, which must belong to that workflow.
      *     responses:
      *       200:
-     *         description: move to previous step Successfully
+     *         description: The ticket with the step it now sits in.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 dynamicId:
+     *                   type: integer
+     *                   format: int64
+     *                 staticId:
+     *                   type: string
+     *                 name:
+     *                   type: string
+     *                 type:
+     *                   type: string
+     *                 actuelStep:
+     *                   type: string
+     *                   description: Name of the step the ticket is in after the move.
      *       400:
-     *         description: move to previous step not Successfully
+     *         description: >-
+     *           The process does not belong to the workflow ("Process does not belong to workflow
+     *           context."), or the ticket does not ("Ticket does not belong to workflow context.").
+     *       401:
+     *         description: The profile is not allowed to write on the ticket.
+     *       500:
+     *         description: One of the three nodes could not be loaded, or is not of the expected type.
      */
     app.post('/api/v1/ticket/:ticketId/previous_step', async (req, res) => {
         try {

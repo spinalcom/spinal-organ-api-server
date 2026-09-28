@@ -30,40 +30,48 @@ import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/endPointsGroup/{id}/update:
- *   put:
- *     security: 
- *       - bearerAuth: 
- *         - read
- *     description: update context endPoints Group
- *     summary: update context endPoints Group
- *     tags:
- *       - EndPoints Group
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - newGroupEndpointContextName
- *             properties:
- *                newGroupEndpointContextName:
- *                 type: string
- *     responses:
- *       200:
- *         description: Update Successfully
- *       400:
- *         description: Bad request
-*/
+   * @swagger
+   * /api/v1/endPointsGroup/{id}/update:
+   *   put:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Rename a group context
+   *     description: >-
+   *       Renames a group context. Only the name changes - the categories, groups and the items they
+   *       hold are untouched.
+   *
+   *
+   *       A successful call answers **200 with an empty body**.
+   *     tags:
+   *       - EndPoints Group
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         description: Dynamic ID of the group context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - newContextName
+   *             properties:
+   *               newContextName:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: The context was renamed. The body is empty.
+   *       400:
+   *         description: The context could not be loaded.
+   *       401:
+   *         description: The profile is not allowed to write on this context.
+   */
 
 
 

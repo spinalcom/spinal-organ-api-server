@@ -29,27 +29,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const spinal_env_viewer_plugin_group_manager_service_1 = __importDefault(require("spinal-env-viewer-plugin-group-manager-service"));
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
-    /**
-   * @swagger
-   * /api/v1/groupContext/type_list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return list of type of groupContext
-   *     summary: Gets a list of type of groupContext
-   *     tags:
-   *      - Group Context
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/TypeListGroupContext'
-   *       400:
-   *         description: Bad request
-    */
+    // This handler is not mounted : routes.ts does not require this file, and
+    // GET /api/v1/groupContext/type_list is served by groupContext/groupeContextTypeList.ts.
+    // The OpenAPI block was removed from here so the published spec describes the route that runs.
     app.get("/api/v1/groupContext/type_list", async (req, res, next) => {
         const types = [];
         try {

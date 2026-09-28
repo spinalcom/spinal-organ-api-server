@@ -27,42 +27,68 @@ const requestUtilities_1 = require("../../utilities/requestUtilities");
 const getControlEndpointsInfo_1 = require("../../utilities/getControlEndpointsInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-  * @swagger
-  * /api/v1/node/{id}/control_endpoint_list:
-  *   get:
-  *     security:
-  *       - bearerAuth:
-  *         - readOnly
-  *     description: Return list of control endpoint
-  *     summary: Gets a list of control endpoint
-  *     tags:
-  *      - Nodes
-  *     parameters:
-  *      - in: path
-  *        name: id
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *      - in: query
-  *        name: includeDetails
-  *        description: include detailed endpoint information
-  *        required: false
-  *        schema:
-  *          type: boolean
-  *     responses:
-  *       200:
-  *         description: Success
-  *         content:
-  *           application/json:
-  *             schema:
-  *               type: array
-  *               items:
-  *                $ref: '#/components/schemas/EndPointNode'
-  *       400:
-  *         description: Bad request
-   */
+     * @swagger
+     * /api/v1/node/{id}/control_endpoint_list:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the control endpoints of a node, grouped by profile
+     *     description: >-
+     *       Returns the control points attached to a node. Control points are grouped into profiles
+     *       (`hasControlPoints`), so the response is one entry **per profile**, each holding its own
+     *       `endpoints` array - it is not a flat list of endpoints like
+     *       `/api/v1/node/{id}/endpoint_list`.
+     *
+     *
+     *       Unlike the BMS endpoint route, this one looks at the direct control-point children of the
+     *       node only; it does not walk the whole subtree.
+     *     tags:
+     *      - Nodes
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the node (typically a room, a floor or an equipment group).
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *      - in: query
+     *        name: includeDetails
+     *        description: >-
+     *          Set to `true` to also read the `controlValue` and `timeSeries maxDay` attributes of every
+     *          endpoint (returned as `controlValue` and `timeseriesRetentionDays`).
+     *        required: false
+     *        schema:
+     *          type: boolean
+     *          default: false
+     *     responses:
+     *       200:
+     *         description: The control-point profiles of the node, each with its endpoints.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 description: One control-point profile attached to the node.
+     *                 properties:
+     *                   dynamicId:
+     *                     type: integer
+     *                     format: int64
+     *                     description: Dynamic ID of the node the profile was read from (the node passed in the request, not the profile itself).
+     *                   profileName:
+     *                     type: string
+     *                     description: Name of the control-point profile.
+     *                   endpoints:
+     *                     type: array
+     *                     items:
+     *                       $ref: '#/components/schemas/EndPointNode'
+     *       400:
+     *         description: The node could not be loaded ("list of endpoints is not loaded").
+     *       401:
+     *         description: The profile is not allowed to read this node.
+     */
     app.get("/api/v1/node/:id/control_endpoint_list", async (req, res, next) => {
         try {
             const includeDetails = req.query.includeDetails === 'true';
