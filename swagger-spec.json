@@ -1750,6 +1750,74 @@
           }
         }
       },
+      "HubStatus": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "connecting",
+              "connected",
+              "disconnected",
+              "reconnecting",
+              "resyncing",
+              "closed",
+              "unknown"
+            ]
+          },
+          "since": {
+            "type": "integer",
+            "format": "int64",
+            "description": "when the connection entered this state (ms timestamp)"
+          },
+          "hub": {
+            "type": "string",
+            "description": "the url of the hub, without the credentials"
+          },
+          "disconnections": {
+            "type": "integer",
+            "description": "times the hub stopped answering or dropped the session of the organ"
+          },
+          "sessionsOpened": {
+            "type": "integer",
+            "description": "sessions opened with the hub, the first one included"
+          },
+          "lastError": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          },
+          "lastResync": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "at": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "durationMs": {
+                "type": "integer"
+              },
+              "reloaded": {
+                "type": "integer",
+                "description": "models loaded back, each with everything it holds"
+              },
+              "missing": {
+                "type": "integer",
+                "description": "models in memory the hub does not know anymore"
+              }
+            }
+          }
+        }
+      },
       "AttributeUpdate": {
         "type": "object",
         "required": [
@@ -26685,6 +26753,61 @@
           },
           "500": {
             "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/api/v1/hubStatus": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Get the state of the connection of this organ to the hub",
+        "description": "Answers from memory, without any request to the hub : it keeps answering while the hub is down, and the status code alone tells whether the organ can reach the hub.\n\nspinal-core-connectorjs keeps the connection when the hub stops answering or restarts : the organ keeps answering the other routes from memory, keeps what it could not send, and once the hub is back it opens a new session and loads back the models in memory (`resyncing`) so that the hub sends their changes again.\n\n`state` is one of :\n- `connecting` : the first session is not open yet\n- `connected` : the hub answers and knows the session of the organ\n- `disconnected` : the hub does not answer, the session may still be valid\n- `reconnecting` : the hub no longer knows the session (it restarted), a new one is being opened\n- `resyncing` : the new session is open, the models in memory are being loaded back\n- `closed` : the connection gave up, the organ is about to exit\n- `unknown` : the installed spinal-core-connectorjs does not report it (older than the reconnection), the organ exits when it loses the hub",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "The organ can reach the hub (`connected`, `resyncing`), or the state is `unknown`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubStatus"
+                },
+                "example": {
+                  "state": "connected",
+                  "since": 1790856078046,
+                  "hub": "http://127.0.0.1:7777",
+                  "disconnections": 1,
+                  "sessionsOpened": 2,
+                  "lastError": {
+                    "at": 1790856071234,
+                    "message": "cannot reach the hub at http://127.0.0.1:7777: ECONNREFUSED"
+                  },
+                  "lastResync": {
+                    "at": 1790856078046,
+                    "durationMs": 1900,
+                    "reloaded": 20002,
+                    "missing": 0
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The organ cannot reach the hub (`connecting`, `disconnected`, `reconnecting`, `closed`). It keeps answering the other routes from memory.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HubStatus"
+                }
+              }
+            }
           }
         }
       }

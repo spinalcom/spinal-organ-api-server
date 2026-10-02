@@ -72,8 +72,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
   app.get("/api/v1/eventContext/:id/category_list", async (req, res, next) => {
 
     const nodes = [];
-    await spinalAPIMiddleware.getGraph();
     try {
+      await spinalAPIMiddleware.getGraph();
       const profileId = getProfileId(req);
       const context: SpinalNode<any> = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       //@ts-ignore

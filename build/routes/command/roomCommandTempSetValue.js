@@ -95,6 +95,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                             const model = spinal_env_viewer_graph_service_1.SpinalGraphService.getInfo(bmsEndPoint.getId().get());
                             const element = await bmsEndPoint.element.load();
                             await (0, upstaeControlEndpoint_1.updateControlEndpointWithAnalytic)(model, req.body.tempCurrentValue, spinal_model_bmsnetwork_1.InputDataEndpointDataType.Real, spinal_model_bmsnetwork_1.InputDataEndpointType.Other);
+                            bmsEndPoint.info.directModificationDate.set(Date.now());
                             // element.currentValue.set(req.body.tempCurrentValue)
                             info = {
                                 dynamicId: room._server_id,

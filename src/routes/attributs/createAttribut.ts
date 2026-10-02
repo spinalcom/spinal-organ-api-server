@@ -23,7 +23,7 @@
  */
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
-import type {
+import {
   SpinalNode,
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';

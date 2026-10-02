@@ -826,5 +826,7 @@ module.exports = [
   "routes/userGroup/user/addUsersInGroup.ts",
   "routes/userGroup/user/deleteUserInGroup.ts",
   "routes/userGroup/user/getUserInGroup.ts",
-  "routes/userGroup/user/moveUsersInGroup.ts"
+  "routes/userGroup/user/moveUsersInGroup.ts",
+  "../src/routes/health/hubStatus.ts",
+  "routes/health/hubStatus.ts"
 ]

@@ -136,6 +136,28 @@ PRELOAD_BATCH_SIZE="20"                       # OPTIONAL | default 20   | nodes 
 PRELOAD_BATCH_DELAY="50"                      # OPTIONAL | default 50   | ms between two batches
 ```
 
+## Connection to the hub
+
+`spinal-core-connectorjs` keeps the connection when the hub stops answering or
+restarts : the organ waits for the hub instead of exiting, keeps answering from
+memory, and once the hub is back opens a new session and loads back the models
+it has in memory, keeping their instances. It needs a version of the connector
+with the reconnection (see "Connection to the hub" in its README) ; older ones
+exit the organ, which then loads everything again after its restart.
+
+`GET /api/v1/hubStatus` returns the state of that connection without asking the
+hub : `200` while the organ reaches the hub (`connected`, `resyncing`), `503`
+otherwise (`connecting`, `disconnected`, `reconnecting`, `closed`), for an uptime
+monitor. With an older connector it answers `{ "state": "unknown" }`.
+
+A promise rejected without a handler is logged instead of exiting the organ
+(node exits on it since version 15). An organ embedding the API server (bos-config)
+adds the same handler to its entry point :
+
+```ts
+process.on("unhandledRejection", (reason) => console.error("unhandled rejection", reason));
+```
+
 ## Running the API Server
 
 ```bash

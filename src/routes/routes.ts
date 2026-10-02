@@ -1287,6 +1287,7 @@ function routes(
   require('./command/commandMultiple')(logger, app, spinalAPIMiddleware);
   require('./health/healthStatus')(logger, app, spinalAPIMiddleware);
   require('./health/organStatus')(logger, app, spinalAPIMiddleware);
+  require('./health/hubStatus')(logger, app, spinalAPIMiddleware);
   require('./health/testTimeout')(logger, app, spinalAPIMiddleware);
 
   require('./snapshot/createNodeSnapshot')(logger, app, spinalAPIMiddleware);

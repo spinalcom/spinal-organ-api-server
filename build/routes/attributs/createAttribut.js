@@ -25,6 +25,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 const spinal_env_viewer_plugin_documentation_service_2 = require("spinal-env-viewer-plugin-documentation-service");
+const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 const awaitSync_1 = require("../../utilities/awaitSync");
 module.exports = function (logger, app, spinalAPIMiddleware) {
@@ -114,10 +115,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const node = await spinalAPIMiddleware.load(parseInt(req.params.IdNode, 10), profileId);
             //@ts-ignore
-            SpinalGraphService._addNode(node);
+            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
             const category = await spinalAPIMiddleware.load(parseInt(req.params.IdCategory, 10), profileId);
             //@ts-ignore
-            SpinalGraphService._addNode(category);
+            spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(category);
             const attributeLabel = req.body.attributeLabel;
             const attributeValue = req.body.attributeValue;
             const attributeType = req.body.attributeType;
