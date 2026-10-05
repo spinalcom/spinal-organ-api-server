@@ -38,12 +38,20 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: create endpoint
-   *     summary: create endpoint
+   *         - write
+   *     summary: Create an endpoint under a device
+   *     description: >-
+   *       Creates a `BmsEndpoint` under an existing device. The network context is taken from the
+   *       first context the device belongs to.
+   *
+   *
+   *       The creation is **not awaited** : the route answers **200 with an empty body** as soon as the
+   *       write is started, and returns no ID for the new endpoint. Read the device back with
+   *       `/api/v1/device/{id}/endpoint_list` to get it.
    *     tags:
    *       - IoTNetwork & Time Series
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
@@ -54,19 +62,24 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *               - type
    *               - Unit
    *             properties:
-   *                deviceDynamicId:
+   *               deviceDynamicId:
    *                 type: number
-   *                name:
+   *                 description: Dynamic ID of the device the endpoint is created under.
+   *               name:
    *                 type: string
-   *                type:
+   *               type:
    *                 type: string
-   *                Unit:
+   *                 description: Free-text type of the endpoint (its node type is always `BmsEndpoint`).
+   *               Unit:
    *                 type: string
+   *                 description: Unit of the measured value. Note the capital U.
    *     responses:
    *       200:
-   *         description: Create Successfully
+   *         description: The creation was started. The body is empty.
    *       400:
-   *         description: Bad request
+   *         description: The device could not be loaded, or the endpoint could not be created.
+   *       401:
+   *         description: The profile is not allowed to write on this device.
    */
 
 

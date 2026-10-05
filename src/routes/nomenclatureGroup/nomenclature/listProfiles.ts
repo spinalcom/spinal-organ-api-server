@@ -34,36 +34,44 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/nomenclatureGroup/{contextId}/profile_list:
- *   get:
- *     security:
- *       - bearerAuth:
- *         - readOnly
- *     description: Return list of nomenclature profiles
- *     summary: Gets a list of nomenclature profiles
- *     tags:
- *       - Nomenclature Group
- *     parameters:
- *      - in: path
- *        name: contextId
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *               type: array
- *               items: 
- *                $ref: '#/components/schemas/ProfilesList'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/nomenclatureGroup/{contextId}/profile_list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the nomenclature profiles of a context
+   *     description: >-
+   *       Returns the nomenclature profiles of an `AttributeConfigurationGroupContext`. A profile
+   *       describes which attribute categories, and which attributes inside them, a family of nodes is
+   *       expected to carry - its name, its standard name and its unit.
+   *
+   *
+   *       The node must be of type `AttributeConfigurationGroupContext`.
+   *     tags:
+   *       - Nomenclature Group
+   *     parameters:
+   *      - in: path
+   *        name: contextId
+   *        description: Dynamic ID of the nomenclature context.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The profiles of the context, each with its categories and their attributes.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/ProfilesList'
+   *       400:
+   *         description: The node is not an `AttributeConfigurationGroupContext`, or it could not be loaded.
+   *       401:
+   *         description: The profile is not allowed to read this context.
+   */
 
   app.get("/api/v1/nomenclatureGroup/:contextId/profile_list", async (req, res, next) => {
 

@@ -32,37 +32,39 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      * /api/v1/eventContext/{ContextId}/eventCategory/{CategoryId}/eventGroup/{GroupId}/event_list:
      *   get:
      *     security:
-     *      - bearerAuth:
-     *        - read
-     *     description: Return list of event
-     *     summary: Gets a list of event
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the events of a calendar group
+     *     description: >-
+     *       Returns the events held by a group of an event context. The category and the group must both
+     *       belong to the given context.
      *     tags:
-     *      - Calendar & Event
+     *       - Calendar & Event
      *     parameters:
-     *      - in: path
-     *        name: ContextId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: CategoryId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: GroupId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
+     *       - in: path
+     *         name: ContextId
+     *         description: Dynamic ID of the event context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: CategoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: GroupId
+     *         description: Dynamic ID of the group, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The events of the group (an empty array if there are none).
      *         content:
      *           application/json:
      *             schema:
@@ -70,7 +72,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                $ref: '#/components/schemas/Event'
      *       400:
-     *         description: Bad request
+     *         description: The category or the group does not belong to the context ("node not found in context").
+     *       401:
+     *         description: The profile is not allowed to read this context.
+     *       500:
+     *         description: One of the nodes could not be loaded.
      */
     app.get('/api/v1/eventContext/:ContextId/eventCategory/:CategoryId/eventGroup/:GroupId/event_list', async (req, res, next) => {
         const eventarray = [];

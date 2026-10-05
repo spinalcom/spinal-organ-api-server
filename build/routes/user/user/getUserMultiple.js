@@ -40,7 +40,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - read
      *     summary: Retrieve multiple SpinalUsers by their IDs
-     *     description: Retrieve multiple SpinalUsers by their unique IDs.
+     *     description: >-
+     *       Batch version of `GET /api/v1/user/{userId}` : the body carries the user IDs to read and the
+     *       response holds one user per ID. The same `attributes`, `groups` and `organizations` options
+     *       apply to every user of the batch.
      *     tags:
      *       - User
      *     requestBody:
@@ -86,13 +89,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Bad request - Invalid input or parameters
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.post('/api/v1/user/multiple', (0, express_zod_safe_1.default)({
         body: zod_1.z.strictObject({
             userDynamicIds: zod_1.z.array(zod_1.z.coerce.number().positive()).min(1).max(100),
-            attributes: zod_1.z.coerce.boolean().optional().default(false),
-            groups: zod_1.z.coerce.boolean().optional().default(false),
-            organizations: zod_1.z.coerce.boolean().optional().default(false),
+            attributes: zod_1.z.boolean().optional().default(false),
+            groups: zod_1.z.boolean().optional().default(false),
+            organizations: zod_1.z.boolean().optional().default(false),
         }),
     }), async (req, res) => {
         try {

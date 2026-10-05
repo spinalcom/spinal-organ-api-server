@@ -36,31 +36,44 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: create device
-     *     summary: create device
+     *         - write
+     *     summary: Create a device under a network
+     *     description: >-
+     *       Creates a `BmsDevice` under an existing network. The network context is taken from the first
+     *       context the network belongs to.
+     *
+     *
+     *       The creation is **not awaited** : the route answers **200 with an empty body** as soon as the
+     *       write is started, and returns no ID for the new device. Read the network back with
+     *       `/api/v1/Network/{id}/device_list` to get it.
      *     tags:
      *       - IoTNetwork & Time Series
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
      *             type: object
      *             required:
-     *               - configDevice
+     *               - networkDynamicId
+     *               - name
+     *               - type
      *             properties:
-     *                networkDynamicId:
+     *               networkDynamicId:
      *                 type: number
-     *                 description: optional
-     *                name:
+     *                 description: Dynamic ID of the network the device is created under.
+     *               name:
      *                 type: string
-     *                type:
+     *               type:
      *                 type: string
+     *                 description: Free-text type of the device (its node type is always `BmsDevice`).
      *     responses:
      *       200:
-     *         description: Create Successfully
+     *         description: The creation was started. The body is empty.
      *       400:
-     *         description: Bad request
+     *         description: The network could not be loaded, or the device could not be created.
+     *       401:
+     *         description: The profile is not allowed to write on this network.
      */
     app.post("/api/v1/device/create", async (req, res, next) => {
         try {

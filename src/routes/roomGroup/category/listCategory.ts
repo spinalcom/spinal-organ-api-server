@@ -32,36 +32,40 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/roomsGroup/{id}/category_list:
- *   get:
- *     security:
- *       - bearerAuth:
- *         - readOnly
- *     description: Return list of category roomsGroup
- *     summary: Gets a list of category roomsGroup
- *     tags:
- *       - Rooms Group
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *               type: array
- *               items: 
- *                $ref: '#/components/schemas/CategoryEvent'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/roomsGroup/{id}/category_list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the categories of a group context
+   *     description: >-
+   *       Returns the categories of a group context. Use a returned `dynamicId` with
+   *       `/api/v1/roomsGroup/{contextId}/category/{categoryId}/group_list` to get its groups.
+   *     tags:
+   *       - Rooms Group
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         description: Dynamic ID of the group context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     responses:
+   *       200:
+   *         description: The categories of the context (an empty array if there are none).
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/CategoryEvent'
+   *       400:
+   *         description: The context could not be loaded ("list of category event is not loaded").
+   *       401:
+   *         description: The profile is not allowed to read this context.
+   */
 
   app.get("/api/v1/roomsGroup/:id/category_list", async (req, res, next) => {
 

@@ -39,24 +39,36 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/ticket/{id}/create_event:
+   * /api/v1/ticket/{ticketDynamicId}/create_event:
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: create event of ticket
-   *     summary: create event of ticket
+   *         - write
+   *     summary: Create a calendar event on a ticket
+   *     description: >-
+   *       Attaches a calendar event to a ticket - a scheduled intervention, for instance. The event is
+   *       created in the default event tree of the twin (its context, category and group are created if
+   *       they do not exist yet).
+   *
+   *
+   *       Set `repeat` to true to create a recurring event : `period` gives the unit (`day`, `week`,
+   *       `month` or `year`), `count` how many units between two occurrences, and `repeatEnd` when the
+   *       recurrence stops. For a one-off event, `repeat` is false and those fields are ignored.
+   *
+   *
+   *       All three dates use the format `DD MM YYYY HH:mm:ss`. `user` describes who the event is for.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
    *      - in: path
    *        name: ticketDynamicId
-   *        description: use the dynamic ID of a ticket
+   *        description: Dynamic ID of the ticket.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
@@ -84,14 +96,18 @@ module.exports = function (
    *                 type: string
    *               repeat:
    *                 type: boolean
+   *                 description: Whether the event repeats.
    *               repeatEnd:
    *                 type: string
    *                 default: DD MM YYYY HH:mm:ss
+   *                 description: When the recurrence stops. Only used when `repeat` is true.
    *               count:
    *                 type: number
+   *                 description: Number of `period` units between two occurrences.
    *               period:
    *                 type: string
    *                 default: day|week|month|year
+   *                 description: Unit of the recurrence.
    *               user:
    *                 type: object
    *                 required:
@@ -107,13 +123,19 @@ module.exports = function (
    *                     type: string
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The created event.
    *         content:
    *           application/json:
    *             schema:
    *                $ref: '#/components/schemas/Event'
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           The default event context is not a `SpinalEventGroupContext`, a date could not be parsed,
+   *           or a required field is missing.
+   *       401:
+   *         description: The profile is not allowed to write on this ticket.
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.post('/api/v1/ticket/:ticketDynamicId/create_event', async (req, res) => {
     try {

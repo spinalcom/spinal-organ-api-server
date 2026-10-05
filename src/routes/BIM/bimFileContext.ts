@@ -37,13 +37,15 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return list of BIM File Contexts
-   *     summary: Get the list  BIM File Contexts
+   *     summary: List the BIM file contexts
+   *     description: >-
+   *       Returns the BIM file contexts of the twin with the BIM files they hold - the models published
+   *       to the hub, which the viewer then loads through `/BIM/file`.
    *     tags:
    *       - BIM
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The BIM file contexts with their files.
    *         content:
    *           application/json:
    *             schema:
@@ -51,9 +53,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *               items:
    *                $ref: '#/components/schemas/BIMFileContext'
    *       400:
-   *         description: scene not found
-   *       500:
-   *         description: internal error
+   *         description: The contexts could not be read ("list of contexts is not loaded").
+   *       401:
+   *         description: The profile is not allowed to read the graph.
    */
 
   app.get('/api/v1/BIM/BIMFileContext/list', async (req, res) => {

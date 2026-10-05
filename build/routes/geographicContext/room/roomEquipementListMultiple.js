@@ -27,54 +27,71 @@ const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getEquipmentListInfo_1 = require("../../../utilities/getEquipmentListInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-    * @swagger
-    * /api/v1/room/equipment_list_multiple:
-    *   post:
-    *     security:
-    *       - bearerAuth:
-    *         - readOnly
-    *     description: Return list of equipment for multiple rooms
-    *     summary: Gets a list of equipment for multiple rooms
-    *     tags:
-    *      - Geographic Context
-    *     requestBody:
-    *       required: true
-    *       content:
-    *         application/json:
-    *           schema:
-    *             type: array
-    *             items:
-    *               type: integer
-    *               format: int64
-    *     responses:
-    *       200:
-    *         description: Success - All equipment lists fetched
-    *         content:
-    *           application/json:
-    *             schema:
-    *               type: array
-    *               items:
-    *                 type: object
-    *                 properties:
-    *                   dynamicId:
-    *                     type: integer
-    *                   equipments:
-    *                     type: array
-    *                     items:
-    *                       $ref: '#/components/schemas/Equipement'
-    *       206:
-    *         description: Partial Content - Some equipment lists could not be fetched
-    *         content:
-    *           application/json:
-    *             schema:
-    *               type: array
-    *               items:
-    *                 oneOf:
-    *                   - $ref: '#/components/schemas/Equipement'
-    *                   - $ref: '#/components/schemas/Error'
-    *       400:
-    *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/room/equipment_list_multiple:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the equipment of several rooms at once
+     *     description: >-
+     *       Batch version of `GET /api/v1/room/{id}/equipment_list` : the body is an array of room
+     *       dynamic IDs and the response holds one `{ dynamicId, equipments }` entry per ID, in the same
+     *       order.
+     *
+     *
+     *       Each room is read independently : a failure turns its slot into `{ dynamicId, error }` and
+     *       the response comes back with **206 Partial Content**. At most 1000 IDs per call (configurable
+     *       through `MULTIPLE_ROUTE_IDS_LIMIT`).
+     *     tags:
+     *       - Geographic Context
+     *     requestBody:
+     *       required: true
+     *       description: The dynamic IDs of the rooms.
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: array
+     *             items:
+     *               type: integer
+     *               format: int64
+     *     responses:
+     *       200:
+     *         description: Every room was read.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 properties:
+     *                   dynamicId:
+     *                     type: integer
+     *                     format: int64
+     *                   equipments:
+     *                     type: array
+     *                     items:
+     *                       $ref: '#/components/schemas/Equipement'
+     *       206:
+     *         description: At least one room could not be read; those slots hold an error object instead.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 oneOf:
+     *                   - type: object
+     *                     properties:
+     *                       dynamicId:
+     *                         type: integer
+     *                       equipments:
+     *                         type: array
+     *                         items:
+     *                           $ref: '#/components/schemas/Equipement'
+     *                   - $ref: '#/components/schemas/Error'
+     *       400:
+     *         description: The body is not an array, or it holds more IDs than the configured limit.
+     */
     app.post("/api/v1/room/equipment_list_multiple", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

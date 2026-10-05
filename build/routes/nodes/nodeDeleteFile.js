@@ -32,31 +32,44 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   delete:
      *     security:
      *       - bearerAuth:
-     *         - readOnly
-     *     description: Delete a file from a node
-     *     summary: Delete a file from a node
+     *         - write
+     *     summary: Delete a document attached to a node
+     *     description: >-
+     *       Removes one document from the node's `hasFiles` directory. `fileServerId` is the `dynamicId`
+     *       of the file as returned by `/api/v1/node/{id}/file_list` - the ID of the file itself, not of
+     *       the node.
      *     tags:
      *       - Nodes
      *     parameters:
      *      - in: path
      *        name: id
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the node the document hangs on.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *      - in: path
      *        name: fileServerId
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the document, as returned by `/api/v1/node/{id}/file_list`.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *     responses:
-     *       204:
-     *         description: Node successfully deleted
+     *       200:
+     *         description: The document was deleted ("File successfully deleted").
+     *         content:
+     *           text/plain:
+     *             schema:
+     *               type: string
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           The node carries no document at all ("Node has no files"), or no document with this ID
+     *           ("File not found").
+     *       401:
+     *         description: The profile is not allowed to write on this node.
+     *       500:
+     *         description: The node could not be loaded or the document could not be removed.
      */
     app.delete('/api/v1/node/:id/delete_file/:fileServerId', async (req, res, next) => {
         try {

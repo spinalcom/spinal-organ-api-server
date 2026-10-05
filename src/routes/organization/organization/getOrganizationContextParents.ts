@@ -75,6 +75,8 @@ module.exports = function (
    *         description: Organization not found
    *       401:
    *         description: Unauthorized - No graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.get(
     '/api/v1/organization/:organizationId/parent/context',

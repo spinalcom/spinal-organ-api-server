@@ -35,7 +35,7 @@ module.exports = function (logger: any, app: express.Express, spinalAPIMiddlewar
    *       200:
    *         description: Analysis contexts successfully retrieved
    *       400:
-   *         description: Bad request
+   *         description: The analysis contexts could not be read.
    */
 
   app.get("/api/v1/analysis/contexts", async (req, res, next) => {

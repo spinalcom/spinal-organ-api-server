@@ -34,6 +34,7 @@ const express_fileupload_1 = __importDefault(require("express-fileupload"));
 const cors_1 = __importDefault(require("cors"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const routes_1 = __importDefault(require("./routes/routes"));
+const requestActivity_1 = require("./preloadingScript/requestActivity");
 const morgan = require("morgan");
 const chalk_1 = __importDefault(require("chalk"));
 const non_secure_1 = require("nanoid/non-secure");
@@ -143,6 +144,9 @@ function useLogger(app, log_body) {
 }
 function APIServer(logger, spinalAPIMiddleware) {
     const app = (0, express_1.default)();
+    // first in the chain : it measures the whole lifecycle of every request, and
+    // the snapshot preloader uses it to only work while the organ is idle
+    app.use(requestActivity_1.requestActivity.middleware);
     app.use((req, res, next) => {
         res.setHeader('X-API-Version', process.env.API_SERVER_VERSION);
         next();

@@ -33,20 +33,29 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   put:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: update name and/or description of Ticket
-     *     summary: update name and/or description of Ticket
+     *         - write
+     *     summary: Update the name, description or priority of a ticket
+     *     description: >-
+     *       Updates the fields present in the body and leaves the others untouched, so this is a partial
+     *       update.
+     *
+     *
+     *       Only truthy values are considered : sending `""`, `0` or `null` for a field leaves it
+     *       unchanged rather than clearing it. `name` and `description` must be non-empty strings, and
+     *       `priority` a number between 0 and 5 - anything else is rejected with 400. Note that the
+     *       ticket creation route only documents priorities 0 to 2.
      *     tags:
      *       - Workflow & ticket
      *     parameters:
      *       - in: path
      *         name: ticketId
-     *         description: use the dynamic ID
+     *         description: Dynamic ID of the ticket.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -54,15 +63,34 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               name:
      *                 type: string
+     *                 description: Non-empty string.
      *               description:
      *                 type: string
+     *                 description: Non-empty string.
      *               priority:
      *                 type: number
+     *                 description: Number between 0 and 5.
      *     responses:
      *       200:
-     *         description: updated Successfully
+     *         description: The ticket was updated, as `{ success, ticketInfo }`.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 success:
+     *                   type: boolean
+     *                 ticketInfo:
+     *                   type: object
+     *                   description: The ticket as it stands after the update.
      *       400:
-     *         description: update not Successfully
+     *         description: >-
+     *           One of the fields is invalid ("Invalid name", "Invalid description", "Invalid
+     *           priority").
+     *       401:
+     *         description: The profile is not allowed to write on this ticket.
+     *       500:
+     *         description: The ticket could not be loaded, or it is not a ticket node.
      */
     app.put('/api/v1/ticket/:ticketId/update', async (req, res) => {
         try {

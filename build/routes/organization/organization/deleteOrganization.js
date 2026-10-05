@@ -69,6 +69,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Organization context not found
      *       401:
      *         description: Unauthorized - No graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.delete('/api/v1/organization/:parentOrganizationId/:organizationIdToBeRemoved', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({

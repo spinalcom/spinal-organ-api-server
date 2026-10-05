@@ -23,7 +23,7 @@
  */
 import { serviceDocumentation } from 'spinal-env-viewer-plugin-documentation-service';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
-import type {
+import {
   SpinalNode,
   SpinalGraphService,
 } from 'spinal-env-viewer-graph-service';
@@ -39,31 +39,42 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/node/{idNode}/category/{idCategory}/attribut/create:
+   * /api/v1/node/{IdNode}/category/{IdCategory}/attribut/create:
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: Create attribute
-   *     summary: create an attribute
+   *         - write
+   *     summary: Add an attribute to a category of a node
+   *     description: >-
+   *       Adds an attribute inside one of the node's existing attribute categories. The category is
+   *       given by its dynamic ID and **must already be attached to that node** - otherwise the request
+   *       fails with 400. Create a category first with `/api/v1/node/{id}/category/create` if
+   *       needed.
+   *
+   *
+   *       The attribute is added by category *name*, so if the node holds several categories with the
+   *       same name the attribute lands in the first one. An attribute with the same label is
+   *       overwritten rather than duplicated. The route waits for the hub to acknowledge the write
+   *       before answering, so the returned `id` is usable right away.
    *     tags:
    *       - Node Attributs
    *     parameters:
    *       - in: path
-   *         name: idNode
-   *         description: use the dynamic ID
+   *         name: IdNode
+   *         description: Dynamic ID of the node.
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
    *       - in: path
-   *         name: idCategory
-   *         description: use the dynamic ID
+   *         name: IdCategory
+   *         description: Dynamic ID of the category, as returned by `/api/v1/node/{id}/attribute_list`.
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
@@ -76,17 +87,36 @@ module.exports = function (
    *             properties:
    *               attributeLabel:
    *                 type: string
+   *                 description: Name of the attribute; it is also its key inside the category.
    *               attributeValue:
    *                 type: string
    *               attributeType:
    *                 type: string
+   *                 description: Free-text type of the attribute (for instance `string`, `number`, `boolean`).
    *               attributeUnit:
    *                 type: string
    *     responses:
    *       200:
-   *         description: Create Successfully
+   *         description: The attribute was created.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 name:
+   *                   type: string
+   *                   description: The label that was given to the attribute.
+   *                 id:
+   *                   type: integer
+   *                   format: int64
+   *                   description: Dynamic ID of the created attribute.
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           The category is not one of the node's categories ("Category not found in the node
+   *           categories list"), the write failed ("Creation failed"), or the node or category could
+   *           not be loaded.
+   *       401:
+   *         description: The profile is not allowed to write on this node.
    */
 
   app.post(

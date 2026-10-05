@@ -43,20 +43,27 @@ module.exports = function (
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: create a Process
-   *     summary: create a Process
+   *         - write
+   *     summary: Create a process in a workflow
+   *     description: >-
+   *       Adds a process to a workflow. The new process gets the default steps defined on the workflow
+   *       at its creation.
+   *
+   *
+   *       Process names must be unique inside the workflow; a name already used by another process of
+   *       the same workflow is rejected with 400.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: id
+   *         description: Dynamic ID of the workflow context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
@@ -68,9 +75,19 @@ module.exports = function (
    *                 type: string
    *     responses:
    *       200:
-   *         description: Create Successfully
+   *         description: The created process.
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/Process'
    *       400:
-   *         description: create not Successfully
+   *         description: >-
+   *           `nameProcess` is empty ("nameProcess is required"), or the workflow already holds a
+   *           process with that name ("The name process already exists").
+   *       401:
+   *         description: The profile is not allowed to write on this workflow.
+   *       500:
+   *         description: The workflow could not be loaded, or it is not a workflow context.
    */
 
   app.post('/api/v1/workflow/:id/create_process', async (req, res) => {

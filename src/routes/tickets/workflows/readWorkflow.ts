@@ -42,27 +42,31 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: read a workflow
-   *     summary: read a workflow
+   *     summary: Read a workflow
+   *     description: >-
+   *       Returns the identity of a workflow context : `dynamicId`, `staticId`, `name` and `type`. Its
+   *       processes are listed by `/api/v1/workflow/{id}/processList`.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
    *       - in: path
    *         name: id
-   *         description: use the dynamic ID
+   *         description: Dynamic ID of the workflow context.
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The workflow.
    *         content:
    *           application/json:
    *             schema:
    *                $ref: '#/components/schemas/Workflow'
-   *       400:
-   *         description: Bad request
+   *       401:
+   *         description: The profile is not allowed to read this workflow.
+   *       500:
+   *         description: The workflow could not be loaded, or the node is not a workflow context.
    */
 
   app.get('/api/v1/workflow/:id/read', async (req, res) => {

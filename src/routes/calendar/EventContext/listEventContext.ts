@@ -38,13 +38,15 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return list of event contexts
-   *     summary: Gets a list of event contexts
+   *     summary: List the event contexts
+   *     description: >-
+   *       Returns every context of type `SpinalEventGroupContext` the profile can reach - the calendars
+   *       of the twin. Events are organised as context -> category -> group -> event.
    *     tags:
-   *      - Calendar & Event
+   *       - Calendar & Event
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The event contexts (an empty array if there are none).
    *         content:
    *           application/json:
    *             schema:
@@ -52,7 +54,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *               items:
    *                $ref: '#/components/schemas/ContextEvent'
    *       400:
-   *         description: Bad request
+   *         description: The profile graph could not be read ("list of contexts events is not loaded").
+   *       401:
+   *         description: The profile is not allowed to read the graph.
    */
 
   app.get('/api/v1/eventContext/list', async (req, res, next) => {

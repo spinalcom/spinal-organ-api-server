@@ -76,6 +76,8 @@ module.exports = function (
    *         description: failed to create organization context
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.post(
     '/api/v1/organization/context',

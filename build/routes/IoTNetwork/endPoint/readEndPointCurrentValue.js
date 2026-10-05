@@ -27,34 +27,42 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-    * @swagger
-    * /api/v1/endpoint/{id}/read:
-    *   get:
-    *     security:
-    *       - bearerAuth:
-    *         - readOnly
-    *     description: read the current value of endpoint
-    *     summary: read the current value of endpoint
-    *     tags:
-    *       - IoTNetwork & Time Series
-    *     parameters:
-    *      - in: path
-    *        name: id
-    *        description: use the dynamic ID
-    *        required: true
-    *        schema:
-    *          type: integer
-    *          format: int64
-    *     responses:
-    *       200:
-    *         description: Success
-    *         content:
-    *           application/json:
-    *             schema:
-    *                $ref: '#/components/schemas/CurrentValue'
-    *       400:
-    *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/endpoint/{id}/read:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: Read the current value of an endpoint
+     *     description: >-
+     *       Returns `{ currentValue }` for one endpoint : the last value the hub knows, not a fresh
+     *       reading from the field device. Its type follows the endpoint (number, boolean or string).
+     *
+     *
+     *       For the unit, the type and the time-series flags of the endpoint, read the node it hangs on
+     *       with `/api/v1/node/{id}/endpoint_list`.
+     *     tags:
+     *       - IoTNetwork & Time Series
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the endpoint.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The current value of the endpoint.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/CurrentValue'
+     *       400:
+     *         description: The node could not be loaded, or it carries no element with a current value.
+     *       401:
+     *         description: The profile is not allowed to read this endpoint.
+     */
     app.get("/api/v1/endpoint/:id/read", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

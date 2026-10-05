@@ -45,21 +45,27 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return list of endpoint
-   *     summary: Gets a list of endpoint
+   *     summary: List the BMS endpoints of a room
+   *     description: >-
+   *       Returns the BMS endpoints reachable from a room, with the last value known by the hub. The
+   *       node must be of type `geographicRoom`.
+   *
+   *
+   *       The generic `/api/v1/node/{id}/endpoint_list` covers any node type and accepts
+   *       `includeDetails`; this room-specific route does not.
    *     tags:
-   *      - Geographic Context
+   *       - Geographic Context
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the room.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The endpoints of the room (an empty array if there are none).
    *         content:
    *           application/json:
    *             schema:
@@ -67,7 +73,11 @@ module.exports = function (
    *               items:
    *                $ref: '#/components/schemas/EndPointRoom'
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           The node is not a room ("node is not of type geographic room"), or its endpoints could
+   *           not be read ("list of endpoints is not loaded").
+   *       401:
+   *         description: The profile is not allowed to read this room.
    */
 
   app.get('/api/v1/room/:id/endpoint_list', async (req, res, next) => {

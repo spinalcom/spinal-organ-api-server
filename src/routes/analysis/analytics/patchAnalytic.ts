@@ -69,7 +69,7 @@ module.exports = function (logger: any, app: express.Express, spinalAPIMiddlewar
    *                     analysisModuleVersion:
    *                       type: string
    *       400:
-   *         description: Bad request
+   *         description: The body is invalid, or the analytic could not be loaded or updated.
    */
 
   app.patch("/api/v1/analysis/analytics/:analyticId", async (req, res, next) => {

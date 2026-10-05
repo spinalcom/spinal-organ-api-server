@@ -41,25 +41,33 @@ module.exports = function (
    *   put:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: update category attribut in specific node
-   *     summary: update category attribut
+   *         - write
+   *     summary: Rename an attribute category of a node, by name
+   *     description: >-
+   *       Renames the category of the node that carries the name `categoryName`. When several
+   *       categories share that name, the first one found is renamed. Only the name changes; the
+   *       attributes the category holds are untouched.
+   *
+   *
+   *       A successful call answers **200 with an empty body**.
    *     tags:
    *       - Node Attribut Categories
    *     parameters:
    *      - in: path
    *        name: nodeId
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the node.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *      - in: path
    *        name: categoryName
+   *        description: Current name of the category (exact match).
    *        required: true
    *        schema:
    *          type: string
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
@@ -69,11 +77,16 @@ module.exports = function (
    *             properties:
    *               categoryName:
    *                 type: string
+   *                 description: The new name of the category.
    *     responses:
    *       200:
-   *         description: Updated successfully
+   *         description: The category was renamed. The body is empty.
    *       400:
-   *         description: Bad request
+   *         description: The node carries no category with this name ("category not found in node").
+   *       401:
+   *         description: The profile is not allowed to write on this node.
+   *       500:
+   *         description: The node could not be loaded.
    */
 
   app.put(

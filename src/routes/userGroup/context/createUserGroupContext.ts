@@ -43,7 +43,9 @@ module.exports = function (
    *       - bearerAuth:
    *         - write
    *     summary: Create a user group context
-   *     description: Create a user group context
+   *     description: >-
+   *       Creates a user group context and adds it to the profile graph. It is the container that holds
+   *       categories, which in turn hold the user groups that people are assigned to.
    *     tags:
    *       - User Group
    *     requestBody:
@@ -75,6 +77,8 @@ module.exports = function (
    *         description: failed to create user group context
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.post(
     '/api/v1/user-group/context',

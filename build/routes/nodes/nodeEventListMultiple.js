@@ -27,61 +27,73 @@ const requestUtilities_1 = require("../../utilities/requestUtilities");
 const getEventListInfo_1 = require("../../utilities/getEventListInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/node/event_list_multiple:
-   *   post:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Returns events of multiple nodes, including error details where applicable.
-   *     summary: Get list of events for multiple nodes
-   *     tags:
-   *       - Nodes
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: array
-   *             items:
-   *               type: integer
-   *               format: int64
-   *     responses:
-   *       200:
-   *         description: Success - All events fetched
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                 type: object
-   *                 properties:
-   *                   dynamicId:
-   *                     type: integer
-   *                   events:
-   *                     type: array
-   *                     items:
-   *                       $ref: '#/components/schemas/Event'
-   *       206:
-   *         description: Partial Content - Some events could not be fetched
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                 oneOf:
-   *                   - type: object
-   *                     properties:
-   *                       dynamicId:
-   *                         type: integer
-   *                       events:
-   *                         type: array
-   *                         items:
-   *                           $ref: '#/components/schemas/Event'
-   *                   - $ref: '#/components/schemas/Error'
-   *       400:
-   *         description: Bad request
-   */
+     * @swagger
+     * /api/v1/node/event_list_multiple:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the calendar events of several nodes at once
+     *     description: >-
+     *       Batch version of `/api/v1/node/{id}/event_list` : the body is an array of dynamic IDs and the
+     *       response holds one `{ dynamicId, events }` entry per ID, in the same order.
+     *
+     *
+     *       Each node is read independently : a failure turns its entry into `{ dynamicId, error }` and
+     *       the response comes back with **206 Partial Content**. At most 1000 IDs per call (configurable
+     *       through `MULTIPLE_ROUTE_IDS_LIMIT`).
+     *     tags:
+     *       - Nodes
+     *     requestBody:
+     *       required: true
+     *       description: The dynamic IDs of the nodes to read.
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: array
+     *             items:
+     *               type: integer
+     *               format: int64
+     *     responses:
+     *       200:
+     *         description: Every node was read.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 properties:
+     *                   dynamicId:
+     *                     type: integer
+     *                     format: int64
+     *                   events:
+     *                     type: array
+     *                     items:
+     *                       $ref: '#/components/schemas/Event'
+     *       206:
+     *         description: At least one node could not be read; those entries hold an error instead.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 oneOf:
+     *                   - type: object
+     *                     properties:
+     *                       dynamicId:
+     *                         type: integer
+     *                         format: int64
+     *                       events:
+     *                         type: array
+     *                         items:
+     *                           $ref: '#/components/schemas/Event'
+     *                   - $ref: '#/components/schemas/Error'
+     *       400:
+     *         description: The body is not an array, or it holds more IDs than the configured limit.
+     *       500:
+     *         description: Unexpected error while reading the events.
+     */
     app.post('/api/v1/node/event_list_multiple', async (req, res, next) => {
         try {
             await spinalAPIMiddleware.getGraph();

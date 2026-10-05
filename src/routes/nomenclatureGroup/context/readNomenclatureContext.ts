@@ -35,34 +35,40 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
- * @swagger
- * /api/v1/nomenclatureGroup/{id}/read:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: read group nomenclature Group
- *     summary: Gets group nomenclature Group
- *     tags:
- *       - Nomenclature Group
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *                $ref: '#/components/schemas/Context'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/nomenclatureGroup/{id}/read:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: Read a group context
+   *     description: >-
+   *       Returns the identity of a group context : `dynamicId`, `staticId`, `name` and `type`. Its
+   *       categories are listed by `/api/v1/nomenclatureGroup/{id}/category_list`.
+   *     tags:
+   *       - Nomenclature Group
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         description: Dynamic ID of the group context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     responses:
+   *       200:
+   *         description: The group context.
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/Context'
+   *       400:
+   *         description: The context could not be loaded.
+   *       401:
+   *         description: The profile is not allowed to read this context.
+   *       500:
+   *         description: The context could not be loaded or read.
+   */
 
   app.get("/api/v1/nomenclatureGroup/:id/read", async (req, res, next) => {
     try {

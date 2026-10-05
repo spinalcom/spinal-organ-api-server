@@ -33,27 +33,37 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Returns list of tickets object
-     *     summary: Get list of tickets object
+     *     summary: List the tickets declared on a node
+     *     description: >-
+     *       Returns the tickets attached to a node through the `SpinalSystemServiceTicketHasTicket`
+     *       relation, each with its full details : priority, creation date, declarer, description, the
+     *       process and step it currently sits in, its workflow and its attribute categories.
+     *
+     *
+     *       Only the tickets directly attached to this node are returned; tickets declared on its
+     *       children are not collected.
      *     tags:
      *       - Nodes
      *     parameters:
      *      - in: path
      *        name: id
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the node the tickets are declared on.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *      - in: query
      *        name: includeAttachedItems
-     *        description: Include attached items in the response
+     *        description: >-
+     *          Set to `true` to also return, for every ticket, the items attached to it (documents, notes
+     *          and linked elements). Off by default because it costs extra reads per ticket.
      *        required: false
      *        schema:
      *          type: boolean
+     *          default: false
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The tickets declared on the node (an empty array if there are none).
      *         content:
      *           application/json:
      *             schema:
@@ -61,7 +71,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                $ref: '#/components/schemas/Ticket'
      *       400:
-     *         description: Bad request
+     *         description: The node could not be loaded, or its tickets could not be read.
+     *       401:
+     *         description: The profile is not allowed to read this node.
      */
     app.get('/api/v1/node/:id/ticket_list', async (req, res, next) => {
         try {

@@ -32,26 +32,36 @@ import { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/geographicContext/space:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: Return space tree of context
- *     summary: Get a space tree context
- *     tags:
- *       - Geographic Context
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *                $ref: '#/components/schemas/ContextTree'
- *       400:
- *         description: Bad request
- */
+   * @swagger
+   * /api/v1/geographicContext/space:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: Get the geographic context down to the rooms
+   *     description: >-
+   *       Same as `/api/v1/geographicContext/tree`, but the walk stops after **3 levels**, which on a
+   *       standard geographic context gives the buildings, their floors and their rooms, without the
+   *       BIM objects and equipment hanging below. This is the cheap route to draw a space selector.
+   *
+   *
+   *       As with the full tree, only the first context of type `geographicContext` is considered.
+   *     tags:
+   *       - Geographic Context
+   *     responses:
+   *       200:
+   *         description: >-
+   *           The geographic context down to three levels of children. When the twin has no geographic
+   *           context the body is `null` with a 200 status.
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/ContextTree'
+   *       401:
+   *         description: The profile is not allowed to read the graph.
+   *       500:
+   *         description: The profile graph or the context could not be read.
+   */
 
   app.get("/api/v1/geographicContext/space", async (req, res, next) => {
     let contexts: ContextTree;

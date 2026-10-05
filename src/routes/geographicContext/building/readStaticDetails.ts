@@ -32,34 +32,43 @@ import { getTicketListInfo } from '../../../utilities/getTicketListInfo';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
- * @swagger
- * /api/v1/building/{id}/read_static_details:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: read static details of a building 
- *     summary: Gets static details of a building
- *     tags:
- *       - Geographic Context
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
-  *                $ref: '#/components/schemas/StaticDetailsFloor'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/building/{id}/read_static_details:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: Get everything known about a building
+   *     description: >-
+   *       The full read of a building in one call : its identity, its attribute categories with their
+   *       attributes, its control points, its BMS endpoints with their current values, and `tickets`,
+   *       the tickets declared directly on the building node.
+   *
+   *
+   *       Only the tickets of the building node itself are returned; those declared on its floors,
+   *       rooms or equipment are not collected. The node must be of type `geographicBuilding`.
+   *     tags:
+   *       - Geographic Context
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the building.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The complete static description of the building, plus its tickets.
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/StaticDetailsFloor'
+   *       401:
+   *         description: The profile is not allowed to read this building.
+   *       500:
+   *         description: The building could not be loaded, or the node is not a `geographicBuilding`.
+   */
 
   app.get("/api/v1/building/:id/read_static_details", async (req, res, next) => {
     try {

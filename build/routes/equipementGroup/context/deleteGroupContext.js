@@ -27,30 +27,39 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/equipementsGroup/{id}/delete:
-   *   delete:
-   *     security:
-   *       - bearerAuth:
-   *         - read
-   *     description: delete equipements Group context
-   *     summary: delete equipements Group context
-   *     tags:
-   *       - Equipements Group
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Delete Successfully
-   *       400:
-   *         description: Bad request
-  */
+     * @swagger
+     * /api/v1/equipementsGroup/{id}/delete:
+     *   delete:
+     *     security:
+     *       - bearerAuth:
+     *         - write
+     *     summary: Delete a group context
+     *     description: >-
+     *       Removes a group context from the graph, with its categories and groups.
+     *
+     *
+     *       The items that were assigned to those groups are **not** deleted : they keep living in their
+     *       own context and simply lose this grouping.
+     *     tags:
+     *       - Equipements Group
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         description: Dynamic ID of the group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     responses:
+     *       200:
+     *         description: The context was deleted.
+     *       400:
+     *         description: The context could not be loaded.
+     *       401:
+     *         description: The profile is not allowed to delete this context.
+     *       500:
+     *         description: The context could not be removed.
+     */
     app.delete("/api/v1/equipementsGroup/:id/delete", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

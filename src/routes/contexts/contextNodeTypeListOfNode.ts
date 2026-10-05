@@ -33,39 +33,46 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
   /**
    * @swagger
-   * /api/v1/context/{idContext}/node/{idNode}/nodeTypeList:
+   * /api/v1/context/{contextId}/node/{nodeId}/nodeTypeList:
    *   get:
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return node type list of context
-   *     summary: Get type list from node in context with given IDcontext ans IDnode
+   *     summary: List the node types found under a node in a context
+   *     description: >-
+   *       Browses the subtree of `nodeId` inside `contextId` and returns the distinct node types it
+   *       contains. Same result as `/api/v1/context/{id}/nodeTypeList`, but restricted to one branch of
+   *       the context. The node must belong to the context.
    *     tags:
    *       - Contexts/ontologies
    *     parameters:
    *      - in: path
-   *        name: idContext
-   *        description: use the dynamic ID
+   *        name: contextId
+   *        description: Dynamic ID of the context.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *      - in: path
-   *        name: idNode
-   *        description: use the dynamic ID
+   *        name: nodeId
+   *        description: Dynamic ID of the node whose subtree is browsed. It must belong to the context.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The distinct node types present under the node.
    *         content:
    *           application/json:
    *             schema:
    *              $ref: "#/components/schemas/ContextNodeTypeList"
    *       400:
-   *         description: Bad request
+   *         description: The node does not belong to the context ("node not found in context").
+   *       401:
+   *         description: The profile is not allowed to read the context or the node.
+   *       500:
+   *         description: The context or the node could not be loaded.
    */
 
   app.get("/api/v1/context/:contextId/node/:nodeId/nodeTypeList", async (req, res, next) => {

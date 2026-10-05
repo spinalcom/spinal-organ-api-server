@@ -45,39 +45,49 @@ module.exports = function (
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: create category
-   *     summary: create category
+   *         - write
+   *     summary: Create a category in a group context
+   *     description: >-
+   *       Adds a category to a group context. Categories are the first level of the context; groups are
+   *       then created inside them with `/api/v1/groupContext/{contextId}/category/{categoryId}/create_group`.
    *     tags:
    *       - Group Context
    *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: id
+   *         description: Dynamic ID of the group context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
    *             type: object
    *             required:
    *               - categoryName
-   *               - categoryIcon
    *             properties:
-   *                categoryName:
+   *               categoryName:
    *                 type: string
-   *                categoryIcon:
+   *               categoryIcon:
    *                 type: string
-   *                categoryColor:
- *                   type: string
+   *                 description: Optional display icon.
+   *               categoryColor:
+   *                 type: string
+   *                 description: Optional display colour, stored as a `color` attribute on the category.
    *     responses:
    *       200:
-   *         description: Create Successfully
+   *         description: The created category.
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/BasicNode'
    *       400:
-   *         description: Bad request
+   *         description: The context could not be loaded, or the category could not be created.
+   *       401:
+   *         description: The profile is not allowed to write on this context.
    */
 
   app.post(

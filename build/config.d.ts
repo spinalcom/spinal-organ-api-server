@@ -12,5 +12,12 @@ declare const config: {
     file: {
         path: string;
     };
+    preload: {
+        workHoursStart: number;
+        workHoursEnd: number;
+        idleDelay: number;
+        batchSize: number;
+        batchDelay: number;
+    };
 };
 export default config;

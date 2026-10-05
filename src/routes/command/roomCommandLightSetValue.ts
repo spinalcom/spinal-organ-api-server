@@ -40,21 +40,27 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - readOnly
-   *     description: Set command light value
-   *     summary: Set command light value
+   *         - write
+   *     summary: Set the light command of a room
+   *     description: >-
+   *       Writes a new value on the `COMMAND_LIGHT` control point of a room. The value goes through the same
+   *       path as an analytic result, so the control point is updated and its time series records the
+   *       change.
+   *
+   *
+   *       The room must carry a `Command` control-point profile holding a `COMMAND_LIGHT` endpoint, otherwise
+   *       the request fails with 400.
    *     tags:
-   *      - Command
+   *       - Command
    *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: id
+   *         description: Dynamic ID of the room.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     requestBody:
-   *       description: set current value, float attribute, 
    *       required: true
    *       content:
    *         application/json:
@@ -67,13 +73,15 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *                 type: number
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The value that was written.
    *         content:
    *           application/json:
    *             schema:
    *                $ref: '#/components/schemas/Command'
    *       400:
-   *         description: Bad request
+   *         description: The room has no `COMMAND_LIGHT` control point, or the room could not be loaded.
+   *       401:
+   *         description: The profile is not allowed to write on this room.
    */
 
   app.post('/api/v1/command/room/:id/light', async (req, res, next) => {
@@ -96,6 +104,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
               const element = await bmsEndPoint.element.load()
 
               await updateControlEndpointWithAnalytic(model, req.body.lightCurrentValue, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
+              bmsEndPoint.info.directModificationDate.set(Date.now());
               // var element = (await bmsEndPoint.element.load()).get();
               // element.currentValue.set(req.body.lightCurrentValue)
               info = {
@@ -106,7 +115,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
                 currentValue: element.currentValue.get()
               }
               return res.send(info);
-              
+
             }
           }
         }
@@ -117,6 +126,6 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
       res.status(400).send("list of room is not loaded");
     }
 
-    
+
   });
 };

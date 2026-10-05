@@ -28,40 +28,52 @@ const findOneInContext_1 = require("../../../utilities/findOneInContext");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-    * @swagger
-    * /api/v1/IoTNetworkContext/{IoTNetworkId}/node/{nodeId}/find:
-    *   get:
-    *     security:
-    *       - bearerAuth:
-    *         - readOnly
-    *     description: find a node in IoTNetwork
-    *     summary: find a node in IoTNetwork
-    *     tags:
-    *       - IoTNetwork & Time Series
-    *     parameters:
-    *       - in: path
-    *         name: IoTNetworkId
-    *         description: use the dynamic ID
-    *         required: true
-    *         schema:
-    *           type: integer
-    *           format: int64
-    *       - in: path
-    *         name: nodeId
-    *         description: use the staticId ID
-    *         required: true
-    *         schema:
-    *           type: string
-    *     responses:
-    *       200:
-    *         description: Success
-    *         content:
-    *           application/json:
-    *             schema:
-    *                $ref: '#/components/schemas/IoTNetwork'
-    *       400:
-    *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/IoTNetworkContext/{IoTNetworkId}/node/{nodeId}/find:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: Find a node inside a network context by its static ID
+     *     description: >-
+     *       Looks a node up **by its static ID** inside a network context and returns its summary,
+     *       including the `dynamicId` needed by the other routes. This is the way to turn a persistent
+     *       ID back into a usable dynamic ID after a hub restart.
+     *
+     *
+     *       Unlike most routes, `nodeId` here is the static ID, not a dynamic one.
+     *     tags:
+     *       - IoTNetwork & Time Series
+     *     parameters:
+     *      - in: path
+     *        name: IoTNetworkId
+     *        description: Dynamic ID of the network context to search in.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *      - in: path
+     *        name: nodeId
+     *        description: Static ID of the node to find.
+     *        required: true
+     *        schema:
+     *          type: string
+     *     responses:
+     *       200:
+     *         description: The node summary.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/IoTNetwork'
+     *       400:
+     *         description: The context is not a network context ("this context is not a Network").
+     *       401:
+     *         description: The profile is not allowed to read this context.
+     *       404:
+     *         description: No node with this static ID exists in the context ("node Not found").
+     *       500:
+     *         description: The context could not be loaded or browsed.
+     */
     app.get("/api/v1/IoTNetworkContext/:IoTNetworkId/node/:nodeId/find", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

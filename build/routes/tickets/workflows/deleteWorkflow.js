@@ -33,30 +33,42 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   delete:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: Delete a workflow
-     *     summary: this will delete an workflow but also delete the related Process and Steps, deleting the tickets is an optional choice
+     *         - write
+     *     summary: Delete a workflow
+     *     description: >-
+     *       Removes a workflow context, with its processes and steps.
+     *
+     *
+     *       By default the tickets it holds are left in the graph, detached from the workflow. Pass
+     *       `shouldDeleteTickets=true` to delete them along with it - that is not reversible.
      *     tags:
      *       - Workflow & ticket
      *     parameters:
      *      - in: path
      *        name: id
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the workflow context.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
-     *      - in : query
-     *        name : shouldDeleteTickets
-     *        description : if true all tickets in the workflow will be deleted
-     *        required : false
+     *      - in: query
+     *        name: shouldDeleteTickets
+     *        description: Set to `true` to also delete every ticket of the workflow.
+     *        required: false
      *        schema:
      *          type: boolean
+     *          default: false
      *     responses:
      *       200:
-     *         description: Delete Successfully
-     *       400:
-     *         description: Bad request
+     *         description: The workflow was deleted ("Delete Successfully").
+     *         content:
+     *           text/plain:
+     *             schema:
+     *               type: string
+     *       401:
+     *         description: The profile is not allowed to delete this workflow.
+     *       500:
+     *         description: The workflow could not be loaded, is not a workflow context, or could not be removed.
      */
     app.delete('/api/v1/workflow/:id/delete', async (req, res) => {
         try {

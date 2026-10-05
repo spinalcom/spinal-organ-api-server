@@ -27,41 +27,46 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/roomsGroup/{contextId}/category/{categoryId}/read:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: read category roomsGroup
-   *     summary: Get category roomsGroup
-   *     tags:
-   *       - Rooms Group
-   *     parameters:
-   *      - in: path
-   *        name: contextId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: categoryId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/BasicNode'
-   *       400:
-   *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/roomsGroup/{contextId}/category/{categoryId}/read:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: Read a category of a group context
+     *     description: >-
+     *       Returns the identity of a category, after checking that it belongs to the given context.
+     *     tags:
+     *       - Rooms Group
+     *     parameters:
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     responses:
+     *       200:
+     *         description: The category.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/BasicNode'
+     *       400:
+     *         description: The category does not belong to the context.
+     *       401:
+     *         description: The profile is not allowed to read this context.
+     *       500:
+     *         description: The context or the category could not be loaded.
+     */
     app.get("/api/v1/roomsGroup/:contextId/category/:categoryId/read", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

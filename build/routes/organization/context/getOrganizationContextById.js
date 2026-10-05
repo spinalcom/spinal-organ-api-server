@@ -40,7 +40,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - read
      *     summary: Retrieve an Organization Context by ID
-     *     description: Get a specific Organization Context by its ID
+     *     description: >-
+     *       Returns one organization context by its dynamic ID. An organization context holds the
+     *       organizations of the twin, each linking user groups to room groups.
      *     tags:
      *       - Organization
      *     parameters:
@@ -65,6 +67,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Organization context not found
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.get('/api/v1/organization/context/:contextId', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({

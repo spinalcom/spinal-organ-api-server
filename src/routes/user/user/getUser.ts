@@ -127,6 +127,8 @@ module.exports = function (
    *         description: User context not found
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.get(
     '/api/v1/user/context/:contextId/user',
@@ -140,9 +142,9 @@ module.exports = function (
           .string()
           .regex(/^[a-zA-Z0-9]|(special)$/)
           .optional(),
-        attributes: z.coerce.boolean().optional().default(false),
-        groups: z.coerce.boolean().optional().default(false),
-        organizations: z.coerce.boolean().optional().default(false),
+        attributes: z.stringbool().optional().default(false),
+        groups: z.stringbool().optional().default(false),
+        organizations: z.stringbool().optional().default(false),
         offset: z.coerce.number().int().nonnegative().optional().default(0),
       }),
     }),

@@ -132,19 +132,54 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     }
     /**
      * @swagger
-     * /BIM/file:
+     * /BIM/file/{path}:
      *   get:
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: route of the static bim files
+     *     summary: Serve a viewer model file
+     *     description: >-
+     *       Serves the viewer files of the published BIM models - the many small files an Autodesk-style
+     *       viewer fetches while loading a model. Everything under `/BIM/file/` is served, so `path` is
+     *       the file path inside the hub's `viewerForgeFiles` directory.
+     *
+     *
+     *       Two modes, decided by the organ's configuration :
+     *
+     *        * **proxy** (default) - the request is forwarded to the hub;
+     *
+     *        * **local** - when `BIM_FILE_LOCAL_PATH` points at the hub's `viewerForgeFiles` directory,
+     *          files are read straight from disk, and any file missing locally silently falls back to the
+     *          proxy.
+     *
+     *
+     *       Caching is controlled by `BIM_FILE_CACHE_MAXAGE` (seconds) and `BIM_FILE_CACHE_IMMUTABLE`.
+     *       It is safe to cache these aggressively : a viewer folder id embeds the model path and its
+     *       upload timestamp, so re-publishing a model produces a new URL rather than new content at the
+     *       old one.
+     *
+     *
+     *       The handler is mounted for every HTTP method, and this is not a JSON route : the body is the
+     *       file itself.
      *     tags:
      *       - BIM
+     *     parameters:
+     *       - in: path
+     *         name: path
+     *         description: Path of the file inside the viewer files directory.
+     *         required: true
+     *         schema:
+     *           type: string
      *     responses:
      *       200:
-     *         description: the file
+     *         description: The file content.
+     *         content:
+     *           application/octet-stream:
+     *             schema:
+     *               type: string
+     *               format: binary
      *       404:
-     *         description: not found
+     *         description: The file exists neither locally nor on the hub.
      */
     const handlers = [morgan('tiny')];
     if (localStatic)

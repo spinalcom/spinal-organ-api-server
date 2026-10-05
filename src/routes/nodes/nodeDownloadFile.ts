@@ -36,34 +36,56 @@ module.exports = function (
   /**
    * @swagger
    * /api/v1/node/{id}/download_file:
-   *   post:
+   *   get:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: Download a document in either binary or Base64 encoding
-   *     summary: Download a document
+   *         - readOnly
+   *     summary: Download a document attached to a node
+   *     description: >-
+   *       Streams back the content of a document stored on the hub. The `id` is the `dynamicId` of the
+   *       **file** as returned by `/api/v1/node/{id}/file_list`, not the ID of the node it hangs on.
+   *
+   *
+   *       By default the body is the raw file, with the `Content-Type` guessed from its name (falling
+   *       back to `application/octet-stream`). With `encoding=base64` the body is instead the base64
+   *       text of the file, served as `text/plain`.
+   *
+   *
+   *       The handler is mounted for every HTTP method, so a POST to the same URL behaves identically.
    *     tags:
    *       - Nodes
    *     parameters:
    *       - in: path
    *         name: id
-   *         description: Use the dynamic ID
+   *         description: Dynamic ID of the document, as returned by `/api/v1/node/{id}/file_list`.
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
    *       - in: query
    *         name: encoding
-   *         description: Specify the encoding type for the downloaded file ('binary' or 'base64'). Default is 'binary'.
+   *         description: >-
+   *           `binary` (default) streams the raw file; `base64` returns its base64 text as
+   *           `text/plain`. Any other value is treated as `binary`.
    *         required: false
    *         schema:
    *           type: string
    *           enum: [binary, base64]
+   *           default: binary
    *     responses:
    *       200:
-   *         description: File downloaded successfully
+   *         description: The document content.
+   *         content:
+   *           application/octet-stream:
+   *             schema:
+   *               type: string
+   *               format: binary
+   *           text/plain:
+   *             schema:
+   *               type: string
+   *               description: Base64 text, when `encoding=base64`.
    *       400:
-   *         description: Error in downloading file
+   *         description: The document could not be loaded or fetched from the hub (body is `ko`).
    */
 
   app.use('/api/v1/node/:id/download_file', async (req, res, next) => {

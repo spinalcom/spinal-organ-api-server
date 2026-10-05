@@ -32,24 +32,49 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   delete:
      *     security:
      *       - bearerAuth:
-     *         - readOnly
-     *     description: Delete node and all descendants up to the first descendant that have a parent from another branch
-     *     summary: Delete an entire branch of nodes until the first node that has a parent from another branch
+     *         - write
+     *     summary: Preview the branch that a recursive delete would remove
+     *     description: >-
+     *       Walks the node and its descendants, keeping every child that has this branch as its **only**
+     *       parent and stopping at any node that is also attached elsewhere, so that nodes shared with
+     *       another branch are never dropped.
+     *
+     *
+     *       The removal itself is currently commented out in the handler : the route computes and returns
+     *       the set of nodes that the walk selected, grouped by type, but **nothing is deleted from the
+     *       graph**. Treat it as a dry run and use `/api/v1/node/{id}/delete` to actually delete a node.
      *     tags:
      *       - Nodes
      *     parameters:
      *      - in: path
      *        name: id
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the node the branch starts at.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *     responses:
      *       200:
-     *         description: Node(s) successfully deleted
+     *         description: The nodes the branch walk selected, counted by type.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 deleted_nodes_by_type:
+     *                   type: object
+     *                   description: Number of selected nodes per node type.
+     *                   additionalProperties:
+     *                     type: integer
+     *                 total:
+     *                   type: integer
+     *                   description: Total number of selected nodes, the starting node included.
      *       400:
-     *         description: Bad request
+     *         description: The node could not be loaded (unknown or stale dynamic ID).
+     *       401:
+     *         description: The profile is not allowed to read this node.
+     *       500:
+     *         description: The branch could not be walked.
      */
     app.delete('/api/v1/node/:id/delete_smart', async (req, res, next) => {
         try {

@@ -33,21 +33,24 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Returns files of equipement
-     *     summary: Get list files of equipement
+     *     summary: List the documents attached to an equipment
+     *     description: >-
+     *       Returns the documents stored under the equipment's `hasFiles` child as `{ dynamicId, Name }`.
+     *       Use the returned `dynamicId` with `/api/v1/node/{id}/download_file`. The node must be of type
+     *       `BIMObject`.
      *     tags:
      *       - Geographic Context
      *     parameters:
      *      - in: path
      *        name: id
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the equipment (a `BIMObject`).
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The requested list (empty when there is nothing).
      *         content:
      *           application/json:
      *             schema:
@@ -55,7 +58,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                $ref: '#/components/schemas/File'
      *       400:
-     *         description: Bad request
+     *         description: The node is not a `BIMObject`, or its documents could not be read (body is `ko`).
+     *       401:
+     *         description: The profile is not allowed to read this equipment.
      */
     app.get('/api/v1/equipement/:id/file_list', async (req, res, next) => {
         try {

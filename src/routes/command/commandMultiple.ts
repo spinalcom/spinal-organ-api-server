@@ -48,21 +48,39 @@ module.exports = function (
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - readOnly
-   *     description: Set command value
-   *     summary: Set command value
+   *         - write
+   *     summary: Set command values on several nodes
+   *     description: >-
+   *       Writes command control points on a batch of nodes. For each entry the route walks the node's
+   *       `hasControlPoints` children, looks inside the profile named `Command`, and writes each
+   *       requested `key` with its `value`.
+   *
+   *
+   *       Nodes are addressed by `dynamicId` when it is numeric, and by `staticId` otherwise - a
+   *       `staticId` requires `context` to be given at the top level, since the node is then searched
+   *       inside that context.
+   *
+   *
+   *       Only `geographicRoom`, `geographicFloor`, `geographicRoomGroup`, `BIMObject` and
+   *       `BIMObjectGroup` nodes are acted on; a node of any other type is **skipped silently**, and a
+   *       key the node does not carry is skipped too. The answer is a plain success message, so it does
+   *       not say which writes actually landed - read the control points back to confirm.
    *     tags:
    *      - Command
    *     requestBody:
-   *       description: set current value, float attribute
    *       required: true
    *       content:
    *         application/json:
    *           schema:
    *             type: object
+   *             required:
+   *               - propertyReference
    *             properties:
    *               context:
    *                 type: string
+   *                 description: >-
+   *                   Context to search in, as a name, a dynamic ID or a static ID. Required as soon as
+   *                   one entry is addressed by `staticId`.
    *               propertyReference:
    *                 type: array
    *                 items:
@@ -70,26 +88,36 @@ module.exports = function (
    *                   properties:
    *                     dynamicId:
    *                       type: string
+   *                       description: Dynamic ID of the node. Used when it is numeric.
    *                     staticId:
    *                       type: string
+   *                       description: Static ID of the node. Used when `dynamicId` is not numeric; needs `context`.
    *                     keys:
    *                       type: array
+   *                       description: The command control points to write on that node.
    *                       items:
    *                         type: object
    *                         properties:
    *                           key:
    *                             type: string
+   *                             description: Name of the command endpoint, for instance `COMMAND_LIGHT`.
    *                           value:
    *                             type: string
+   *                             description: The value to write.
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The batch ran ("Command updates executed successfully").
    *         content:
-   *           application/json:
+   *           text/plain:
    *             schema:
-   *                $ref: '#/components/schemas/Command'
+   *               type: string
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           A `staticId` was given without a `context` ("Trying to load a node with staticId but no
+   *           context provided"), the context was not found ("Context not found"), a node could not be
+   *           found ("Node could not be found"), or one of the nodes could not be loaded.
+   *       401:
+   *         description: The profile is not allowed to write on one of the nodes.
    */
 
   app.post('/api/v1/node/command', async (req, res, next) => {

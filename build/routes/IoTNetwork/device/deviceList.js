@@ -27,36 +27,40 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/Network/{id}/device_list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return list of device
-   *     summary: Gets a list of device
-   *     tags:
-   *      - IoTNetwork & Time Series
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/IoTNetwork'
-   *       400:
-   *         description: Bad request
-   */
+     * @swagger
+     * /api/v1/Network/{id}/device_list:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the devices of a network
+     *     description: >-
+     *       Returns the `BmsDevice` children of a network, as `{ dynamicId, staticId, name, type }`. Use
+     *       a returned `dynamicId` with `/api/v1/device/{id}/endpoint_list` to reach its endpoints.
+     *     tags:
+     *      - IoTNetwork & Time Series
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the network.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The devices of the network (an empty array if there are none).
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                $ref: '#/components/schemas/IoTNetwork'
+     *       400:
+     *         description: The network could not be loaded ("list of devices is not loaded").
+     *       401:
+     *         description: The profile is not allowed to read this network.
+     */
     app.get("/api/v1/Network/:id/device_list", async (req, res, next) => {
         const nodes = [];
         try {

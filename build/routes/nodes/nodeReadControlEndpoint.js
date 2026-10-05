@@ -32,38 +32,76 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Get control endpoint value
-     *     summary: Get control endpoint value
+     *     summary: Read command control points on several nodes
+     *     description: >-
+     *       Reads the current value of the `Command` control points of a batch of nodes. For each entry,
+     *       the route walks `hasControlPoints` -> the profile named `Command` -> `hasBmsEndpoint`, and
+     *       keeps the endpoints whose name matches one of the requested `keys`.
+     *
+     *
+     *       Both sides are restricted : a node must be a `geographicRoom`, `geographicFloor`,
+     *       `geographicRoomGroup`, `BIMObject` or `BIMObjectGroup`, and every key must be one of
+     *       `COMMAND_BLIND`, `COMMAND_LIGHT` or `COMMAND_TEMP`. Anything else makes the request fail with
+     *       400.
+     *
+     *
+     *       The `dynamicId` / `name` / `type` returned on each row are those of the **requested node**,
+     *       not of the endpoint; only `currentValue` comes from the control point.
      *     tags:
      *      - Nodes
      *     requestBody:
-     *       description: get current value, float attribute
      *       required: true
      *       content:
      *         application/json:
      *           schema:
      *             type: object
+     *             required:
+     *               - propertyReference
      *             properties:
      *               propertyReference:
      *                 type: array
      *                 items:
      *                   type: object
+     *                   required:
+     *                     - dynamicId
+     *                     - keys
      *                   properties:
      *                     dynamicId:
      *                       type: string
+     *                       description: Dynamic ID of the node to read (accepted as a string or a number).
      *                     keys:
      *                       type: array
+     *                       description: Names of the command control points to read.
      *                       items:
      *                         type: string
+     *                         enum: [COMMAND_BLIND, COMMAND_LIGHT, COMMAND_TEMP]
      *     responses:
      *       200:
-     *         description: Success
+     *         description: One row per node and matching command control point.
      *         content:
      *           application/json:
      *             schema:
-     *                $ref: '#/components/schemas/Command'
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 properties:
+     *                   dynamicId:
+     *                     type: integer
+     *                     format: int64
+     *                   staticId:
+     *                     type: string
+     *                   name:
+     *                     type: string
+     *                   type:
+     *                     type: string
+     *                   currentValue:
+     *                     description: Current value of the command control point.
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           A node is not of an allowed type ("one of the node is not of type authorized"), a key is
+     *           not a known command ("unkown key"), or a node could not be loaded.
+     *       401:
+     *         description: The profile is not allowed to read one of the nodes.
      */
     app.post('/api/v1/node/read_control_endpoint', async (req, res, next) => {
         try {

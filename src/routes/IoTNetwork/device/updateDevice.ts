@@ -31,40 +31,50 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
- * @swagger
- * /api/v1/device/{id}/update:
- *   put:
- *     security: 
- *       - bearerAuth: 
- *         - read
- *     description: update the device
- *     summary: update the device
- *     tags:
- *       - IoTNetwork & Time Series
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - newNameNetwork
- *             properties:
- *                newNameNetwork:
- *                 type: string
- *     responses:
- *       200:
- *         description: Update Success
- *       400:
- *         description: Bad request
-*/
+   * @swagger
+   * /api/v1/device/{id}/update:
+   *   put:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Rename a device
+   *     description: >-
+   *       Renames a device. Only the name changes - the endpoints under it and their values are
+   *       untouched. The node must be of type `BmsDevice`.
+   *
+   *
+   *       The body field is called `newNameNetwork`, a historical name kept for compatibility even
+   *       though this route renames a device.
+   *     tags:
+   *       - IoTNetwork & Time Series
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the device.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - newNameNetwork
+   *             properties:
+   *               newNameNetwork:
+   *                 type: string
+   *                 description: The new name of the device.
+   *     responses:
+   *       200:
+   *         description: The device was renamed. The body is empty.
+   *       400:
+   *         description: The node is not a device ("this node is not a BmsDevice"), or it could not be loaded.
+   *       401:
+   *         description: The profile is not allowed to write on this device.
+   */
 
   app.put("/api/v1/device/:id/update", async (req, res, next) => {
 

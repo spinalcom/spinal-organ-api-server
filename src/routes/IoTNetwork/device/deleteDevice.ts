@@ -30,30 +30,39 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/device/{id}/delete:
- *   delete:
- *     security:
- *       - bearerAuth:
- *         - read
- *     description: delete device
- *     summary: delete device 
- *     tags:
- *       - IoTNetwork & Time Series
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Delete Successfully
- *       400:
- *         description: Bad request
-*/
+   * @swagger
+   * /api/v1/device/{id}/delete:
+   *   delete:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Delete a device
+   *     description: >-
+   *       Removes a device from the graph. The node must be of type `BmsDevice`; any other type is
+   *       rejected, which protects endpoints and networks from being deleted through this route.
+   *
+   *
+   *       The endpoints hanging under the device are not deleted with it.
+   *     tags:
+   *       - IoTNetwork & Time Series
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the device.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The device was deleted. The body is empty.
+   *       400:
+   *         description: The node is not a device ("this node is not of type BmsDevice").
+   *       401:
+   *         description: The profile is not allowed to delete this device.
+   *       500:
+   *         description: The device could not be loaded or removed.
+   */
   app.delete("/api/v1/device/:id/delete", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);

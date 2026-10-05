@@ -40,7 +40,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - write
      *     summary: Create a new user group category in a user group context
-     *     description: Create a new user group category in a user group context
+     *     description: >-
+     *       Creates a category inside a user group context. Categories are the first level of the context;
+     *       user groups are then created inside them, and users are assigned to those groups.
      *     tags:
      *       - User Group
      *     parameters:
@@ -76,6 +78,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               $ref: '#/components/schemas/BasicNodeWithColor'
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.post('/api/v1/user-group/context/:contextId/category', (0, express_zod_safe_1.default)({
         params: zod_1.z.object({ contextId: zod_1.z.coerce.number().positive() }),

@@ -35,13 +35,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return list of IoTNetwork
-   *     summary: Gets a list of IoTNetwork
+   *     summary: List the network contexts
+   *     description: >-
+   *       Returns every context of type `Network` the profile can reach - the roots of the IoT part of
+   *       the digital twin. Use one of the returned `dynamicId` with
+   *       `/api/v1/IoTNetworkContext/{id}/tree` or `/api/v1/Network/list`.
    *     tags:
-   *      - IoTNetwork & Time Series
+   *       - IoTNetwork & Time Series
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The network contexts (an empty array if there are none).
    *         content:
    *           application/json:
    *             schema:
@@ -49,7 +52,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *               items:
    *                $ref: '#/components/schemas/IoTNetwork'
    *       400:
-   *         description: Bad request
+   *         description: The profile graph could not be read ("list of IoTNetworksContext is not loaded").
+   *       401:
+   *         description: The profile is not allowed to read the graph.
    */
 
 

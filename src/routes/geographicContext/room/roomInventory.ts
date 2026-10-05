@@ -33,34 +33,50 @@ module.exports = function (
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
- * @swagger
- * /api/v1/room/{id}/inventory:
- *   get:
- *     security:
- *       - bearerAuth:
- *         - readOnly
- *     description: Reads details of a room including its inventory
- *     summary: Gets inventory details of a room ( deprecated )
- *     tags:
- *       - Geographic Context
- *     parameters:
- *       - in: path
- *         name: id
- *         description: Use the dynamic ID of the room
- *         required: true
- *         schema:
- *           type: integer
- *           format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/InventoryRoomDetails'
- *       400:
- *         description: Bad request
- */
+   * @swagger
+   * /api/v1/room/{id}/inventory:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: Get the inventory of a room (deprecated)
+   *     description: >-
+   *       Returns the room with everything it holds, nested as category -> group -> equipment : for
+   *       each BIM object of the room, the route walks up to the groups that hold it
+   *       (`groupHasBIMObject`) and then to their categories (`hasGroup`), and returns them **whatever
+   *       group context they belong to**.
+   *
+   *
+   *       Use `POST /api/v1/room/{id}/inventory` instead : it lets you choose the group context and the
+   *       category, and it returns a flat list of groups, which is both cheaper and predictable.
+   *
+   *
+   *       The node must be a `geographicRoom`; any other type is rejected.
+   *     deprecated: true
+   *     tags:
+   *       - Geographic Context
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         description: Dynamic ID of the room.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     responses:
+   *       200:
+   *         description: The room with its categories, their groups and the equipment of each group.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/InventoryRoomDetails'
+   *       400:
+   *         description: >-
+   *           The node is not a room ("node is not of type geographic room"), or it could not be
+   *           loaded.
+   *       401:
+   *         description: The profile is not allowed to read this room.
+   */
   app.get("/api/v1/room/:id/inventory", async (req, res, next) => {
     try {
         const profileId = getProfileId(req);

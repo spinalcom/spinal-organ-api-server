@@ -31,41 +31,48 @@ import { ISpinalAPIMiddleware } from '../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/context/{id}/tree/{numberOfLevel}/depth:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: Return tree of context
- *     summary: Get a tree context by ID
- *     tags:
- *       - Contexts/ontologies
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *      - in: path
- *        name: numberOfLevel
- *        description: the number of levels to go
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *                $ref: '#/components/schemas/ContextTree'
- *       400:
- *         description: Bad request
- */
+   * @swagger
+   * /api/v1/context/{id}/tree/{numberOfLevel}/depth:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: Get a context tree limited to a given depth
+   *     description: >-
+   *       Same traversal as `/api/v1/context/{id}/tree`, but stops after `numberOfLevel` levels of
+   *       children. This is the route to use to browse a large context progressively, one level at a
+   *       time.
+   *     tags:
+   *       - Contexts/ontologies
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the context.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *      - in: path
+   *        name: numberOfLevel
+   *        description: Number of levels of children to include below the context (1 returns the direct children only).
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: >-
+   *           The context with its descendants down to the requested depth. When the requested node is
+   *           not a SpinalContext the body is `null` with a 200 status.
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/ContextTree'
+   *       401:
+   *         description: The profile is not allowed to read this context.
+   *       500:
+   *         description: The context could not be loaded or the tree could not be built.
+   */
 
   app.get("/api/v1/context/:id/tree/:numberOfLevel/depth", async (req, res, next) => {
     let contexts: ContextTree;

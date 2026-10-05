@@ -43,7 +43,7 @@ module.exports = function (logger: any, app: express.Express, spinalAPIMiddlewar
    *                       type: string
    *                       description: Version of spinal-model-analysis used
    *       400:
-   *         description: Bad request
+   *         description: The analytic could not be loaded, or it is not an analytic node.
    */
 
   app.get("/api/v1/analysis/analytics/:analyticId", async (req, res, next) => {

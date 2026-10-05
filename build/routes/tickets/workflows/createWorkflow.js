@@ -33,12 +33,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: create a workflow
-     *     summary: create a workflow
+     *         - write
+     *     summary: Create a workflow
+     *     description: >-
+     *       Creates a workflow context and adds it to the profile graph. Workflow names must be unique
+     *       across **all** contexts of the twin, not only the workflows : a name already taken by any
+     *       context is rejected with 400.
+     *
+     *
+     *       `steps` optionally defines the default steps given to the processes of this workflow. Entries
+     *       without a `name` or with a non-numeric `order` are silently dropped, and the kept ones are
+     *       sorted by `order`. Steps start at order 1.
      *     tags:
      *       - Workflow & ticket
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -48,10 +57,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               nameWorkflow:
      *                 type: string
-     *                 description: name of the workflow
+     *                 description: Name of the workflow. Must not be used by any existing context.
      *               steps:
      *                 type: array
-     *                 description: optionnal default steps that will be created in the workflow process, steps start at order 1
+     *                 description: Optional default steps of the workflow's processes, starting at order 1.
      *                 items:
      *                   type: object
      *                   required:
@@ -60,18 +69,27 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                   properties:
      *                     name:
      *                       type: string
-     *                       description: name of the step
+     *                     order:
+     *                       type: number
+     *                       description: Position of the step. Must be a number, otherwise the step is ignored.
      *                     color:
      *                       type: string
-     *                       description: color of the step
-     *                     order:
-     *                       type: integer
-     *                       description: order of the step, starts at 1
+     *                       description: Optional display colour.
      *     responses:
      *       200:
-     *         description: Create Successfully
+     *         description: The created workflow.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/Workflow'
      *       400:
-     *         description: create not Successfully
+     *         description: >-
+     *           `nameWorkflow` is not a string ("string nameWorkflow is invalide name"), or the name is
+     *           already taken by a context ("the name context already exists").
+     *       401:
+     *         description: The profile is not allowed to write on the graph.
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.post('/api/v1/workflow/create', async (req, res) => {
         try {

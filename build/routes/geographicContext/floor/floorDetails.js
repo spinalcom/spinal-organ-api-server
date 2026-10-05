@@ -33,27 +33,37 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Return details of a floor
-     *     summary: Gets a details of a floor
+     *     summary: Get the area and BIM objects of a floor
+     *     description: >-
+     *       Walks the rooms of a floor and returns two things : `area`, the sum of the `area` attribute
+     *       found in the `Spatial` category of every room, and `_bimObjects`, the flat list of the BIM
+     *       objects attached to those rooms.
+     *
+     *
+     *       Rooms without a `Spatial` category, or without an `area` attribute in it, simply contribute
+     *       nothing to the sum - the total is never reported as incomplete. BIM objects are listed with
+     *       their `staticId` only; they carry no `dynamicId` here.
      *     tags:
      *      - Geographic Context
      *     parameters:
      *      - in: path
      *        name: id
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the floor.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The floor area and its BIM objects.
      *         content:
      *           application/json:
      *             schema:
      *                $ref: '#/components/schemas/FloorDetails'
      *       400:
-     *         description: Bad request
+     *         description: The floor could not be loaded, or one of its rooms could not be read.
+     *       401:
+     *         description: The profile is not allowed to read this floor.
      */
     app.get('/api/v1/floor/:id/floor_details', async (req, res, next) => {
         try {

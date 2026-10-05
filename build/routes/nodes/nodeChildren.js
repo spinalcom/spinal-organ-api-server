@@ -27,37 +27,45 @@ const requestUtilities_1 = require("../../utilities/requestUtilities");
 const getChildrenNodesInfo_1 = require("../../utilities/getChildrenNodesInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/node/{id}/children:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return node's children
-   *     summary: Gets Node children
-   *     tags:
-   *       - Nodes
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                 $ref: '#/components/schemas/BasicNode'
-   *
-   *       400:
-   *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/node/{id}/children:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the children of a node
+     *     description: >-
+     *       Returns the direct children of a node, through **every** relation it carries. To restrict the
+     *       walk to named relations, or to stay inside a context, use the POST variants
+     *       `/api/v1/node/{id}/children` and `/api/v1/context/{idContext}/node/{idNode}/children`.
+     *
+     *
+     *       Each child is returned in its short form (`dynamicId`, `staticId`, `name`, `type`) plus the
+     *       display and BIM fields when it carries them (`icon`, `bimFileId`, `dbid`).
+     *     tags:
+     *       - Nodes
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the node.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The direct children of the node (an empty array if it has none).
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 $ref: '#/components/schemas/BasicNode'
+     *       400:
+     *         description: The node could not be loaded (unknown or stale dynamic ID).
+     *       401:
+     *         description: The profile is not allowed to read this node.
+     */
     app.get("/api/v1/node/:id/children", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

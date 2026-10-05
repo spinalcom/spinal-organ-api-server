@@ -113,6 +113,8 @@ module.exports = function (
    *                   description: array of dynamic IDs of the users that failed to be moved to the target user group
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.post(
     '/api/v1/user-group/user/move',

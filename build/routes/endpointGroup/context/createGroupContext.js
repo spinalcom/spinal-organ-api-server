@@ -31,32 +31,58 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-  * @swagger
-  * /api/v1/endPointsGroup/create:
-  *   post:
-  *     security:
-  *       - bearerAuth:
-  *         - read
-  *     description: create endPoints Group context
-  *     summary: create endPoints Group context
-  *     tags:
-  *       - EndPoints Group
-  *     requestBody:
-  *       content:
-  *         application/json:
-  *           schema:
-  *             type: object
-  *             required:
-  *               - contextName
-  *             properties:
-  *                contextName:
-  *                 type: string
-  *     responses:
-  *       200:
-  *         description: Create Successfully
-  *       400:
-  *         description: Bad request
-  */
+     * @swagger
+     * /api/v1/endPointsGroup/create:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - write
+     *     summary: Create a group context
+     *     description: >-
+     *       Creates a group context and adds it to the profile graph. `childrenType` says what kind of
+     *       item the groups of this context will hold.
+     *
+     *
+     *       Context names must be unique across the whole twin : a name already used by any context is
+     *       rejected with 400.
+     *     tags:
+     *       - EndPoints Group
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - contextName
+     *               - childrenType
+     *             properties:
+     *               contextName:
+     *                 type: string
+     *                 description: Name of the context. Must not be used by any existing context.
+     *               childrenType:
+     *                 type: string
+     *                 description: Type of the items the groups of this context will hold.
+     *               contextColor:
+     *                 type: string
+     *                 description: Optional display colour.
+     *               contextIcon:
+     *                 type: string
+     *                 description: Optional display icon.
+     *     responses:
+     *       200:
+     *         description: The created context.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/Context'
+     *       400:
+     *         description: The name is already taken ("Context name already exists"), or a required field is missing.
+     *       401:
+     *         description: The profile is not allowed to write on the graph.
+     *       406:
+     *         description: No graph was found for the caller's profile.
+     */
     app.post("/api/v1/endPointsGroup/create", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

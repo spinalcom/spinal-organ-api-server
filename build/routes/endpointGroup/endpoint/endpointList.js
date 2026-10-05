@@ -33,41 +33,47 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: read  endpointList
-     *     summary: Get  endpointList
+     *     summary: List the endpoints assigned to a group
+     *     description: >-
+     *       Returns the BMS endpoints assigned to a group of an endpoint group context, in their short
+     *       form. The category and the group must belong to the given context.
      *     tags:
      *       - EndPoints Group
      *     parameters:
-     *      - in: path
-     *        name: contextId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: categoryId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: groupId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the endpoint group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: groupId
+     *         description: Dynamic ID of the group, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The endpoints of the group (an empty array if none are assigned).
      *         content:
      *           application/json:
      *             schema:
-     *                $ref: '#/components/schemas/BasicNode'
+     *               type: array
+     *               items:
+     *                 $ref: '#/components/schemas/BasicNode'
      *       400:
-     *         description: Bad request
+     *         description: The category or the group does not belong to the context ("category or group not found in context").
+     *       401:
+     *         description: The profile is not allowed to read this context.
      */
     app.get('/api/v1/endPointsGroup/:contextId/category/:categoryId/group/:groupId/endpointList', async (req, res, next) => {
         try {

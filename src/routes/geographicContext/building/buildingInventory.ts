@@ -38,95 +38,150 @@ module.exports = function (
         return undefined;
     };
 
-    /**
-     * @swagger
-     * /api/v1/building/inventory:
-     *   post:
-     *     security:
-     *       - bearerAuth:
-     *         - readOnly
-     *     description: Gets building inventory details by aggregating floor inventories for all floors
-     *     summary: Gets building inventory
-     *     tags:
-     *       - Geographic Context
-     *     parameters:
-     *       - in: query
-     *         name: includePosition
-     *         description: Include position details in the response
-     *         required: false
-     *         schema:
-     *           type: boolean
-     *       - in: query
-     *         name: includeArea
-     *         description: Include area details in the response
-     *         required: false
-     *         schema:
-     *           type: boolean
-     *       - in: query
-     *         name: onlyDynamicId
-     *         description: Only include dynamic ID in the response
-     *         required: false
-     *         schema:
-     *           type: boolean
-     *       - in: query
-     *         name: includeUnassignedItems
-     *         description: Include items not assigned to any group
-     *         required: false
-     *         schema:
-     *           type: boolean
-     *       - in: query
-     *         name: onlyCounts
-     *         description: Return only the number of items per group instead of loading the items themselves
-     *         required: false
-     *         schema:
-     *           type: boolean
-     *
-     *     requestBody:
-     *       required: true
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             properties:
-     *               context:
-     *                 type: string
-     *               contextId:
-     *                 type: integer
-     *               category:
-     *                 type: string
-     *               categoryId:
-     *                 type: integer
-     *               groups:
-     *                 type: array
-     *                 items:
-     *                   type: string
-     *                 description: Optional list of group names
-     *               groupIds:
-     *                 type: array
-     *                 items:
-     *                   type: integer
-     *                 description: Optional list of group dynamic IDs
-     *     responses:
-     *       200:
-     *         description: Success
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: array
-     *               items:
-     *                 type: object
-     *                 properties:
-     *                   dynamicId:
-     *                     type: integer
-     *                   name:
-     *                     type: string
-     *                   type:
-     *                     type: string
-     *                   inventory:
-     *                     type: array
-     *       400:
-     *         description: Bad request
-     */
+  /**
+   * @swagger
+   * /api/v1/building/inventory:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: Get the inventory of the building, grouped by group
+   *     description: >-
+   *       Whole-building counterpart of `/api/v1/floor/{id}/inventory`. It takes no building ID : it
+   *       works on the first building of the first geographic context the profile can reach.
+   *
+   *
+   *       Rather than walking floors and rooms, it walks the group context itself
+   *       (context -> category -> group -> items), which is much faster on a full building. The flip
+   *       side is that the result covers everything the chosen category holds, whether or not those
+   *       items hang under this building.
+   *
+   *
+   *       Set `onlyCounts=true` to get, for each group, just the number of items it holds : the items
+   *       themselves are never loaded, which makes it the right call for a dashboard. The other
+   *       per-item options (`includePosition`, `includeArea`, `onlyDynamicId`) then no longer apply.
+   *     tags:
+   *       - Geographic Context
+   *     parameters:
+   *       - in: query
+   *         name: includePosition
+   *         description: >-
+   *           Add a `position` to every item, read from its `XYZ center` attribute in the `Spatial`
+   *           category. Items without that attribute get `{ x: null, y: null, z: null }`.
+   *         required: false
+   *         schema:
+   *           type: boolean
+   *           default: false
+   *       - in: query
+   *         name: includeArea
+   *         description: >-
+   *           Add an `area` to every item, read from its `area` attribute in the `Spatial` category
+   *           (`null` when absent). Only meaningful when the items are rooms.
+   *         required: false
+   *         schema:
+   *           type: boolean
+   *           default: false
+   *       - in: query
+   *         name: onlyDynamicId
+   *         description: >-
+   *           Reduce every item to its `dynamicId` - name, type, staticId, dbid, bimFileId and color
+   *           are left out. Much lighter on large inventories.
+   *         required: false
+   *         schema:
+   *           type: boolean
+   *           default: false
+   *       - in: query
+   *         name: includeUnassignedItems
+   *         description: >-
+   *           Append an extra group named `unassignedItems` holding the items that matched no group.
+   *           The group is only added when at least one item is unassigned, and it carries no
+   *           `dynamicId` / `type` / `color`.
+   *         required: false
+   *         schema:
+   *           type: boolean
+   *           default: false
+   *       - in: query
+   *         name: onlyCounts
+   *         description: >-
+   *           Return the number of items per group instead of the items. Nothing below the groups is
+   *           loaded, so this is by far the cheapest form of the route.
+   *         required: false
+   *         schema:
+   *           type: boolean
+   *           default: false
+   *     requestBody:
+   *       required: true
+   *       description: >-
+   *         Selects the group context, the category inside it, and optionally the groups to keep.
+   *         Each pair accepts either a dynamic ID or a name; the ID wins when both are given.
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               context:
+   *                 type: string
+   *                 description: Name of the group context. Ignored when `contextId` is set.
+   *               contextId:
+   *                 type: integer
+   *                 format: int64
+   *                 description: Dynamic ID of the group context.
+   *               category:
+   *                 type: string
+   *                 description: >-
+   *                   Name of the category inside the group context. Required in practice : items
+   *                   whose group sits in no matching category are silently left out of the result.
+   *               categoryId:
+   *                 type: integer
+   *                 format: int64
+   *                 description: Dynamic ID of the category. Ignored when it does not match.
+   *               groups:
+   *                 type: array
+   *                 items:
+   *                   type: string
+   *                 description: Optional group names to keep. All groups of the category when omitted.
+   *               groupIds:
+   *                 type: array
+   *                 items:
+   *                   type: integer
+   *                   format: int64
+   *                 description: Optional group dynamic IDs to keep. Takes precedence over `groups`.
+   *     responses:
+   *       200:
+   *         description: >-
+   *           One entry per group. With `onlyCounts=true` each entry reports a count instead of an
+   *           items array.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 properties:
+   *                   name:
+   *                     type: string
+   *                     description: Name of the group.
+   *                   dynamicId:
+   *                     type: integer
+   *                     format: int64
+   *                   type:
+   *                     type: string
+   *                   color:
+   *                     type: string
+   *                   icon:
+   *                     type: string
+   *                   groupItems:
+   *                     type: array
+   *                     items:
+   *                       type: object
+   *       400:
+   *         description: >-
+   *           The twin has no geographic context ("geographic context not found") or no building
+   *           ("building not found"), the group context was not found ("context not found"), or the
+   *           building could not be loaded.
+   *       401:
+   *         description: The profile is not allowed to read the graph.
+   */
     app.post("/api/v1/building/inventory", async (req, res, next) => {
         try {
             const profileId = getProfileId(req);

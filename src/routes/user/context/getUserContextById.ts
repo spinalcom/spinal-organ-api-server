@@ -42,7 +42,9 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - read
-   *     description: Get a specific User Context by its dynamic ID
+   *     description: >-
+   *       Returns one user context by its dynamic ID. To list the users it holds, use
+   *       `GET /api/v1/user/context/{contextId}/user`.
    *     summary: Get a specific User Context by its dynamic ID
    *     tags:
    *       - User
@@ -68,6 +70,8 @@ module.exports = function (
    *         description: User context not found
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.get(
     '/api/v1/user/context/:contextId',

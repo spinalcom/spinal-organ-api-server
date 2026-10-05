@@ -27,34 +27,38 @@ const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getEventInfo_1 = require("../../../utilities/getEventInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-  * @swagger
-  * /api/v1/event/{eventId}/read:
-  *   get:
-  *     security:
-  *       - bearerAuth:
-  *         - readOnly
-  *     description: Return event
-  *     summary: Get event
-  *     tags:
-  *      - Calendar & Event
-  *     parameters:
-  *      - in: path
-  *        name: eventId
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *     responses:
-  *       200:
-  *         description: Success
-  *         content:
-  *           application/json:
-  *             schema:
-  *                $ref: '#/components/schemas/Event'
-  *       400:
-  *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/event/{eventId}/read:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: Read a calendar event
+     *     description: >-
+     *       Returns one event with its name, description, dates, recurrence settings and the element it
+     *       concerns.
+     *     tags:
+     *       - Calendar & Event
+     *     parameters:
+     *      - in: path
+     *        name: eventId
+     *        description: Dynamic ID of the event.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The event.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/Event'
+     *       400:
+     *         description: The event could not be loaded ("list of event is not loaded").
+     *       401:
+     *         description: The profile is not allowed to read this event.
+     */
     app.get("/api/v1/event/:eventId/read", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

@@ -40,7 +40,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - write
      *     summary: create a SpinalUser in a SpinalUserContext
-     *     description: Create a SpinalUser in a SpinalUserContext.
+     *     description: >-
+     *       Creates a SpinalUser inside a user context. The user is filed under the alphabetical group
+     *       matching the first character of its name, which is what makes the `startingAlphaNum` filter of
+     *       the listing route work.
      *     tags:
      *       - User
      *     parameters:
@@ -84,6 +87,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: User context not found
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.post('/api/v1/user/context/:contextId/user', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({

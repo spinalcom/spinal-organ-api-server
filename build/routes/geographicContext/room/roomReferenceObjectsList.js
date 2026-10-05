@@ -26,6 +26,40 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getRoomReferenceObjectListInfo_1 = require("../../../utilities/getRoomReferenceObjectListInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
+    /**
+     * @swagger
+     * /api/v1/room/{id}/reference_Objects_list:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the reference objects of a room (deprecated alias)
+     *     description: >-
+     *       Kept for backwards compatibility, note the capital `O`. Identical result to
+     *       `/api/v1/room/{id}/reference_object_list`, which should be used instead.
+     *     deprecated: true
+     *     tags:
+     *      - Geographic Context
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the room.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The room with its reference objects.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/RoomReferenceObjectResponse'
+     *       400:
+     *         description: The room could not be loaded ("list of reference_Objects is not loaded").
+     *       401:
+     *         description: The profile is not allowed to read this room.
+     */
     app.get("/api/v1/room/:id/reference_Objects_list", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
@@ -40,49 +74,43 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
     });
     /**
-   * @swagger
-   * /api/v1/room/{id}/reference_object_list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return reference objects of a room
-   *     summary: Gets a reference objects of a room
-   *     tags:
-   *      - Geographic Context
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: "object"
-   *               properties:
-   *                 dynamicId:
-   *                   type: "integer"
-   *                 staticId:
-   *                   type: "string"
-   *                 name:
-   *                   type: "string"
-   *                 type:
-   *                   type: "string"
-   *                 bimFileId:
-   *                   type: "string"
-   *                 infoReferencesObjects:
-   *                   type: "array"
-   *                   items:
-   *                    $ref: '#/components/schemas/Equipement'
-   *       400:
-   *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/room/{id}/reference_object_list:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the reference objects of a room
+     *     description: >-
+     *       Returns the room together with the objects attached to it through `hasReferenceObject`.
+     *       Reference objects are BIM objects that a room points at without owning them - typically
+     *       shared elements such as facades, ducts or structural parts.
+     *
+     *
+     *       This is not the equipment of the room : use `/api/v1/room/{id}/equipment_list` for the
+     *       objects the room owns.
+     *     tags:
+     *      - Geographic Context
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the room.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The room with its reference objects.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/RoomReferenceObjectResponse'
+     *       400:
+     *         description: The room could not be loaded ("list of reference_Objects is not loaded").
+     *       401:
+     *         description: The profile is not allowed to read this room.
+     */
     app.get("/api/v1/room/:id/reference_object_list", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

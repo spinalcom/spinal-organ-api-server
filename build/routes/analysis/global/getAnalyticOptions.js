@@ -93,7 +93,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                     analysisModuleVersion:
      *                       type: string
      *       400:
-     *         description: Bad request
+     *         description: The analytic option list could not be read.
      */
     app.get("/api/v1/analysis/analyticOptions", async (req, res, next) => {
         try {

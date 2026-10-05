@@ -32,44 +32,50 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/nomenclatureGroup/{contextId}/category/{categoryId}/group/{groupId}/delete:
- *   delete:
- *     security:
- *       - bearerAuth:
- *         - read
- *     description: delete group nomenclature Group
- *     summary: delete group nomenclature Group
- *     tags:
- *       - Nomenclature Group
- *     parameters:
- *      - in: path
- *        name: contextId
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *      - in: path
- *        name: categoryId
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *      - in: path
- *        name: groupId
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Delete Successfully
- *       400:
- *         description: Bad request
-*/
+   * @swagger
+   * /api/v1/nomenclatureGroup/{contextId}/category/{categoryId}/group/{groupId}/delete:
+   *   delete:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Delete a group of a category
+   *     description: >-
+   *       Removes a group from a category. The items that were assigned to it are **not** deleted, they
+   *       simply lose this grouping.
+   *     tags:
+   *       - Nomenclature Group
+   *     parameters:
+   *       - in: path
+   *         name: contextId
+   *         description: Dynamic ID of the group context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: categoryId
+   *         description: Dynamic ID of the category, which must belong to that context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: groupId
+   *         description: Dynamic ID of the group, which must belong to that category.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     responses:
+   *       200:
+   *         description: The group was deleted.
+   *       400:
+   *         description: The category or the group does not belong to the context.
+   *       401:
+   *         description: The profile is not allowed to write on this context.
+   *       500:
+   *         description: One of the nodes could not be loaded or removed.
+   */
   app.delete("/api/v1/nomenclatureGroup/:contextId/category/:categoryId/group/:groupId/delete", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);

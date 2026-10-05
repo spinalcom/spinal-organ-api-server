@@ -40,27 +40,39 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return node object with parent and children relation
-   *     summary: Gets Node
+   *     summary: Read a node
+   *     description: >-
+   *       Returns the summary of a single node : its `dynamicId` (the volatile `_server_id`, valid only
+   *       for the lifetime of the current hub connection), its persistent `staticId`, its name and type,
+   *       and the display fields it carries (`color`, `icon`) plus the BIM link (`dbid`, `bimFileId`)
+   *       when they exist.
+   *
+   *
+   *       `children_relation_list` and `parent_relation_list` are always returned **empty** by this
+   *       route. To get the relations of a node use `/api/v1/node/{id}/children`,
+   *       `/api/v1/node/{id}/parents`, or `/api/v1/node/read_multiple`, which takes
+   *       `includeChildrenRelations` / `includeParentRelations` query parameters.
    *     tags:
    *       - Nodes
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the node.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The node summary.
    *         content:
    *           application/json:
    *             schema:
    *                $ref: '#/components/schemas/Node'
    *       400:
-   *         description: Bad request
+   *         description: The node could not be loaded (unknown or stale dynamic ID).
+   *       401:
+   *         description: The profile is not allowed to read this node.
    */
 
   app.get('/api/v1/node/:id/read', async (req, res, next) => {

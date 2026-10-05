@@ -33,12 +33,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Read details of multiple rooms, including error details where applicable.
-     *     summary: Gets details of multiple rooms
+     *     summary: Get the area and BIM objects of several rooms at once
+     *     description: >-
+     *       Batch version of `GET /api/v1/room/{id}/read_details` : the body is an array of room dynamic IDs and the response holds
+     *       one `{ dynamicId, area, bimFileId, _bimObjects }` entry per ID, in the same order.
+     *
+     *
+     *       Each room is read independently : a failure turns its slot into an error object and the
+     *       response comes back with **206 Partial Content**. At most 1000 IDs per call (configurable
+     *       through `MULTIPLE_ROUTE_IDS_LIMIT`).
      *     tags:
      *       - Geographic Context
      *     requestBody:
      *       required: true
+     *       description: The dynamic IDs of the rooms.
      *       content:
      *         application/json:
      *           schema:
@@ -48,7 +56,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               format: int64
      *     responses:
      *       200:
-     *         description: Success - All room details fetched
+     *         description: Every room was read.
      *         content:
      *           application/json:
      *             schema:
@@ -56,7 +64,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                 $ref: '#/components/schemas/RoomDetailsWithId'
      *       206:
-     *         description: Partial Content - Some room details could not be fetched
+     *         description: At least one room could not be read; those slots hold an error object instead.
      *         content:
      *           application/json:
      *             schema:
@@ -66,7 +74,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                   - $ref: '#/components/schemas/RoomDetailsWithId'
      *                   - $ref: '#/components/schemas/Error'
      *       400:
-     *         description: Bad request
+     *         description: The body is not an array, or it holds more IDs than the configured limit.
      */
     app.post('/api/v1/room/read_details_multiple', async (req, res, next) => {
         try {

@@ -31,40 +31,48 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
- * @swagger
- * /api/v1/IoTNetworkContext/{id}/update:
- *   put:
- *     security: 
- *       - bearerAuth: 
- *         - read
- *     description: update the IoTNetwork
- *     summary: update the IoTNetwork
- *     tags:
- *       - IoTNetwork & Time Series
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - newNameIoTNetwork
- *             properties:
- *                newNameIoTNetwork:
- *                 type: string
- *     responses:
- *       200:
- *         description: Update Success
- *       400:
- *         description: Bad request
-*/
+   * @swagger
+   * /api/v1/IoTNetworkContext/{id}/update:
+   *   put:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Rename a network context
+   *     description: >-
+   *       Renames a context of type `Network`. Only the name changes - the networks, devices and
+   *       endpoints below it are untouched.
+   *     tags:
+   *       - IoTNetwork & Time Series
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the network context.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - newNameIoTNetwork
+   *             properties:
+   *               newNameIoTNetwork:
+   *                 type: string
+   *                 description: The new name of the context.
+   *     responses:
+   *       200:
+   *         description: The context was renamed. The body is empty.
+   *       400:
+   *         description: >-
+   *           The node is not a network context ("this context is not a Network"), or it could not be
+   *           loaded.
+   *       401:
+   *         description: The profile is not allowed to write on this context.
+   */
 
   app.put("/api/v1/IoTNetworkContext/:id/update", async (req, res, next) => {
 

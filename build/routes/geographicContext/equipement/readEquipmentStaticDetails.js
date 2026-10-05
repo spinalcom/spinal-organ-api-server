@@ -33,27 +33,36 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: read static details of equipment
-     *     summary: Gets static details of equipment
+     *     summary: Get everything known about an equipment
+     *     description: >-
+     *       The full read of a piece of equipment in one call : its identity and BIM identifiers, its
+     *       attribute categories with their attributes, its control points, its BMS endpoints with their
+     *       current values, and the groups it belongs to.
+     *
+     *
+     *       The node must be of type `BIMObject`. This is the equipment counterpart of
+     *       `/api/v1/room/{id}/read_static_details`, and the heaviest equipment route.
      *     tags:
      *       - Geographic Context
      *     parameters:
      *      - in: path
      *        name: id
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the equipment (a `BIMObject`).
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The complete static description of the equipment.
      *         content:
      *           application/json:
      *             schema:
      *                $ref: '#/components/schemas/StaticDetailsRoom'
      *       400:
-     *         description: Bad request
+     *         description: The node is not a `BIMObject`, or it could not be loaded (body is `ko`).
+     *       401:
+     *         description: The profile is not allowed to read this equipment.
      */
     app.get('/api/v1/equipment/:id/read_static_details', async (req, res, next) => {
         try {

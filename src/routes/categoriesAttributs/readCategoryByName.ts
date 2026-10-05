@@ -41,32 +41,40 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: read category attribut in specific node
-   *     summary: read category attribut
+   *     summary: Read one attribute category of a node, by name
+   *     description: >-
+   *       Same as reading a category by ID, but the category is looked up by name on the node. When the
+   *       node carries several categories with that name, the first one is returned. The attributes it
+   *       holds are not returned - use `/api/v1/node/{id}/attribute_list` for those.
    *     tags:
    *       - Node Attribut Categories
    *     parameters:
    *      - in: path
    *        name: nodeId
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the node.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *      - in: path
    *        name: categoryName
+   *        description: Name of the category (exact match).
    *        required: true
    *        schema:
    *          type: string
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The category.
    *         content:
    *           application/json:
    *             schema:
-   *                $ref: '#/components/schemas/CategoriesAttribute'
+   *              $ref: '#/components/schemas/CategoriesAttribute'
    *       400:
-   *         description: Bad request
+   *         description: The node carries no category with this name ("category not found in node").
+   *       401:
+   *         description: The profile is not allowed to read this node.
+   *       500:
+   *         description: The node could not be loaded.
    */
 
   app.get(

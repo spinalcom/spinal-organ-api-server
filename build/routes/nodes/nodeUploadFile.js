@@ -33,24 +33,35 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: Upload a Doc
-     *     summary: Upload a Doc
+     *         - write
+     *     summary: Attach a document to a node
+     *     description: >-
+     *       Uploads a file as `multipart/form-data` and stores it under the node's `hasFiles` child,
+     *       where `/api/v1/node/{id}/file_list` then lists it. The form field **must** be named `file`;
+     *       one file per request.
+     *
+     *
+     *       Beware : when no file is sent the request still answers **200** with
+     *       `{ "status": false, "message": "No file uploaded" }`, so check the `status` field rather than
+     *       the HTTP code.
      *     tags:
      *       - Nodes
      *     parameters:
      *      - in: path
      *        name: id
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the node the document is attached to.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *     requestBody:
+     *       required: true
      *       content:
      *         multipart/form-data:
      *           schema:
      *             type: object
+     *             required:
+     *               - file
      *             properties:
      *               file:
      *                 type: string
@@ -60,9 +71,33 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               style: form
      *     responses:
      *       200:
-     *         description: Upload Successfully
+     *         description: >-
+     *           The file was stored (`status: true`), or no file was sent at all (`status: false`, no
+     *           `data`).
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 status:
+     *                   type: boolean
+     *                 message:
+     *                   type: string
+     *                 data:
+     *                   type: object
+     *                   description: Only present when a file was actually stored.
+     *                   properties:
+     *                     name:
+     *                       type: string
+     *                     mimetype:
+     *                       type: string
+     *                     size:
+     *                       type: integer
+     *                       description: Size in bytes.
      *       400:
-     *         description: Upload not Successfully
+     *         description: The node could not be loaded, or the file could not be stored.
+     *       401:
+     *         description: The profile is not allowed to write on this node.
      */
     app.post('/api/v1/node/:id/upload_file', async (req, res, next) => {
         try {

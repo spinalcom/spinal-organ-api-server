@@ -37,31 +37,40 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *   delete:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: Delete category from graph
-   *     summary: Delete category attribut
+   *         - write
+   *     summary: Delete an attribute category of a node, by ID
+   *     description: >-
+   *       Removes a category from the graph, with every attribute it holds. The category must be
+   *       attached to the given node.
+   *
+   *
+   *       A successful call answers **200 with an empty body**.
    *     tags:
-   *      - Node Attribut Categories
+   *       - Node Attribut Categories
    *     parameters:
    *      - in: path
    *        name: nodeId
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the node.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *      - in: path
    *        name: categoryId
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the category to delete.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Deleted successfully
+   *         description: The category was deleted. The body is empty.
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           The category is not attached to this node ("category not found in node"), or the node or
+   *           category could not be loaded.
+   *       401:
+   *         description: The profile is not allowed to write on this node.
    */
 
   app.delete("/api/v1/node/:nodeId/category/:categoryId/delete", async (req, res, next) => {

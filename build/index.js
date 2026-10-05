@@ -31,8 +31,14 @@ const api_server_1 = __importDefault(require("./api-server"));
 const spinalAPIMiddleware_1 = __importDefault(require("./spinalAPIMiddleware"));
 const swagger_1 = require("./swagger");
 const spinal_lib_organ_monitoring_1 = __importDefault(require("spinal-lib-organ-monitoring"));
-const preloadingScript_1 = require("./preloadingScript/preloadingScript");
+const runPreloading_1 = require("./preloadingScript/runPreloading");
 const preload_config = require('../preload_config');
+// since node 15 a promise rejected without a handler exits the process : one
+// forgotten catch in a route would restart the organ, which then loads
+// everything back from the hub
+process.on('unhandledRejection', (reason) => {
+    console.error('[api-server] unhandled promise rejection, the organ keeps running:', reason);
+});
 function Requests(logger) {
     async function initSpinalHub() {
         const spinalAPIMiddleware = spinalAPIMiddleware_1.default.getInstance();
@@ -56,15 +62,11 @@ function Requests(logger) {
             const spinalAPIMiddleware = await initSpinalHub();
             const api = initApiServer(spinalAPIMiddleware);
             const port = config_1.default.api.port;
-            // Automatic API route call logic
-            const preloadViewInfoEnabled = process.env.PRELOAD_SCRIPT === '1';
-            if (preloadViewInfoEnabled) {
-                try {
-                    await (0, preloadingScript_1.preloadingScript)(spinalAPIMiddleware, 'any', preload_config);
-                }
-                catch (err) {
-                    console.error(`Error calling preloadViewInfo:`, err.message);
-                }
+            // Automatic API route call logic : the preloading picks its strategy
+            // from the time of day and from whether a node snapshot is available
+            // (see runPreloading).
+            if (process.env.PRELOAD_SCRIPT === '1') {
+                await (0, runPreloading_1.runPreloading)(spinalAPIMiddleware, 'any', preload_config);
             }
             const server = api.listen(port, async () => {
                 if (!process.env.DISABLE_MONITORING) {

@@ -44,7 +44,9 @@ module.exports = function (
    *       - bearerAuth:
    *         - read
    *     summary: Get a user group by its ID
-   *     description: Get a user group by its ID
+   *     description: >-
+   *       Returns one user group by its dynamic ID, with its name and display colour. To get the users in
+   *       it, use `GET /api/v1/user-group/group/{groupId}/user`.
    *     tags:
    *       - User Group
    *     parameters:
@@ -64,6 +66,8 @@ module.exports = function (
    *               $ref: '#/components/schemas/BasicNodeWithColor'
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.get(
     '/api/v1/user-group/group/:groupId',

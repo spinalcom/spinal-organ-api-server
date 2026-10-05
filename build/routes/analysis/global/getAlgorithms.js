@@ -65,7 +65,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                     analysisModuleVersion:
      *                       type: string
      *       400:
-     *         description: Bad request
+     *         description: The algorithm catalogue could not be read.
      */
     app.get("/api/v1/analysis/algorithms", async (req, res, next) => {
         try {

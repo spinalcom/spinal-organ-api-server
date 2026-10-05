@@ -39,20 +39,26 @@ module.exports = function (
    *   put:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: update the workflow
-   *     summary: update the workflow
+   *         - write
+   *     summary: Rename a workflow
+   *     description: >-
+   *       Renames a workflow context. As at creation, the new name must not be used by any other
+   *       context of the twin.
+   *
+   *
+   *       Only the name changes; the processes, steps and tickets below are untouched.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: id
+   *         description: Dynamic ID of the workflow context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
@@ -60,13 +66,21 @@ module.exports = function (
    *             required:
    *               - newNameWorkflow
    *             properties:
-   *                newNameWorkflow:
+   *               newNameWorkflow:
    *                 type: string
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The workflow was renamed (body is `Success`).
+   *         content:
+   *           text/plain:
+   *             schema:
+   *               type: string
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           `newNameWorkflow` is not a string, the name is already taken ("the name context already
+   *           exists"), or the workflow could not be loaded.
+   *       401:
+   *         description: The profile is not allowed to write on this workflow.
    */
 
   app.put('/api/v1/workflow/:id/update', async (req, res) => {

@@ -37,12 +37,24 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Get time series of the last 24 hours for multiple IDs
-     *     summary: Get time series of the last 24 hours for multiple IDs
+     *     summary: Read the time series of the last 24 hours for several endpoints
+     *     description: >-
+     *       Returns the points recorded over the **last 24 hours**, counted back from now.
+     *
+     *
+     *       The body is an array of endpoint dynamic IDs and the response holds one
+     *       `{ dynamicId, timeseries }` entry per ID, in the same order. Each endpoint is read
+     *       independently : a failure turns its entry into `{ dynamicId, error }` and the response comes
+     *       back with **206 Partial Content**.
+     *
+     *
+     *       At most 1000 IDs per call, configurable on the organ through `MULTIPLE_TIMESERIES_IDS_LIMIT`
+     *       (a separate setting from the one used by the other batch routes).
      *     tags:
      *       - IoTNetwork & Time Series
      *     requestBody:
      *       required: true
+     *       description: The dynamic IDs of the endpoints.
      *       content:
      *         application/json:
      *           schema:
@@ -52,7 +64,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               format: int64
      *     responses:
      *       200:
-     *         description: Success - All time series data of the last 24 hours fetched
+     *         description: Every endpoint was read.
      *         content:
      *           application/json:
      *             schema:
@@ -60,7 +72,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                 $ref: '#/components/schemas/TimeserieWithID'
      *       206:
-     *         description: Partial Content - Some time series data of the last 24 hours could not be fetched
+     *         description: At least one endpoint could not be read; those entries hold an error instead.
      *         content:
      *           application/json:
      *             schema:
@@ -70,7 +82,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                   - $ref: '#/components/schemas/TimeserieWithID'
      *                   - $ref: '#/components/schemas/Error'
      *       400:
-     *         description: Bad request
+     *         description: The body is not an array, or it holds more IDs than the configured limit.
      */
     app.post('/api/v1/endpoint/timeSeries/readFromLast24H_multiple', async (req, res, next) => {
         try {

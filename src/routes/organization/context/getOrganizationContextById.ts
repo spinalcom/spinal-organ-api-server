@@ -43,7 +43,9 @@ module.exports = function (
    *       - bearerAuth:
    *         - read
    *     summary: Retrieve an Organization Context by ID
-   *     description: Get a specific Organization Context by its ID
+   *     description: >-
+   *       Returns one organization context by its dynamic ID. An organization context holds the
+   *       organizations of the twin, each linking user groups to room groups.
    *     tags:
    *       - Organization
    *     parameters:
@@ -68,6 +70,8 @@ module.exports = function (
    *         description: Organization context not found
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.get(
     '/api/v1/organization/context/:contextId',

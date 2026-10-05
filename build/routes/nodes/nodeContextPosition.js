@@ -33,35 +33,67 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Get node position in a context
-     *     summary: Get node position in a context
+     *     summary: Get the paths that lead to a node inside a context
+     *     description: >-
+     *       Walks back up from a node to the root of a context and returns every path that reaches it.
+     *       A node can hang under several parents, so `parentsInContext` holds one entry per path - for a
+     *       room this is typically its floor, then its building, then the context itself.
+     *
+     *
+     *       The structure is recursive : each entry has the same shape as the node itself and carries its
+     *       own `parentsInContext`, which is empty on the context root. Only parents that belong to the
+     *       given context are followed, so this is the position of the node *in that context*, not in the
+     *       whole graph.
      *     tags:
      *       - Geographic Context
      *     parameters:
      *      - in: path
      *        name: contextId
-     *        description: use the dynamic context ID
+     *        description: Dynamic ID of the context the paths are built in.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *      - in: path
      *        name: nodeId
-     *        description: use the dynamic node ID
+     *        description: Dynamic ID of the node to locate.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The node with the recursive chain of its parents inside the context.
      *         content:
      *           application/json:
      *             schema:
-     *                $ref: '#/components/schemas/RoomPosition'
+     *               type: object
+     *               properties:
+     *                 name:
+     *                   type: string
+     *                 dynamicId:
+     *                   type: integer
+     *                   format: int64
+     *                 type:
+     *                   type: string
+     *                 color:
+     *                   type: string
+     *                   description: Only present when the node carries one.
+     *                 icon:
+     *                   type: string
+     *                   description: Only present when the node carries one.
+     *                 parentsInContext:
+     *                   type: array
+     *                   description: >-
+     *                     One entry per parent path, each with the same shape as this object. Empty once
+     *                     the walk reaches the context root.
+     *                   items:
+     *                     type: object
      *       400:
-     *         description: Bad request
-      */
+     *         description: The node or the context could not be loaded ("Failed to get position").
+     *       401:
+     *         description: The profile is not allowed to read the node or the context.
+     */
     app.get("/api/v1/context/:contextId/node/:nodeId/get_position", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

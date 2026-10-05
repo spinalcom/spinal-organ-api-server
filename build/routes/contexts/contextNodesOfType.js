@@ -4,41 +4,49 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-  * @swagger
-  * /api/v1/context/{id}/nodesOfType/{type}:
-  *   get:
-  *     security:
-  *       - bearerAuth:
-  *         - readOnly
-  *     description: Return nodes of type in context
-  *     summary: Gets a nodes of type with given ID context and Type
-  *     tags:
-  *       - Contexts/ontologies
-  *     parameters:
-  *      - in: path
-  *        name: id
-  *        description: use the dynamic ID
-  *        required: true
-  *        schema:
-  *          type: integer
-  *          format: int64
-  *      - in: path
-  *        name: type
-  *        required: true
-  *        schema:
-  *          type: string
-  *     responses:
-  *       200:
-  *         description: Success
-  *         content:
-  *           application/json:
-  *             schema:
-  *               type: array
-  *               items:
-  *                $ref: '#/components/schemas/ContextNodeofTypes'
-  *       400:
-  *         description: Bad request
-  */
+     * @swagger
+     * /api/v1/context/{id}/nodesOfType/{type}:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the nodes of a given type in a context
+     *     description: >-
+     *       Browses the context, classifies its nodes by type and returns the ones matching `type`.
+     *       The accepted values are exactly the ones returned by `/api/v1/context/{id}/nodeTypeList`;
+     *       the comparison is case sensitive.
+     *     tags:
+     *       - Contexts/ontologies
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the context.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *      - in: path
+     *        name: type
+     *        description: Node type to filter on, as returned by `/api/v1/context/{id}/nodeTypeList`.
+     *        required: true
+     *        schema:
+     *          type: string
+     *     responses:
+     *       200:
+     *         description: The nodes of the requested type found in the context.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                $ref: '#/components/schemas/ContextNodeofTypes'
+     *       400:
+     *         description: No node of this type exists in the context ("type not found in context").
+     *       401:
+     *         description: The profile is not allowed to read this context.
+     *       500:
+     *         description: The context could not be loaded or browsed.
+     */
     app.get("/api/v1/context/:id/nodesOfType/:type", async (req, res, next) => {
         const nodes = [];
         try {

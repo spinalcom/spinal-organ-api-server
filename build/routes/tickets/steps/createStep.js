@@ -35,20 +35,27 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: add a Step
-     *     summary: add a Step
+     *         - write
+     *     summary: Create a step in a process
+     *     description: >-
+     *       Adds a step to a process of a workflow. The process is named in the body, the workflow in the
+     *       path, and the process must belong to that workflow.
+     *
+     *
+     *       `order` places the step in the pipeline, and `name` must not already be used by another step
+     *       of the same process. `name` and `color` are both required and must be non-empty strings.
      *     tags:
      *       - Workflow & ticket
      *     parameters:
      *       - in: path
      *         name: id
-     *         description: use the dynamic ID
+     *         description: Dynamic ID of the workflow context.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -61,17 +68,30 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               processDynamicId:
      *                 type: number
+     *                 description: Dynamic ID of the process the step is added to.
      *               name:
      *                 type: string
      *               color:
      *                 type: string
+     *                 description: Display colour of the step.
      *               order:
      *                 type: number
+     *                 description: Position of the step in the pipeline.
      *     responses:
      *       201:
-     *         description: Added Successfully
+     *         description: The created step.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/Step'
      *       400:
-     *         description: Add not Successfully
+     *         description: >-
+     *           `processDynamicId` is not a number, `name` or `color` is missing or not a string, or the
+     *           process already holds a step with that name ("The name of step already exists").
+     *       401:
+     *         description: The profile is not allowed to write on this workflow.
+     *       500:
+     *         description: The workflow or the process could not be loaded, or is not of the expected type.
      */
     app.post('/api/v1/workflow/:id/create_step', async (req, res) => {
         try {

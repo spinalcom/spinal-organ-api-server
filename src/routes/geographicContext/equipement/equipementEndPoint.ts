@@ -32,36 +32,44 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/equipement/{id}/endpoint_list:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: Return list of endpoint
- *     summary: Gets a list of endpoint
- *     tags:
- *      - Geographic Context
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *               type: array
- *               items: 
- *                $ref: '#/components/schemas/EndPointRoom'
- *       400:
- *         description: Bad request
- */
+   * @swagger
+   * /api/v1/equipement/{id}/endpoint_list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the BMS endpoints of an equipment
+   *     description: >-
+   *       Returns the BMS endpoints attached to a piece of equipment, with the last value known by the
+   *       hub. The node must be of type `BIMObject`.
+   *
+   *
+   *       The generic `/api/v1/node/{id}/endpoint_list` does the same on any node type and accepts
+   *       `includeDetails`.
+   *     tags:
+   *       - Geographic Context
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the equipment (a `BIMObject`).
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The requested list (empty when there is nothing).
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/EndPointRoom'
+   *       400:
+   *         description: The node is not a `BIMObject`, or its endpoints could not be read ("list of endpoints is not loaded").
+   *       401:
+   *         description: The profile is not allowed to read this equipment.
+   */
 
   app.get("/api/v1/equipement/:id/endpoint_list", async (req, res, next) => {
 

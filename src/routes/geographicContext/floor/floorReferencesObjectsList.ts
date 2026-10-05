@@ -46,42 +46,49 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return reference objects of a floor
-   *     summary: Gets a reference objects of a floor
+   *     summary: List the reference objects of a floor
+   *     description: >-
+   *       Returns the floor together with the objects attached to it through `hasReferenceObject`, each
+   *       with its BIM identifiers (`dbid`, `bimFileId`, `externalId`, `version`).
+   *
+   *
+   *       Note the capital `O` in the path, kept for backwards compatibility. Reference objects are BIM
+   *       objects a node points at without owning them.
    *     tags:
    *      - Geographic Context
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the floor.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The floor with its reference objects.
    *         content:
    *           application/json:
    *             schema:
-   *               type: "object"
+   *               type: object
    *               properties:
    *                 dynamicId:
-   *                   type: "integer"
+   *                   type: integer
+   *                   format: int64
    *                 staticId:
-   *                   type: "string"
+   *                   type: string
    *                 name:
-   *                   type: "string"
+   *                   type: string
    *                 type:
-   *                   type: "string"
-   *                 bimFileId:
-   *                   type: "string"
+   *                   type: string
    *                 infoReferencesObjects:
-   *                   type: "array"
+   *                   type: array
    *                   items:
    *                    $ref: '#/components/schemas/Equipement'
    *       400:
-   *         description: Bad request
+   *         description: The floor could not be loaded ("list of reference_Objects is not loaded").
+   *       401:
+   *         description: The profile is not allowed to read this floor.
    */
 
   app.get(

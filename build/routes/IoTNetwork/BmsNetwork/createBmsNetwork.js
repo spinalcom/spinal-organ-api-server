@@ -36,12 +36,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: create Network
-     *     summary: create Network
+     *         - write
+     *     summary: Create a network in a network context
+     *     description: >-
+     *       Adds a `BmsNetwork` to an existing context of type `Network`.
+     *
+     *
+     *       The creation is **not awaited** : the route answers **200 with an empty body** as soon as the
+     *       write is started, and returns no ID for the new network. Read the context back with
+     *       `/api/v1/Network/list` to get it.
      *     tags:
      *       - IoTNetwork & Time Series
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -51,17 +58,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               - NetworkName
      *               - NetworkTypeName
      *             properties:
-     *                IoTNetworkContext_DynamicId:
+     *               IoTNetworkContext_DynamicId:
+     *                 type: number
+     *                 description: Dynamic ID of the network context the network is created in.
+     *               NetworkName:
      *                 type: string
-     *                NetworkName:
+     *               NetworkTypeName:
      *                 type: string
-     *                NetworkTypeName:
-     *                 type: string
+     *                 description: Free-text type of the network.
      *     responses:
      *       200:
-     *         description: Create Successfully
+     *         description: The creation was started. The body is empty.
      *       400:
-     *         description: Bad request
+     *         description: The context could not be loaded, or the network could not be created.
+     *       401:
+     *         description: The profile is not allowed to write on this context.
      */
     app.post("/api/v1/Network/create", async (req, res, next) => {
         try {

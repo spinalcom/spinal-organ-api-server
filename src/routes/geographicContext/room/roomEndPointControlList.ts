@@ -46,21 +46,28 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return list of control endpoint
-   *     summary: Gets a list of control endpoint
+   *     summary: List the control endpoints of a room, grouped by profile
+   *     description: >-
+   *       Returns the control points of a room, grouped by control-point profile : one entry per
+   *       profile, each holding its own endpoints with their current values. The node must be of type
+   *       `geographicRoom`.
+   *
+   *
+   *       Same grouping as the generic `/api/v1/node/{id}/control_endpoint_list`, which also accepts
+   *       `includeDetails`.
    *     tags:
-   *      - Geographic Context
+   *       - Geographic Context
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the room.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The control-point profiles of the room, each with its endpoints.
    *         content:
    *           application/json:
    *             schema:
@@ -68,7 +75,9 @@ module.exports = function (
    *               items:
    *                $ref: '#/components/schemas/EndPointRoom'
    *       400:
-   *         description: Bad request
+   *         description: The node is not a room ("node is not of type geographicRoom"), or its control points could not be read.
+   *       401:
+   *         description: The profile is not allowed to read this room.
    */
 
   app.get('/api/v1/room/:id/control_endpoint_list', async (req, res, next) => {

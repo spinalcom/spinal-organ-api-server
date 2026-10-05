@@ -30,36 +30,43 @@ import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {  /**
-
-  /**
  * @swagger
  * /api/v1/endpoint/{id}/timeSeries/readCurrentMonth:
  *   get:
  *     security:
  *       - bearerAuth:
  *         - readOnly
- *     description: get time series of month
- *     summary: get time series of month
+ *     summary: Read the time series of the last 31 days
+ *     description: >-
+ *       Returns the points recorded over the **last 31 days**, counted back from now. Despite the
+ *       name, this is a rolling 31-day window, not the current calendar month - and it is 31 days
+ *       whatever the length of the month.
+ *
+ *
+ *       The points come back as `{ date, value }`, oldest first. For any other interval, or for
+ *       aggregated values, use `/api/v1/endpoint/{id}/timeSeries/read/{begin}/{end}`.
  *     tags:
  *       - IoTNetwork & Time Series
  *     parameters:
  *      - in: path
  *        name: id
- *        description: use the dynamic ID
+ *        description: Dynamic ID of the endpoint.
  *        required: true
  *        schema:
  *          type: integer
  *          format: int64
  *     responses:
  *       200:
- *         description: Success
+ *         description: The recorded points over the window (an empty array if none).
  *         content:
  *           application/json:
  *             schema:
  *                $ref: '#/components/schemas/Timeserie'
  *       400:
- *         description: Bad request
-  */
+ *         description: The endpoint could not be loaded, or its time series could not be read.
+ *       401:
+ *         description: The profile is not allowed to read this endpoint.
+ */
 
   app.get("/api/v1/endpoint/:id/timeSeries/readCurrentMonth", async (req, res, next) => {
 

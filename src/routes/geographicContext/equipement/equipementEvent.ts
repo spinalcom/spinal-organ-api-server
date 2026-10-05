@@ -32,36 +32,42 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/equipement/{id}/event_list:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: Returns events of equipement
- *     summary: Get list events of equipement
- *     tags:
- *       - Geographic Context
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *               type: array
- *               items: 
- *                $ref: '#/components/schemas/Event'
- *       400:
- *         description: Bad request
-*/
+   * @swagger
+   * /api/v1/equipement/{id}/event_list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the calendar events of an equipment
+   *     description: >-
+   *       Returns the `SpinalEvent` children of a piece of equipment. Unlike the room event route, there
+   *       is no period filter here : every event is returned. The node must be of type `BIMObject`.
+   *     tags:
+   *       - Geographic Context
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the equipment (a `BIMObject`).
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The requested list (empty when there is nothing).
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/Event'
+   *       400:
+   *         description: The node is not a `BIMObject`.
+   *       401:
+   *         description: The profile is not allowed to read this equipment.
+   *       500:
+   *         description: The equipment could not be loaded or its events could not be read.
+   */
   app.get("/api/v1/equipement/:id/event_list", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);

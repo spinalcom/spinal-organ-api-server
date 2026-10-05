@@ -47,7 +47,13 @@ module.exports = function (
    *       - bearerAuth:
    *         - write
    *     summary: Remove user from a specific user group
-   *     description: Remove user from a specific user group
+   *     description: >-
+   *       Removes one user from a user group. The user itself is **not** deleted, it only leaves the
+   *       group.
+   *
+   *
+   *       By default the user is also detached from the control points attached to that group;
+   *       pass `removeControlPoints=false` to leave those links in place.
    *     tags:
    *       - User Group
    *     parameters:
@@ -77,6 +83,8 @@ module.exports = function (
    *         description: Successfully removed users from the user group
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.delete(
     '/api/v1/user-group/group/:groupId/user/:userId',
@@ -86,7 +94,7 @@ module.exports = function (
         userId: z.coerce.number().positive(),
       }),
       query: z.object({
-        removeControlPoints: z.coerce.boolean().optional().default(true),
+        removeControlPoints: z.stringbool().optional().default(true),
       }),
     }),
     async (req, res) => {

@@ -46,28 +46,29 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return list of group roomsGroup
-   *     summary: Gets a list of group roomsGroup
+   *     summary: List the groups of a category
+   *     description: >-
+   *       Returns the groups of a category. The category must belong to the given context.
    *     tags:
    *       - Rooms Group
    *     parameters:
-   *      - in: path
-   *        name: contextId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: categoryId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: contextId
+   *         description: Dynamic ID of the group context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: categoryId
+   *         description: Dynamic ID of the category, which must belong to that context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The groups of the category (an empty array if there are none).
    *         content:
    *           application/json:
    *             schema:
@@ -75,7 +76,11 @@ module.exports = function (
    *               items:
    *                $ref: '#/components/schemas/CategoryEvent'
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           `contextId` is not a context ("The context Id provided does not represent a context"), or
+   *           the category does not belong to it ("The category does not belong to the context").
+   *       401:
+   *         description: The profile is not allowed to read this context.
    */
 
   app.get(

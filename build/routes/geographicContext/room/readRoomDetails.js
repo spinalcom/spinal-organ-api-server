@@ -27,34 +27,43 @@ const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getRoomDetailsInfo_1 = require("../../../utilities/getRoomDetailsInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/room/{id}/read_details:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: read details of room
-   *     summary: Gets details of room
-   *     tags:
-   *       - Geographic Context
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/RoomDetails'
-   *       400:
-   *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/room/{id}/read_details:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: Get the area and BIM objects of a room
+     *     description: >-
+     *       Returns the `area` of the room (read from the `area` attribute of its `Spatial` category),
+     *       its `bimFileId`, and `_bimObjects`, the BIM objects attached to it grouped by BIM file with
+     *       their dbids.
+     *
+     *
+     *       This is the BIM-oriented view of a room. For its attributes, endpoints and groups use
+     *       `/api/v1/room/{id}/read_static_details`.
+     *     tags:
+     *       - Geographic Context
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the room.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The area and BIM objects of the room.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/RoomDetails'
+     *       401:
+     *         description: The profile is not allowed to read this room.
+     *       500:
+     *         description: The room could not be loaded, or it is not of type `geographicRoom`.
+     */
     app.get("/api/v1/room/:id/read_details", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

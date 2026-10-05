@@ -41,7 +41,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                     analysisModuleVersion:
      *                       type: string
      *       400:
-     *         description: Bad request
+     *         description: The analytic could not be loaded, or it could not be deleted.
      */
     app.delete("/api/v1/analysis/analytics/:analyticId", async (req, res, next) => {
         try {

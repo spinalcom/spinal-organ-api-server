@@ -38,13 +38,28 @@ module.exports = function (logger, app: express.Express) {
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return node type list of workflow
-   *     summary: Get type list in workflow
+   *     summary: List the node types used by workflows
+   *     description: >-
+   *       Returns the fixed list of node types the ticketing service uses : the workflow context type,
+   *       the process type, the step type and the ticket type.
+   *
+   *
+   *       This is a **constant** : the `id` in the path is not read, the workflow is never loaded, and
+   *       the answer is the same for any value. It is there to mirror the `nodeTypeList` route of the
+   *       other contexts.
    *     tags:
    *       - Workflow & ticket
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         description: Not used. Any value is accepted.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The node types used by workflows.
    *         content:
    *           application/json:
    *             schema:

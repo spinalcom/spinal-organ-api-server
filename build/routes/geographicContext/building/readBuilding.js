@@ -33,19 +33,31 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: read building
-     *     summary: Gets building
+     *     summary: Read the building
+     *     description: >-
+     *       Returns the **first building of the first geographic context** the profile can reach, with
+     *       its `address` (the `Adresse` attribute of its `Spinal Building Information` category) and its
+     *       `area` (the `area` attribute of its `Spatial` category).
+     *
+     *
+     *       There is no building ID to pass : a twin holding several geographic contexts or several
+     *       buildings will always be answered with the first one. Attributes that are missing simply come
+     *       back as `undefined`.
      *     tags:
      *       - Geographic Context
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The building with its address and area.
      *         content:
      *           application/json:
      *             schema:
      *                $ref: '#/components/schemas/Building'
-     *       400:
-     *         description: Bad request
+     *       401:
+     *         description: The profile is not allowed to read the graph.
+     *       500:
+     *         description: >-
+     *           The profile graph could not be read, or the twin holds no geographic context or no
+     *           building.
      */
     app.get('/api/v1/building/read', async (req, res, next) => {
         try {

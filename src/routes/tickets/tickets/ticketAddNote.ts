@@ -40,20 +40,23 @@ module.exports = function (
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: add a note
-   *     summary: add a note
+   *         - write
+   *     summary: Add a note to a ticket
+   *     description: >-
+   *       Appends a note to a ticket. The notes of a ticket are returned by its `read_details`, and by
+   *       the generic `/api/v1/node/{id}/note_list`.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
    *       - in: path
    *         name: ticketId
-   *         description: use the dynamic ID
+   *         description: Dynamic ID of the ticket.
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
@@ -63,11 +66,20 @@ module.exports = function (
    *             properties:
    *               note:
    *                 type: string
+   *                 description: The text of the note.
    *     responses:
    *       201:
-   *         description: Add Successfully
+   *         description: The note was added.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
    *       400:
-   *         description: Add not Successfully
+   *         description: The ticket ID or the note is missing ("Note content is required").
+   *       401:
+   *         description: The profile is not allowed to write on this ticket.
+   *       500:
+   *         description: The ticket could not be loaded, or it is not a ticket node.
    */
   app.post('/api/v1/ticket/:ticketId/add_note', async (req, res) => {
     try {

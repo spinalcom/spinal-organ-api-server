@@ -33,27 +33,33 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Return entity of ticket
-     *     summary: Get entity of ticket
+     *     summary: Get the element a ticket was declared on
+     *     description: >-
+     *       Returns the node the ticket concerns - the room, equipment or other element it was attached
+     *       to at creation - in its short form (`dynamicId`, `staticId`, `name`, `type`).
      *     tags:
      *       - Workflow & ticket
      *     parameters:
-     *      - in: path
-     *        name: ticketId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
+     *       - in: path
+     *         name: ticketId
+     *         description: Dynamic ID of the ticket.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The element the ticket concerns.
      *         content:
      *           application/json:
      *             schema:
      *                $ref: '#/components/schemas/BasicNode'
-     *       400:
-     *         description: Bad request
+     *       401:
+     *         description: The profile is not allowed to read this ticket.
+     *       404:
+     *         description: The ticket is not attached to any element ("Entity not found").
+     *       500:
+     *         description: The ticket could not be loaded, or it is not a ticket node.
      */
     app.get('/api/v1/ticket/:ticketId/find_entity', async (req, res) => {
         try {

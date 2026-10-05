@@ -44,21 +44,32 @@ module.exports = function (
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: insert new value
-   *     summary: insert new value
+   *         - write
+   *     summary: Record a value in the time series at a given date
+   *     description: >-
+   *       Records a value in the endpoint's time series **at the date given in the body**, which makes
+   *       it the route to backfill history. The time series is created if the endpoint does not have
+   *       one yet.
+   *
+   *
+   *       Accepted date formats are `DD-MM-YYYY HH:mm:ss`, `DD MM YYYY HH:mm:ss` and
+   *       `DD/MM/YYYY HH:mm:ss`, parsed in the server's local time. A date in any other format is
+   *       rejected with 400.
+   *
+   *
+   *       This writes only the history; the `currentValue` of the endpoint is left untouched. The route
+   *       answers **200 with an empty body**.
    *     tags:
    *       - IoTNetwork & Time Series
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the endpoint.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     requestBody:
-   *       description: the date format is "DD-MM-YYYY HH:mm:ss" or "DD MM YYYY HH:mm:ss" or "DD/MM/YYYY HH:mm:ss"
    *       required: true
    *       content:
    *         application/json:
@@ -68,15 +79,19 @@ module.exports = function (
    *               - newValue
    *               - date
    *             properties:
-   *                newValue:
+   *               newValue:
    *                 type: number
-   *                date:
+   *               date:
    *                 type: string
+   *                 description: When the value was measured.
+   *                 example: 31-01-2024 14:30:00
    *     responses:
    *       200:
-   *         description: Create Successfully
+   *         description: The value was recorded. The body is empty.
    *       400:
-   *         description: Bad request
+   *         description: The endpoint could not be loaded, or the date could not be parsed.
+   *       401:
+   *         description: The profile is not allowed to write on this endpoint.
    */
 
   app.post('/api/v1/endpoint/:id/timeSeries/insert', async (req, res, next) => {

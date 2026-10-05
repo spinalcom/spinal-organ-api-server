@@ -36,28 +36,52 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: create network context
-     *     summary: create network context
+     *         - write
+     *     summary: Create a network context with its first network
+     *     description: >-
+     *       Creates a context of type `Network` holding one `NetworkVirtual` network, and adds the
+     *       context to the profile graph so the caller can see it right away.
+     *
+     *
+     *       Both names are taken as given : calling this twice with the same `contextName` reuses the
+     *       existing context rather than failing. Unlike the device and endpoint create routes, this one
+     *       waits for the write and returns the created nodes with their dynamic IDs.
      *     tags:
      *       - IoTNetwork & Time Series
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
      *             type: object
      *             required:
-     *               - configNetworkContext
+     *               - contextName
+     *               - networkName
      *             properties:
-     *                contextName:
+     *               contextName:
      *                 type: string
-     *                networkName:
+     *                 description: Name of the context to create. Its type is always `Network`.
+     *               networkName:
      *                 type: string
+     *                 description: Name of the first network. Its type is always `NetworkVirtual`.
      *     responses:
      *       200:
-     *         description: Create Successfully
+     *         description: The created context and network, each with its `dynamicId`.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 context:
+     *                   type: object
+     *                   description: The `info` of the context node, plus its `dynamicId`.
+     *                 network:
+     *                   type: object
+     *                   description: The `info` of the network node, plus its `dynamicId`.
      *       400:
-     *         description: Bad request
+     *         description: The context or the network could not be created.
+     *       401:
+     *         description: The profile is not allowed to write on the graph.
      */
     app.post("/api/v1/IoTNetworkContext/create", async (req, res, next) => {
         try {

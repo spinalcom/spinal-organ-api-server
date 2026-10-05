@@ -31,57 +31,68 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-  * @swagger
-   * /api/v1/endPointsGroup/{contextId}/category/{categoryId}/group/{groupId}/update:
-   *   put:
-   *     security:
-   *       - bearerAuth:
-   *         - read
-   *     description: update group endPoints Group
-   *     summary: update group endPoints Group
-   *     tags:
-   *       - EndPoints Group
-   *     parameters:
-   *      - in: path
-   *        name: contextId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: categoryId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: groupId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     requestBody:
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - newNameGroup
-   *               - newNameColor
-   *             properties:
-   *                newNameGroup:
-   *                 type: string
-   *                newNameColor:
-   *                 type: string
-   *     responses:
-   *       200:
-   *         description: Update Successfully
-   *       400:
-   *         description: Bad request
-  */
+     * @swagger
+     * /api/v1/endPointsGroup/{contextId}/category/{categoryId}/group/{groupId}/update:
+     *   put:
+     *     security:
+     *       - bearerAuth:
+     *         - write
+     *     summary: Rename a group and change its colour
+     *     description: >-
+     *       Updates the name and the colour of a group. Both fields are applied, so send the current
+     *       colour to keep it. The category and the group must belong to the given context.
+     *     tags:
+     *       - EndPoints Group
+     *     parameters:
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: groupId
+     *         description: Dynamic ID of the group, which must belong to that category.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - newNameGroup
+     *             properties:
+     *               newNameGroup:
+     *                 type: string
+     *               newNameColor:
+     *                 type: string
+     *                 description: New display colour.
+     *     responses:
+     *       200:
+     *         description: The updated group.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/BasicNode'
+     *       400:
+     *         description: >-
+     *           The context, category or group could not be resolved ("context not found",
+     *           "category not found", "group not found").
+     *       401:
+     *         description: The profile is not allowed to write on this context.
+     */
     app.put("/api/v1/endPointsGroup/:contextId/category/:categoryId/group/:groupId/update", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

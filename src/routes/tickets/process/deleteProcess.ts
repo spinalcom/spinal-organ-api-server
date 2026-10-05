@@ -40,31 +40,45 @@ module.exports = function (
    *   delete:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: Delete a process
-   *     summary: delete an process and steps but NOT the tickets
+   *         - write
+   *     summary: Delete a process
+   *     description: >-
+   *       Removes a process from a workflow, with its steps. The process must belong to the given
+   *       workflow.
+   *
+   *
+   *       The tickets that were sitting in its steps are not deleted; they are left detached from any
+   *       process.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
-   *      - in: path
-   *        name: workflowId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: processId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: workflowId
+   *         description: Dynamic ID of the workflow context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: processId
+   *         description: Dynamic ID of the process, which must belong to that workflow.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     responses:
    *       200:
-   *         description: Delete Successfully
+   *         description: The process was deleted ("Delete Successfully").
+   *         content:
+   *           text/plain:
+   *             schema:
+   *               type: string
    *       400:
-   *         description: Bad request
+   *         description: The process does not belong to the workflow.
+   *       401:
+   *         description: The profile is not allowed to write on this workflow.
+   *       500:
+   *         description: The workflow or the process could not be loaded, or is not of the expected type.
    */
 
   app.delete(

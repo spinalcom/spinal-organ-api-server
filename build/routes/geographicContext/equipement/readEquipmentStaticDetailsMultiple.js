@@ -27,47 +27,56 @@ const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getStaticDetailsInfo_1 = require("../../../utilities/getStaticDetailsInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/equipment/read_static_details_multiple:
-   *   post:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Read static details of multiple equipments
-   *     summary: Gets static details of multiple equipments
-   *     tags:
-   *       - Geographic Context
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: array
-   *             items:
-   *               type: integer
-   *               format: int64
-   *     responses:
-   *       200:
-   *         description: Success - All equipment static details fetched
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                 $ref: '#/components/schemas/StaticDetailsRoom'
-   *       206:
-   *         description: Partial Content - Some equipment static details could not be fetched
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                 oneOf:
-   *                   - $ref: '#/components/schemas/StaticDetailsRoom'
-   *                   - $ref: '#/components/schemas/Error'
-   *       400:
-   *         description: Bad request
-   */
+     * @swagger
+     * /api/v1/equipment/read_static_details_multiple:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: Get everything known about several equipments at once
+     *     description: >-
+     *       Batch version of `/api/v1/equipment/{id}/read_static_details` : the body is an array of
+     *       dynamic IDs and the response holds the full static description of one equipment per ID, in
+     *       the same order.
+     *
+     *
+     *       Each equipment is read independently : a failure turns its slot into an error object and the
+     *       response comes back with **206 Partial Content**. These entries are large, so keep the
+     *       batches small. At most 1000 IDs per call (configurable through `MULTIPLE_ROUTE_IDS_LIMIT`).
+     *     tags:
+     *       - Geographic Context
+     *     requestBody:
+     *       required: true
+     *       description: The dynamic IDs of the equipments.
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: array
+     *             items:
+     *               type: integer
+     *               format: int64
+     *     responses:
+     *       200:
+     *         description: Every equipment was read.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 $ref: '#/components/schemas/StaticDetailsRoom'
+     *       206:
+     *         description: At least one equipment could not be read; those slots hold an error object instead.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 oneOf:
+     *                   - $ref: '#/components/schemas/StaticDetailsRoom'
+     *                   - $ref: '#/components/schemas/Error'
+     *       400:
+     *         description: The body is not an array, or it holds more IDs than the configured limit.
+     */
     app.post('/api/v1/equipment/read_static_details_multiple', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

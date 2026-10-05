@@ -38,37 +38,53 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Retrieve parents of multiple nodes based on context and relations.
-   *     summary: Retrieve parents of multiple nodes based on context and relations
+   *     summary: List the parents of several nodes inside one context
+   *     description: >-
+   *       Batch version of `POST /api/v1/context/{idContext}/node/{idNode}/parents` : every entry is
+   *       walked inside the same context `id`, and the response holds one `{ dynamicId, nodes }` entry
+   *       per request entry, in the same order.
+   *
+   *
+   *       Each node is walked independently : one that cannot be read does not fail the request, its
+   *       entry becomes `{ dynamicId, error }` and the response is returned with
+   *       **206 Partial Content**.
    *     tags:
    *       - Nodes
    *     parameters:
    *       - in: path
    *         name: id
-   *         description: Context dynamic Id
+   *         description: Dynamic ID of the context every walk stays in.
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
    *     requestBody:
    *       required: true
+   *       description: >-
+   *         One entry per node. `relations` is the list of relation names to follow for that node; an
+   *         empty array follows every relation it carries. At most 1000 entries per call (configurable
+   *         on the organ through `MULTIPLE_ROUTE_IDS_LIMIT`).
    *       content:
    *         application/json:
    *           schema:
    *             type: array
    *             items:
    *               type: object
+   *               required:
+   *                 - dynamicId
+   *                 - relations
    *               properties:
    *                 dynamicId:
    *                   type: integer
    *                   format: int64
+   *                   description: Dynamic ID of the node to walk.
    *                 relations:
    *                   type: array
    *                   items:
    *                     type: string
    *     responses:
    *       200:
-   *         description: Success - All parent nodes information for the specified relations fetched successfully.
+   *         description: Every node was walked.
    *         content:
    *           application/json:
    *             schema:
@@ -76,7 +92,7 @@ module.exports = function (
    *               items:
    *                 $ref: '#/components/schemas/BasicNodeMultiple'
    *       206:
-   *         description: Partial Content - Some parent node information based on the specified relations could not be fetched.
+   *         description: At least one node could not be walked; those entries hold an error instead.
    *         content:
    *           application/json:
    *             schema:
@@ -86,7 +102,7 @@ module.exports = function (
    *                   - $ref: '#/components/schemas/BasicNodeMultiple'
    *                   - $ref: '#/components/schemas/Error'
    *       400:
-   *         description: Bad request - Invalid input or parameters.
+   *         description: The body is not an array, it holds more entries than the configured limit, or the walk failed.
    */
   app.post('/api/v1/context/:id/node/parents_multiple', async (req, res) => {
     try {

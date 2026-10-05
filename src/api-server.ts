@@ -28,6 +28,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import type SpinalAPIMiddleware from './spinalAPIMiddleware';
 import routes from './routes/routes';
+import { requestActivity } from './preloadingScript/requestActivity';
 import morgan = require('morgan');
 import chalk from 'chalk';
 import { nanoid } from 'nanoid/non-secure';
@@ -171,6 +172,9 @@ function APIServer(
   spinalAPIMiddleware: SpinalAPIMiddleware
 ): express.Express {
   const app = express();
+  // first in the chain : it measures the whole lifecycle of every request, and
+  // the snapshot preloader uses it to only work while the organ is idle
+  app.use(requestActivity.middleware);
   app.use((req, res, next) => {
     res.setHeader('X-API-Version', process.env.API_SERVER_VERSION);
     next();

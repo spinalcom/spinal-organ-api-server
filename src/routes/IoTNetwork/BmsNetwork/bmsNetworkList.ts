@@ -35,13 +35,16 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return list of Network
-   *     summary: Gets a list of Network
+   *     summary: List the networks of the network context
+   *     description: >-
+   *       Returns the `BmsNetwork` nodes held by the **first** context of type `Network` the profile
+   *       can reach. A twin holding several network contexts will always be answered with the first
+   *       one; walk `/api/v1/IoTNetworkContext/{id}/tree` to reach the others.
    *     tags:
    *      - IoTNetwork & Time Series
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The networks of the context (an empty array if there are none).
    *         content:
    *           application/json:
    *             schema:
@@ -49,7 +52,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *               items:
    *                $ref: '#/components/schemas/IoTNetwork'
    *       400:
-   *         description: Bad request
+   *         description: The profile graph could not be read ("list of networks is not loaded").
+   *       401:
+   *         description: The profile is not allowed to read the graph.
    */
 
 

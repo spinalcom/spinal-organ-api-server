@@ -51,12 +51,66 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Get time series for multiple IDs
-   *     summary: Get time series for multiple IDs
+   *     summary: Read the time series of several endpoints over an interval
+   *     description: >-
+   *       Batch version of `/api/v1/endpoint/{id}/timeSeries/read/{begin}/{end}` : the body is an array
+   *       of endpoint dynamic IDs and the response holds one entry per ID, in the same order.
+   *
+   *
+   *       The same `aggregation` and `bucket` options apply, and they shape each entry the same way :
+   *       raw points by default, aggregated measures with `aggregation`, per-bucket values with
+   *       `bucket`. `twavg` is the time-weighted average, which weighs every value by how long it
+   *       stayed in place.
+   *
+   *
+   *       Each endpoint is read independently : a failure turns its entry into `{ dynamicId, error }`
+   *       and the response comes back with **206 Partial Content**. At most 1000 IDs per call
+   *       (configurable through `MULTIPLE_TIMESERIES_IDS_LIMIT`).
    *     tags:
    *       - IoTNetwork & Time Series
+   *     parameters:
+   *       - in: path
+   *         name: begin
+   *         description: Start of the interval, as `DD-MM-YYYY HH:mm:ss` or `DD MM YYYY HH:mm:ss`.
+   *         required: true
+   *         schema:
+   *           type: string
+   *       - in: path
+   *         name: end
+   *         description: End of the interval, same formats as `begin`.
+   *         required: true
+   *         schema:
+   *           type: string
+   *       - in: query
+   *         name: valueAtBegin
+   *         description: >-
+   *           Set to `true` to prepend, for each endpoint, the last value known before `begin`.
+   *         required: false
+   *         schema:
+   *           type: string
+   *           enum: [false, true]
+   *           default: 'false'
+   *       - in: query
+   *         name: aggregation
+   *         description: >-
+   *           Comma-separated measures to compute instead of the raw points : `sum`, `min`, `max`,
+   *           `avg`, `twavg` (alias `time_weighted_avg`), or `all`.
+   *         required: false
+   *         schema:
+   *           type: string
+   *           example: "sum,min,max,avg"
+   *       - in: query
+   *         name: bucket
+   *         description: >-
+   *           Split the interval into sub-intervals of this size and aggregate inside each one.
+   *           Accepts `hour`, `day`, `week` and `month`.
+   *         required: false
+   *         schema:
+   *           type: string
+   *           example: "hour"
    *     requestBody:
    *       required: true
+   *       description: The dynamic IDs of the endpoints.
    *       content:
    *         application/json:
    *           schema:
@@ -64,50 +118,9 @@ module.exports = function (
    *             items:
    *               type: integer
    *               format: int64
-   *     parameters:
-   *      - in: path
-   *        name: begin
-   *        description: Date Format is DD-MM-YYYY HH:mm:ss or DD MM YYYY HH:mm:ss
-   *        required: true
-   *        schema:
-   *          type: string
-   *      - in: path
-   *        name: end
-   *        description: Date Format is DD-MM-YYYY HH:mm:ss or DD MM YYYY HH:mm:ss
-   *        required: true
-   *        schema:
-   *          type: string
-   *      - in: query
-   *        name: valueAtBegin
-   *        description: If true, the last known timeserie before the begin date will be included. Default is 'false'.
-   *        required: false
-   *        schema:
-   *          type: string
-   *          enum: [false, true]
-   *      - in: query
-   *        name: aggregation
-   *        description: >
-   *          Comma-separated list of aggregation operations to apply on each endpoint's data.
-   *          Supported values: sum, min, max, avg, twavg, time_weighted_avg, all.
-   *          Use 'all' to get sum, min, max, avg and twavg at once.
-   *          If not provided, raw time series data is returned for each endpoint.
-   *        required: false
-   *        schema:
-   *          type: string
-   *          example: "min,max,avg,twavg"
-   *      - in: query
-   *        name: bucket
-   *        description: >
-   *          Split the interval into sub-intervals of the given size and compute
-   *          the requested aggregations per bucket. If no aggregation is specified,
-   *          defaults to twavg. Supported formats: hour, day, week, month.
-   *        required: false
-   *        schema:
-   *          type: string
-   *          example: "hour"
    *     responses:
    *       200:
-   *         description: Success - All time series data fetched
+   *         description: Every endpoint was read.
    *         content:
    *           application/json:
    *             schema:
@@ -115,7 +128,7 @@ module.exports = function (
    *               items:
    *                 $ref: '#/components/schemas/TimeserieWithID'
    *       206:
-   *         description: Partial Content - Some time series data could not be fetched
+   *         description: At least one endpoint could not be read; those entries hold an error instead.
    *         content:
    *           application/json:
    *             schema:
@@ -125,7 +138,9 @@ module.exports = function (
    *                   - $ref: '#/components/schemas/TimeserieWithID'
    *                   - $ref: '#/components/schemas/Error'
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           The body is not an array, it holds more IDs than the configured limit, a date could not
+   *           be parsed ("invalid date"), or the `aggregation` value is unknown.
    */
 
   app.post(

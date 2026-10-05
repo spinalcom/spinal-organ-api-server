@@ -37,50 +37,10 @@ module.exports = function (
   app: express.Express,
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
-  /**
-   * @swagger
-   * /api/v1/groupContext/{contextId}/category/{categoryId}/group/{groupId}/read:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: read group
-   *     summary: Get group
-   *     tags:
-   *       - Group Context
-   *     parameters:
-   *      - in: path
-   *        name: contextId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: categoryId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: groupId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/BasicNode'
-   *       400:
-   *         description: Bad request
-   */
-
+  // This handler is not mounted : routes.ts does not require this file, and
+  // GET /api/v1/groupContext/{contextId}/category/{categoryId}/group/{groupId}/read is served by
+  // group/readGroup.ts. The OpenAPI block was removed from here so the published spec describes the
+  // route that actually runs.
   app.get(
     '/api/v1/groupContext/:contextId/category/:categoryId/group/:groupId/read',
     async (req, res, next) => {

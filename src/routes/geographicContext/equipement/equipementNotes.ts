@@ -37,21 +37,23 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns notes of equipement
-   *     summary: Get list notes of equipement
+   *     summary: List the notes attached to an equipment
+   *     description: >-
+   *       Returns the notes written on a piece of equipment as `{ date, type, message }`, where `date` is
+   *       a timestamp in milliseconds. The node must be of type `BIMObject`.
    *     tags:
    *       - Geographic Context
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the equipment (a `BIMObject`).
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The requested list (empty when there is nothing).
    *         content:
    *           application/json:
    *             schema:
@@ -59,7 +61,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *               items:
    *                $ref: '#/components/schemas/Note'
    *       400:
-   *         description: Bad request
+   *         description: The node is not a `BIMObject`.
+   *       401:
+   *         description: The profile is not allowed to read this equipment.
+   *       500:
+   *         description: The equipment could not be loaded or its notes could not be read.
    */
   app.get('/api/v1/equipement/:id/note_list', async (req, res, next) => {
     try {
