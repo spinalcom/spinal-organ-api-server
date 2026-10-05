@@ -29,7 +29,7 @@ import type { Express } from 'express';
 import { SpinalNode } from 'spinal-model-graph';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { parseAttributesQuery } from '../../../utilities/geographicContext_v2/parseAttributesQuery';
-import { getNodeData } from '../models/getNodeData';
+import { getNodeData } from '../../../utilities/node_v2/getNodeData';
 import { getBuildingNode } from '../../../utilities/geographicContext_v2/getBuilding';
 import { parseInfoQuery } from '../../../utilities/geographicContext_v2/parseInfoQuery';
 

@@ -29,8 +29,8 @@ import type {
   INodeItemAttr,
   INodeItemAttrCat,
   INodeItemInfo,
-} from './INodeItem';
-import { awaitSync } from '../../../utilities/awaitSync';
+} from '../../routes/interface/INodeItem';
+import { awaitSync } from '../awaitSync';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 import { SpinalAttribute } from 'spinal-models-documentation';
 

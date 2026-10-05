@@ -28,7 +28,7 @@ import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import type { Express } from 'express';
 import { getProfileId } from '../../../utilities/requestUtilities';
 import { addBuilding } from 'spinal-env-viewer-context-geographic-service';
-import { getNodeData } from '../models/getNodeData';
+import { getNodeData } from '../../../utilities/node_v2/getNodeData';
 import { getBuildingNode } from '../../../utilities/geographicContext_v2/getBuilding';
 import { addExtraInfoValidation } from '../../../utilities/geographicContext_v2/addExtraInfoValidation';
 import {
