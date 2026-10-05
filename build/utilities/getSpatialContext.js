@@ -24,11 +24,13 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSpatialContext = getSpatialContext;
+const spinal_env_viewer_context_geographic_service_1 = require("spinal-env-viewer-context-geographic-service");
 async function getSpatialContext(spinalAPIMiddleware, profileId) {
     const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
+    if (!userGraph)
+        throw { code: 401, message: `No graph found for ${profileId}` };
     const contexts = await userGraph.getChildren('hasContext');
-    const spatialContext = contexts.find((el) => el.getName().get() === 'spatial' &&
-        el.getType().get() === 'geographicContext');
+    const spatialContext = contexts.find((el) => el.getName().get() === 'spatial' && el.getType().get() === spinal_env_viewer_context_geographic_service_1.CONTEXT_TYPE);
     if (!spatialContext)
         throw new Error('spatial context not found');
     return spatialContext;

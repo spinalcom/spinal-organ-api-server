@@ -1713,6 +1713,121 @@
           }
         }
       },
+      "INodeItem": {
+        "type": "object",
+        "required": [
+          "dynamicId"
+        ],
+        "properties": {
+          "dynamicId": {
+            "type": "number"
+          },
+          "info": {
+            "$ref": "#/components/schemas/INodeItemInfo"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/INodeItemAttr"
+          }
+        },
+        "example": {
+          "dynamicId": 123,
+          "info": {
+            "staticId": "abc123",
+            "name": "Node Name",
+            "type": "Node Type",
+            "color": "#FFFFFF",
+            "directModificationDate": 1627849200
+          },
+          "attributes": {
+            "categoryName1_without_add-attributes-modification-date": {
+              "attributeName1": "example value"
+            },
+            "categoryName2_with_add-attributes-modification-date": {
+              "attributeName2": {
+                "value": "example value",
+                "lastModification": 1627849200
+              }
+            }
+          }
+        }
+      },
+      "INodeItemInfo": {
+        "description": "Information about the node item",
+        "type": "object",
+        "properties": {
+          "staticId": {
+            "type": "string",
+            "description": "Static ID of the node (unique id from the database)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the node"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the node"
+          },
+          "color": {
+            "type": "string",
+            "description": "Color of the node must be in hexadecimal format (e.g.,"
+          },
+          "directModificationDate": {
+            "type": "number",
+            "description": "Timestamp of the direct modification date of the node"
+          }
+        },
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "INodeItemAttr": {
+        "type": "object",
+        "description": "Attributes of the node item categorized by category name",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "description": "Value of the attribute. Depending on the add-attributes-modification-date flag, either as a string or an object with its value and last modification date",
+            "oneOf": [
+              {
+                "type": "string",
+                "description": "Attribute value as a string"
+              },
+              {
+                "type": "object",
+                "description": "Attribute value along with its last modification date",
+                "$ref": "#/components/schemas/INodeItemAttrCatAttrAndDate"
+              }
+            ]
+          }
+        }
+      },
+      "INodeItemAttrCatAttrAndDate": {
+        "type": "object",
+        "description": "attribute value and its last modification date",
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "lastModification": {
+            "type": "number"
+          }
+        },
+        "example": {
+          "value": "example value",
+          "lastModification": 1627849200
+        }
+      },
       "HealthStatus": {
         "type": "object",
         "properties": {
@@ -18672,6 +18787,147 @@
         }
       }
     },
+    "/api/v1/analysis/analyticOptions": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "description": "Returns the analytic-level option metadata used to build the analysis form: the available work-node concurrency modes (with their configurable fields and which is the default), the available lifecycle statuses (with which is the default), and the available error policies (with which is the default). Lets clients render concurrency/status/errorPolicy selectors generically, the same way triggerTypes drives the trigger form. Single source of truth for the selectable values of `concurrency`, `status` and `errorPolicy` in IAnalysisConfigJSON.\n",
+        "summary": "Gets the selectable concurrency modes, lifecycle statuses and error policies for an analytic",
+        "tags": [
+          "Analysis"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "concurrencyModes": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "mode": {
+                                "type": "string",
+                                "enum": [
+                                  "BOUNDED",
+                                  "FULL",
+                                  "SEQUENTIAL"
+                                ]
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "default": {
+                                "type": "boolean",
+                                "description": "Whether this is the mode applied when none is specified"
+                              },
+                              "fields": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "string",
+                                        "number",
+                                        "boolean"
+                                      ]
+                                    },
+                                    "description": {
+                                      "type": "string"
+                                    },
+                                    "required": {
+                                      "type": "boolean"
+                                    },
+                                    "default": {
+                                      "description": "Value to pre-fill when none is provided"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "statuses": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "string",
+                                "enum": [
+                                  "Active",
+                                  "Inactive"
+                                ]
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "default": {
+                                "type": "boolean",
+                                "description": "Whether this is the value applied when none is specified"
+                              }
+                            }
+                          }
+                        },
+                        "errorPolicies": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "string",
+                                "enum": [
+                                  "continue",
+                                  "stop"
+                                ]
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "default": {
+                                "type": "boolean",
+                                "description": "Whether this is the value applied when none is specified"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "analysisModuleVersion": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
     "/api/v1/analysis/inputTypes": {
       "get": {
         "security": [
@@ -18803,6 +19059,202 @@
           },
           "400": {
             "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/analysis/organs": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "List analysis organs and their assignment records",
+        "description": "Lists every organ that has an assignment file in /etc/Organs/Analysis, with its enabled flag and assigned analytic ids.",
+        "tags": [
+          "Analysis"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/analysis/organs/{organName}/assignment": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Get one organ's assignment record",
+        "description": "Returns { enabled, analytics }. If the organ has no file yet, returns exists=false with run-all defaults.",
+        "tags": [
+          "Analysis"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Set an organ's assignment record",
+        "description": "Sets `enabled` and/or replaces `analytics`. Creates the organ's file if it doesn't exist yet.",
+        "tags": [
+          "Analysis"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "analytics": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v1/analysis/organs/{organName}/analytics/{analyticId}": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Assign one analysis to an organ",
+        "description": "Adds the analysis id to the organ's list (creating the file if needed). Idempotent.",
+        "tags": [
+          "Analysis"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "analyticId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assigned"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Unassign one analysis from an organ",
+        "description": "Removes the analysis id from the organ's list. 404 if the organ has no file.",
+        "tags": [
+          "Analysis"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "organName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "analyticId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Unassigned"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Organ has no assignment file"
           }
         }
       }
@@ -19288,6 +19740,710 @@
           },
           "400": {
             "description": "Bad request"
+          }
+        }
+      }
+    },
+    "/api/v2/building": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "create the building",
+        "description": "Create a building.",
+        "tags": [
+          "geographicContext"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "info": {
+                    "type": "object",
+                    "description": "Information about the building, including its name, color, and icon. the following fields are forbidden 'id', 'staticId', 'type', 'dynamicId'",
+                    "required": [
+                      "name"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "name of the building",
+                        "maxLength": 200,
+                        "minLength": 1
+                      },
+                      "color": {
+                        "type": "string",
+                        "description": "Hexadecimal color code for the building (e.g.,",
+                        "pattern": "^#([A-Fa-f0-9]{6})$"
+                      },
+                      "icon": {
+                        "type": "string",
+                        "description": "icon of the building"
+                      },
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "description": "add attributes to building",
+                    "properties": {
+                      "Spatial": {
+                        "type": "object",
+                        "description": "Spatial attributes category of the building",
+                        "properties": {
+                          "area": {
+                            "type": "string",
+                            "description": "Area of the building"
+                          }
+                        }
+                      },
+                      "Spinal Building Information": {
+                        "type": "object",
+                        "description": "Spinal Building Information attribute category of the building",
+                        "properties": {
+                          "area": {
+                            "type": "string",
+                            "description": "Area of the building"
+                          }
+                        },
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "info"
+                ],
+                "example": {
+                  "info": {
+                    "name": "Building Name",
+                    "color": "#FF0000",
+                    "icon": "building-icon"
+                  },
+                  "attributes": {
+                    "Spatial": {
+                      "area": "20"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "$ref": "#/components/schemas/INodeItem"
+                    },
+                    "error": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve the building",
+        "description": "Retrieve a building.",
+        "tags": [
+          "geographicContext"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "info",
+            "required": false,
+            "description": "Add fields information to the response. Can be \"true\" or a comma-separated list like \"staticId,name\". \"true\" will include all fields and in the latter case, \"false\" or omitting the parameter will include the default fields if present ('staticId','name', 'type', 'color', 'icon', 'virtual', 'bimFileId', 'dbid'),",
+            "schema": {
+              "type": "string"
+            },
+            "example": false
+          },
+          {
+            "in": "query",
+            "name": "attributes",
+            "required": false,
+            "description": "Add attributes to the response. Can be \"true\" or a comma-separated list like \"Spatial/area,Spatial/volume,OtherCategories\". \"true\" will include all attributes from all categories and in the latter case, inputting only the category will include all the attributes within that category. \"false\" or omitting the parameter will include no attributes.",
+            "schema": {
+              "type": "string"
+            },
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "add-attributes-modification-date",
+            "required": false,
+            "description": "add the modification date of the attributes",
+            "example": "",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieve Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "$ref": "#/components/schemas/INodeItem"
+                    },
+                    "error": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/api/v2/floor": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "create a floor",
+        "description": "Create a floor.",
+        "tags": [
+          "geographicContext"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "info": {
+                    "type": "object",
+                    "description": "Information about the floor, including its name, color, and icon. The following fields are forbidden 'id', 'staticId', 'type', 'dynamicId'",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "name of the floor",
+                        "maxLength": 200,
+                        "minLength": 1
+                      },
+                      "color": {
+                        "type": "string",
+                        "description": "Hexadecimal color code for the floor (e.g.,",
+                        "pattern": "^#([A-Fa-f0-9]{6})$"
+                      },
+                      "icon": {
+                        "type": "string",
+                        "description": "icon of the floor"
+                      },
+                      "virtual": {
+                        "type": "boolean",
+                        "description": "status of the floor (virtual or not)",
+                        "default": false
+                      },
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "description": "add attributes to floor",
+                    "properties": {
+                      "Spatial": {
+                        "type": "object",
+                        "description": "Spatial attributes category of the floor",
+                        "properties": {
+                          "area": {
+                            "type": "string",
+                            "description": "Area of the floor"
+                          }
+                        },
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "linkToGroups": {
+                    "type": "array",
+                    "description": "link the floor to groups",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "contextDynamicId": {
+                          "type": "number",
+                          "minimum": 1
+                        },
+                        "groupDynamicId": {
+                          "type": "number",
+                          "minimum": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "info"
+                ],
+                "example": {
+                  "info": {
+                    "name": "Floor Name",
+                    "color": "#FF0000",
+                    "icon": "floor-icon"
+                  },
+                  "attributes": {
+                    "Spatial": {
+                      "area": "20"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "$ref": "#/components/schemas/INodeItem"
+                    },
+                    "error": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v2/room": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "create a room",
+        "description": "Create a room.",
+        "tags": [
+          "geographicContext"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "dynamicFloorId": {
+                    "type": "number",
+                    "description": "The dynamic ID of the floor to which the room belongs",
+                    "minimum": 1
+                  },
+                  "info": {
+                    "type": "object",
+                    "description": "Information about the room, including its name, color, and icon. The following fields are forbidden 'id', 'staticId', 'type', 'dynamicId'",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "name of the room",
+                        "maxLength": 200,
+                        "minLength": 1
+                      },
+                      "color": {
+                        "type": "string",
+                        "description": "Hexadecimal color code for the room (e.g.,",
+                        "pattern": "^#([A-Fa-f0-9]{6})$"
+                      },
+                      "icon": {
+                        "type": "string",
+                        "description": "icon of the room"
+                      },
+                      "virtual": {
+                        "type": "boolean",
+                        "description": "status of the room (virtual or not)",
+                        "default": false
+                      },
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "description": "add attributes to room",
+                    "properties": {
+                      "Spatial": {
+                        "type": "object",
+                        "description": "Spatial attributes category of the room",
+                        "properties": {
+                          "area": {
+                            "type": "string",
+                            "description": "Area of the room"
+                          }
+                        },
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "linkToGroups": {
+                    "type": "array",
+                    "description": "link the room to groups",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "contextDynamicId": {
+                          "type": "number",
+                          "minimum": 1
+                        },
+                        "groupDynamicId": {
+                          "type": "number",
+                          "minimum": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "dynamicFloorId",
+                  "info"
+                ],
+                "example": {
+                  "dynamicFloorId": 123456789,
+                  "info": {
+                    "name": "Room Name",
+                    "color": "#FF0000",
+                    "icon": "room-icon"
+                  },
+                  "attributes": {
+                    "Spatial": {
+                      "area": "20"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "$ref": "#/components/schemas/INodeItem"
+                    },
+                    "error": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v2/equipment": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "create an equipment",
+        "description": "Create an equipment.",
+        "tags": [
+          "geographicContext"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "dynamicRoomId",
+                  "info"
+                ],
+                "properties": {
+                  "dynamicRoomId": {
+                    "type": "number",
+                    "description": "The dynamic ID of the floor to which the equipment belongs",
+                    "minimum": 1
+                  },
+                  "info": {
+                    "type": "object",
+                    "description": "Information about the equipment, including its name, color, and icon. The following fields are forbidden 'id', 'staticId', 'type', 'dynamicId'",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "name of the equipment",
+                        "maxLength": 200,
+                        "minLength": 1
+                      },
+                      "color": {
+                        "type": "string",
+                        "description": "Hexadecimal color code for the equipment (e.g.,",
+                        "pattern": "^#([A-Fa-f0-9]{6})$"
+                      },
+                      "icon": {
+                        "type": "string",
+                        "description": "icon of the equipment"
+                      },
+                      "virtual": {
+                        "type": "boolean",
+                        "description": "status of the equipment (virtual or not)",
+                        "default": false
+                      },
+                      "dbid": {
+                        "type": "number",
+                        "description": "dbid of the equipment, for use in the APS Viewer"
+                      },
+                      "externalId": {
+                        "type": "string",
+                        "description": "External ID of the equipment comming from Revit"
+                      },
+                      "bimFileId": {
+                        "type": "string",
+                        "description": "staticId of the BimFile which the equipment belongs to"
+                      },
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "boolean"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "description": "add attributes to equipment",
+                    "properties": {
+                      "Spatial": {
+                        "type": "object",
+                        "description": "Spatial attributes category of the equipment",
+                        "properties": {
+                          "area": {
+                            "type": "string",
+                            "description": "Area of the equipment"
+                          }
+                        },
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "linkToGroups": {
+                    "type": "array",
+                    "description": "link the equipment to groups",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "contextDynamicId": {
+                          "type": "number",
+                          "minimum": 1
+                        },
+                        "groupDynamicId": {
+                          "type": "number",
+                          "minimum": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "dynamicRoomId": 123456789,
+                  "info": {
+                    "name": "equipment Name",
+                    "color": "#FF0000",
+                    "icon": "room-icon"
+                  },
+                  "attributes": {
+                    "Spatial": {
+                      "area": "20"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "$ref": "#/components/schemas/INodeItem"
+                    },
+                    "error": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or parameters"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         }
       }
@@ -23052,343 +24208,6 @@
           },
           "401": {
             "description": "no graph found for the user"
-          }
-        }
-      }
-    },
-    "/api/v1/analysis/analyticOptions": {
-      "get": {
-        "security": [
-          {
-            "bearerAuth": [
-              "readOnly"
-            ]
-          }
-        ],
-        "description": "Returns the analytic-level option metadata used to build the analysis form: the available work-node concurrency modes (with their configurable fields and which is the default), the available lifecycle statuses (with which is the default), and the available error policies (with which is the default). Lets clients render concurrency/status/errorPolicy selectors generically, the same way triggerTypes drives the trigger form. Single source of truth for the selectable values of `concurrency`, `status` and `errorPolicy` in IAnalysisConfigJSON.\n",
-        "summary": "Gets the selectable concurrency modes, lifecycle statuses and error policies for an analytic",
-        "tags": [
-          "Analysis"
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "concurrencyModes": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "mode": {
-                                "type": "string",
-                                "enum": [
-                                  "BOUNDED",
-                                  "FULL",
-                                  "SEQUENTIAL"
-                                ]
-                              },
-                              "description": {
-                                "type": "string"
-                              },
-                              "default": {
-                                "type": "boolean",
-                                "description": "Whether this is the mode applied when none is specified"
-                              },
-                              "fields": {
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "name": {
-                                      "type": "string"
-                                    },
-                                    "type": {
-                                      "type": "string",
-                                      "enum": [
-                                        "string",
-                                        "number",
-                                        "boolean"
-                                      ]
-                                    },
-                                    "description": {
-                                      "type": "string"
-                                    },
-                                    "required": {
-                                      "type": "boolean"
-                                    },
-                                    "default": {
-                                      "description": "Value to pre-fill when none is provided"
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        },
-                        "statuses": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "value": {
-                                "type": "string",
-                                "enum": [
-                                  "Active",
-                                  "Inactive"
-                                ]
-                              },
-                              "description": {
-                                "type": "string"
-                              },
-                              "default": {
-                                "type": "boolean",
-                                "description": "Whether this is the value applied when none is specified"
-                              }
-                            }
-                          }
-                        },
-                        "errorPolicies": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "value": {
-                                "type": "string",
-                                "enum": [
-                                  "continue",
-                                  "stop"
-                                ]
-                              },
-                              "description": {
-                                "type": "string"
-                              },
-                              "default": {
-                                "type": "boolean",
-                                "description": "Whether this is the value applied when none is specified"
-                              }
-                            }
-                          }
-                        }
-                      }
-                    },
-                    "meta": {
-                      "type": "object",
-                      "properties": {
-                        "analysisModuleVersion": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request"
-          }
-        }
-      }
-    },
-    "/api/v1/analysis/organs": {
-      "get": {
-        "security": [
-          {
-            "bearerAuth": [
-              "readOnly"
-            ]
-          }
-        ],
-        "summary": "List analysis organs and their assignment records",
-        "description": "Lists every organ that has an assignment file in /etc/Organs/Analysis, with its enabled flag and assigned analytic ids.",
-        "tags": [
-          "Analysis"
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "400": {
-            "description": "Bad request"
-          }
-        }
-      }
-    },
-    "/api/v1/analysis/organs/{organName}/assignment": {
-      "get": {
-        "security": [
-          {
-            "bearerAuth": [
-              "readOnly"
-            ]
-          }
-        ],
-        "summary": "Get one organ's assignment record",
-        "description": "Returns { enabled, analytics }. If the organ has no file yet, returns exists=false with run-all defaults.",
-        "tags": [
-          "Analysis"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "organName",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "400": {
-            "description": "Bad request"
-          }
-        }
-      },
-      "put": {
-        "security": [
-          {
-            "bearerAuth": [
-              "write"
-            ]
-          }
-        ],
-        "summary": "Set an organ's assignment record",
-        "description": "Sets `enabled` and/or replaces `analytics`. Creates the organ's file if it doesn't exist yet.",
-        "tags": [
-          "Analysis"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "organName",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "enabled": {
-                    "type": "boolean"
-                  },
-                  "analytics": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Updated"
-          },
-          "400": {
-            "description": "Bad request"
-          }
-        }
-      }
-    },
-    "/api/v1/analysis/organs/{organName}/analytics/{analyticId}": {
-      "post": {
-        "security": [
-          {
-            "bearerAuth": [
-              "write"
-            ]
-          }
-        ],
-        "summary": "Assign one analysis to an organ",
-        "description": "Adds the analysis id to the organ's list (creating the file if needed). Idempotent.",
-        "tags": [
-          "Analysis"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "organName",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "analyticId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Assigned"
-          },
-          "400": {
-            "description": "Bad request"
-          }
-        }
-      },
-      "delete": {
-        "security": [
-          {
-            "bearerAuth": [
-              "write"
-            ]
-          }
-        ],
-        "summary": "Unassign one analysis from an organ",
-        "description": "Removes the analysis id from the organ's list. 404 if the organ has no file.",
-        "tags": [
-          "Analysis"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "organName",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "analyticId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Unassigned"
-          },
-          "400": {
-            "description": "Bad request"
-          },
-          "404": {
-            "description": "Organ has no assignment file"
           }
         }
       }

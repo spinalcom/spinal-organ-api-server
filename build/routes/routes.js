@@ -429,6 +429,11 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./organization/roomGroup/addRoomGroupFromOrganization')(logger, app, spinalAPIMiddleware);
     require('./organization/roomGroup/deleteRoomGroupFromOrganization')(logger, app, spinalAPIMiddleware);
     require('./organization/roomGroup/getRoomGroupsFromOrganization')(logger, app, spinalAPIMiddleware);
+    require('./geographicContextV2/building/getBuilding')(logger, app, spinalAPIMiddleware);
+    require('./geographicContextV2/building/createBuilding')(logger, app, spinalAPIMiddleware);
+    require('./geographicContextV2/floor/createFloor')(logger, app, spinalAPIMiddleware);
+    require('./geographicContextV2/room/createRoom')(logger, app, spinalAPIMiddleware);
+    require('./geographicContextV2/equipment/createEquipment')(logger, app, spinalAPIMiddleware);
 }
 exports.default = routes;
 //# sourceMappingURL=routes.js.map

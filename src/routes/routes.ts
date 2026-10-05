@@ -1484,6 +1484,32 @@ function routes(
     app,
     spinalAPIMiddleware
   );
+
+  require('./geographicContextV2/building/getBuilding')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./geographicContextV2/building/createBuilding')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./geographicContextV2/floor/createFloor')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./geographicContextV2/room/createRoom')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./geographicContextV2/equipment/createEquipment')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
 }
 
 export default routes;
