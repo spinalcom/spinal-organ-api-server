@@ -96,9 +96,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             userId: zod_1.z.coerce.number().positive(),
         }),
         query: zod_1.z.strictObject({
-            attributes: zod_1.z.coerce.boolean().optional().default(false),
-            groups: zod_1.z.coerce.boolean().optional().default(false),
-            organizations: zod_1.z.coerce.boolean().optional().default(false),
+            attributes: zod_1.z.stringbool().optional().default(false),
+            groups: zod_1.z.stringbool().optional().default(false),
+            organizations: zod_1.z.stringbool().optional().default(false),
         }),
     }), async (req, res) => {
         try {

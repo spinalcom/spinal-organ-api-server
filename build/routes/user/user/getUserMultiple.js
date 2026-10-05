@@ -95,9 +95,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
     app.post('/api/v1/user/multiple', (0, express_zod_safe_1.default)({
         body: zod_1.z.strictObject({
             userDynamicIds: zod_1.z.array(zod_1.z.coerce.number().positive()).min(1).max(100),
-            attributes: zod_1.z.coerce.boolean().optional().default(false),
-            groups: zod_1.z.coerce.boolean().optional().default(false),
-            organizations: zod_1.z.coerce.boolean().optional().default(false),
+            attributes: zod_1.z.boolean().optional().default(false),
+            groups: zod_1.z.boolean().optional().default(false),
+            organizations: zod_1.z.boolean().optional().default(false),
         }),
     }), async (req, res) => {
         try {

@@ -85,7 +85,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             userId: zod_1.z.coerce.number().positive(),
         }),
         query: zod_1.z.object({
-            removeControlPoints: zod_1.z.coerce.boolean().optional().default(true),
+            removeControlPoints: zod_1.z.stringbool().optional().default(true),
         }),
     }), async (req, res) => {
         try {

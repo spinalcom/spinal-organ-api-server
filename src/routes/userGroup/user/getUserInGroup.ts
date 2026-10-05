@@ -110,9 +110,9 @@ module.exports = function (
         groupId: z.coerce.number().positive(),
       }),
       query: z.object({
-        attributes: z.coerce.boolean().optional().default(false),
-        groups: z.coerce.boolean().optional().default(false),
-        organizations: z.coerce.boolean().optional().default(false),
+        attributes: z.stringbool().optional().default(false),
+        groups: z.stringbool().optional().default(false),
+        organizations: z.stringbool().optional().default(false),
       }),
     }),
     async (req, res) => {

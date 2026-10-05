@@ -101,9 +101,9 @@ module.exports = function (
     validate({
       body: z.strictObject({
         userDynamicIds: z.array(z.coerce.number().positive()).min(1).max(100),
-        attributes: z.coerce.boolean().optional().default(false),
-        groups: z.coerce.boolean().optional().default(false),
-        organizations: z.coerce.boolean().optional().default(false),
+        attributes: z.boolean().optional().default(false),
+        groups: z.boolean().optional().default(false),
+        organizations: z.boolean().optional().default(false),
       }),
     }),
     async (req, res) => {

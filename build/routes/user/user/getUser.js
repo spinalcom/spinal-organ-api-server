@@ -131,9 +131,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 .string()
                 .regex(/^[a-zA-Z0-9]|(special)$/)
                 .optional(),
-            attributes: zod_1.z.coerce.boolean().optional().default(false),
-            groups: zod_1.z.coerce.boolean().optional().default(false),
-            organizations: zod_1.z.coerce.boolean().optional().default(false),
+            attributes: zod_1.z.stringbool().optional().default(false),
+            groups: zod_1.z.stringbool().optional().default(false),
+            organizations: zod_1.z.stringbool().optional().default(false),
             offset: zod_1.z.coerce.number().int().nonnegative().optional().default(0),
         }),
     }), async (req, res) => {

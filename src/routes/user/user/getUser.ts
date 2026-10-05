@@ -142,9 +142,9 @@ module.exports = function (
           .string()
           .regex(/^[a-zA-Z0-9]|(special)$/)
           .optional(),
-        attributes: z.coerce.boolean().optional().default(false),
-        groups: z.coerce.boolean().optional().default(false),
-        organizations: z.coerce.boolean().optional().default(false),
+        attributes: z.stringbool().optional().default(false),
+        groups: z.stringbool().optional().default(false),
+        organizations: z.stringbool().optional().default(false),
         offset: z.coerce.number().int().nonnegative().optional().default(0),
       }),
     }),

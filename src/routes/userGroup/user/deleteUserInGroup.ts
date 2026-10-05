@@ -94,7 +94,7 @@ module.exports = function (
         userId: z.coerce.number().positive(),
       }),
       query: z.object({
-        removeControlPoints: z.coerce.boolean().optional().default(true),
+        removeControlPoints: z.stringbool().optional().default(true),
       }),
     }),
     async (req, res) => {
