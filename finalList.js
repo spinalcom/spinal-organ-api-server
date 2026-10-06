@@ -836,5 +836,12 @@ module.exports = [
   "routes/userGroup/user/moveUsersInGroup.ts",
   "../src/routes/health/hubStatus.ts",
   "routes/health/hubStatus.ts",
-  "../src/routes/interface/INodeItem.ts"
+  "../src/routes/interface/INodeItem.ts",
+  "../src/routes/v2/geographicContext/building/createBuilding.ts",
+  "../src/routes/v2/geographicContext/building/getBuilding.ts",
+  "../src/routes/v2/geographicContext/equipment/createEquipment.ts",
+  "../src/routes/v2/geographicContext/floor/createFloor.ts",
+  "../src/routes/v2/geographicContext/room/createRoom.ts",
+  "../src/routes/v2/interface/IErrorItem.ts",
+  "../src/routes/v2/interface/INodeItem.ts"
 ]

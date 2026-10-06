@@ -1488,27 +1488,27 @@ function routes(
     spinalAPIMiddleware
   );
 
-  require('./geographicContextV2/building/getBuilding')(
+  require('./v2/geographicContext/building/getBuilding')(
     logger,
     app,
     spinalAPIMiddleware
   );
-  require('./geographicContextV2/building/createBuilding')(
+  require('./v2/geographicContext/building/createBuilding')(
     logger,
     app,
     spinalAPIMiddleware
   );
-  require('./geographicContextV2/floor/createFloor')(
+  require('./v2/geographicContext/floor/createFloor')(
     logger,
     app,
     spinalAPIMiddleware
   );
-  require('./geographicContextV2/room/createRoom')(
+  require('./v2/geographicContext/room/createRoom')(
     logger,
     app,
     spinalAPIMiddleware
   );
-  require('./geographicContextV2/equipment/createEquipment')(
+  require('./v2/geographicContext/equipment/createEquipment')(
     logger,
     app,
     spinalAPIMiddleware

@@ -178,20 +178,12 @@ module.exports = function (
    *         description: Bad request - Invalid input or parameters
    *         content:
    *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   $ref: '#/components/schemas/IErrorItem'
+   *             $ref: '#/components/schemas/IErrorItem'
    *       500:
    *         description: Internal server error
    *         content:
    *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   $ref: '#/components/schemas/IErrorItem'
+   *             $ref: '#/components/schemas/IErrorItem'
    */
   app.post(
     '/api/v2/equipment',

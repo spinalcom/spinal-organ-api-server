@@ -90,19 +90,7 @@ module.exports = function (
    *         content:
    *           application/json:
    *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   $ref: '#/components/schemas/IErrorItem'
-   *       404:
-   *         description: User not found
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 error:
-   *                   $ref: '#/components/schemas/IErrorItem'
+   *               $ref: '#/components/schemas/IErrorItem'
    */
   app.get(
     '/api/v2/building',

@@ -30,13 +30,11 @@ const getHTTPStatusCode_1 = require("./getHTTPStatusCode");
 function sendResponseError(res, error) {
     console.error(error);
     if ((0, createErrorMsgItem_1.isErrorItem)(error)) {
-        return res.status((0, getHTTPStatusCode_1.getHTTPStatusCode)(error)).json({ error });
+        return res.status((0, getHTTPStatusCode_1.getHTTPStatusCode)(error)).json(error);
     }
     return res.status(500).json({
-        error: {
-            errorType: EApiErrorType_1.EApiErrorType.INTERNAL_ERROR,
-            message: 'An unexpected error occurred',
-        },
+        errorType: EApiErrorType_1.EApiErrorType.INTERNAL_ERROR,
+        message: 'An unexpected error occurred',
     });
 }
 //# sourceMappingURL=sendResponseError.js.map

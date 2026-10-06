@@ -16,8 +16,8 @@ import type { EApiErrorType } from '../../../utilities/v2/errorHandler/EApiError
  *           type: string
  *           description: The error message
  *       example:
- *         errorType: "ERROR_DATABASE"
- *         message: "An equipment with the same name already exists"
+ *         errorType: "INTERNAL_ERROR"
+ *         message: "An unexpected error occurred"
  */
 export interface IErrorItem {
     errorType: EApiErrorType;

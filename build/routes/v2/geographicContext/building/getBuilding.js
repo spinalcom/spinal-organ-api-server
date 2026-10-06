@@ -87,19 +87,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         content:
      *           application/json:
      *             schema:
-     *               type: object
-     *               properties:
-     *                 error:
-     *                   $ref: '#/components/schemas/IErrorItem'
-     *       404:
-     *         description: User not found
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 error:
-     *                   $ref: '#/components/schemas/IErrorItem'
+     *               $ref: '#/components/schemas/IErrorItem'
      */
     app.get('/api/v2/building', (0, express_zod_safe_1.default)({
         query: zod_1.z.strictObject({

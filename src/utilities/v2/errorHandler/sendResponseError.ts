@@ -30,12 +30,10 @@ import { getHTTPStatusCode } from './getHTTPStatusCode';
 export function sendResponseError(res: any, error: IErrorItem) {
   console.error(error);
   if (isErrorItem(error)) {
-    return res.status(getHTTPStatusCode(error)).json({ error });
+    return res.status(getHTTPStatusCode(error)).json(error);
   }
   return res.status(500).json({
-    error: {
-      errorType: EApiErrorType.INTERNAL_ERROR,
-      message: 'An unexpected error occurred',
-    },
+    errorType: EApiErrorType.INTERNAL_ERROR,
+    message: 'An unexpected error occurred',
   });
 }
