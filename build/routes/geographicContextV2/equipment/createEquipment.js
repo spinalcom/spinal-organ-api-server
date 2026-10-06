@@ -58,13 +58,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *           schema:
      *             type: object
      *             required:
-     *               - dynamicRoomId
+     *               - parentDynamicId
      *               - info
      *             properties:
-     *               dynamicRoomId:
+     *               parentDynamicId:
      *                 type: number
-     *                 description: The dynamic ID of the floor to which the equipment belongs
+     *                 description: The dynamic ID of the room to which the equipment belongs, can be an floor if it's for adding a reference object.
      *                 minimum: 1
+     *               isRefObject:
+     *                 type: boolean
+     *                 description: Indicates if the equipment is to be added as an reference object
+     *                 default: false
      *               info:
      *                 type: object
      *                 description: Information about the equipment, including its name, color, and icon. The following fields are forbidden 'id', 'staticId', 'type', 'dynamicId'
@@ -131,7 +135,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                       type: number
      *                       minimum: 1
      *             example:
-     *               dynamicRoomId: 123456789
+     *               parentDynamicId: 123456789
      *               info:
      *                 name: "equipment Name"
      *                 color: "#FF0000"
@@ -159,7 +163,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      */
     app.post('/api/v2/equipment', (0, express_zod_safe_1.default)({
         body: zod_1.z.object({
-            dynamicRoomId: zod_1.z.number().min(1),
+            parentDynamicId: zod_1.z.number().min(1),
+            isRefObject: zod_1.z.boolean().optional().default(false),
             info: (0, addExtraInfoValidation_1.addExtraInfoValidation)(zod_1.z.object({
                 name: zod_1.z.string().min(1).max(200),
                 color: zod_1.z
@@ -190,9 +195,27 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const { geographicContext, building } = await (0, getBuilding_1.getBuildingNode)(spinalAPIMiddleware, profileId, false);
             if (!building)
                 return res.status(404).send('Building not found');
-            const { dynamicRoomId, info, attributes, linkToGroups } = req.body;
-            const roomNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, dynamicRoomId, profileId, spinal_env_viewer_context_geographic_service_1.ROOM_TYPE);
-            const oldEquipments = await roomNode.getChildrenInContext(geographicContext, spinal_env_viewer_context_geographic_service_1.EQUIPMENT_RELATION);
+            const { parentDynamicId, info, attributes, linkToGroups, isRefObject } = req.body;
+            let relationParentToChild = spinal_env_viewer_context_geographic_service_1.EQUIPMENT_RELATION;
+            const parentNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, parentDynamicId, profileId);
+            const parentType = parentNode.info.type.get();
+            if (isRefObject) {
+                if (parentType === spinal_env_viewer_context_geographic_service_1.FLOOR_TYPE) {
+                    relationParentToChild = spinal_env_viewer_context_geographic_service_1.REFERENCE_RELATION;
+                }
+                else if (parentType === spinal_env_viewer_context_geographic_service_1.ROOM_TYPE) {
+                    relationParentToChild = spinal_env_viewer_context_geographic_service_1.REFERENCE_ROOM_RELATION;
+                }
+                else {
+                    return res
+                        .status(400)
+                        .json('Invalid parent type for reference object');
+                }
+            }
+            else if (parentType !== spinal_env_viewer_context_geographic_service_1.ROOM_TYPE) {
+                return res.status(400).json('Invalid parent type for equipment');
+            }
+            const oldEquipments = await parentNode.getChildren(relationParentToChild);
             for (const oldEquip of oldEquipments) {
                 if (oldEquip.info.name.get() === info.name) {
                     return res
@@ -201,7 +224,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 }
             }
             const newEquipment = new spinal_model_graph_1.SpinalNode(info.name, spinal_env_viewer_context_geographic_service_1.EQUIPMENT_TYPE, undefined);
-            await roomNode.addChildInContext(newEquipment, spinal_env_viewer_context_geographic_service_1.EQUIPMENT_RELATION, spinal_model_graph_1.SPINAL_RELATION_LST_PTR_TYPE, geographicContext);
+            if (isRefObject) {
+                await parentNode.addChild(newEquipment, relationParentToChild, spinal_model_graph_1.SPINAL_RELATION_LST_PTR_TYPE);
+            }
+            else {
+                await parentNode.addChildInContext(newEquipment, relationParentToChild, spinal_model_graph_1.SPINAL_RELATION_LST_PTR_TYPE, geographicContext);
+            }
             await (0, handleSetAttribute_1.handleSetAttribute)(newEquipment, attributes, undefined);
             (0, handleSetInfo_1.handleSetInfo)(newEquipment, info);
             const resObj = await (0, getNodeData_1.getNodeData)(newEquipment, true, true);

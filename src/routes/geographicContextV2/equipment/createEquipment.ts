@@ -30,6 +30,9 @@ import { getProfileId } from '../../../utilities/requestUtilities';
 import {
   EQUIPMENT_RELATION,
   EQUIPMENT_TYPE,
+  FLOOR_TYPE,
+  REFERENCE_RELATION,
+  REFERENCE_ROOM_RELATION,
   ROOM_TYPE,
 } from 'spinal-env-viewer-context-geographic-service';
 import { getNodeData } from '../../../utilities/node_v2/getNodeData';
@@ -68,13 +71,17 @@ module.exports = function (
    *           schema:
    *             type: object
    *             required:
-   *               - dynamicRoomId
+   *               - parentDynamicId
    *               - info
    *             properties:
-   *               dynamicRoomId:
+   *               parentDynamicId:
    *                 type: number
-   *                 description: The dynamic ID of the floor to which the equipment belongs
+   *                 description: The dynamic ID of the room to which the equipment belongs, can be an floor if it's for adding a reference object.
    *                 minimum: 1
+   *               isRefObject:
+   *                 type: boolean
+   *                 description: Indicates if the equipment is to be added as an reference object
+   *                 default: false
    *               info:
    *                 type: object
    *                 description: Information about the equipment, including its name, color, and icon. The following fields are forbidden 'id', 'staticId', 'type', 'dynamicId'
@@ -141,7 +148,7 @@ module.exports = function (
    *                       type: number
    *                       minimum: 1
    *             example:
-   *               dynamicRoomId: 123456789
+   *               parentDynamicId: 123456789
    *               info:
    *                 name: "equipment Name"
    *                 color: "#FF0000"
@@ -171,7 +178,8 @@ module.exports = function (
     '/api/v2/equipment',
     validate({
       body: z.object({
-        dynamicRoomId: z.number().min(1),
+        parentDynamicId: z.number().min(1),
+        isRefObject: z.boolean().optional().default(false),
         info: addExtraInfoValidation(
           z.object({
             name: z.string().min(1).max(200),
@@ -215,17 +223,33 @@ module.exports = function (
           false
         );
         if (!building) return res.status(404).send('Building not found');
-        const { dynamicRoomId, info, attributes, linkToGroups } = req.body;
-        const roomNode = await loadAndValidateNode(
+        const { parentDynamicId, info, attributes, linkToGroups, isRefObject } =
+          req.body;
+        let relationParentToChild:
+          | typeof EQUIPMENT_RELATION
+          | typeof REFERENCE_RELATION
+          | typeof REFERENCE_ROOM_RELATION = EQUIPMENT_RELATION;
+        const parentNode = await loadAndValidateNode(
           spinalAPIMiddleware,
-          dynamicRoomId,
-          profileId,
-          ROOM_TYPE
+          parentDynamicId,
+          profileId
         );
-
-        const oldEquipments = await roomNode.getChildrenInContext(
-          geographicContext,
-          EQUIPMENT_RELATION
+        const parentType = parentNode.info.type.get();
+        if (isRefObject) {
+          if (parentType === FLOOR_TYPE) {
+            relationParentToChild = REFERENCE_RELATION;
+          } else if (parentType === ROOM_TYPE) {
+            relationParentToChild = REFERENCE_ROOM_RELATION;
+          } else {
+            return res
+              .status(400)
+              .json('Invalid parent type for reference object');
+          }
+        } else if (parentType !== ROOM_TYPE) {
+          return res.status(400).json('Invalid parent type for equipment');
+        }
+        const oldEquipments = await parentNode.getChildren(
+          relationParentToChild
         );
 
         for (const oldEquip of oldEquipments) {
@@ -241,12 +265,20 @@ module.exports = function (
           EQUIPMENT_TYPE,
           undefined
         );
-        await roomNode.addChildInContext(
-          newEquipment,
-          EQUIPMENT_RELATION,
-          SPINAL_RELATION_LST_PTR_TYPE,
-          geographicContext
-        );
+        if (isRefObject) {
+          await parentNode.addChild(
+            newEquipment,
+            relationParentToChild,
+            SPINAL_RELATION_LST_PTR_TYPE
+          );
+        } else {
+          await parentNode.addChildInContext(
+            newEquipment,
+            relationParentToChild,
+            SPINAL_RELATION_LST_PTR_TYPE,
+            geographicContext
+          );
+        }
         await handleSetAttribute(newEquipment, attributes, undefined);
         handleSetInfo(newEquipment, info);
 
