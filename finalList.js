@@ -835,5 +835,6 @@ module.exports = [
   "routes/userGroup/user/getUserInGroup.ts",
   "routes/userGroup/user/moveUsersInGroup.ts",
   "../src/routes/health/hubStatus.ts",
-  "routes/health/hubStatus.ts"
+  "routes/health/hubStatus.ts",
+  "../src/routes/interface/INodeItem.ts"
 ]

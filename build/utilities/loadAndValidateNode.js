@@ -26,9 +26,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.loadAndValidateNodeMultiple = loadAndValidateNodeMultiple;
 exports.loadAndValidateNode = loadAndValidateNode;
 const spinal_model_graph_1 = require("spinal-model-graph");
+const createErrorMsgItem_1 = require("./v2/errorHandler/createErrorMsgItem");
+const EApiErrorType_1 = require("./v2/errorHandler/EApiErrorType");
 async function loadAndValidateNodeMultiple(spinalAPIMiddleware, serverIds, profileId, nodeType) {
     if (!Array.isArray(serverIds))
-        throw createErrorResponse(400, `Invalid input: serverIds should be an array of numbers`);
+        throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, `Invalid input: serverIds should be an array of numbers`);
     const successfulNodes = [];
     const failedServerIds = [];
     await Promise.allSettled(serverIds.map(async (serverId) => {
@@ -50,12 +52,12 @@ async function loadAndValidateNodeMultiple(spinalAPIMiddleware, serverIds, profi
 async function loadAndValidateNode(spinalAPIMiddleware, serverId, profileId, nodeType) {
     if ((typeof serverId === 'number' && isNaN(serverId)) ||
         (typeof serverId === 'string' && isNaN(Number(serverId))))
-        throw createErrorResponse(400, `Invalid dynamicId: ${serverId}`);
+        throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, `Invalid dynamicId: ${serverId}`);
     const node = await safeLoadNode(spinalAPIMiddleware, serverId, profileId);
     if (!(node instanceof spinal_model_graph_1.SpinalNode))
-        throw createErrorResponse(400, `Node ${serverId} is not a SpinalNode`);
+        throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_LOAD_NODE_TYPE, `Node ${serverId} is not a SpinalNode`);
     if (nodeType && node.info?.type?.get() !== nodeType)
-        throw createErrorResponse(400, `Node ${serverId} is not of type ${nodeType}`);
+        throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_LOAD_NODE_TYPE, `Node ${serverId} is not of type ${nodeType}`);
     return node;
 }
 async function safeLoadNode(spinalAPIMiddleware, serverId, profileId) {
@@ -63,10 +65,7 @@ async function safeLoadNode(spinalAPIMiddleware, serverId, profileId) {
         return await spinalAPIMiddleware.load(serverId, profileId);
     }
     catch (error) {
-        throw createErrorResponse(404, `Error : Loading node ${serverId} failed`);
+        throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_LOAD_NODE_TYPE, `Error : Loading node ${serverId} failed`);
     }
-}
-function createErrorResponse(code, message) {
-    return { code, message };
 }
 //# sourceMappingURL=loadAndValidateNode.js.map
