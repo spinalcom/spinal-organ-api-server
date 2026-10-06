@@ -46,7 +46,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       200:
      *         description: Document moved successfully.
      *       400:
-     *         description: Missing or invalid body values.
+     *         description: Missing or invalid body values, or move refused (nodes outside the context...).
+     *       401:
+     *         description: One of the nodes is not accessible with this profile.
+     *       404:
+     *         description: sourceId, targetId, contextId or documentId not found.
      *       500:
      *         description: Internal server error.
      */
@@ -62,18 +66,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(400).send({ message: "contextId is required" });
             if (!documentId)
                 return res.status(400).send({ message: "documentId is required" });
-            const sourceNode = await spinalAPIMiddleware.load(parseInt(sourceId, 10), profileId);
-            const targetNode = await spinalAPIMiddleware.load(parseInt(targetId, 10), profileId);
-            const contextNode = await spinalAPIMiddleware.load(parseInt(contextId, 10), profileId);
-            const documentNode = await spinalAPIMiddleware.load(parseInt(documentId, 10), profileId);
-            if (!sourceNode)
-                return res.status(400).send({ message: "sourceId not found" });
-            if (!targetNode)
-                return res.status(400).send({ message: "targetId not found" });
-            if (!contextNode)
-                return res.status(400).send({ message: "contextId not found" });
-            if (!documentNode)
-                return res.status(400).send({ message: "documentId not found" });
+            const sourceNode = await loadNode("sourceId", sourceId, profileId);
+            const targetNode = await loadNode("targetId", targetId, profileId);
+            const contextNode = await loadNode("contextId", contextId, profileId);
+            const documentNode = await loadNode("documentId", documentId, profileId);
             return spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation
                 .moveDocumentInContext(documentNode, sourceNode, targetNode, contextNode)
                 .then(async (moved) => {
@@ -96,5 +92,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             return res.status(500).send({ message: error.message });
         }
     });
+    // Loads a node given in the body: 400 if the id is not a number, 404 if it does not exist.
+    async function loadNode(field, value, profileId) {
+        const dynamicId = parseInt(value, 10);
+        if (isNaN(dynamicId) || dynamicId <= 0)
+            throw { code: 400, message: `Invalid ${field}` };
+        const node = await spinalAPIMiddleware.load(dynamicId, profileId).catch((error) => {
+            if (error?.code === 404)
+                throw { code: 404, message: `${field} not found` };
+            throw error;
+        });
+        if (!node)
+            throw { code: 404, message: `${field} not found` };
+        return node;
+    }
 };
 //# sourceMappingURL=moveDocumentInContext.js.map

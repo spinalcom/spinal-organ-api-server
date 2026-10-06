@@ -52,6 +52,7 @@ const routes_1 = __importDefault(require("../routes/routes"));
 const api_server_1 = require("../api-server");
 const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
 const requestActivity_1 = require("../preloadingScript/requestActivity");
+const fileUploadOptions_1 = require("../utilities/fileUploadOptions");
 __exportStar(require("../routes/geographicContext/viewInfo_func"), exports);
 __exportStar(require("../preloadingScript/preloadingScript"), exports);
 __exportStar(require("../preloadingScript/runPreloading"), exports);
@@ -67,7 +68,8 @@ function initApiServer(app, spinalAPIMiddleware, log_body = false) {
         res.setHeader("X-API-Version", API_SERVER_VERSION);
         next();
     });
-    app.use((0, express_fileupload_1.default)({ createParentPath: true }));
+    // UTF-8 file names and size limit (DOCUMENTARY_MAX_UPLOAD_MB): see getFileUploadOptions
+    app.use((0, express_fileupload_1.default)((0, fileUploadOptions_1.getFileUploadOptions)()));
     // app.use(logRequestLifecycle);
     app.use((0, api_server_1.createLogRequestLifecycle)(log_body));
     //useLogger(app, log_body);

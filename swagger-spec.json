@@ -2209,6 +2209,56 @@
             }
           }
         }
+      },
+      "DocumentaryUploadedFile": {
+        "type": "object",
+        "description": "Info of the created document node",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "dynamicId": {
+            "type": "integer",
+            "description": "Dynamic id of the document node"
+          }
+        }
+      },
+      "DocumentaryUploadFailure": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the uploaded file"
+          },
+          "code": {
+            "type": "integer",
+            "description": "Reason as an HTTP code (400 empty name, 409 name already used, 500 storage error, 503 creation not confirmed by the hub)"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "DocumentaryLinkFailure": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "description": "Id as sent in filesIds"
+          },
+          "code": {
+            "type": "integer",
+            "description": "Reason as an HTTP code (400 invalid or unsupported document, 401 not accessible, 404 not found, 409 already in the directory)"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
       }
     }
   },
@@ -23279,8 +23329,14 @@
           "404": {
             "description": "Node not found."
           },
+          "413": {
+            "description": "A file exceeds the upload size limit (DOCUMENTARY_MAX_UPLOAD_MB, 200 MB by default)."
+          },
           "500": {
             "description": "Internal server error."
+          },
+          "503": {
+            "description": "The hub did not confirm the creation in time (the files may still appear later)."
           }
         }
       }
@@ -23333,6 +23389,9 @@
           },
           "500": {
             "description": "Internal server error."
+          },
+          "503": {
+            "description": "The hub did not confirm the link in time."
           }
         }
       }
@@ -23443,13 +23502,19 @@
             "description": "File version updated successfully."
           },
           "400": {
-            "description": "Invalid request or missing file."
+            "description": "Invalid request, missing file or more than one file sent."
           },
           "404": {
             "description": "File not found."
           },
+          "413": {
+            "description": "The file exceeds the upload size limit (DOCUMENTARY_MAX_UPLOAD_MB, 200 MB by default)."
+          },
           "500": {
             "description": "Internal server error."
+          },
+          "503": {
+            "description": "The hub did not confirm the new version in time."
           }
         }
       }
@@ -23464,7 +23529,7 @@
           }
         ],
         "summary": "Create documentary context",
-        "description": "Creates a documentary context and links it to the user graph when needed.",
+        "description": "Creates a documentary context and links it to the user graph when needed. Context creations are serialized (in memory) so that two simultaneous requests cannot create two contexts with the same name.\n",
         "tags": [
           "Documentary"
         ],
@@ -23492,13 +23557,16 @@
             "description": "Context created successfully."
           },
           "400": {
-            "description": "Missing or invalid request data."
+            "description": "Missing or invalid request data, or a context with this name already exists."
           },
           "406": {
             "description": "Profile graph not found."
           },
           "500": {
             "description": "Internal server error."
+          },
+          "503": {
+            "description": "The hub did not confirm the creation in time (the context may still appear later)."
           }
         }
       }
@@ -23513,7 +23581,7 @@
           }
         ],
         "summary": "Create directory in context",
-        "description": "Creates a documentation directory under a parent node within a context.",
+        "description": "Creates a documentation directory under a parent node within a context. Names are unique within a directory: the comparison ignores case and surrounding spaces, and the name is stored trimmed.\n",
         "tags": [
           "Documentary"
         ],
@@ -23551,7 +23619,7 @@
                 "properties": {
                   "name": {
                     "type": "string",
-                    "description": "Directory name."
+                    "description": "Directory name (trimmed)."
                   },
                   "icon": {
                     "type": "string",
@@ -23572,8 +23640,14 @@
           "404": {
             "description": "Context or parent node not found."
           },
+          "409": {
+            "description": "An item with the same name already exists in the parent directory."
+          },
           "500": {
             "description": "Internal server error."
+          },
+          "503": {
+            "description": "The hub did not confirm the creation in time (the directory may still appear later)."
           }
         }
       }
@@ -23687,7 +23761,13 @@
             "description": "Document moved successfully."
           },
           "400": {
-            "description": "Missing or invalid body values."
+            "description": "Missing or invalid body values, or move refused (nodes outside the context...)."
+          },
+          "401": {
+            "description": "One of the nodes is not accessible with this profile."
+          },
+          "404": {
+            "description": "sourceId, targetId, contextId or documentId not found."
           },
           "500": {
             "description": "Internal server error."
@@ -23772,7 +23852,7 @@
           }
         ],
         "summary": "Upload file in context",
-        "description": "Uploads one or multiple files and attaches them under a parent node in a context.",
+        "description": "Uploads one or multiple files and attaches them under a parent node in a context. Names are unique within a directory (case and surrounding spaces ignored): a file whose name is already used in the parent directory, or twice in the request, is rejected with 409 and is not stored. Each file is processed independently. When some files fail, the response is 207 with { success, failed } rather than an error for the whole request, so that the client only retries the failed files (retrying all of them would duplicate the stored ones); the 200 response stays an array for compatibility.\n",
         "tags": [
           "Documentary"
         ],
@@ -23822,16 +23902,59 @@
         },
         "responses": {
           "200": {
-            "description": "Files uploaded successfully."
+            "description": "All files uploaded successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentaryUploadedFile"
+                  }
+                }
+              }
+            }
+          },
+          "207": {
+            "description": "Some files were uploaded, the others are listed in \"failed\".",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DocumentaryUploadedFile"
+                      }
+                    },
+                    "failed": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DocumentaryUploadFailure"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
-            "description": "Invalid request or missing file."
+            "description": "Invalid request or missing file; also returned when no file was stored and the failures have different 4xx reasons (body { message, failed })."
           },
           "404": {
             "description": "Context or parent node not found."
           },
+          "409": {
+            "description": "No file stored, every file name is already used (body { message, failed })."
+          },
+          "413": {
+            "description": "A file exceeds the upload size limit (DOCUMENTARY_MAX_UPLOAD_MB, 200 MB by default)."
+          },
           "500": {
-            "description": "Internal server error."
+            "description": "Internal server error, or no file stored (body { message, failed } when files were processed)."
+          },
+          "503": {
+            "description": "No file confirmed by the hub in time (body { message, failed })."
           }
         }
       }
@@ -23980,7 +24103,7 @@
             "description": "Version removed successfully."
           },
           "400": {
-            "description": "Invalid file id."
+            "description": "Invalid file id, directory or legacy file without version history, or only version of the file."
           },
           "404": {
             "description": "File or version not found."
@@ -24035,11 +24158,18 @@
     },
     "/api/v1/documentary/file/link_to_node/{contextId}/{parentId}": {
       "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
         "tags": [
           "Documentary"
         ],
-        "summary": "Link one or more files to a node in a context",
-        "description": "Links each file node to the given parent node within the specified context.",
+        "summary": "Link existing documents to a directory of a context",
+        "description": "Adds each existing document (file or directory) under the given directory, or at the root of the context when parentId is the context itself. The document keeps its other parents (it is linked, not moved). Each document is processed independently: a document already present in the target directory, a directory linked into itself or one of its sub-directories, a legacy file or an id that cannot be loaded is reported in \"failed\" without stopping the others.\n",
         "parameters": [
           {
             "in": "path",
@@ -24048,7 +24178,7 @@
             "schema": {
               "type": "integer"
             },
-            "description": "Dynamic id of the context node"
+            "description": "Dynamic id of the documentary context"
           },
           {
             "in": "path",
@@ -24057,7 +24187,7 @@
             "schema": {
               "type": "integer"
             },
-            "description": "Dynamic id of the parent node"
+            "description": "Dynamic id of the target directory, or of the context itself for its root"
           }
         ],
         "requestBody": {
@@ -24075,7 +24205,7 @@
                     "items": {
                       "type": "integer"
                     },
-                    "description": "List of file dynamic ids to link"
+                    "description": "Dynamic ids of the documents to link (document node or document model)"
                   }
                 }
               },
@@ -24091,7 +24221,7 @@
         },
         "responses": {
           "200": {
-            "description": "Files processed for linking",
+            "description": "At least one document was linked; the others are listed in \"failed\"",
             "content": {
               "application/json": {
                 "schema": {
@@ -24103,7 +24233,8 @@
                         "type": "object",
                         "properties": {
                           "fileId": {
-                            "type": "integer"
+                            "type": "integer",
+                            "description": "Id as sent in filesIds"
                           },
                           "name": {
                             "type": "string"
@@ -24115,7 +24246,8 @@
                             "type": "string"
                           },
                           "dynamicId": {
-                            "type": "integer"
+                            "type": "integer",
+                            "description": "Dynamic id of the document node"
                           }
                         }
                       }
@@ -24123,15 +24255,7 @@
                     "failed": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "fileId": {
-                            "type": "integer"
-                          },
-                          "message": {
-                            "type": "string"
-                          }
-                        }
+                        "$ref": "#/components/schemas/DocumentaryLinkFailure"
                       }
                     }
                   }
@@ -24140,10 +24264,31 @@
             }
           },
           "400": {
-            "description": "Invalid input data"
+            "description": "Invalid parameters, contextId is not a context, parentId is neither the context nor one of its directories, or no document could be linked (body { message, failed })\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "failed": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DocumentaryLinkFailure"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Context or parent not accessible with this profile"
           },
           "404": {
-            "description": "Context, parent or file node not found"
+            "description": "Context or parent node not found"
           },
           "500": {
             "description": "Internal server error"
@@ -24292,7 +24437,6 @@
         }
       }
     },
-<<<<<<< HEAD
     "/api/v1/documentary/file/downgrade_file_version/{fileId}/{versionName}": {
       "post": {
         "security": [
@@ -24354,8 +24498,6 @@
         }
       }
     },
-=======
->>>>>>> 39a049f367ec798110a59a9532bde9ca67465631
     "/api/v1/analysis/organs": {
       "get": {
         "security": [
@@ -24552,7 +24694,6 @@
         }
       }
     },
-<<<<<<< HEAD
     "/api/v1/documentary/file/{fileId}/details": {
       "get": {
         "security": [
@@ -24563,10 +24704,38 @@
           }
         ],
         "summary": "Get file details",
-        "description": "Returns basic details of a documentary file.",
+        "description": "Returns basic details of a documentary file or directory (contexts, parent directories and linked objects).",
         "tags": [
           "Documentary"
-=======
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileId",
+            "required": true,
+            "description": "Dynamic identifier of the file node.",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File details returned successfully."
+          },
+          "400": {
+            "description": "Invalid file id."
+          },
+          "404": {
+            "description": "File not found."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
     "/api/v1/user-group/context/{contextId}/group/{groupId}/user": {
       "post": {
         "security": [
@@ -24580,19 +24749,10 @@
         "description": "Add users to a specific user group within a user group context",
         "tags": [
           "User Group"
->>>>>>> 39a049f367ec798110a59a9532bde9ca67465631
         ],
         "parameters": [
           {
             "in": "path",
-<<<<<<< HEAD
-            "name": "fileId",
-            "required": true,
-            "description": "Dynamic identifier of the file node.",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-=======
             "name": "contextId",
             "required": true,
             "schema": {
@@ -24729,24 +24889,11 @@
               "type": "boolean",
               "description": "add the organizations which the user belongs to in the response",
               "default": false
->>>>>>> 39a049f367ec798110a59a9532bde9ca67465631
             }
           }
         ],
         "responses": {
           "200": {
-<<<<<<< HEAD
-            "description": "File details returned successfully."
-          },
-          "400": {
-            "description": "Invalid file id."
-          },
-          "404": {
-            "description": "File not found."
-          },
-          "500": {
-            "description": "Internal server error."
-=======
             "description": "Successfully retrieved the users in the user group",
             "content": {
               "application/json": {
@@ -24921,7 +25068,6 @@
           },
           "401": {
             "description": "no graph found for the user"
->>>>>>> 39a049f367ec798110a59a9532bde9ca67465631
           }
         }
       }
@@ -24982,6 +25128,81 @@
           },
           "500": {
             "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/api/v1/documentary/file/{fileId}/download": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "readOnly"
+            ]
+          }
+        ],
+        "summary": "Download the content of a file",
+        "description": "Returns the raw content of the file (current version, or the version given by \"version\"), not JSON. Content-Type is deduced from the file name, Content-Disposition is \"inline\" with the UTF-8 file name (filename*), and Content-Length is the size of the content. Use this route instead of GET /api/v1/documentary/file/{fileDynamicId}?format=buffer, which sends the bytes as a JSON array.\n",
+        "tags": [
+          "Documentary"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileId",
+            "required": true,
+            "description": "Dynamic id of the file (document node or file model).",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "description": "Name of the version to download (as listed by GET /api/v1/documentary/file/{nodeId}/versions). Current version if omitted.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Content of the file.",
+            "headers": {
+              "Content-Disposition": {
+                "description": "inline; filename=\"<ASCII fallback>\"; filename*=UTF-8''<encoded name>",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid id, or the id is not a file (directory or other node)."
+          },
+          "401": {
+            "description": "File not accessible with this profile."
+          },
+          "404": {
+            "description": "File or version not found."
+          },
+          "500": {
+            "description": "Internal server error."
           }
         }
       }

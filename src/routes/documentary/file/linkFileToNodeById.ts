@@ -3,6 +3,7 @@ import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { getProfileId } from "../../../utilities/requestUtilities";
 import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
 import { SpinalNode } from "spinal-model-graph";
+import { waitUntilServerIdNotDefined } from "../utils";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 	/**
@@ -40,6 +41,8 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 	 *         description: File or node not found.
 	 *       500:
 	 *         description: Internal server error.
+	 *       503:
+	 *         description: The hub did not confirm the link in time.
 	 */
 	app.post("/api/v1/documentary/file/:fileId/link_to_node/:nodeId", async (req, res, next) => {
 		try {
@@ -58,6 +61,7 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 
 			const nodeInfo = await serviceDocumentation.linkFileToNode(targetNode, fileNode);
 			if (!nodeInfo) return res.status(500).send({ message: `Failed to link file with id ${fileDynamicId} to node with id ${nodeDynamicId}` });
+			await waitUntilServerIdNotDefined(nodeInfo);
 
 			return res.status(200).send({
 				name: nodeInfo.getName().get(),

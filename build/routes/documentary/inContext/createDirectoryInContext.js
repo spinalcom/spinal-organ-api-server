@@ -12,7 +12,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *           - write
      *     summary: Create directory in context
-     *     description: Creates a documentation directory under a parent node within a context.
+     *     description: >
+     *       Creates a documentation directory under a parent node within a context. Names are unique within a
+     *       directory: the comparison ignores case and surrounding spaces, and the name is stored trimmed.
      *     tags:
      *       - Documentary
      *     parameters:
@@ -41,7 +43,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               name:
      *                 type: string
-     *                 description: Directory name.
+     *                 description: Directory name (trimmed).
      *               icon:
      *                 type: string
      *                 description: Optional icon value for the directory.
@@ -52,12 +54,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Missing or invalid parameters.
      *       404:
      *         description: Context or parent node not found.
+     *       409:
+     *         description: An item with the same name already exists in the parent directory.
      *       500:
      *         description: Internal server error.
+     *       503:
+     *         description: The hub did not confirm the creation in time (the directory may still appear later).
      */
     app.post("/api/v1/documentary/create_directory/:contextId/:parentId", async (req, res, next) => {
         try {
-            const { name, icon } = req.body;
+            const { icon } = req.body;
+            const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
             if (!name)
                 return res.status(400).send({ message: "Missing name in request body" });
             const profileId = (0, requestUtilities_1.getProfileId)(req);
@@ -70,10 +77,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const context = await spinalAPIMiddleware.load(contextId, profileId);
             if (!context)
                 return res.status(404).send({ message: `Context with ID ${contextId} not found` });
-            const parentNode = await spinalAPIMiddleware.load(parentId, profileId);
+            const parentNode = await (0, utils_1.toDocumentaryNode)(await spinalAPIMiddleware.load(parentId, profileId));
             if (!parentNode)
                 return res.status(404).send({ message: `Parent node with ID ${parentId} not found` });
-            const directory = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addDirectoryToNodeInContext(parentNode, name, context, icon);
+            const { conflicts, release } = await (0, utils_1.reserveChildNames)(parentNode, [name]);
+            if (conflicts[0]) {
+                release();
+                return res.status(conflicts[0].code).send({ message: conflicts[0].message });
+            }
+            let directory;
+            try {
+                directory = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.addDirectoryToNodeInContext(parentNode, name, context, icon);
+            }
+            finally {
+                release();
+            }
             await (0, utils_1.waitUntilServerIdNotDefined)(directory);
             return res.status(200).send({
                 ...directory.info.get(),

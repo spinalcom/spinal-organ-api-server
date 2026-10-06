@@ -43,16 +43,22 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       200:
      *         description: File version updated successfully.
      *       400:
-     *         description: Invalid request or missing file.
+     *         description: Invalid request, missing file or more than one file sent.
      *       404:
      *         description: File not found.
+     *       413:
+     *         description: The file exceeds the upload size limit (DOCUMENTARY_MAX_UPLOAD_MB, 200 MB by default).
      *       500:
      *         description: Internal server error.
+     *       503:
+     *         description: The hub did not confirm the new version in time.
      */
     app.post("/api/v1/documentary/file/update_file_version/:fileId", async (req, res, next) => {
         try {
             if (!req.files || !req.files.file)
                 return res.status(400).send({ message: "No file uploaded" });
+            if (Array.isArray(req.files.file))
+                return res.status(400).send({ message: "Only one file can be sent as a new version" });
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const fileId = parseInt(req.params.fileId, 10);
             if (isNaN(fileId))

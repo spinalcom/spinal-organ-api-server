@@ -37,6 +37,7 @@ import routes from "../routes/routes";
 import { createLogRequestLifecycle } from "../api-server";
 import { runSocketServer, ISpinalIOMiddleware } from "spinal-organ-api-pubsub";
 import { requestActivity } from "../preloadingScript/requestActivity";
+import { getFileUploadOptions } from "../utilities/fileUploadOptions";
 export * from "../routes/geographicContext/viewInfo_func";
 export * from "../preloadingScript/preloadingScript";
 export * from "../preloadingScript/runPreloading";
@@ -53,7 +54,8 @@ function initApiServer(app: Application, spinalAPIMiddleware: ISpinalAPIMiddlewa
 		res.setHeader("X-API-Version", API_SERVER_VERSION);
 		next();
 	});
-	app.use(fileUpload({ createParentPath: true }));
+	// UTF-8 file names and size limit (DOCUMENTARY_MAX_UPLOAD_MB): see getFileUploadOptions
+	app.use(fileUpload(getFileUploadOptions()));
 	// app.use(logRequestLifecycle);
 	app.use(createLogRequestLifecycle(log_body));
 	//useLogger(app, log_body);

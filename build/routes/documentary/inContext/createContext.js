@@ -13,7 +13,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *           - write
      *     summary: Create documentary context
-     *     description: Creates a documentary context and links it to the user graph when needed.
+     *     description: >
+     *       Creates a documentary context and links it to the user graph when needed. Context creations are
+     *       serialized (in memory) so that two simultaneous requests cannot create two contexts with the same name.
      *     tags:
      *       - Documentary
      *     requestBody:
@@ -32,11 +34,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       200:
      *         description: Context created successfully.
      *       400:
-     *         description: Missing or invalid request data.
+     *         description: Missing or invalid request data, or a context with this name already exists.
      *       406:
      *         description: Profile graph not found.
      *       500:
      *         description: Internal server error.
+     *       503:
+     *         description: The hub did not confirm the creation in time (the context may still appear later).
      */
     app.post("/api/v1/documentary/create_context", async (req, res, next) => {
         try {
@@ -49,13 +53,17 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const userGraph = await spinalAPIMiddleware.getProfileGraph(profileId);
             if (!userGraph)
                 return res.status(406).send({ message: `No graph found for ${profileId}` });
-            let contextAlreadyExist = await graph.getContext(name);
-            if (contextAlreadyExist)
-                return res.status(400).send({ message: `Context with name ${name} already exists` });
-            const context = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.createDocumentaryContext(graph, name);
-            if (context instanceof spinal_env_viewer_graph_service_1.SpinalContext && graph._server_id !== userGraph._server_id) {
-                await userGraph.addContext(context);
-            }
+            // The existence check and the creation must not interleave with another creation.
+            const context = await (0, utils_1.runExclusive)("documentary-create-context", async () => {
+                const contextAlreadyExist = await graph.getContext(name);
+                if (contextAlreadyExist)
+                    throw { code: 400, message: `Context with name ${name} already exists` };
+                const created = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.createDocumentaryContext(graph, name);
+                if (created instanceof spinal_env_viewer_graph_service_1.SpinalContext && graph._server_id !== userGraph._server_id) {
+                    await userGraph.addContext(created);
+                }
+                return created;
+            });
             await (0, utils_1.waitUntilServerIdNotDefined)(context);
             const contextFormatted = {
                 ...context.info.get(),

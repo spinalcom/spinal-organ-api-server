@@ -12,7 +12,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *           - readOnly
      *     summary: Get file details
-     *     description: Returns basic details of a documentary file.
+     *     description: Returns basic details of a documentary file or directory (contexts, parent directories and linked objects).
      *     tags:
      *       - Documentary
      *     parameters:
@@ -44,8 +44,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(404).send({ message: `No file found with id ${fileId}` });
             if (fileNode instanceof spinal_env_viewer_plugin_documentation_service_1.SpinalDocument)
                 fileNode = (await fileNode.getNode());
-            if (fileNode.getType().get() !== spinal_env_viewer_plugin_documentation_service_1.FILE_NODE_TYPE)
-                return res.status(400).send({ message: `Node with id ${fileId} is not a file node` });
+            // A directory has the same details: its contexts, the directories holding it and the linked objects.
+            const type = fileNode.getType().get();
+            if (type !== spinal_env_viewer_plugin_documentation_service_1.FILE_NODE_TYPE && type !== spinal_env_viewer_plugin_documentation_service_1.DIRECTORY_NODE_TYPE)
+                return res.status(400).send({ message: `Node with id ${fileId} is not a file or a directory` });
             const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
             const contexts = await (0, utils_1.getContexts)(fileNode, graph);
             const fileDetails = {

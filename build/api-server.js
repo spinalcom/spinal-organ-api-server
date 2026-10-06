@@ -38,6 +38,7 @@ const requestActivity_1 = require("./preloadingScript/requestActivity");
 const morgan = require("morgan");
 const chalk_1 = __importDefault(require("chalk"));
 const non_secure_1 = require("nanoid/non-secure");
+const fileUploadOptions_1 = require("./utilities/fileUploadOptions");
 function pad(str, length) {
     return str.padEnd(length);
 }
@@ -151,8 +152,8 @@ function APIServer(logger, spinalAPIMiddleware) {
         res.setHeader('X-API-Version', process.env.API_SERVER_VERSION);
         next();
     });
-    // enable files upload
-    app.use((0, express_fileupload_1.default)({ createParentPath: true }));
+    // enable files upload (UTF-8 file names, size limit: see getFileUploadOptions)
+    app.use((0, express_fileupload_1.default)((0, fileUploadOptions_1.getFileUploadOptions)()));
     app.use((0, cors_1.default)());
     app.disable('x-powered-by');
     app.use(body_parser_1.default.urlencoded({ extended: true }));

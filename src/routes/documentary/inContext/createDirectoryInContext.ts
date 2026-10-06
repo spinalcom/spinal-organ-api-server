@@ -3,7 +3,7 @@ import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { getProfileId } from "../../../utilities/requestUtilities";
 import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
 import { SpinalNode } from "spinal-env-viewer-graph-service";
-import { waitUntilServerIdNotDefined } from "../utils";
+import { reserveChildNames, toDocumentaryNode, waitUntilServerIdNotDefined } from "../utils";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 	/**
@@ -14,7 +14,9 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 	 *       - bearerAuth:
 	 *           - write
 	 *     summary: Create directory in context
-	 *     description: Creates a documentation directory under a parent node within a context.
+	 *     description: >
+	 *       Creates a documentation directory under a parent node within a context. Names are unique within a
+	 *       directory: the comparison ignores case and surrounding spaces, and the name is stored trimmed.
 	 *     tags:
 	 *       - Documentary
 	 *     parameters:
@@ -43,7 +45,7 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 	 *             properties:
 	 *               name:
 	 *                 type: string
-	 *                 description: Directory name.
+	 *                 description: Directory name (trimmed).
 	 *               icon:
 	 *                 type: string
 	 *                 description: Optional icon value for the directory.
@@ -54,12 +56,17 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 	 *         description: Missing or invalid parameters.
 	 *       404:
 	 *         description: Context or parent node not found.
+	 *       409:
+	 *         description: An item with the same name already exists in the parent directory.
 	 *       500:
 	 *         description: Internal server error.
+	 *       503:
+	 *         description: The hub did not confirm the creation in time (the directory may still appear later).
 	 */
 	app.post("/api/v1/documentary/create_directory/:contextId/:parentId", async (req, res, next) => {
 		try {
-			const { name, icon } = req.body;
+			const { icon } = req.body;
+			const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
 			if (!name) return res.status(400).send({ message: "Missing name in request body" });
 
 			const profileId = getProfileId(req);
@@ -72,10 +79,21 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			const context = await spinalAPIMiddleware.load<SpinalNode>(contextId, profileId);
 			if (!context) return res.status(404).send({ message: `Context with ID ${contextId} not found` });
 
-			const parentNode = await spinalAPIMiddleware.load<SpinalNode>(parentId, profileId);
+			const parentNode = await toDocumentaryNode(await spinalAPIMiddleware.load<SpinalNode>(parentId, profileId));
 			if (!parentNode) return res.status(404).send({ message: `Parent node with ID ${parentId} not found` });
 
-			const directory = await serviceDocumentation.addDirectoryToNodeInContext(parentNode, name, context, icon);
+			const { conflicts, release } = await reserveChildNames(parentNode, [name]);
+			if (conflicts[0]) {
+				release();
+				return res.status(conflicts[0].code).send({ message: conflicts[0].message });
+			}
+
+			let directory: SpinalNode;
+			try {
+				directory = await serviceDocumentation.addDirectoryToNodeInContext(parentNode, name, context, icon);
+			} finally {
+				release();
+			}
 
 			await waitUntilServerIdNotDefined(directory);
 

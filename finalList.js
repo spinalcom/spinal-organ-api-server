@@ -436,5 +436,6 @@ module.exports = [
   "../src/routes/userGroup/user/getUserInGroup.ts",
   "../src/routes/userGroup/user/moveUsersInGroup.ts",
   "../src/routes/snapshot/createNodeSnapshot.ts",
-  "../src/routes/snapshot/snapshotUtils.ts"
+  "../src/routes/snapshot/snapshotUtils.ts",
+  "../src/routes/documentary/file/downloadFile.ts"
 ]

@@ -4,6 +4,7 @@ import { getProfileId } from "../../../utilities/requestUtilities";
 import { SpinalNode } from "spinal-model-graph";
 import { UploadedFile } from "express-fileupload";
 import { FileExplorer } from "spinal-env-viewer-plugin-documentation-service";
+import { waitUntilServerIdNotDefined } from "../utils";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 	/**
@@ -46,8 +47,12 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 	 *         description: Invalid request or missing file.
 	 *       404:
 	 *         description: Node not found.
+	 *       413:
+	 *         description: A file exceeds the upload size limit (DOCUMENTARY_MAX_UPLOAD_MB, 200 MB by default).
 	 *       500:
 	 *         description: Internal server error.
+	 *       503:
+	 *         description: The hub did not confirm the creation in time (the files may still appear later).
 	 */
 	app.post("/api/v1/documentary/file/link_to_node/:nodeId", async (req, res, next) => {
 		try {
@@ -64,6 +69,8 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			if (!Array.isArray(files)) files = [files];
 
 			const filesData = await FileExplorer.uploadFiles(node, files);
+			// The nodes are new: wait for their definitive dynamic id before returning it.
+			await Promise.all(filesData.map((file) => waitUntilServerIdNotDefined(file)));
 			const filesFormatted = filesData.map((file) => ({
 				dynamicId: file._server_id,
 				...file.info.get(),

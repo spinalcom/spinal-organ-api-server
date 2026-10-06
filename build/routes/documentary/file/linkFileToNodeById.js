@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+const utils_1 = require("../utils");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -38,6 +39,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: File or node not found.
      *       500:
      *         description: Internal server error.
+     *       503:
+     *         description: The hub did not confirm the link in time.
      */
     app.post("/api/v1/documentary/file/:fileId/link_to_node/:nodeId", async (req, res, next) => {
         try {
@@ -57,6 +60,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const nodeInfo = await spinal_env_viewer_plugin_documentation_service_1.serviceDocumentation.linkFileToNode(targetNode, fileNode);
             if (!nodeInfo)
                 return res.status(500).send({ message: `Failed to link file with id ${fileDynamicId} to node with id ${nodeDynamicId}` });
+            await (0, utils_1.waitUntilServerIdNotDefined)(nodeInfo);
             return res.status(200).send({
                 name: nodeInfo.getName().get(),
                 id: nodeInfo.getId().get(),

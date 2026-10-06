@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+const utils_1 = require("../utils");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -43,8 +44,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Invalid request or missing file.
      *       404:
      *         description: Node not found.
+     *       413:
+     *         description: A file exceeds the upload size limit (DOCUMENTARY_MAX_UPLOAD_MB, 200 MB by default).
      *       500:
      *         description: Internal server error.
+     *       503:
+     *         description: The hub did not confirm the creation in time (the files may still appear later).
      */
     app.post("/api/v1/documentary/file/link_to_node/:nodeId", async (req, res, next) => {
         try {
@@ -61,6 +66,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!Array.isArray(files))
                 files = [files];
             const filesData = await spinal_env_viewer_plugin_documentation_service_1.FileExplorer.uploadFiles(node, files);
+            // The nodes are new: wait for their definitive dynamic id before returning it.
+            await Promise.all(filesData.map((file) => (0, utils_1.waitUntilServerIdNotDefined)(file)));
             const filesFormatted = filesData.map((file) => ({
                 dynamicId: file._server_id,
                 ...file.info.get(),

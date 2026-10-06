@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { getProfileId } from "../../../utilities/requestUtilities";
-import { FILE_NODE_TYPE, SpinalDocument } from "spinal-env-viewer-plugin-documentation-service";
+import { DIRECTORY_NODE_TYPE, FILE_NODE_TYPE, SpinalDocument } from "spinal-env-viewer-plugin-documentation-service";
 import { SpinalNode } from "spinal-model-graph";
 import { File as SpinalFile } from "spinal-core-connectorjs_type";
 import { _formatFileNode, getContexts, getFileAttributes, getParents } from "../utils";
@@ -15,7 +15,7 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 	 *       - bearerAuth:
 	 *           - readOnly
 	 *     summary: Get file details
-	 *     description: Returns basic details of a documentary file.
+	 *     description: Returns basic details of a documentary file or directory (contexts, parent directories and linked objects).
 	 *     tags:
 	 *       - Documentary
 	 *     parameters:
@@ -48,7 +48,9 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 
 			if (fileNode instanceof SpinalDocument) fileNode = (await fileNode.getNode()) as SpinalNode;
 
-			if (fileNode.getType().get() !== FILE_NODE_TYPE) return res.status(400).send({ message: `Node with id ${fileId} is not a file node` });
+			// A directory has the same details: its contexts, the directories holding it and the linked objects.
+			const type = fileNode.getType().get();
+			if (type !== FILE_NODE_TYPE && type !== DIRECTORY_NODE_TYPE) return res.status(400).send({ message: `Node with id ${fileId} is not a file or a directory` });
 
 			const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
 			const contexts = await getContexts(fileNode as SpinalNode, graph);

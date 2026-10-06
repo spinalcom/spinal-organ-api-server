@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { getProfileId } from "../../../utilities/requestUtilities";
-import { serviceDocumentation } from "spinal-env-viewer-plugin-documentation-service";
+import { serviceDocumentation, SpinalDocument } from "spinal-env-viewer-plugin-documentation-service";
 import { SpinalNode } from "spinal-model-graph";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
@@ -34,7 +34,7 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 	 *       200:
 	 *         description: Version removed successfully.
 	 *       400:
-	 *         description: Invalid file id.
+	 *         description: Invalid file id, directory or legacy file without version history, or only version of the file.
 	 *       404:
 	 *         description: File or version not found.
 	 *       500:
@@ -50,6 +50,15 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 			if (!fileNode) return res.status(404).send({ message: `No file found with id ${fileDynamicId}` });
 
 			const versionName = req.params.versionName;
+
+			// Check the version first: removeFileVersion reports a missing version with the same error as the other failures.
+			const document = fileNode instanceof SpinalNode ? await fileNode.getElement(true) : fileNode;
+			if (!(document instanceof SpinalDocument)) return res.status(400).send({ message: `File ${fileDynamicId} has no version history` });
+			if (document.isDirectory()) return res.status(400).send({ message: "Directories do not have versions" });
+
+			const version = await document.getVersionByName(versionName);
+			if (!version) return res.status(404).send({ message: `No version found with name ${versionName}` });
+
 			return serviceDocumentation
 				.removeFileVersion(fileNode, versionName)
 				.then((removed) => {

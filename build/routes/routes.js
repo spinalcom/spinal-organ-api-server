@@ -425,6 +425,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require("./snapshot/createNodeSnapshot")(logger, app, spinalAPIMiddleware);
     // documentary routes files
     require("./documentary/file/getFileData")(logger, app, spinalAPIMiddleware);
+    require("./documentary/file/downloadFile")(logger, app, spinalAPIMiddleware);
     require("./documentary/file/getFileVersionByName")(logger, app, spinalAPIMiddleware);
     require("./documentary/file/linkFileToNodeById")(logger, app, spinalAPIMiddleware);
     require("./documentary/file/unlinkFileFromNode")(logger, app, spinalAPIMiddleware);

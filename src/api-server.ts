@@ -32,6 +32,7 @@ import { requestActivity } from './preloadingScript/requestActivity';
 import morgan = require('morgan');
 import chalk from 'chalk';
 import { nanoid } from 'nanoid/non-secure';
+import { getFileUploadOptions } from './utilities/fileUploadOptions';
 
 function pad(str: string, length: number) {
   return str.padEnd(length);
@@ -179,8 +180,8 @@ function APIServer(
     res.setHeader('X-API-Version', process.env.API_SERVER_VERSION);
     next();
   });
-  // enable files upload
-  app.use(fileUpload({ createParentPath: true }));
+  // enable files upload (UTF-8 file names, size limit: see getFileUploadOptions)
+  app.use(fileUpload(getFileUploadOptions()));
   app.use(cors());
   app.disable('x-powered-by');
   app.use(bodyParser.urlencoded({ extended: true }));
