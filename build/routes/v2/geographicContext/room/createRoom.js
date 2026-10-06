@@ -63,7 +63,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                 minimum: 1
      *               info:
      *                 type: object
-     *                 description: Information about the room, including its name, color, and icon. The following fields are forbidden 'id', 'staticId', 'type', 'dynamicId'
+     *                 description: Information about the room, including its `name`, `color`, and `icon`.
+     *                   The following fields are forbidden `id`, `staticId`, `type`, `dynamicId`
      *                 properties:
      *                   name:
      *                     type: string

@@ -26971,7 +26971,7 @@
                 "properties": {
                   "info": {
                     "type": "object",
-                    "description": "Information about the building, including its name, color, and icon. the following fields are forbidden 'id', 'staticId', 'type', 'dynamicId'",
+                    "description": "Information about the building, including its name, color, and icon. The following fields are forbidden `id`, `staticId`, `type`, `dynamicId`",
                     "required": [
                       "name"
                     ],
@@ -27118,7 +27118,7 @@
             "in": "query",
             "name": "info",
             "required": false,
-            "description": "Add fields information to the response. Can be \"true\" or a comma-separated list like \"staticId,name\". \"true\" will include all fields and in the latter case, \"false\" or omitting the parameter will include the default fields if present ('staticId','name', 'type', 'color', 'icon', 'virtual', 'bimFileId', 'dbid'),",
+            "description": "Add fields information to the response. Can be \"true\" or a comma-separated list like `staticId,name`.\n- ex. `true` will include all fields and in the latter case.\n- ex. `false` or `omitting the parameter` will include the default fields if present (`staticId`,`name`, `type`, `color`, `icon`, `virtual`, `bimFileId`, `dbid`),\n- ex. `staticId,name` will include only the `staticId` and `name` fields.",
             "schema": {
               "type": "string"
             },
@@ -27566,7 +27566,7 @@
                   },
                   "info": {
                     "type": "object",
-                    "description": "Information about the room, including its name, color, and icon. The following fields are forbidden 'id', 'staticId', 'type', 'dynamicId'",
+                    "description": "Information about the room, including its `name`, `color`, and `icon`. The following fields are forbidden `id`, `staticId`, `type`, `dynamicId`",
                     "properties": {
                       "name": {
                         "type": "string",

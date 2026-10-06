@@ -52,7 +52,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - in: query
      *         name: info
      *         required: false
-     *         description: Add fields information to the response. Can be "true" or a comma-separated list like "staticId,name". "true" will include all fields and in the latter case, "false" or omitting the parameter will include the default fields if present ('staticId','name', 'type', 'color', 'icon', 'virtual', 'bimFileId', 'dbid'),
+     *         description: Add fields information to the response.
+     *           Can be "true" or a comma-separated list like `staticId,name`.
+     *
+     *           - ex. `true` will include all fields and in the latter case.
+     *
+     *           - ex. `false` or `omitting the parameter` will include the default fields if present (`staticId`,`name`, `type`, `color`, `icon`, `virtual`, `bimFileId`, `dbid`),
+     *
+     *           - ex. `staticId,name` will include only the `staticId` and `name` fields.
      *         schema:
      *           type: string
      *         example: false
