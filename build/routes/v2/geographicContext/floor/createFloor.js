@@ -58,65 +58,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         application/json:
      *           schema:
      *             type: object
-     *             properties:
-     *               info:
-     *                 type: object
-     *                 description: Information about the floor, including its name, color, and icon. The following fields are forbidden 'id', 'staticId', 'type', 'dynamicId'
-     *                 properties:
-     *                   name:
-     *                     type: string
-     *                     description: name of the floor
-     *                     maxLength: 200
-     *                     minLength: 1
-     *                   color:
-     *                     type: string
-     *                     description:  Hexadecimal color code for the floor (e.g., #RRGGBB)
-     *                     pattern: "^#([A-Fa-f0-9]{6})$"
-     *                   icon:
-     *                     type: string
-     *                     description: icon of the floor
-     *                   virtual:
-     *                     type: boolean
-     *                     description: status of the floor (virtual or not)
-     *                     default: false
-     *                   additionalProperties:
-     *                     oneOf:
-     *                       - type: string
-     *                       - type: number
-     *                       - type: boolean
-     *                 required:
-     *                   - name
-     *               attributes:
-     *                 type: object
-     *                 description: add attributes to floor
-     *                 properties:
-     *                   Spatial:
-     *                     type: object
-     *                     description: Spatial attributes category of the floor
-     *                     properties:
-     *                       area:
-     *                         type: string
-     *                         description: Area of the floor
-     *                     additionalProperties:
-     *                       type: string
-     *                 additionalProperties:
-     *                   type: object
-     *                   additionalProperties:
-     *                     type: string
-     *               linkToGroups:
-     *                 type: array
-     *                 description: link the floor to groups
-     *                 items:
-     *                   type: object
-     *                   properties:
-     *                     contextDynamicId:
-     *                       type: number
-     *                       minimum: 1
-     *                     groupDynamicId:
-     *                       type: number
-     *                       minimum: 1
      *             required:
      *               - info
+     *             properties:
+     *               info:
+     *                 allOf:
+     *                   - $ref: '#/components/schemas/ICreateNodeInfo'
+     *                   - $ref: '#/components/schemas/INodeItemInfoPropVirtual'
+     *               attributes:
+     *                 allOf:
+     *                   - $ref: '#/components/schemas/ICreateNodeItemAttr'
+     *                   - $ref: '#/components/schemas/ICreateNodeItemAttrSpatialCat'
+     *               linkToGroups:
+     *                 $ref: '#/components/schemas/ICreateNodeLinkToGroups'
      *             example:
      *               info:
      *                 name: "Floor Name"
@@ -127,31 +81,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                   area: "20"
      *     responses:
      *       201:
-     *         description: Created Successfully
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 data:
-     *                   type: object
-     *                   $ref: '#/components/schemas/INodeItem'
-     *                 error:
-     *                   type: array
-     *                   items:
-     *                     $ref: '#/components/schemas/IErrorItem'
+     *         $ref: '#/components/responses/INodeItemAttrRes'
      *       400:
-     *         description: Bad request - Invalid input or parameters
-     *         content:
-     *           application/json:
-     *             schema:
-     *               $ref: '#/components/schemas/IErrorItem'
+     *         $ref: '#/components/responses/IErrorItemRes400'
      *       500:
-     *         description: Internal server error
-     *         content:
-     *           application/json:
-     *             schema:
-     *               $ref: '#/components/schemas/IErrorItem'
+     *         $ref: '#/components/responses/IErrorItemRes500'
      */
     app.post('/api/v2/floor', (0, express_zod_safe_1.default)({
         body: zod_1.z.object({

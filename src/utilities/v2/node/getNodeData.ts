@@ -24,12 +24,10 @@
 
 import { Str, Val, Bool, type Lst } from 'spinal-core-connectorjs';
 import { SpinalNode } from 'spinal-model-graph';
-import type {
-  INodeItem,
-  INodeItemAttr,
-  INodeItemAttrCat,
-  INodeItemInfo,
-} from '../../../routes/v2/interface/INodeItem';
+import type { INodeItem } from '../../../routes/v2/openApiCompo/schemas/INodeItem';
+import type { INodeItemAttrCat } from '../../../routes/v2/openApiCompo/schemas/INodeItemAttrCat';
+import type { INodeItemAttr } from '../../../routes/v2/openApiCompo/schemas/INodeItemAttr';
+import type { INodeItemInfo } from '../../../routes/v2/openApiCompo/schemas/INodeItemInfo';
 import { awaitSync } from '../../awaitSync';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 import { SpinalAttribute } from 'spinal-models-documentation';
@@ -38,7 +36,8 @@ export async function getNodeData(
   node: SpinalNode,
   info: true | string[],
   attr: Record<string, string[] | boolean> | boolean,
-  addAttributesModificationDate?: boolean
+  addAttributesModificationDate?: boolean,
+  parentDynamicId?: number
 ): Promise<INodeItem> {
   const nodeInfo = extractNodeInfo(info, node);
   const nodeAttributes = await extractNodeAttr(
@@ -50,6 +49,7 @@ export async function getNodeData(
   await awaitSync(node); // Wait for the _server_id to be assigned by hub
   return {
     dynamicId: node._server_id!,
+    parentDynamicId,
     info: nodeInfo,
     attributes: nodeAttributes,
   };

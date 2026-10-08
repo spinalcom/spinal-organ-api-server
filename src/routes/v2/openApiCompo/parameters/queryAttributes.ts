@@ -22,29 +22,22 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import type { EApiErrorType } from '../../../utilities/v2/errorHandler/EApiErrorType';
-
 /**
  * @swagger
  * components:
- *   schemas:
- *     IErrorItem:
- *       type: object
- *       required:
- *         - errorType
- *         - message
- *       properties:
- *         errorType:
- *           type: string
- *           description: The type of the error
- *         message:
- *           type: string
- *           description: The error message
- *       example:
- *         errorType: "INTERNAL_ERROR"
- *         message: "An unexpected error occurred"
+ *   parameters:
+ *     queryAttributes:
+ *       in: query
+ *       name: attributes
+ *       required: false
+ *       description: Add attributes to the response.
+ *
+ *         - `true` will include all attributes from all categories.
+ *
+ *         - `false` or omitting the parameter will include no attributes.
+ *
+ *         - A comma-separated list like `Spatial/area,Spatial/volume,OtherCategories`. Inputting only the category will include all the attributes within that category.
+ *       schema:
+ *         type: string
+ *       example: true
  */
-export interface IErrorItem {
-  errorType: EApiErrorType;
-  message: string;
-}

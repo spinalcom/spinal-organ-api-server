@@ -40,7 +40,7 @@ const EApiErrorType_1 = require("../../../../utilities/v2/errorHandler/EApiError
 const createErrorMsgItem_1 = require("../../../../utilities/v2/errorHandler/createErrorMsgItem");
 const sendResponseError_1 = require("../../../../utilities/v2/errorHandler/sendResponseError");
 module.exports = function (logger, app, spinalAPIMiddleware) {
-    /**s
+    /**
      * @swagger
      * /api/v2/building:
      *   post:
@@ -57,57 +57,26 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         application/json:
      *           schema:
      *             type: object
-     *             properties:
-     *               info:
-     *                 type: object
-     *                 description: Information about the building, including its name, color, and icon.
-     *                   The following fields are forbidden `id`, `staticId`, `type`, `dynamicId`
-     *                 required:
-     *                   - name
-     *                 properties:
-     *                   name:
-     *                     type: string
-     *                     description: name of the building
-     *                     maxLength: 200
-     *                     minLength: 1
-     *                   color:
-     *                     type: string
-     *                     description:  Hexadecimal color code for the building (e.g., #RRGGBB)
-     *                     pattern: "^#([A-Fa-f0-9]{6})$"
-     *                   icon:
-     *                     type: string
-     *                     description: icon of the building
-     *                   additionalProperties:
-     *                     oneOf:
-     *                       - type: string
-     *                       - type: number
-     *                       - type: boolean
-     *               attributes:
-     *                 type: object
-     *                 description: add attributes to building
-     *                 properties:
-     *                   Spatial:
-     *                     type: object
-     *                     description: Spatial attributes category of the building
-     *                     properties:
-     *                       area:
-     *                         type: string
-     *                         description: Area of the building
-     *                   Spinal Building Information:
-     *                     type: object
-     *                     description: Spinal Building Information attribute category of the building
-     *                     properties:
-     *                       area:
-     *                         type: string
-     *                         description: Area of the building
-     *                     additionalProperties:
-     *                       type: string
-     *                 additionalProperties:
-     *                   type: object
-     *                   additionalProperties:
-     *                     type: string
      *             required:
      *               - info
+     *             properties:
+     *               info:
+     *                 $ref: '#/components/schemas/ICreateNodeInfo'
+     *               attributes:
+     *                 allOf:
+     *                   - $ref: '#/components/schemas/ICreateNodeItemAttr'
+     *                   - $ref: '#/components/schemas/ICreateNodeItemAttrSpatialCat'
+     *                   - type: object
+     *                     properties:
+     *                       'Spinal Building Information':
+     *                         type: object
+     *                         description: Spinal Building Information attribute category of the building
+     *                         properties:
+     *                           Adresse:
+     *                             type: string
+     *                             description: Address of the building
+     *                         additionalProperties:
+     *                           type: string
      *             example:
      *               info:
      *                 name: "Building Name"
@@ -118,27 +87,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                   area: "20"
      *     responses:
      *       201:
-     *         description: Created Successfully
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 data:
-     *                   type: object
-     *                   $ref: '#/components/schemas/INodeItem'
+     *         $ref: '#/components/responses/INodeItemAttrRes'
      *       400:
-     *         description: Bad request - Invalid input or parameters
-     *         content:
-     *           application/json:
-     *             schema:
-     *               $ref: '#/components/schemas/IErrorItem'
+     *         $ref: '#/components/responses/IErrorItemRes400'
      *       500:
-     *         description: Internal server error
-     *         content:
-     *           application/json:
-     *             schema:
-     *               $ref: '#/components/schemas/IErrorItem'
+     *         $ref: '#/components/responses/IErrorItemRes500'
      */
     app.post('/api/v2/building', (0, express_zod_safe_1.default)({
         body: zod_1.z.object({

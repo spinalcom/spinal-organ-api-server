@@ -32,7 +32,7 @@ import {
   isErrorItem,
 } from '../errorHandler/createErrorMsgItem';
 import { EApiErrorType } from '../errorHandler/EApiErrorType';
-import type { IErrorItem } from '../../../routes/v2/interface/IErrorItem';
+import type { IErrorItem } from '../../../routes/v2/openApiCompo/schemas/IErrorItem';
 
 export async function linkNodeToGroups(
   spinalAPIMiddleware: ISpinalAPIMiddleware,

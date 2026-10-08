@@ -73,104 +73,40 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                 description: Indicates if the equipment is to be added as an reference object
      *                 default: false
      *               info:
-     *                 type: object
-     *                 description: Information about the equipment, including its name, color, and icon. The following fields are forbidden 'id', 'staticId', 'type', 'dynamicId'
-     *                 properties:
-     *                   name:
-     *                     type: string
-     *                     description: name of the equipment
-     *                     maxLength: 200
-     *                     minLength: 1
-     *                   color:
-     *                     type: string
-     *                     description:  Hexadecimal color code for the equipment (e.g., #RRGGBB)
-     *                     pattern: "^#([A-Fa-f0-9]{6})$"
-     *                   icon:
-     *                     type: string
-     *                     description: icon of the equipment
-     *                   virtual:
-     *                     type: boolean
-     *                     description: status of the equipment (virtual or not)
-     *                     default: false
-     *                   dbid:
-     *                     type: number
-     *                     description: dbid of the equipment, for use in the APS Viewer
-     *                   externalId:
-     *                     type: string
-     *                     description: External ID of the equipment comming from Revit
-     *                   bimFileId:
-     *                     type: string
-     *                     description: staticId of the BimFile which the equipment belongs to
-     *                   additionalProperties:
-     *                     oneOf:
-     *                       - type: string
-     *                       - type: number
-     *                       - type: boolean
-     *                 required:
-     *                   - name
-     *               attributes:
-     *                 type: object
-     *                 description: add attributes to equipment
-     *                 properties:
-     *                   Spatial:
-     *                     type: object
-     *                     description: Spatial attributes category of the equipment
+     *                 allOf:
+     *                   - $ref: '#/components/schemas/ICreateNodeInfo'
+     *                   - $ref: '#/components/schemas/INodeItemInfoPropVirtual'
+     *                   - type: object
      *                     properties:
-     *                       area:
+     *                       dbid:
+     *                         type: number
+     *                         description: dbid of the equipment, for use in the APS Viewer
+     *                       externalId:
      *                         type: string
-     *                         description: Area of the equipment
-     *                     additionalProperties:
-     *                       type: string
-     *                 additionalProperties:
-     *                   type: object
-     *                   additionalProperties:
-     *                     type: string
+     *                         description: External ID of the equipment comming from Revit
+     *                       bimFileId:
+     *                         type: string
+     *                         description: staticId of the BimFile which the equipment belongs to
+     *               attributes:
+     *                 $ref: '#/components/schemas/ICreateNodeItemAttr'
      *               linkToGroups:
-     *                 type: array
-     *                 description: link the equipment to groups
-     *                 items:
-     *                   type: object
-     *                   properties:
-     *                     contextDynamicId:
-     *                       type: number
-     *                       minimum: 1
-     *                     groupDynamicId:
-     *                       type: number
-     *                       minimum: 1
+     *                 $ref: '#/components/schemas/ICreateNodeLinkToGroups'
      *             example:
      *               parentDynamicId: 123456789
      *               info:
      *                 name: "equipment Name"
      *                 color: "#FF0000"
      *                 icon: "room-icon"
-     *               attributes:
-     *                 Spatial:
-     *                   area: "20"
+     *                 dbid: 123
+     *                 externalId: "external-id"
+     *                 bimFileId: "123-abc-123-abc-456789"
      *     responses:
      *       201:
-     *         description: Created Successfully
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 data:
-     *                   type: object
-     *                   $ref: '#/components/schemas/INodeItem'
-     *                 error:
-     *                   type: array
-     *                   items:
-     *                     $ref: '#/components/schemas/IErrorItem'
+     *         $ref: '#/components/responses/INodeItemAttrRes'
      *       400:
-     *         description: Bad request - Invalid input or parameters
-     *         content:
-     *           application/json:
-     *             $ref: '#/components/schemas/IErrorItem'
+     *         $ref: '#/components/responses/IErrorItemRes400'
      *       500:
-     *         description: Internal server error
-     *         content:
-     *           application/json:
-     *             $ref: '#/components/schemas/IErrorItem'
+     *         $ref: '#/components/responses/IErrorItemRes500'
      */
     app.post('/api/v2/equipment', (0, express_zod_safe_1.default)({
         body: zod_1.z.object({

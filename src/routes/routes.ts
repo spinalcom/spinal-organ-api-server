@@ -1503,7 +1503,27 @@ function routes(
     app,
     spinalAPIMiddleware
   );
+  require('./v2/geographicContext/floor/getFloor')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/geographicContext/floor/getFloorById')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./v2/geographicContext/room/createRoom')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/geographicContext/room/getRoom')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/geographicContext/room/getRoomById')(
     logger,
     app,
     spinalAPIMiddleware

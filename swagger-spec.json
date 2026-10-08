@@ -2345,6 +2345,10 @@
           "dynamicId": {
             "type": "number"
           },
+          "parentDynamicId": {
+            "description": "given when the request use the parent-dynamic-id parameter",
+            "type": "number"
+          },
           "info": {
             "$ref": "#/components/schemas/INodeItemInfo"
           },
@@ -2354,6 +2358,7 @@
         },
         "example": {
           "dynamicId": 123,
+          "parentDynamicId": 456,
           "info": {
             "staticId": "abc123",
             "name": "Node Name",
@@ -2372,6 +2377,48 @@
               }
             }
           }
+        }
+      },
+      "INodeItemAttr": {
+        "type": "object",
+        "description": "Attributes of the node item categorized by category name",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/INodeItemAttrCat"
+        }
+      },
+      "INodeItemAttrCat": {
+        "type": "object",
+        "description": "Attribute category containing individual attributes.",
+        "additionalProperties": {
+          "type": "object",
+          "description": "Value of the attribute. Depending on the `add-attributes-modification-date` flag, either as a string or an object with its value and last modification date.",
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Attribute value as a string"
+            },
+            {
+              "type": "object",
+              "description": "Attribute value along with its last modification date",
+              "$ref": "#/components/schemas/INodeItemAttrCatAttrAndDate"
+            }
+          ]
+        }
+      },
+      "INodeItemAttrCatAttrAndDate": {
+        "type": "object",
+        "description": "attribute value and its last modification date",
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "lastModification": {
+            "type": "number"
+          }
+        },
+        "example": {
+          "value": "example value",
+          "lastModification": 1627849200
         }
       },
       "INodeItemInfo": {
@@ -2413,42 +2460,223 @@
           ]
         }
       },
-      "INodeItemAttr": {
-        "type": "object",
-        "description": "Attributes of the node item categorized by category name",
+      "ICreateNodeInfo": {
+        "description": "Information about the node to create, including its name, color, and icon. The following fields are forbidden `id`, `staticId`, `type`, `dynamicId`",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "name of the node",
+            "maxLength": 200,
+            "minLength": 1
+          },
+          "color": {
+            "type": "string",
+            "description": "Hexadecimal color code for the node (e.g., \\#FFFFFF)",
+            "pattern": "^#([A-Fa-f0-9]{6})$"
+          },
+          "icon": {
+            "type": "string",
+            "description": "icon of the node"
+          }
+        },
         "additionalProperties": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "object",
-            "description": "Value of the attribute. Depending on the add-attributes-modification-date flag, either as a string or an object with its value and last modification date",
-            "oneOf": [
-              {
-                "type": "string",
-                "description": "Attribute value as a string"
-              },
-              {
-                "type": "object",
-                "description": "Attribute value along with its last modification date",
-                "$ref": "#/components/schemas/INodeItemAttrCatAttrAndDate"
-              }
-            ]
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "INodeItemInfoPropVirtual": {
+        "type": "object",
+        "properties": {
+          "virtual": {
+            "type": "boolean",
+            "description": "status of the node (virtual or not)",
+            "default": false
           }
         }
       },
-      "INodeItemAttrCatAttrAndDate": {
+      "ICreateNodeItemAttr": {
         "type": "object",
-        "description": "attribute value and its last modification date",
-        "properties": {
-          "value": {
+        "description": "Attributes to add to the node item.",
+        "additionalProperties": {
+          "description": "category of the node",
+          "type": "object",
+          "additionalProperties": {
+            "description": "Attribute of the category",
             "type": "string"
-          },
-          "lastModification": {
-            "type": "number"
           }
+        }
+      },
+      "ICreateNodeLinkToGroups": {
+        "type": "array",
+        "description": "optionnal, link the floor to groups after creation.",
+        "items": {
+          "type": "object",
+          "required": [
+            "contextDynamicId",
+            "groupDynamicId"
+          ],
+          "properties": {
+            "contextDynamicId": {
+              "type": "number",
+              "minimum": 1
+            },
+            "groupDynamicId": {
+              "type": "number",
+              "minimum": 1
+            }
+          }
+        }
+      },
+      "ICreateNodeItemAttrSpatialCat": {
+        "type": "object",
+        "description": "Spatial attributes category of the node.",
+        "properties": {
+          "Spatial": {
+            "type": "object",
+            "description": "Spatial attributes of the node",
+            "properties": {
+              "area": {
+                "type": "string",
+                "description": "Area of the node"
+              }
+            },
+            "additionalProperties": {
+              "description": "Attribute of the spatial category",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "queryAddAttributesModificationDate": {
+        "in": "query",
+        "name": "add-attributes-modification-date",
+        "required": false,
+        "description": "add the modification date of the attributes",
+        "example": "",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "queryAttributes": {
+        "in": "query",
+        "name": "attributes",
+        "required": false,
+        "description": "Add attributes to the response.\n- `true` will include all attributes from all categories.\n- `false` or omitting the parameter will include no attributes.\n- A comma-separated list like `Spatial/area,Spatial/volume,OtherCategories`. Inputting only the category will include all the attributes within that category.",
+        "schema": {
+          "type": "string"
         },
-        "example": {
-          "value": "example value",
-          "lastModification": 1627849200
+        "example": true
+      },
+      "queryInfo": {
+        "in": "query",
+        "name": "info",
+        "required": false,
+        "description": "Add fields information to the response.\n- `true` will include all fields and in the latter case.\n- `false` or `omitting the parameter` will use the default fields (`staticId,name,type,color,icon,virtual,bimFileId,dbid`) if they are present in the node.\n- A comma-separated list like `staticId,name` will include only the `staticId` and `name` fields.",
+        "schema": {
+          "type": "string"
+        },
+        "example": false
+      },
+      "paramParentDynId": {
+        "in": "query",
+        "name": "parent-dynamic-id",
+        "required": false,
+        "description": "filter the results by the dynamic ID of the parent node. if not provided, will search from the whole building.",
+        "example": "132456",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "responses": {
+      "IErrorItemRes400": {
+        "description": "Bad request - Invalid input or parameters",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/IErrorItem"
+            }
+          }
+        }
+      },
+      "IErrorItemRes500": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/IErrorItem"
+            }
+          }
+        }
+      },
+      "INodeItemAttrRes": {
+        "description": "Retrieve Successfully",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "data"
+              ],
+              "properties": {
+                "data": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/INodeItem"
+                },
+                "errors": {
+                  "type": "array",
+                  "description": "List of errors encountered during the request.",
+                  "items": {
+                    "$ref": "#/components/schemas/IErrorItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "INodeItemAttrMultiRes": {
+        "description": "Retrieve Successfully",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "data"
+              ],
+              "properties": {
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/INodeItem"
+                  }
+                },
+                "errors": {
+                  "type": "array",
+                  "description": "List of errors encountered during the request.",
+                  "items": {
+                    "$ref": "#/components/schemas/IErrorItem"
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -26968,83 +27196,42 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "info": {
-                    "type": "object",
-                    "description": "Information about the building, including its name, color, and icon. The following fields are forbidden `id`, `staticId`, `type`, `dynamicId`",
-                    "required": [
-                      "name"
-                    ],
-                    "properties": {
-                      "name": {
-                        "type": "string",
-                        "description": "name of the building",
-                        "maxLength": 200,
-                        "minLength": 1
-                      },
-                      "color": {
-                        "type": "string",
-                        "description": "Hexadecimal color code for the building (e.g.,",
-                        "pattern": "^#([A-Fa-f0-9]{6})$"
-                      },
-                      "icon": {
-                        "type": "string",
-                        "description": "icon of the building"
-                      },
-                      "additionalProperties": {
-                        "oneOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "boolean"
-                          }
-                        ]
-                      }
-                    }
-                  },
-                  "attributes": {
-                    "type": "object",
-                    "description": "add attributes to building",
-                    "properties": {
-                      "Spatial": {
-                        "type": "object",
-                        "description": "Spatial attributes category of the building",
-                        "properties": {
-                          "area": {
-                            "type": "string",
-                            "description": "Area of the building"
-                          }
-                        }
-                      },
-                      "Spinal Building Information": {
-                        "type": "object",
-                        "description": "Spinal Building Information attribute category of the building",
-                        "properties": {
-                          "area": {
-                            "type": "string",
-                            "description": "Area of the building"
-                          }
-                        },
-                        "additionalProperties": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "additionalProperties": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "string"
-                      }
-                    }
-                  }
-                },
                 "required": [
                   "info"
                 ],
+                "properties": {
+                  "info": {
+                    "$ref": "#/components/schemas/ICreateNodeInfo"
+                  },
+                  "attributes": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ICreateNodeItemAttr"
+                      },
+                      {
+                        "$ref": "#/components/schemas/ICreateNodeItemAttrSpatialCat"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "Spinal Building Information": {
+                            "type": "object",
+                            "description": "Spinal Building Information attribute category of the building",
+                            "properties": {
+                              "Adresse": {
+                                "type": "string",
+                                "description": "Address of the building"
+                              }
+                            },
+                            "additionalProperties": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
                 "example": {
                   "info": {
                     "name": "Building Name",
@@ -27063,40 +27250,13 @@
         },
         "responses": {
           "201": {
-            "description": "Created Successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "$ref": "#/components/schemas/INodeItem"
-                    }
-                  }
-                }
-              }
-            }
+            "$ref": "#/components/responses/INodeItemAttrRes"
           },
           "400": {
-            "description": "Bad request - Invalid input or parameters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IErrorItem"
-                }
-              }
-            }
+            "$ref": "#/components/responses/IErrorItemRes400"
           },
           "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IErrorItem"
-                }
-              }
-            }
+            "$ref": "#/components/responses/IErrorItemRes500"
           }
         }
       },
@@ -27115,63 +27275,251 @@
         ],
         "parameters": [
           {
-            "in": "query",
-            "name": "info",
-            "required": false,
-            "description": "Add fields information to the response. Can be \"true\" or a comma-separated list like `staticId,name`.\n- ex. `true` will include all fields and in the latter case.\n- ex. `false` or `omitting the parameter` will include the default fields if present (`staticId`,`name`, `type`, `color`, `icon`, `virtual`, `bimFileId`, `dbid`),\n- ex. `staticId,name` will include only the `staticId` and `name` fields.",
-            "schema": {
-              "type": "string"
-            },
-            "example": false
+            "$ref": "#/components/parameters/queryInfo"
           },
           {
-            "in": "query",
-            "name": "attributes",
-            "required": false,
-            "description": "Add attributes to the response. Can be \"true\" or a comma-separated list like \"Spatial/area,Spatial/volume,OtherCategories\". \"true\" will include all attributes from all categories and in the latter case, inputting only the category will include all the attributes within that category. \"false\" or omitting the parameter will include no attributes.",
-            "schema": {
-              "type": "string"
-            },
-            "example": true
+            "$ref": "#/components/parameters/queryAttributes"
           },
           {
-            "in": "query",
-            "name": "add-attributes-modification-date",
-            "required": false,
-            "description": "add the modification date of the attributes",
-            "example": "",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
+            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
           }
         ],
         "responses": {
           "200": {
-            "description": "Retrieve Successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "$ref": "#/components/schemas/INodeItem"
+            "$ref": "#/components/responses/INodeItemAttrRes"
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          }
+        }
+      }
+    },
+    "/api/v2/floor": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "create a floor",
+        "description": "Create a floor.",
+        "tags": [
+          "geographicContext"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "info"
+                ],
+                "properties": {
+                  "info": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ICreateNodeInfo"
+                      },
+                      {
+                        "$ref": "#/components/schemas/INodeItemInfoPropVirtual"
+                      }
+                    ]
+                  },
+                  "attributes": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ICreateNodeItemAttr"
+                      },
+                      {
+                        "$ref": "#/components/schemas/ICreateNodeItemAttrSpatialCat"
+                      }
+                    ]
+                  },
+                  "linkToGroups": {
+                    "$ref": "#/components/schemas/ICreateNodeLinkToGroups"
+                  }
+                },
+                "example": {
+                  "info": {
+                    "name": "Floor Name",
+                    "color": "#FF0000",
+                    "icon": "floor-icon"
+                  },
+                  "attributes": {
+                    "Spatial": {
+                      "area": "20"
                     }
                   }
                 }
               }
             }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/INodeItemAttrRes"
           },
           "400": {
-            "description": "Bad request - Invalid input or parameters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IErrorItem"
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve floors",
+        "description": "Retrieve floors.",
+        "tags": [
+          "geographicContext"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/queryInfo"
+          },
+          {
+            "$ref": "#/components/parameters/queryAttributes"
+          },
+          {
+            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/INodeItemAttrMultiRes"
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          }
+        }
+      }
+    },
+    "/api/v2/room": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "create a room",
+        "description": "Create a room.",
+        "tags": [
+          "geographicContext"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "dynamicFloorId",
+                  "info"
+                ],
+                "properties": {
+                  "dynamicFloorId": {
+                    "type": "number",
+                    "description": "The dynamic ID of the floor to which the room belongs",
+                    "minimum": 1
+                  },
+                  "info": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ICreateNodeInfo"
+                      },
+                      {
+                        "$ref": "#/components/schemas/INodeItemInfoPropVirtual"
+                      }
+                    ]
+                  },
+                  "attributes": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ICreateNodeItemAttr"
+                      },
+                      {
+                        "$ref": "#/components/schemas/ICreateNodeItemAttrSpatialCat"
+                      }
+                    ]
+                  },
+                  "linkToGroups": {
+                    "$ref": "#/components/schemas/ICreateNodeLinkToGroups"
+                  }
+                },
+                "example": {
+                  "dynamicFloorId": 123456789,
+                  "info": {
+                    "name": "Room Name",
+                    "color": "#FF0000",
+                    "icon": "room-icon"
+                  },
+                  "attributes": {
+                    "Spatial": {
+                      "area": "20"
+                    }
+                  }
                 }
               }
             }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/INodeItemAttrRes"
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve room by it's dynamic ID",
+        "description": "Retrieve room by its dynamic ID.",
+        "tags": [
+          "geographicContext"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/queryInfo"
+          },
+          {
+            "$ref": "#/components/parameters/queryAttributes"
+          },
+          {
+            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
+          },
+          {
+            "$ref": "#/components/parameters/paramParentDynId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/INodeItemAttrMultiRes"
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
           }
         }
       }
@@ -27212,100 +27560,37 @@
                     "default": false
                   },
                   "info": {
-                    "type": "object",
-                    "description": "Information about the equipment, including its name, color, and icon. The following fields are forbidden 'id', 'staticId', 'type', 'dynamicId'",
-                    "properties": {
-                      "name": {
-                        "type": "string",
-                        "description": "name of the equipment",
-                        "maxLength": 200,
-                        "minLength": 1
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ICreateNodeInfo"
                       },
-                      "color": {
-                        "type": "string",
-                        "description": "Hexadecimal color code for the equipment (e.g.,",
-                        "pattern": "^#([A-Fa-f0-9]{6})$"
+                      {
+                        "$ref": "#/components/schemas/INodeItemInfoPropVirtual"
                       },
-                      "icon": {
-                        "type": "string",
-                        "description": "icon of the equipment"
-                      },
-                      "virtual": {
-                        "type": "boolean",
-                        "description": "status of the equipment (virtual or not)",
-                        "default": false
-                      },
-                      "dbid": {
-                        "type": "number",
-                        "description": "dbid of the equipment, for use in the APS Viewer"
-                      },
-                      "externalId": {
-                        "type": "string",
-                        "description": "External ID of the equipment comming from Revit"
-                      },
-                      "bimFileId": {
-                        "type": "string",
-                        "description": "staticId of the BimFile which the equipment belongs to"
-                      },
-                      "additionalProperties": {
-                        "oneOf": [
-                          {
-                            "type": "string"
+                      {
+                        "type": "object",
+                        "properties": {
+                          "dbid": {
+                            "type": "number",
+                            "description": "dbid of the equipment, for use in the APS Viewer"
                           },
-                          {
-                            "type": "number"
+                          "externalId": {
+                            "type": "string",
+                            "description": "External ID of the equipment comming from Revit"
                           },
-                          {
-                            "type": "boolean"
+                          "bimFileId": {
+                            "type": "string",
+                            "description": "staticId of the BimFile which the equipment belongs to"
                           }
-                        ]
+                        }
                       }
-                    },
-                    "required": [
-                      "name"
                     ]
                   },
                   "attributes": {
-                    "type": "object",
-                    "description": "add attributes to equipment",
-                    "properties": {
-                      "Spatial": {
-                        "type": "object",
-                        "description": "Spatial attributes category of the equipment",
-                        "properties": {
-                          "area": {
-                            "type": "string",
-                            "description": "Area of the equipment"
-                          }
-                        },
-                        "additionalProperties": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "additionalProperties": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "string"
-                      }
-                    }
+                    "$ref": "#/components/schemas/ICreateNodeItemAttr"
                   },
                   "linkToGroups": {
-                    "type": "array",
-                    "description": "link the equipment to groups",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "contextDynamicId": {
-                          "type": "number",
-                          "minimum": 1
-                        },
-                        "groupDynamicId": {
-                          "type": "number",
-                          "minimum": 1
-                        }
-                      }
-                    }
+                    "$ref": "#/components/schemas/ICreateNodeLinkToGroups"
                   }
                 },
                 "example": {
@@ -27313,12 +27598,10 @@
                   "info": {
                     "name": "equipment Name",
                     "color": "#FF0000",
-                    "icon": "room-icon"
-                  },
-                  "attributes": {
-                    "Spatial": {
-                      "area": "20"
-                    }
+                    "icon": "room-icon",
+                    "dbid": 123,
+                    "externalId": "external-id",
+                    "bimFileId": "123-abc-123-abc-456789"
                   }
                 }
               }
@@ -27327,391 +27610,101 @@
         },
         "responses": {
           "201": {
-            "description": "Created Successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "$ref": "#/components/schemas/INodeItem"
-                    },
-                    "error": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/IErrorItem"
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "$ref": "#/components/responses/INodeItemAttrRes"
           },
           "400": {
-            "description": "Bad request - Invalid input or parameters",
-            "content": {
-              "application/json": {
-                "$ref": "#/components/schemas/IErrorItem"
-              }
-            }
+            "$ref": "#/components/responses/IErrorItemRes400"
           },
           "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "$ref": "#/components/schemas/IErrorItem"
-              }
-            }
+            "$ref": "#/components/responses/IErrorItemRes500"
           }
         }
       }
     },
-    "/api/v2/floor": {
-      "post": {
+    "/api/v2/floor/{floorId}": {
+      "get": {
         "security": [
           {
             "bearerAuth": [
-              "write"
+              "read"
             ]
           }
         ],
-        "summary": "create a floor",
-        "description": "Create a floor.",
+        "summary": "Retrieve floor by it's dynamic ID",
+        "description": "Retrieve floor by its dynamic ID.",
         "tags": [
           "geographicContext"
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "info": {
-                    "type": "object",
-                    "description": "Information about the floor, including its name, color, and icon. The following fields are forbidden 'id', 'staticId', 'type', 'dynamicId'",
-                    "properties": {
-                      "name": {
-                        "type": "string",
-                        "description": "name of the floor",
-                        "maxLength": 200,
-                        "minLength": 1
-                      },
-                      "color": {
-                        "type": "string",
-                        "description": "Hexadecimal color code for the floor (e.g.,",
-                        "pattern": "^#([A-Fa-f0-9]{6})$"
-                      },
-                      "icon": {
-                        "type": "string",
-                        "description": "icon of the floor"
-                      },
-                      "virtual": {
-                        "type": "boolean",
-                        "description": "status of the floor (virtual or not)",
-                        "default": false
-                      },
-                      "additionalProperties": {
-                        "oneOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "boolean"
-                          }
-                        ]
-                      }
-                    },
-                    "required": [
-                      "name"
-                    ]
-                  },
-                  "attributes": {
-                    "type": "object",
-                    "description": "add attributes to floor",
-                    "properties": {
-                      "Spatial": {
-                        "type": "object",
-                        "description": "Spatial attributes category of the floor",
-                        "properties": {
-                          "area": {
-                            "type": "string",
-                            "description": "Area of the floor"
-                          }
-                        },
-                        "additionalProperties": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "additionalProperties": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "string"
-                      }
-                    }
-                  },
-                  "linkToGroups": {
-                    "type": "array",
-                    "description": "link the floor to groups",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "contextDynamicId": {
-                          "type": "number",
-                          "minimum": 1
-                        },
-                        "groupDynamicId": {
-                          "type": "number",
-                          "minimum": 1
-                        }
-                      }
-                    }
-                  }
-                },
-                "required": [
-                  "info"
-                ],
-                "example": {
-                  "info": {
-                    "name": "Floor Name",
-                    "color": "#FF0000",
-                    "icon": "floor-icon"
-                  },
-                  "attributes": {
-                    "Spatial": {
-                      "area": "20"
-                    }
-                  }
-                }
-              }
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/queryInfo"
+          },
+          {
+            "$ref": "#/components/parameters/queryAttributes"
+          },
+          {
+            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
+          },
+          {
+            "name": "floorId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
             }
           }
-        },
+        ],
         "responses": {
-          "201": {
-            "description": "Created Successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "$ref": "#/components/schemas/INodeItem"
-                    },
-                    "error": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/IErrorItem"
-                      }
-                    }
-                  }
-                }
-              }
-            }
+          "200": {
+            "$ref": "#/components/responses/INodeItemAttrRes"
           },
           "400": {
-            "description": "Bad request - Invalid input or parameters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IErrorItem"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IErrorItem"
-                }
-              }
-            }
+            "$ref": "#/components/responses/IErrorItemRes400"
           }
         }
       }
     },
-    "/api/v2/room": {
-      "post": {
+    "/api/v2/room/{roomId}": {
+      "get": {
         "security": [
           {
             "bearerAuth": [
-              "write"
+              "read"
             ]
           }
         ],
-        "summary": "create a room",
-        "description": "Create a room.",
+        "summary": "Retrieve room by it's dynamic ID",
+        "description": "Retrieve room by its dynamic ID.",
         "tags": [
           "geographicContext"
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "dynamicFloorId": {
-                    "type": "number",
-                    "description": "The dynamic ID of the floor to which the room belongs",
-                    "minimum": 1
-                  },
-                  "info": {
-                    "type": "object",
-                    "description": "Information about the room, including its `name`, `color`, and `icon`. The following fields are forbidden `id`, `staticId`, `type`, `dynamicId`",
-                    "properties": {
-                      "name": {
-                        "type": "string",
-                        "description": "name of the room",
-                        "maxLength": 200,
-                        "minLength": 1
-                      },
-                      "color": {
-                        "type": "string",
-                        "description": "Hexadecimal color code for the room (e.g.,",
-                        "pattern": "^#([A-Fa-f0-9]{6})$"
-                      },
-                      "icon": {
-                        "type": "string",
-                        "description": "icon of the room"
-                      },
-                      "virtual": {
-                        "type": "boolean",
-                        "description": "status of the room (virtual or not)",
-                        "default": false
-                      },
-                      "additionalProperties": {
-                        "oneOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "boolean"
-                          }
-                        ]
-                      }
-                    },
-                    "required": [
-                      "name"
-                    ]
-                  },
-                  "attributes": {
-                    "type": "object",
-                    "description": "add attributes to room",
-                    "properties": {
-                      "Spatial": {
-                        "type": "object",
-                        "description": "Spatial attributes category of the room",
-                        "properties": {
-                          "area": {
-                            "type": "string",
-                            "description": "Area of the room"
-                          }
-                        },
-                        "additionalProperties": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "additionalProperties": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "string"
-                      }
-                    }
-                  },
-                  "linkToGroups": {
-                    "type": "array",
-                    "description": "link the room to groups",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "contextDynamicId": {
-                          "type": "number",
-                          "minimum": 1
-                        },
-                        "groupDynamicId": {
-                          "type": "number",
-                          "minimum": 1
-                        }
-                      }
-                    }
-                  }
-                },
-                "required": [
-                  "dynamicFloorId",
-                  "info"
-                ],
-                "example": {
-                  "dynamicFloorId": 123456789,
-                  "info": {
-                    "name": "Room Name",
-                    "color": "#FF0000",
-                    "icon": "room-icon"
-                  },
-                  "attributes": {
-                    "Spatial": {
-                      "area": "20"
-                    }
-                  }
-                }
-              }
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/queryInfo"
+          },
+          {
+            "$ref": "#/components/parameters/queryAttributes"
+          },
+          {
+            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
+          },
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
             }
           }
-        },
+        ],
         "responses": {
-          "201": {
-            "description": "Created Successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "$ref": "#/components/schemas/INodeItem"
-                    },
-                    "error": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/IErrorItem"
-                      }
-                    }
-                  }
-                }
-              }
-            }
+          "200": {
+            "$ref": "#/components/responses/INodeItemAttrRes"
           },
           "400": {
-            "description": "Bad request - Invalid input or parameters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IErrorItem"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IErrorItem"
-                }
-              }
-            }
+            "$ref": "#/components/responses/IErrorItemRes400"
           }
         }
       }

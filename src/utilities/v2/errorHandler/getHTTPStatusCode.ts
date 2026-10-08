@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import type { IErrorItem } from '../../../routes/v2/interface/IErrorItem';
+import type { IErrorItem } from '../../../routes/v2/openApiCompo/schemas/IErrorItem';
 import { isErrorItem } from './createErrorMsgItem';
 import { EApiErrorType } from './EApiErrorType';
 

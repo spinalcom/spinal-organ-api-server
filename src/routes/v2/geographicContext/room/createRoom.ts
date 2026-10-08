@@ -43,9 +43,6 @@ import { handleSetInfo } from '../../../../utilities/v2/node/handleSetInfo';
 import { getNodeData } from '../../../../utilities/v2/node/getNodeData';
 import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
 import { addExtraInfoValidation } from '../../../../utilities/v2/requestParse/addExtraInfoValidation';
-import { sendResponseError } from '../../../../utilities/v2/errorHandler/sendResponseError';
-import { createErrorMsgItem } from '../../../../utilities/v2/errorHandler/createErrorMsgItem';
-import { EApiErrorType } from '../../../../utilities/v2/errorHandler/EApiErrorType';
 
 module.exports = function (
   logger: any,
@@ -69,71 +66,24 @@ module.exports = function (
    *         application/json:
    *           schema:
    *             type: object
+   *             required:
+   *               - dynamicFloorId
+   *               - info
    *             properties:
    *               dynamicFloorId:
    *                 type: number
    *                 description: The dynamic ID of the floor to which the room belongs
    *                 minimum: 1
    *               info:
-   *                 type: object
-   *                 description: Information about the room, including its `name`, `color`, and `icon`.
-   *                   The following fields are forbidden `id`, `staticId`, `type`, `dynamicId`
-   *                 properties:
-   *                   name:
-   *                     type: string
-   *                     description: name of the room
-   *                     maxLength: 200
-   *                     minLength: 1
-   *                   color:
-   *                     type: string
-   *                     description:  Hexadecimal color code for the room (e.g., #RRGGBB)
-   *                     pattern: "^#([A-Fa-f0-9]{6})$"
-   *                   icon:
-   *                     type: string
-   *                     description: icon of the room
-   *                   virtual:
-   *                     type: boolean
-   *                     description: status of the room (virtual or not)
-   *                     default: false
-   *                   additionalProperties:
-   *                     oneOf:
-   *                       - type: string
-   *                       - type: number
-   *                       - type: boolean
-   *                 required:
-   *                   - name
+   *                 allOf:
+   *                   - $ref: '#/components/schemas/ICreateNodeInfo'
+   *                   - $ref: '#/components/schemas/INodeItemInfoPropVirtual'
    *               attributes:
-   *                 type: object
-   *                 description: add attributes to room
-   *                 properties:
-   *                   Spatial:
-   *                     type: object
-   *                     description: Spatial attributes category of the room
-   *                     properties:
-   *                       area:
-   *                         type: string
-   *                         description: Area of the room
-   *                     additionalProperties:
-   *                       type: string
-   *                 additionalProperties:
-   *                   type: object
-   *                   additionalProperties:
-   *                     type: string
+   *                 allOf:
+   *                   - $ref: '#/components/schemas/ICreateNodeItemAttr'
+   *                   - $ref: '#/components/schemas/ICreateNodeItemAttrSpatialCat'
    *               linkToGroups:
-   *                 type: array
-   *                 description: link the room to groups
-   *                 items:
-   *                   type: object
-   *                   properties:
-   *                     contextDynamicId:
-   *                       type: number
-   *                       minimum: 1
-   *                     groupDynamicId:
-   *                       type: number
-   *                       minimum: 1
-   *             required:
-   *               - dynamicFloorId
-   *               - info
+   *                 $ref: '#/components/schemas/ICreateNodeLinkToGroups'
    *             example:
    *               dynamicFloorId: 123456789
    *               info:
@@ -145,31 +95,11 @@ module.exports = function (
    *                   area: "20"
    *     responses:
    *       201:
-   *         description: Created Successfully
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 data:
-   *                   type: object
-   *                   $ref: '#/components/schemas/INodeItem'
-   *                 error:
-   *                   type: array
-   *                   items:
-   *                     $ref: '#/components/schemas/IErrorItem'
+   *         $ref: '#/components/responses/INodeItemAttrRes'
    *       400:
-   *         description: Bad request - Invalid input or parameters
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/IErrorItem'
+   *         $ref: '#/components/responses/IErrorItemRes400'
    *       500:
-   *         description: Internal server error
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/IErrorItem'
+   *         $ref: '#/components/responses/IErrorItemRes500'
    */
   app.post(
     '/api/v2/room',

@@ -434,7 +434,11 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./v2/geographicContext/building/getBuilding')(logger, app, spinalAPIMiddleware);
     require('./v2/geographicContext/building/createBuilding')(logger, app, spinalAPIMiddleware);
     require('./v2/geographicContext/floor/createFloor')(logger, app, spinalAPIMiddleware);
+    require('./v2/geographicContext/floor/getFloor')(logger, app, spinalAPIMiddleware);
+    require('./v2/geographicContext/floor/getFloorById')(logger, app, spinalAPIMiddleware);
     require('./v2/geographicContext/room/createRoom')(logger, app, spinalAPIMiddleware);
+    require('./v2/geographicContext/room/getRoom')(logger, app, spinalAPIMiddleware);
+    require('./v2/geographicContext/room/getRoomById')(logger, app, spinalAPIMiddleware);
     require('./v2/geographicContext/equipment/createEquipment')(logger, app, spinalAPIMiddleware);
 }
 exports.default = routes;

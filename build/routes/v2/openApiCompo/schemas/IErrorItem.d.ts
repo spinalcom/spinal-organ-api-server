@@ -1,4 +1,4 @@
-import type { EApiErrorType } from '../../../utilities/v2/errorHandler/EApiErrorType';
+import type { EApiErrorType } from '../../../../utilities/v2/errorHandler/EApiErrorType';
 /**
  * @swagger
  * components:
