@@ -65,21 +65,23 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Retrun the default scene with it's items
-     *     summary: Get the default scene with it's items
+     *     summary: Get the default BIM scene with its items
+     *     description: >-
+     *       Returns the scene marked as the default one, together with `scenesItems`, the models it
+     *       loads. This is what a viewer opens when no particular scene is asked for.
      *     tags:
      *       - BIM
      *     responses:
      *       200:
-     *         description: scene
+     *         description: The default scene with its items.
      *         content:
      *           application/json:
      *             schema:
      *                $ref: '#/components/schemas/IScenesbody'
      *       400:
-     *         description: scene not found
+     *         description: No scene is marked as the default one.
      *       500:
-     *         description: internal error
+     *         description: The scenes could not be read. The body is an empty object.
      */
     app.get('/api/v1/BIM/scene/default', async (req, res, next) => {
         try {

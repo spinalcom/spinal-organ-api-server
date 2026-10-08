@@ -29,50 +29,79 @@ const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
 const spinal_service_ticket_1 = require("spinal-service-ticket");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-     * @swagger
-     * /api/v1/ticket/{ticketId}/add_doc:
-     *   post:
-     *     security:
-     *       - bearerAuth:
-     *         - read
-     *     description: Uploads a Doc
-     *     summary: Uploads a Doc
-     *     tags:
-     *       - Workflow & ticket
-     *     parameters:
-     *       - in: path
-     *         name: ticketId
-     *         description: use the dynamic ID
-     *         required: true
-     *         schema:
-     *           type: integer
-     *           format: int64
-     *     requestBody:
-     *       content:
-     *         multipart/form-data:
-     *           schema:
-     *             type: object
-     *             properties:
-     *               file:
-     *                 type: string
-     *                 format: binary
-     *           encoding:
-     *             file:
-     *               style: form
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             required:
-     *               - workflowId
-     *             properties:
-     *               workflowId:
-     *                 type: number
-     *     responses:
-     *       200:
-     *         description: Add Successfully
-     *       400:
-     *         description: Add not Successfully
-     */
+   * @swagger
+   * /api/v1/ticket/{ticketId}/add_doc:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Attach documents to a ticket
+   *     description: >-
+   *       Uploads one or more files as `multipart/form-data` under the field `file` and stores them as
+   *       documents of the ticket, where `/api/v1/node/{id}/file_list` then lists them.
+   *
+   *
+   *       **Known behaviour to be aware of** : when exactly **one** file is sent, the route answers
+   *       `status: true, "File is uploaded"` **without actually storing it** - only requests carrying
+   *       two or more files write anything today. Send two files, or use
+   *       `/api/v1/node/{id}/upload_file` on the ticket node, until this is fixed.
+   *
+   *
+   *       When no file is sent at all the answer is still **200**, with `status: false` and
+   *       `"No file uploaded"`, so check the `status` field rather than the HTTP code.
+   *     tags:
+   *       - Workflow & ticket
+   *     parameters:
+   *       - in: path
+   *         name: ticketId
+   *         description: Dynamic ID of the ticket.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         multipart/form-data:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - file
+   *             properties:
+   *               file:
+   *                 type: string
+   *                 format: binary
+   *                 description: One or more files, all under the field name `file`.
+   *           encoding:
+   *             file:
+   *               style: form
+   *     responses:
+   *       200:
+   *         description: >-
+   *           The outcome, as `{ status, message, data }`. `data` is an array when several files were
+   *           stored, a single object in the one-file case described above, and absent when no file was
+   *           sent.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 status:
+   *                   type: boolean
+   *                 message:
+   *                   type: string
+   *                 data:
+   *                   description: One entry per file, each with `name`, `mimetype` and `size`.
+   *                   oneOf:
+   *                     - type: object
+   *                     - type: array
+   *                       items:
+   *                         type: object
+   *       400:
+   *         description: The ticket could not be loaded, or the files could not be stored (body is `ko`).
+   *       401:
+   *         description: The profile is not allowed to write on this ticket.
+   */
     app.post("/api/v1/ticket/:ticketId/add_doc", async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

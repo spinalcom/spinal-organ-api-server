@@ -49,7 +49,10 @@ module.exports = function (
    *       - bearerAuth:
    *         - write
    *     summary: Add an user group to an Organization
-   *     description: Add an user group linked to a specific Organization
+   *     description: >-
+   *       Links an existing user group to an organization, which is how the people belonging to an
+   *       organization are declared. Neither the group nor its users are copied - only the link is
+   *       created, and linking a group that is already linked changes nothing.
    *     tags:
    *       - Organization
    *     requestBody:
@@ -111,6 +114,8 @@ module.exports = function (
    *         description: Organization context not found
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.post(
     '/api/v1/organization/user-group',

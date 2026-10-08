@@ -10,33 +10,37 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: return the nodes of type from a node in a context
-     *     summary: Get nodes of type from a node in a context with given IDcontext IDnode and type
+     *     summary: List the nodes of a given type under a node in a context
+     *     description: >-
+     *       Browses the subtree of `nodeId` inside `contextId` and returns the nodes matching `type`.
+     *       The accepted values are the ones returned by
+     *       `/api/v1/context/{contextId}/node/{nodeId}/nodeTypeList`; the comparison is case sensitive.
      *     tags:
      *       - Contexts/ontologies
      *     parameters:
      *      - in: path
      *        name: contextId
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the context.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *      - in: path
      *        name: nodeId
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the node whose subtree is browsed. It must belong to the context.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *      - in: path
      *        name: type
+     *        description: Node type to filter on.
      *        required: true
      *        schema:
      *          type: string
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The nodes of the requested type found under the node.
      *         content:
      *           application/json:
      *             schema:
@@ -44,7 +48,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                $ref: '#/components/schemas/ContextNodeofTypes'
      *       400:
-     *         description: Bad request
+     *         description: No node of this type exists under the node ("Type not found in node"), or the node does not belong to the context ("node not found in context").
+     *       401:
+     *         description: The profile is not allowed to read the context or the node.
+     *       500:
+     *         description: The context or the node could not be loaded.
      */
     app.get("/api/v1/context/:contextId/node/:nodeId/nodesOfType/:type", async (req, res, next) => {
         const nodes = [];

@@ -27,47 +27,55 @@ const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getStaticDetailsInfo_1 = require("../../../utilities/getStaticDetailsInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-    * @swagger
-    * /api/v1/room/read_static_details_multiple:
-    *   post:
-    *     security:
-    *       - bearerAuth:
-    *         - readOnly
-    *     description: Read static details of multiple rooms
-    *     summary: Gets static details of multiple rooms
-    *     tags:
-    *       - Geographic Context
-    *     requestBody:
-    *       required: true
-    *       content:
-    *         application/json:
-    *           schema:
-    *             type: array
-    *             items:
-    *               type: integer
-    *               format: int64
-    *     responses:
-    *       200:
-    *         description: Success - All room static details fetched
-    *         content:
-    *           application/json:
-    *             schema:
-    *               type: array
-    *               items:
-    *                 $ref: '#/components/schemas/StaticDetailsRoom'
-    *       206:
-    *         description: Partial Content - Some room static details could not be fetched
-    *         content:
-    *           application/json:
-    *             schema:
-    *               type: array
-    *               items:
-    *                 oneOf:
-    *                   - $ref: '#/components/schemas/StaticDetailsRoom'
-    *                   - $ref: '#/components/schemas/Error'
-    *       400:
-    *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/room/read_static_details_multiple:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: Get everything known about several rooms at once
+     *     description: >-
+     *       Batch version of `GET /api/v1/room/{id}/read_static_details` : the body is an array of room dynamic IDs and the response holds
+     *       the full static description of one room per ID, in the same order. Each entry carries the attributes, control points, endpoints, BIM objects and group parents of its room, so this response grows quickly - keep the batches small.
+     *
+     *
+     *       Each room is read independently : a failure turns its slot into an error object and the
+     *       response comes back with **206 Partial Content**. At most 1000 IDs per call (configurable
+     *       through `MULTIPLE_ROUTE_IDS_LIMIT`).
+     *     tags:
+     *       - Geographic Context
+     *     requestBody:
+     *       required: true
+     *       description: The dynamic IDs of the rooms.
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: array
+     *             items:
+     *               type: integer
+     *               format: int64
+     *     responses:
+     *       200:
+     *         description: Every room was read.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 $ref: '#/components/schemas/StaticDetailsRoom'
+     *       206:
+     *         description: At least one room could not be read; those slots hold an error object instead.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 oneOf:
+     *                   - $ref: '#/components/schemas/StaticDetailsRoom'
+     *                   - $ref: '#/components/schemas/Error'
+     *       400:
+     *         description: The body is not an array, or it holds more IDs than the configured limit.
+     */
     app.post('/api/v1/room/read_static_details_multiple', async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

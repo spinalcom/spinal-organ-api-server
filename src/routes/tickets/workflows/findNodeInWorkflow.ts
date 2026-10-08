@@ -44,33 +44,40 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: find a node in workflow
-   *     summary: find a node in workflow
+   *     summary: Find a node inside a workflow by its static ID
+   *     description: >-
+   *       Browses a workflow context looking for a node with the given **static ID** and returns its
+   *       summary, including the `dynamicId` the other routes need. This is how a persistent ID is
+   *       turned back into a usable dynamic ID after a hub restart.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
    *       - in: path
    *         name: workflowId
-   *         description: use the dynamic ID
+   *         description: Dynamic ID of the workflow context to search in.
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
    *       - in: path
    *         name: nodeId
-   *         description: use the Static ID
+   *         description: Static ID of the node to find.
    *         required: true
    *         schema:
    *           type: string
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The node summary.
    *         content:
    *           application/json:
    *             schema:
    *                $ref: '#/components/schemas/Workflow'
-   *       400:
-   *         description: Bad request
+   *       401:
+   *         description: The profile is not allowed to read this workflow.
+   *       404:
+   *         description: No node with this static ID exists in the workflow ("node not found").
+   *       500:
+   *         description: The workflow could not be loaded, or it is not a workflow context.
    */
 
   app.get(

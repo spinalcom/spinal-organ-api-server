@@ -28,36 +28,45 @@ const spinal_env_viewer_task_service_1 = require("spinal-env-viewer-task-service
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-  * @swagger
-  * /api/v1/eventContext/create:
-  *   post:
-  *     security:
-  *       - bearerAuth:
-  *         - read
-  *     description: create event context
-  *     summary: create event context
-  *     tags:
-  *       - Calendar & Event
-  *     requestBody:
-  *       content:
-  *         application/json:
-  *           schema:
-  *             type: object
-  *             required:
-  *               - configEventContext
-  *             properties:
-  *                contextName:
-  *                 type: string
-  *     responses:
-  *       200:
-  *         description: Success
-  *         content:
-  *           application/json:
-  *             schema:
-  *                $ref: '#/components/schemas/Context'
-  *       400:
-  *         description: Bad request
-  */
+     * @swagger
+     * /api/v1/eventContext/create:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - write
+     *     summary: Create an event context
+     *     description: >-
+     *       Creates a calendar, that is a context of type `SpinalEventGroupContext`, and adds it to the
+     *       profile graph. Categories and groups are then created inside it with
+     *       `/api/v1/eventContext/{id}/create_category` and
+     *       `/api/v1/eventContext/{ContextId}/eventCategory/{CategoryId}/create_group`.
+     *     tags:
+     *       - Calendar & Event
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - contextName
+     *             properties:
+     *               contextName:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: The created event context.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/Context'
+     *       401:
+     *         description: The profile is not allowed to write on the graph.
+     *       406:
+     *         description: No graph was found for the caller's profile.
+     *       500:
+     *         description: The context could not be created.
+     */
     app.post("/api/v1/eventContext/create", async (req, res, next) => {
         try {
             const steps = [];

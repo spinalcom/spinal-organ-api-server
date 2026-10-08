@@ -27,40 +27,48 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/roomsGroup/{id}/update:
-   *   put:
-   *     security:
-   *       - bearerAuth:
-   *         - read
-   *     description: update group context roomsGroup
-   *     summary: update group context roomsGroup
-   *     tags:
-   *       - Rooms Group
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     requestBody:
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - newGroupRoomContextName
-   *             properties:
-   *                newGroupRoomContextName:
-   *                 type: string
-   *     responses:
-   *       200:
-   *         description: Update Successfully
-   *       400:
-   *         description: Bad request
-  */
+     * @swagger
+     * /api/v1/roomsGroup/{id}/update:
+     *   put:
+     *     security:
+     *       - bearerAuth:
+     *         - write
+     *     summary: Rename a group context
+     *     description: >-
+     *       Renames a group context. Only the name changes - the categories, groups and the items they
+     *       hold are untouched.
+     *
+     *
+     *       A successful call answers **200 with an empty body**.
+     *     tags:
+     *       - Rooms Group
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         description: Dynamic ID of the group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - newContextName
+     *             properties:
+     *               newContextName:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: The context was renamed. The body is empty.
+     *       400:
+     *         description: The context could not be loaded.
+     *       401:
+     *         description: The profile is not allowed to write on this context.
+     */
     app.put("/api/v1/roomsGroup/:id/update", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

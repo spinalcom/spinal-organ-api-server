@@ -44,38 +44,49 @@ module.exports = function (
    *   delete:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: Delete a step
-   *     summary: delete an step
+   *         - write
+   *     summary: Delete a step of a process
+   *     description: >-
+   *       Removes a step from a process. The step must belong to the given process, which must belong
+   *       to the given workflow.
+   *
+   *
+   *       A successful call answers **204 with an empty body**.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
-   *      - in: path
-   *        name: workflowId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: processId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: stepId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: workflowId
+   *         description: Dynamic ID of the workflow context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: processId
+   *         description: Dynamic ID of the process, which must belong to that workflow.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: stepId
+   *         description: Dynamic ID of the step.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     responses:
-   *       200:
-   *         description: Delete Successfully
+   *       204:
+   *         description: The step was deleted. The body is empty.
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           One of the IDs is not a number ("Invalid workflowId" / "Invalid processId" / "Invalid
+   *           stepId"), or the step or process is not where it is said to be.
+   *       401:
+   *         description: The profile is not allowed to write on this workflow.
+   *       500:
+   *         description: One of the nodes could not be loaded, or is not of the expected type.
    */
 
   app.delete(

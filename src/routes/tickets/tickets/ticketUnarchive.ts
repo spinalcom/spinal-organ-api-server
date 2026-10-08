@@ -44,20 +44,26 @@ module.exports = function (
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: unarchive a Ticket
-   *     summary: unarchive a Ticket
+   *         - write
+   *     summary: Bring an archived ticket back into its process
+   *     description: >-
+   *       Takes a ticket out of the archives of its workflow and puts it back into its process. The
+   *       response says which step it landed in.
+   *
+   *
+   *       Both the process and the ticket must belong to the given workflow.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
    *       - in: path
    *         name: ticketId
-   *         description: use the dynamic ID
+   *         description: Dynamic ID of the ticket.
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
@@ -68,13 +74,38 @@ module.exports = function (
    *             properties:
    *               workflowDynamicId:
    *                 type: number
+   *                 description: Dynamic ID of the workflow context the ticket lives in.
    *               processDynamicId:
    *                 type: number
+   *                 description: Dynamic ID of the process, which must belong to that workflow.
    *     responses:
    *       200:
-   *         description: Unarchive Successfully
+   *         description: The ticket with the step it now sits in.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 dynamicId:
+   *                   type: integer
+   *                   format: int64
+   *                 staticId:
+   *                   type: string
+   *                 name:
+   *                   type: string
+   *                 type:
+   *                   type: string
+   *                 actuelStep:
+   *                   type: string
+   *                   description: Name of the step the ticket is in after the move.
    *       400:
-   *         description: Unarchive not Successfully
+   *         description: >-
+   *           The process does not belong to the workflow ("Process does not belong to workflow
+   *           context."), or the ticket does not ("Ticket does not belong to workflow context.").
+   *       401:
+   *         description: The profile is not allowed to write on the ticket.
+   *       500:
+   *         description: One of the three nodes could not be loaded, or is not of the expected type.
    */
   app.post('/api/v1/ticket/:ticketId/unarchive', async (req, res) => {
     try {

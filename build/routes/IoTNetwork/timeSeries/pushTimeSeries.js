@@ -37,20 +37,29 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: push new value
-     *     summary: push new value
+     *         - write
+     *     summary: Append a value to the time series, dated now
+     *     description: >-
+     *       Records a value in the endpoint's time series **at the current server time**. The time series
+     *       is created if the endpoint does not have one yet.
+     *
+     *
+     *       This writes only the history : the `currentValue` of the endpoint is left untouched. Use
+     *       `PUT /api/v1/endpoint/{id}/update` to set the current value (which also records a numeric
+     *       value in the time series). To record a value at a chosen date, use
+     *       `/api/v1/endpoint/{id}/timeSeries/insert`.
      *     tags:
      *       - IoTNetwork & Time Series
      *     parameters:
      *      - in: path
      *        name: id
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the endpoint.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -58,13 +67,22 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             required:
      *               - newValue
      *             properties:
-     *                newValue:
+     *               newValue:
      *                 type: number
      *     responses:
      *       200:
-     *         description: Create Successfully
+     *         description: The value was recorded, echoed back as `{ newValue }`.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 newValue:
+     *                   type: number
      *       400:
-     *         description: Bad request
+     *         description: The endpoint could not be loaded, or the value could not be recorded.
+     *       401:
+     *         description: The profile is not allowed to write on this endpoint.
      */
     app.post('/api/v1/endpoint/:id/timeSeries/push', async (req, res, next) => {
         try {

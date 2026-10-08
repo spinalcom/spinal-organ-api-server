@@ -28,36 +28,42 @@ import { getProfileId } from '../../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {  /**
-
-  /**
  * @swagger
  * /api/v1/endpoint/{id}/timeSeries/readCurrentDay:
  *   get:
  *     security:
  *       - bearerAuth:
  *         - readOnly
- *     description: get time series of current day 
- *     summary: get time series of current day
+ *     summary: Read the time series since midnight
+ *     description: >-
+ *       Returns the points recorded **since midnight** : the window starts at the top of the current
+ *       day, in the server's local time, and ends now.
+ *
+ *
+ *       The points come back as `{ date, value }`, oldest first. For any other interval, or for
+ *       aggregated values, use `/api/v1/endpoint/{id}/timeSeries/read/{begin}/{end}`.
  *     tags:
  *       - IoTNetwork & Time Series
  *     parameters:
  *      - in: path
  *        name: id
- *        description: use the dynamic ID
+ *        description: Dynamic ID of the endpoint.
  *        required: true
  *        schema:
  *          type: integer
  *          format: int64
  *     responses:
  *       200:
- *         description: Success
+ *         description: The recorded points over the window (an empty array if none).
  *         content:
  *           application/json:
  *             schema:
  *                $ref: '#/components/schemas/Timeserie'
  *       400:
- *         description: Bad request
-  */
+ *         description: The endpoint could not be loaded, or its time series could not be read.
+ *       401:
+ *         description: The profile is not allowed to read this endpoint.
+ */
 
   app.get("/api/v1/endpoint/:id/timeSeries/readCurrentDay", async (req, res, next) => {
 

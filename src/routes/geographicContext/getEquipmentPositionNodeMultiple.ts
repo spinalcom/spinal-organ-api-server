@@ -39,12 +39,24 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return positions for multiple equipment
-   *     summary: Gets positions for multiple equipment
+   *     summary: Get the room, floor and building of several equipments at once
+   *     description: >-
+   *       Batch version of `/api/v1/equipment/{id}/get_position` : the body is an array of equipment
+   *       dynamic IDs and the response holds one position per ID, in the same order.
+   *
+   *
+   *       The lookup runs inside the geographic context **named `spatial`** : the digital twin must
+   *       hold a context of type `geographicContext` with that exact name.
+   *
+   *
+   *       Each equipment is resolved independently : a failure turns its slot into an error object and
+   *       the response comes back with **206 Partial Content**. At most 1000 IDs per call (configurable
+   *       through `MULTIPLE_ROUTE_IDS_LIMIT`).
    *     tags:
    *      - Geographic Context
    *     requestBody:
    *       required: true
+   *       description: The dynamic IDs of the equipments.
    *       content:
    *         application/json:
    *           schema:
@@ -54,7 +66,7 @@ module.exports = function (
    *               format: int64
    *     responses:
    *       200:
-   *         description: Success - All equipment positions fetched
+   *         description: Every equipment was located.
    *         content:
    *           application/json:
    *             schema:
@@ -62,7 +74,7 @@ module.exports = function (
    *               items:
    *                 $ref: '#/components/schemas/Position'
    *       206:
-   *         description: Partial Content - Some equipment positions could not be fetched
+   *         description: At least one equipment could not be located; those slots hold an error object instead.
    *         content:
    *           application/json:
    *             schema:
@@ -72,7 +84,9 @@ module.exports = function (
    *                   - $ref: '#/components/schemas/Position'
    *                   - $ref: '#/components/schemas/Error'
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           The body is not an array, it holds more IDs than the configured limit, or the spatial
+   *           context is missing.
    */
   app.post(
     '/api/v1/equipment/get_position_multiple',

@@ -32,30 +32,36 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
-* @swagger
-* /api/v1/event/{eventId}/delete:
-*   delete:
-*     security: 
-*       - bearerAuth: 
-*         - read
-*     description: delete event
-*     summary: delete event 
-*     tags:
-*       - Calendar & Event
-*     parameters:
-*      - in: path
-*        name: eventId
-*        description: use the dynamic ID
-*        required: true
-*        schema:
-*          type: integer
-*          format: int64
-*     responses:
-*       200:
-*         description: Delete Successfully
-*       400:
-*         description: Bad request
-*/
+   * @swagger
+   * /api/v1/event/{eventId}/delete:
+   *   delete:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Delete a calendar event
+   *     description: >-
+   *       Removes an event from the graph. The node must be of type `SpinalEvent`, which protects the
+   *       categories and groups of the calendar from being deleted through this route.
+   *     tags:
+   *       - Calendar & Event
+   *     parameters:
+   *      - in: path
+   *        name: eventId
+   *        description: Dynamic ID of the event.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The event was deleted.
+   *       400:
+   *         description: The node is not an event ("this event is not of type SpinalEvent").
+   *       401:
+   *         description: The profile is not allowed to delete this event.
+   *       500:
+   *         description: The event could not be loaded or removed.
+   */
   app.delete("/api/v1/event/:eventId/delete", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);

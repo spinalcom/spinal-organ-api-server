@@ -40,7 +40,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - write
      *     summary: Remove the user group from an Organization
-     *     description: Remove the user group linked to a specific Organization
+     *     description: >-
+     *       Removes the link between a user group and an organization. The user group itself and the users
+     *       in it are **not** deleted; they simply stop being attached to that organization.
      *     tags:
      *       - Organization
      *     parameters:
@@ -69,6 +71,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Organization context not found
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.delete('/api/v1/organization/context/:contextId/organization/:organizationId/user-group', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({

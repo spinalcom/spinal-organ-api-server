@@ -36,15 +36,20 @@ module.exports = function (
    * /api/v1/organStatus:
    *   get:
    *     security:
-   *       - OauthSecurity:
+   *       - bearerAuth:
    *         - readOnly
-   *     description: Return list of health Status organ
-   *     summary: Gets a list of health Status organ
+   *     summary: List the organs that stopped reporting
+   *     description: >-
+   *       The alerting counterpart of `/api/v1/healthStatus` : it returns **only** the organs whose
+   *       last health report is older than 5 minutes, that is the ones that look down.
+   *
+   *
+   *       An empty array therefore means every organ is reporting normally.
    *     tags:
    *      - Health
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The organs that have not reported in the last 5 minutes.
    *         content:
    *           application/json:
    *             schema:
@@ -52,7 +57,7 @@ module.exports = function (
    *               items:
    *                $ref: '#/components/schemas/OrganStatus'
    *       400:
-   *         description: Bad request
+   *         description: The monitoring directory could not be read.
    */
 
   app.get('/api/v1/organStatus', async (req, res, next) => {

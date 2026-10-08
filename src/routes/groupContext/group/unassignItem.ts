@@ -37,60 +37,72 @@ module.exports = function (
     app: express.Express,
     spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
-    /**
-     * @swagger
-     * /api/v1/groupContext/{contextId}/category/{categoryId}/group/{groupId}/unassign_items:
-     *   post:
-     *     security:
-     *       - bearerAuth:
-     *         - readOnly
-     *     description: Unassign items from a group (works for any group context type)
-     *     summary: Unassign items from a group
-     *     tags:
-     *       - Group Context
-     *     parameters:
-     *      - in: path
-     *        name: contextId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: categoryId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: groupId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *     requestBody:
-     *       description: array of dynamic IDs of items to unassign
-     *       required: true
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: array
-     *             items:
-     *               type: number
-     *     responses:
-     *       200:
-     *         description: Success
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: array
-     *               items:
-     *                 $ref: '#/components/schemas/BasicNode'
-     *       400:
-     *         description: Bad request
-     */
+  /**
+   * @swagger
+   * /api/v1/groupContext/{contextId}/category/{categoryId}/group/{groupId}/unassign_items:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Unassign items from a group
+   *     description: >-
+   *       Takes items out of a group, whatever the family of the group context - the generic
+   *       counterpart of the `deleteRooms` / `deleteEquipement` / `deleteEndpoint` routes.
+   *
+   *
+   *       The body is a non-empty array of item dynamic IDs. The items themselves are **not** deleted :
+   *       they stay in their own context and only lose this grouping. The response lists the items that
+   *       were actually unassigned, so an ID that was not in the group simply does not appear in it.
+   *     tags:
+   *       - Group Context
+   *     parameters:
+   *       - in: path
+   *         name: contextId
+   *         description: Dynamic ID of the group context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: categoryId
+   *         description: Dynamic ID of the category, which must belong to that context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: groupId
+   *         description: Dynamic ID of the group, which must belong to that context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     requestBody:
+   *       required: true
+   *       description: The dynamic IDs of the items to unassign.
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: integer
+   *               format: int64
+   *     responses:
+   *       200:
+   *         description: The items that were unassigned from the group.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/BasicNode'
+   *       400:
+   *         description: >-
+   *           The body is not a non-empty array ("Request body must be a non-empty array of dynamic
+   *           IDs"), `contextId` is not a context, or the category or the group does not belong to it.
+   *       401:
+   *         description: The profile is not allowed to write on this context.
+   */
 
     app.post(
         '/api/v1/groupContext/:contextId/category/:categoryId/group/:groupId/unassign_items',

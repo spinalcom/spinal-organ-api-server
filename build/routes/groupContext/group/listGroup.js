@@ -30,6 +30,43 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const spinal_env_viewer_plugin_group_manager_service_1 = __importDefault(require("spinal-env-viewer-plugin-group-manager-service"));
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
+    /**
+     * @swagger
+     * /api/v1/groupeContext/{contextId}/category/{categoryId}/group_list:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the groups of a category (deprecated alias)
+     *     description: >-
+     *       Kept for backwards compatibility : `groupeContext` is a historical misspelling of
+     *       `groupContext`. Identical behaviour to `/api/v1/groupContext/{contextId}/category/{categoryId}/group_list`, which should be used instead.
+     *     deprecated: true
+     *     tags:
+     *       - Group Context
+     *     parameters:
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     responses:
+     *       200:
+     *         description: Same body as the non-deprecated route.
+     *       400:
+     *         description: Same errors as the non-deprecated route.
+     *       401:
+     *         description: The profile is not allowed to reach this context.
+     */
     app.get("/api/v1/groupeContext/:contextId/category/:categoryId/group_list", async (req, res, next) => {
         const nodes = [];
         try {
@@ -69,43 +106,48 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         res.send(nodes);
     });
     /**
-   * @swagger
-   * /api/v1/groupContext/{contextId}/category/{categoryId}/group_list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return list of group
-   *     summary: Gets a list of group
-   *     tags:
-   *      - Group Context
-   *     parameters:
-   *      - in: path
-   *        name: contextId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: categoryId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/CategoryEvent'
-   *       400:
-   *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/groupContext/{contextId}/category/{categoryId}/group_list:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the groups of a category
+     *     description: >-
+     *       Returns the groups of a category. The category must belong to the given context.
+     *     tags:
+     *       - Group Context
+     *     parameters:
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     responses:
+     *       200:
+     *         description: The groups of the category (an empty array if there are none).
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                $ref: '#/components/schemas/CategoryEvent'
+     *       400:
+     *         description: >-
+     *           `contextId` is not a context ("The context Id provided does not represent a context"), or
+     *           the category does not belong to it ("The category does not belong to the context").
+     *       401:
+     *         description: The profile is not allowed to read this context.
+     */
     app.get("/api/v1/groupContext/:contextId/category/:categoryId/group_list", async (req, res, next) => {
         const nodes = [];
         try {

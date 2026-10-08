@@ -33,29 +33,34 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Return node's children based on specified relations
-     *     summary: Gets Node children by relations (POST)
+     *     summary: List the children of a node, through chosen relations
+     *     description: >-
+     *       Same as `GET /api/v1/node/{id}/children`, but the body restricts the walk to the relation
+     *       names it lists. An empty array behaves like the GET route and follows every relation.
      *     tags:
      *       - Nodes
      *     parameters:
      *       - in: path
      *         name: id
-     *         description: Node dynamic Id
+     *         description: Dynamic ID of the node.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *     requestBody:
      *       required: true
+     *       description: >-
+     *         The relation names to follow. An **empty array follows every relation** the node carries.
      *       content:
      *         application/json:
      *           schema:
      *             type: array
      *             items:
      *               type: string
+     *             example: ["hasGeographicRoom"]
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The children reached through the requested relations.
      *         content:
      *           application/json:
      *             schema:
@@ -63,7 +68,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                 $ref: '#/components/schemas/BasicNode'
      *       400:
-     *         description: Bad request
+     *         description: The body is not an array, or the node could not be loaded.
+     *       401:
+     *         description: The profile is not allowed to read this node.
      */
     app.post("/api/v1/node/:id/children", async (req, res) => {
         try {

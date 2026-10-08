@@ -28,45 +28,52 @@ import * as express from 'express';
 import { getParentNodesInfo } from '../../utilities/getParentNodesInfo';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
-/**
- * @swagger
- * /api/v1/node/{id}/parents:
- *   post:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: Return node's parents based on specified relations
- *     summary: Gets Node parents by relations (POST)
- *     tags:
- *       - Nodes
- *     parameters:
- *       - in: path
- *         name: id
- *         description: Node dynamic Id
- *         required: true
- *         schema:
- *           type: integer
- *           format: int64
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: array
- *             items:
- *               type: string
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/BasicNode'
- *       400:
- *         description: Bad request
- */
+  /**
+   * @swagger
+   * /api/v1/node/{id}/parents:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the parents of a node, through chosen relations
+   *     description: >-
+   *       Same as `GET /api/v1/node/{id}/parents`, but the body restricts the walk to the relation
+   *       names it lists. An empty array behaves like the GET route and follows every relation.
+   *     tags:
+   *       - Nodes
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         description: Dynamic ID of the node.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     requestBody:
+   *       required: true
+   *       description: >-
+   *         The relation names to follow. An **empty array follows every relation** the node carries.
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               type: string
+   *             example: ["hasGeographicRoom"]
+   *     responses:
+   *       200:
+   *         description: The parents reached through the requested relations.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/BasicNode'
+   *       400:
+   *         description: The body is not an array, or the node could not be loaded.
+   *       401:
+   *         description: The profile is not allowed to read this node.
+   */
 
   app.post("/api/v1/node/:id/parents", async (req, res) => {
     try {

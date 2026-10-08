@@ -55,6 +55,42 @@ import type { ISpinalAPIMiddleware } from "../../interfaces";
 import type { SpinalNode } from "spinal-model-graph";
 
 module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
+	/**
+   * @swagger
+   * /api/v1/node/{id}/attributsList:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the attributes of a node (deprecated alias)
+   *     description: >-
+   *       Kept for backwards compatibility. Identical result to
+   *       `/api/v1/node/{id}/attribute_list`, which should be used instead.
+   *     deprecated: true
+   *     tags:
+   *       - Node Attributs
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the node.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The attribute categories of the node.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/NodeAttribut'
+   *       400:
+   *         description: The node could not be loaded (unknown or stale dynamic ID).
+   *       401:
+   *         description: The profile is not allowed to read this node.
+   */
 	//deprecated
 	app.get("/api/v1/node/:id/attributsList", async (req, res, next) => {
 		try {
@@ -81,36 +117,46 @@ module.exports = function (logger: any, app: Express, spinalAPIMiddleware: ISpin
 	});
 
 	/**
-	 * @swagger
-	 * /api/v1/node/{id}/attribute_list:
-	 *   get:
-	 *     security:
-	 *       - bearerAuth:
-	 *         - readOnly
-	 *     description: Returns list of attributs
-	 *     summary: Get list of attributs
-	 *     tags:
-	 *       - Node Attributs
-	 *     parameters:
-	 *      - in: path
-	 *        name: id
-	 *        description: use the dynamic ID
-	 *        required: true
-	 *        schema:
-	 *          type: integer
-	 *          format: int64
-	 *     responses:
-	 *       200:
-	 *         description: Success
-	 *         content:
-	 *           application/json:
-	 *             schema:
-	 *               type: array
-	 *               items:
-	 *                $ref: '#/components/schemas/NodeAttribut'
-	 *       400:
-	 *         description: Bad request
-	 */
+   * @swagger
+   * /api/v1/node/{id}/attribute_list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the attributes of a node
+   *     description: >-
+   *       Returns the attribute categories attached to a node, each with its attributes. Attributes are
+   *       always grouped by category in Spinal, so the response is one entry per category, holding the
+   *       category's own `dynamicId` / `staticId` / `name` and its `attributs` array
+   *       (`label`, `value`, `type`, `unit`).
+   *
+   *
+   *       The category `dynamicId` is what the create / update / delete attribute routes expect as
+   *       `IdCategory`.
+   *     tags:
+   *       - Node Attributs
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the node.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The attribute categories of the node (an empty array if it has none).
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/NodeAttribut'
+   *       400:
+   *         description: The node could not be loaded (unknown or stale dynamic ID).
+   *       401:
+   *         description: The profile is not allowed to read this node.
+   */
 
 	app.get("/api/v1/node/:id/attribute_list", async (req, res, next) => {
 		try {

@@ -1,5 +1,14 @@
 # CHANGELOG
 
+# 02-10-2026 -> v1.1.21
+- New route GET /api/v1/hubStatus : the state of the connection to the hub, reported by spinal-core-connectorjs (the version that keeps the connection through the restarts of the hub), 503 when the organ cannot reach the hub.
+- An unhandled promise rejection is logged instead of exiting the organ.
+- POST /api/v1/geographicContext/viewInfo2 and GET /api/v1/eventContext/:id/category_list : an error no longer exits the organ.
+
+# 28-09-2026 -> v1.1.20
+- Re-write of the documentation for every route.
+- Command routes now also update directModificationDate
+
 # 13-08-2026 -> v1.1.19
 - Fixed json parsing on create_ticket route that allowed parsing of bigger requests
 

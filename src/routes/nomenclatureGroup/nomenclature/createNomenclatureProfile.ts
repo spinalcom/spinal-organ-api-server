@@ -32,52 +32,11 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-  /**
- * @swagger
- * /api/v1/nomenclatureGroup/{contextId}/category/{categoryId}/create_group:
- *   post:
- *     security:
- *       - bearerAuth:
- *         - read
- *     description: create group nomenclature Group
- *     summary: create group nomenclature Group
- *     tags:
- *       - Nomenclature Group
- *     parameters:
- *      - in: path
- *        name: contextId
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *      - in: path
- *        name: categoryId
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - groupName
- *               - colorName
- *             properties:
- *                groupName:
- *                 type: string
- *                colorName:
- *                 type: string
- *     responses:
- *       200:
- *         description: Create Successfully
- *       400:
- *         description: Bad request
-*/
-
+  // This handler is not mounted : routes.ts does not require this file, and
+  // POST /api/v1/nomenclatureGroup/{contextId}/category/{categoryId}/create_group is served by
+  // group/createGroupNomenclature.ts (which expects an AttributeConfigurationGroupContext, not a
+  // BIMObjectGroupContext). The OpenAPI block was removed from here so the published spec describes
+  // the route that actually runs.
   app.post("/api/v1/nomenclatureGroup/:contextId/category/:categoryId/create_group", async (req, res, next) => {
 
     try {

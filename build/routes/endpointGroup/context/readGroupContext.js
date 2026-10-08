@@ -27,34 +27,40 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/endPointsGroup/{id}/read:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: read group endPoints Group
-   *     summary: Gets group endPoints Group
-   *     tags:
-   *       - EndPoints Group
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/Context'
-   *       400:
-   *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/endPointsGroup/{id}/read:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: Read a group context
+     *     description: >-
+     *       Returns the identity of a group context : `dynamicId`, `staticId`, `name` and `type`. Its
+     *       categories are listed by `/api/v1/endPointsGroup/{id}/category_list`.
+     *     tags:
+     *       - EndPoints Group
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         description: Dynamic ID of the group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     responses:
+     *       200:
+     *         description: The group context.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/Context'
+     *       400:
+     *         description: The context could not be loaded.
+     *       401:
+     *         description: The profile is not allowed to read this context.
+     *       500:
+     *         description: The context could not be loaded or read.
+     */
     app.get("/api/v1/endPointsGroup/:id/read", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

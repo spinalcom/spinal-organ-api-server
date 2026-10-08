@@ -29,51 +29,76 @@ const dateFunctions_1 = require("../../../utilities/dateFunctions");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/room/{id}/event_list:
-   *   post:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Returns events of room
-   *     summary: Get list events of room
-   *     tags:
-   *       - Geographic Context
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     requestBody:
-   *       description: you have 3 choices to fill in the "period" field   (*all* => to retrieve the entire list of events,   *today* => to retrieve today's events,   *week* = > to retrieve the events of the current week,   *dateInterval* or *undefined* to retrieve a precise date by filling in the "startDate" and "endDate" fields)
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - period
-   *             properties:
-   *               startDate:
-   *                 type: string
-   *               endDate:
-   *                 type: string
-   *               period:
-   *                 type: string
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/Event'
-   *       400:
-   *         description: Bad request
-  */
+     * @swagger
+     * /api/v1/room/{id}/event_list:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the calendar events of a room over a period
+     *     description: >-
+     *       Returns the events attached to a room, restricted to the period given in the body :
+     *
+     *        * `all` - every event of the room, whatever its date;
+     *
+     *        * `today` - the events of the current day;
+     *
+     *        * `week` - the events of the current week. **This is also what an omitted `period`
+     *          gives**, not a date interval;
+     *
+     *        * `dateInterval` - the events between `startDate` and `endDate`, which then become
+     *          required.
+     *
+     *
+     *       Dates are read in `DD-MM-YYYY` / `DD-MM-YYYY HH:mm:ss` and their `/` and space variants; an
+     *       unparsable date is rejected with 400. The node must be of type `geographicRoom`.
+     *     tags:
+     *       - Geographic Context
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the room.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               period:
+     *                 type: string
+     *                 description: Which events to return. Defaults to `week` when omitted.
+     *                 enum: [all, today, week, dateInterval]
+     *               startDate:
+     *                 type: string
+     *                 description: Start of the interval. Only read when `period` is `dateInterval`.
+     *                 example: 01-01-2024
+     *               endDate:
+     *                 type: string
+     *                 description: End of the interval. Only read when `period` is `dateInterval`.
+     *                 example: 31-01-2024
+     *     responses:
+     *       200:
+     *         description: The events of the room over the requested period.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                $ref: '#/components/schemas/Event'
+     *       400:
+     *         description: >-
+     *           The node is not a room ("node is not of type geographic room"), or a date could not be
+     *           parsed ("invalid Date").
+     *       401:
+     *         description: The profile is not allowed to read this room.
+     *       500:
+     *         description: The room could not be loaded or its events could not be read.
+     */
     app.post("/api/v1/room/:id/event_list", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

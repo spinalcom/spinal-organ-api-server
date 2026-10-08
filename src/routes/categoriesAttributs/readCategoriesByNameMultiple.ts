@@ -41,10 +41,19 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Read multiple categories attributes for multiple nodes
-   *     summary: Read multiple categories attributes for multiple nodes
+   *     summary: Read several categories, by name, on several nodes at once
+   *     description: >-
+   *       Like `/api/v1/node/categoryByName/{categoryName}/read_multiple`, but each entry names its own
+   *       list of categories : the body is an array of `{ dynamicId, categoryNames }` and the response
+   *       holds one `{ dynamicId, categoryAttributes }` entry per node, in the same order.
+   *
+   *
+   *       All the requested names must exist on the node : the first missing one fails that entry,
+   *       which becomes `{ dynamicId, error }`, and the response comes back with
+   *       **206 Partial Content**. At most 1000 entries per call (configurable through
+   *       `MULTIPLE_ROUTE_IDS_LIMIT`).
    *     tags:
-   *      - Node Attribut Categories
+   *       - Node Attribut Categories
    *     requestBody:
    *       required: true
    *       content:
@@ -66,25 +75,40 @@ module.exports = function (
    *                     type: string
    *     responses:
    *       200:
-   *         description: Success - All attribute nodes info fetched
+   *         description: Every node carries every requested category.
    *         content:
    *           application/json:
    *             schema:
    *               type: array
    *               items:
-   *                 $ref: '#/components/schemas/CategoriesAttributeMultiple'
+   *                 type: object
+   *                 properties:
+   *                   dynamicId:
+   *                     type: integer
+   *                     format: int64
+   *                   categoryAttributes:
+   *                     type: array
+   *                     items:
+   *                       $ref: '#/components/schemas/CategoriesAttribute'
    *       206:
-   *         description: Partial Content - Some attribute info could not be fetched
+   *         description: At least one node is missing one of the categories, or could not be read.
    *         content:
    *           application/json:
    *             schema:
    *               type: array
    *               items:
    *                 oneOf:
-   *                   - $ref: '#/components/schemas/CategoriesAttributeMultiple'
+   *                   - type: object
+   *                     properties:
+   *                       dynamicId:
+   *                         type: integer
+   *                       categoryAttributes:
+   *                         type: array
+   *                         items:
+   *                           $ref: '#/components/schemas/CategoriesAttribute'
    *                   - $ref: '#/components/schemas/Error'
    *       400:
-   *         description: Bad request
+   *         description: The body is not an array, or it holds more entries than the configured limit.
    */
 
   app.post(

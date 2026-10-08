@@ -41,28 +41,30 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns list of steps
-   *     summary: Get list of steps
+   *     summary: List the steps of a process
+   *     description: >-
+   *       Returns the steps of a process, each with its name, colour and order. The order is what
+   *       `next_step` and `previous_step` follow, and `move_to_step` can target a step by that order.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
-   *      - in: path
-   *        name: workflowId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: processId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: workflowId
+   *         description: Dynamic ID of the workflow context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: processId
+   *         description: Dynamic ID of the process, which must belong to that workflow.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The steps of the process.
    *         content:
    *           application/json:
    *             schema:
@@ -70,7 +72,13 @@ module.exports = function (
    *               items:
    *                $ref: '#/components/schemas/Step'
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           `workflowId` or `processId` is not a number ("Invalid workflowId" / "Invalid
+   *           processId"), or the process does not belong to the workflow.
+   *       401:
+   *         description: The profile is not allowed to read this workflow.
+   *       500:
+   *         description: The workflow or the process could not be loaded, or is not of the expected type.
    */
 
   app.get(

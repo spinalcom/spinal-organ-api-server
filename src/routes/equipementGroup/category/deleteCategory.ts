@@ -32,37 +32,43 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/equipementsGroup/{contextId}/category/{categoryId}/delete:
- *   delete:
- *     security:
- *       - bearerAuth:
- *         - read
- *     description: delete category
- *     summary: delete category 
- *     tags:
- *       - Equipements Group
- *     parameters:
- *      - in: path
- *        name: contextId
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *      - in: path
- *        name: categoryId
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Delete Successfully
- *       400:
- *         description: Bad request
-*/
+   * @swagger
+   * /api/v1/equipementsGroup/{contextId}/category/{categoryId}/delete:
+   *   delete:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Delete a category of a group context
+   *     description: >-
+   *       Removes a category from a group context, with the groups it holds. The items assigned to
+   *       those groups are not deleted, they simply lose this grouping.
+   *     tags:
+   *       - Equipements Group
+   *     parameters:
+   *       - in: path
+   *         name: contextId
+   *         description: Dynamic ID of the group context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: categoryId
+   *         description: Dynamic ID of the category, which must belong to that context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     responses:
+   *       200:
+   *         description: The category was deleted.
+   *       400:
+   *         description: The category does not belong to the context.
+   *       401:
+   *         description: The profile is not allowed to write on this context.
+   *       500:
+   *         description: The context or the category could not be loaded or removed.
+   */
   app.delete("/api/v1/equipementsGroup/:contextId/category/:categoryId/delete", async (req, res, next) => {
     try {
       const profileId = getProfileId(req);

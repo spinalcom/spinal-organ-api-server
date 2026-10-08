@@ -31,6 +31,13 @@ import { runPreloading } from "./preloadingScript/runPreloading";
 const preload_config = require("../preload_config");
 import { registerMonitoringAgent } from "spinal-agent-monitoring";
 
+// since node 15 a promise rejected without a handler exits the process : one
+// forgotten catch in a route would restart the organ, which then loads
+// everything back from the hub
+process.on('unhandledRejection', (reason) => {
+  console.error('[api-server] unhandled promise rejection, the organ keeps running:', reason);
+});
+
 function Requests(logger) {
 	async function initSpinalHub() {
 		const spinalAPIMiddleware = SpinalAPIMiddleware.getInstance();

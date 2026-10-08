@@ -33,43 +33,47 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: read room list
-     *     summary: Get room list from rooms Group
+     *     summary: List the rooms assigned to a group
+     *     description: >-
+     *       Returns the rooms assigned to a group of a room group context, in their short form. The
+     *       category and the group must belong to the given context.
      *     tags:
      *       - Rooms Group
      *     parameters:
-     *      - in: path
-     *        name: contextId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: categoryId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: groupId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the room group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: groupId
+     *         description: Dynamic ID of the group, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The rooms of the group (an empty array if none are assigned).
      *         content:
      *           application/json:
      *             schema:
      *               type: array
      *               items:
-     *                $ref: '#/components/schemas/BasicNode'
+     *                 $ref: '#/components/schemas/BasicNode'
      *       400:
-     *         description: Bad request
+     *         description: The category or the group does not belong to the context ("category or group not found in context").
+     *       401:
+     *         description: The profile is not allowed to read this context.
      */
     app.get('/api/v1/roomsGroup/:contextId/category/:categoryId/group/:groupId/roomList', async (req, res, next) => {
         try {

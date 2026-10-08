@@ -38,44 +38,57 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Retrieve children of a single node based on context and relations.
-   *     summary: Retrieve children of a single node based on context and relations
+   *     summary: List the children of a node inside a context
+   *     description: >-
+   *       Returns the children of `idNode` that belong to the context `idContext`, through the relation
+   *       names given in the body. An empty array follows every relation of the node that belongs to
+   *       the context.
+   *
+   *
+   *       This is the route to use to browse a context branch by branch : unlike
+   *       `POST /api/v1/node/{id}/children`, children attached through relations outside the context
+   *       are left out.
    *     tags:
    *       - Nodes
    *     parameters:
    *       - in: path
    *         name: idContext
-   *         description: Context dynamic Id
+   *         description: Dynamic ID of the context the walk stays in.
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
    *       - in: path
    *         name: idNode
-   *         description: Node dynamic Id
+   *         description: Dynamic ID of the node to walk.
    *         required: true
    *         schema:
    *           type: integer
    *           format: int64
    *     requestBody:
    *       required: true
+   *       description: >-
+   *         The relation names to follow. An **empty array follows every relation** the node carries.
    *       content:
    *         application/json:
    *           schema:
    *             type: array
    *             items:
    *               type: string
+   *             example: ["hasGeographicRoom"]
    *     responses:
    *       200:
-   *         description: Success -  Information for the specified relations fetched successfully.
+   *         description: The children of the node inside the context.
    *         content:
    *           application/json:
    *             schema:
    *               type: array
    *               items:
-   *                 $ref: '#/components/schemas/BasicNodeMultiple'
+   *                 $ref: '#/components/schemas/BasicNode'
    *       400:
-   *         description: Bad request - Invalid input or parameters.
+   *         description: The body is not an array, or the node or context could not be loaded.
+   *       401:
+   *         description: The profile is not allowed to read the node or the context.
    */
   app.post('/api/v1/context/:idContext/node/:idNode/children', async (req, res) => {
     try {

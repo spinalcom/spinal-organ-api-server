@@ -44,7 +44,9 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - write
-   *     description: Update a specific User Context by its dynamic ID
+   *     description: >-
+   *       Renames a user context. Only the fields present in the body are applied, so this is a partial
+   *       update; the users it holds are untouched.
    *     summary: Update a specific User Context by its dynamic ID
    *     tags:
    *       - User
@@ -86,6 +88,8 @@ module.exports = function (
    *         description: User context not found
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.patch(
     '/api/v1/user/context/:contextId',

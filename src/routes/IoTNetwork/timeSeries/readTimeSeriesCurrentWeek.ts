@@ -39,36 +39,42 @@ module.exports = function (
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
   /**
-
-  /**
-* @swagger
- * /api/v1/endpoint/{id}/timeSeries/readCurrentWeek:
- *   get:
- *     security:
- *       - bearerAuth:
- *         - readOnly
- *     description: get time series of week
- *     summary: get time series of week
- *     tags:
- *       - IoTNetwork & Time Series
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema:
- *                $ref: '#/components/schemas/Timeserie'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/endpoint/{id}/timeSeries/readCurrentWeek:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: Read the time series of the last 7 days
+   *     description: >-
+   *       Returns the points recorded over the **last 7 days**, counted back from now. Despite the
+   *       name, this is a rolling 7-day window, not the current calendar week.
+   *
+   *
+   *       The points come back as `{ date, value }`, oldest first. For any other interval, or for
+   *       aggregated values, use `/api/v1/endpoint/{id}/timeSeries/read/{begin}/{end}`.
+   *     tags:
+   *       - IoTNetwork & Time Series
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the endpoint.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The recorded points over the window (an empty array if none).
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/Timeserie'
+   *       400:
+   *         description: The endpoint could not be loaded, or its time series could not be read.
+   *       401:
+   *         description: The profile is not allowed to read this endpoint.
+   */
 
   app.get(
     '/api/v1/endpoint/:id/timeSeries/readCurrentWeek',

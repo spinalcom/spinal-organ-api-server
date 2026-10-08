@@ -28,34 +28,38 @@ const recTree_1 = require("../../../utilities/recTree");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/eventContext/{id}/tree:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return tree of event context
-   *     summary: Get a tree event context by ID
-   *     tags:
-   *      - Calendar & Event
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/ContextTree'
-   *       400:
-   *         description: Bad request
-   */
+     * @swagger
+     * /api/v1/eventContext/{id}/tree:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: Get the whole tree of an event context
+     *     description: >-
+     *       Returns an event context with everything below it : its categories, their groups and the
+     *       events in each group. On a busy calendar this response can be large.
+     *     tags:
+     *       - Calendar & Event
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the event context.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The event context and its descendants.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/ContextTree'
+     *       401:
+     *         description: The profile is not allowed to read this context.
+     *       500:
+     *         description: The context could not be loaded or the tree could not be built.
+     */
     app.get("/api/v1/eventContext/:id/tree", async (req, res, next) => {
         let contexts;
         try {

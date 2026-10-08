@@ -42,7 +42,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - read
      *     summary: Update a user group by its ID
-     *     description: Update a user group by its ID
+     *     description: >-
+     *       Updates the name or the colour of a user group. Only the fields present in the body are
+     *       applied, so this is a partial update; the users assigned to the group are untouched.
      *     tags:
      *       - User Group
      *     parameters:
@@ -78,6 +80,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               $ref: '#/components/schemas/BasicNodeWithColor'
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.patch('/api/v1/user-group/group/:groupId', (0, express_zod_safe_1.default)({
         params: zod_1.z.object({

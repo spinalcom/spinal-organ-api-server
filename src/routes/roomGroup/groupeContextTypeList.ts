@@ -28,28 +28,9 @@ import groupManagerService from "spinal-env-viewer-plugin-group-manager-service"
 import { getProfileId } from '../../utilities/requestUtilities';
 import { ISpinalAPIMiddleware } from '../../interfaces';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
-  /**
- * @swagger
- * /api/v1/groupContext/type_list:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: Return list of type of groupContext
- *     summary: Gets a list of type of groupContext
- *     tags:
- *      - Group Context
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *                $ref: '#/components/schemas/TypeListGroupContext'
- *       400:
- *         description: Bad request
-  */
-
+  // This handler is not mounted : routes.ts does not require this file, and
+  // GET /api/v1/groupContext/type_list is served by groupContext/groupeContextTypeList.ts.
+  // The OpenAPI block was removed from here so the published spec describes the route that runs.
   app.get("/api/v1/groupContext/type_list", async (req, res, next) => {
 
     const types = [];

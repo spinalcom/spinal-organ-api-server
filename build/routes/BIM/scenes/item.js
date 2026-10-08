@@ -65,12 +65,18 @@ module.exports = function (logger, app) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Retrun the target scene with it's items
-     *     summary: Get the target scene with it's items
+     *     summary: Get one BIM scene with its items
+     *     description: >-
+     *       Returns a scene together with `scenesItems`, the models it loads. The `id` is matched against
+     *       both the dynamic ID and the static ID of the scenes, so either can be used.
+     *
+     *
+     *       Beware of the two reserved names : `/api/v1/BIM/scene/list` and `/api/v1/BIM/scene/default`
+     *       are registered before this route, so a scene can never be reached under those two ids.
      *     parameters:
      *       - in: path
      *         name: id
-     *         description: dynamic or static id
+     *         description: Dynamic ID or static ID of the scene.
      *         required: true
      *         schema:
      *           oneOf:
@@ -80,15 +86,15 @@ module.exports = function (logger, app) {
      *       - BIM
      *     responses:
      *       200:
-     *         description: scene
+     *         description: The scene with its items.
      *         content:
      *           application/json:
      *             schema:
      *                $ref: '#/components/schemas/IScenesbody'
      *       400:
-     *         description: scene not found
+     *         description: No scene matches this id ("item not found").
      *       500:
-     *         description: internal error
+     *         description: The scenes could not be read. The body is an empty object.
      */
     app.get('/api/v1/BIM/scene/:id', async (req, res, spinalAPIMiddleware) => {
         try {

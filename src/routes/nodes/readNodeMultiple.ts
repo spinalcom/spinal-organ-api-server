@@ -42,8 +42,21 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns an array of node objects with optional parent and children relations
-   *     summary: Gets Multiple Nodes
+   *     summary: Read several nodes at once
+   *     description: >-
+   *       Batch version of `/api/v1/node/{id}/read` : the body is a JSON array of dynamic IDs and the
+   *       response is an array of node summaries in the same order.
+   *
+   *
+   *       Unlike the single-node route, the parent and children relations are included by default here.
+   *       Pass `includeChildrenRelations=false` / `includeParentRelations=false` to leave them out -
+   *       any other value (including omitting the parameter) keeps them.
+   *
+   *
+   *       Each ID is resolved independently : a node that cannot be read does not fail the request, its
+   *       slot is filled with `{ dynamicId, error }` and the whole response is returned with
+   *       **206 Partial Content**. At most 1000 IDs per call (configurable on the organ through
+   *       `MULTIPLE_ROUTE_IDS_LIMIT`); a longer array is rejected with 400.
    *     tags:
    *       - Nodes
    *     parameters:
@@ -51,16 +64,19 @@ module.exports = function (
    *         name: includeChildrenRelations
    *         schema:
    *           type: boolean
+   *           default: true
    *         required: false
-   *         description: Whether to include children relations
+   *         description: Set to `false` to leave `children_relation_list` empty.
    *       - in: query
    *         name: includeParentRelations
    *         schema:
    *           type: boolean
+   *           default: true
    *         required: false
-   *         description: Whether to include parent relations
+   *         description: Set to `false` to leave `parent_relation_list` empty.
    *     requestBody:
    *       required: true
+   *       description: The dynamic IDs to read.
    *       content:
    *         application/json:
    *           schema:
@@ -70,7 +86,7 @@ module.exports = function (
    *               format: int64
    *     responses:
    *       200:
-   *         description: Success - All nodes fetched successfully
+   *         description: Every node was read.
    *         content:
    *           application/json:
    *             schema:
@@ -78,7 +94,7 @@ module.exports = function (
    *               items:
    *                 $ref: '#/components/schemas/Node'
    *       206:
-   *         description: Partial Content - Some nodes could not be fetched
+   *         description: At least one node could not be read; those slots hold an error object instead.
    *         content:
    *           application/json:
    *             schema:
@@ -88,7 +104,9 @@ module.exports = function (
    *                   - $ref: '#/components/schemas/Node'
    *                   - $ref: '#/components/schemas/Error'
    *       400:
-   *         description: Bad request
+   *         description: The body is not an array, or it holds more IDs than the configured limit.
+   *       500:
+   *         description: Unexpected error while reading the nodes.
    */
 
   app.post('/api/v1/node/read_multiple', async (req, res, next) => {

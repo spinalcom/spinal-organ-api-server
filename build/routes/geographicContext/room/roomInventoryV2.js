@@ -40,33 +40,53 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Gets room inventory details ( equipment inventory )
-     *     summary: Gets room inventory
+     *     summary: Get the inventory of a room, grouped by group
+     *     description: >-
+     *       Lists the BIM objects of a room, classified by the groups of a chosen group context - the
+     *       per-room counterpart of `/api/v1/floor/{id}/inventory`.
+     *
+     *
+     *       The group context named in the body must be a `BIMObjectGroupContext`, and the node must be a
+     *       `geographicRoom`. An object that belongs to several matching groups is listed under each of
+     *       them, and objects whose group sits in no matching category are left out unless
+     *       `includeUnassignedItems` is set.
+     *
+     *
+     *       This route replaces the older `GET /api/v1/room/{id}/inventory`, which returned every group
+     *       of every context nested by category.
      *     tags:
      *       - Geographic Context
      *     parameters:
      *       - in: path
      *         name: id
-     *         description: Use the dynamic ID of the room
+     *         description: Dynamic ID of the room.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *       - in: query
      *         name: includePosition
-     *         description: Include position details in the response
+     *         description: >-
+     *           Add a `position` to every item, read from its `XYZ center` attribute in the `Spatial`
+     *           category. Items without that attribute get `{ x: null, y: null, z: null }`.
      *         required: false
      *         schema:
      *           type: boolean
+     *           default: false
      *       - in: query
      *         name: onlyDynamicId
-     *         description: Only include dynamic ID in the response
+     *         description: >-
+     *           Reduce every item to its `dynamicId` - name, type, staticId, dbid, bimFileId and color
+     *           are left out.
      *         required: false
      *         schema:
      *           type: boolean
-     *
+     *           default: false
      *     requestBody:
      *       required: true
+     *       description: >-
+     *         Selects the group context, the category inside it, and optionally the groups to keep.
+     *         Each pair accepts either a dynamic ID or a name; the ID wins when both are given.
      *       content:
      *         application/json:
      *           schema:
@@ -74,31 +94,63 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               context:
      *                 type: string
+     *                 description: Name of the group context. Ignored when `contextId` is set.
      *               contextId:
      *                 type: integer
+     *                 format: int64
+     *                 description: Dynamic ID of the group context.
      *               category:
      *                 type: string
+     *                 description: >-
+     *                   Name of the category inside the group context. Required in practice : objects
+     *                   whose group sits in no matching category are silently left out of the result.
      *               categoryId:
      *                 type: integer
+     *                 format: int64
+     *                 description: Dynamic ID of the category.
      *               groups:
      *                 type: array
      *                 items:
      *                   type: string
-     *                 description: Optional list of group names
+     *                 description: Optional group names to keep. All groups of the category when omitted.
      *               groupIds:
      *                 type: array
      *                 items:
      *                   type: integer
-     *                 description: Optional list of group dynamic IDs
+     *                   format: int64
+     *                 description: Optional group dynamic IDs to keep. Takes precedence over `groups`.
      *     responses:
      *       200:
-     *         description: Success
+     *         description: One entry per group, each holding the BIM objects of the room that belong to it.
      *         content:
      *           application/json:
      *             schema:
-     *               $ref: '#/components/schemas/InventoryRoomDetails'
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 properties:
+     *                   name:
+     *                     type: string
+     *                   dynamicId:
+     *                     type: integer
+     *                     format: int64
+     *                   type:
+     *                     type: string
+     *                   color:
+     *                     type: string
+     *                   icon:
+     *                     type: string
+     *                   groupItems:
+     *                     type: array
+     *                     items:
+     *                       type: object
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           The group context was not found ("context not found"), it is not a
+     *           `BIMObjectGroupContext`, the node is not a room ("node is not of type geographicRoom"),
+     *           or the room could not be loaded.
+     *       401:
+     *         description: The profile is not allowed to read the room or the group context.
      */
     app.post("/api/v1/room/:id/inventory", async (req, res, next) => {
         try {

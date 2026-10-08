@@ -43,12 +43,25 @@ module.exports = function (
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: update multiple attributes for multiple nodes
-   *     summary: update multiple attributes for multiple nodes
+   *         - write
+   *     summary: Update attributes on several nodes at once
+   *     description: >-
+   *       Writes a batch of attributes, addressing each one by node, **category name** and attribute
+   *       label - no category dynamic ID here, unlike the single-attribute routes.
+   *
+   *
+   *       The write is an upsert : a category that does not exist on the node is created, and so is an
+   *       unknown attribute label. Only the value is written (`attributeNewValue`); the type and unit
+   *       of an existing attribute are left untouched.
+   *
+   *
+   *       Entries are applied in order and the first failure aborts the whole request, so a call that
+   *       returns 400 may already have written the entries before it. At most 1000 entries per call
+   *       (configurable through `MULTIPLE_ROUTE_IDS_LIMIT`).
    *     tags:
    *       - Node Attributs
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
@@ -57,9 +70,17 @@ module.exports = function (
    *               $ref: '#/components/schemas/NodeAttributeUpdate'
    *     responses:
    *       200:
-   *         description: Create Successfully
+   *         description: Every entry was written (body is `ok`).
+   *         content:
+   *           text/plain:
+   *             schema:
+   *               type: string
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           The body is not an array, it holds more entries than the configured limit, or one of the
+   *           nodes could not be loaded or written (body is `ko`).
+   *       401:
+   *         description: The profile is not allowed to write on one of the nodes.
    */
 
   app.post('/api/v1/node/attribute/update_multiple', async (req, res, next) => {

@@ -32,27 +32,33 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   put:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: update category attribut in specific node
-     *     summary: update category attribut
+     *         - write
+     *     summary: Rename an attribute category of a node, by ID
+     *     description: >-
+     *       Renames a category, after checking that it is attached to the given node. Only the name
+     *       changes; the attributes the category holds are untouched.
+     *
+     *
+     *       A successful call answers **200 with an empty body**.
      *     tags:
      *       - Node Attribut Categories
      *     parameters:
      *      - in: path
      *        name: nodeId
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the node.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *      - in: path
      *        name: categoryId
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the category to rename.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -62,11 +68,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               categoryName:
      *                 type: string
+     *                 description: The new name of the category.
      *     responses:
      *       200:
-     *         description: Updated successfully
+     *         description: The category was renamed. The body is empty.
      *       400:
-     *         description: Bad request
+     *         description: The category is not attached to this node ("category not found in node").
+     *       401:
+     *         description: The profile is not allowed to write on this node.
+     *       500:
+     *         description: The node or the category could not be loaded.
      */
     app.put('/api/v1/node/:nodeId/categoryById/:categoryId/update', async (req, res, next) => {
         try {

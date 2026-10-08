@@ -29,36 +29,41 @@ const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-vie
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-     * @swagger
-     * /api/v1/equipement/{id}/file_list:
-     *   get:
-     *     security:
-     *       - bearerAuth:
-     *         - readOnly
-     *     description: Returns files of equipement
-     *     summary: Get list files of equipement
-     *     tags:
-     *       - Geographic Context
-     *     parameters:
-     *      - in: path
-     *        name: id
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *     responses:
-     *       200:
-     *         description: Success
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: array
-     *               items:
-     *                $ref: '#/components/schemas/File'
-     *       400:
-     *         description: Bad request
-     */
+   * @swagger
+   * /api/v1/equipement/{id}/file_list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the documents attached to an equipment
+   *     description: >-
+   *       Returns the documents stored under the equipment's `hasFiles` child as `{ dynamicId, Name }`.
+   *       Use the returned `dynamicId` with `/api/v1/node/{id}/download_file`. The node must be of type
+   *       `BIMObject`.
+   *     tags:
+   *       - Geographic Context
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the equipment (a `BIMObject`).
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The requested list (empty when there is nothing).
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/File'
+   *       400:
+   *         description: The node is not a `BIMObject`, or its documents could not be read (body is `ko`).
+   *       401:
+   *         description: The profile is not allowed to read this equipment.
+   */
     app.get("/api/v1/equipement/:id/file_list", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

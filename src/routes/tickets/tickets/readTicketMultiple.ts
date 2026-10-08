@@ -39,13 +39,20 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns details for multiple tickets
-   *     summary: Get details of multiple tickets
+   *     summary: Read several tickets at once
+   *     description: >-
+   *       Batch version of `/api/v1/ticket/{ticketId}/read_details` : the body is an array of ticket
+   *       dynamic IDs and the response holds the details of one ticket per ID, in the same order.
+   *
+   *
+   *       Each ticket is read independently : a failure turns its slot into an error object and the
+   *       response comes back with **206 Partial Content**. At most 1000 IDs per call (configurable
+   *       through `MULTIPLE_ROUTE_IDS_LIMIT`).
    *     tags:
    *       - Workflow & ticket
    *     requestBody:
-   *       description: An array of ticket IDs to fetch details for
    *       required: true
+   *       description: The dynamic IDs of the tickets.
    *       content:
    *         application/json:
    *           schema:
@@ -55,7 +62,7 @@ module.exports = function (
    *               format: int64
    *     responses:
    *       200:
-   *         description: Success - All ticket details fetched
+   *         description: Every ticket was read.
    *         content:
    *           application/json:
    *             schema:
@@ -63,7 +70,7 @@ module.exports = function (
    *               items:
    *                 $ref: '#/components/schemas/TicketDetails'
    *       206:
-   *         description: Partial Content - Some ticket details could not be fetched
+   *         description: At least one ticket could not be read; those slots hold an error object instead.
    *         content:
    *           application/json:
    *             schema:
@@ -73,7 +80,7 @@ module.exports = function (
    *                   - $ref: '#/components/schemas/TicketDetails'
    *                   - $ref: '#/components/schemas/Error'
    *       400:
-   *         description: Bad request
+   *         description: The body is not an array, or it holds more IDs than the configured limit.
    */
   app.post('/api/v1/ticket/read_details_multiple', async (req, res) => {
     try {

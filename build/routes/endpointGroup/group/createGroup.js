@@ -31,50 +31,67 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/endPointsGroup/{contextId}/category/{categoryId}/create_group:
-   *   post:
-   *     security:
-   *       - bearerAuth:
-   *         - read
-   *     description: create group endPoints Group
-   *     summary: create group endPoints Group
-   *     tags:
-   *       - EndPoints Group
-   *     parameters:
-   *      - in: path
-   *        name: contextId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: categoryId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     requestBody:
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - groupName
-   *               - colorName
-   *             properties:
-   *                groupName:
-   *                 type: string
-   *                colorName:
-   *                 type: string
-   *     responses:
-   *       200:
-   *         description: Create Successfully
-   *       400:
-   *         description: Bad request
-  */
+     * @swagger
+     * /api/v1/endPointsGroup/{contextId}/category/{categoryId}/create_group:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - write
+     *     summary: Create a group in a category
+     *     description: >-
+     *       Adds a group to a category of a group context. Items are then assigned to the group through
+     *       the assignment routes of this family.
+     *
+     *
+     *       The context must be of type `BmsEndpointGroupContext`.
+     *     tags:
+     *       - EndPoints Group
+     *     parameters:
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - groupName
+     *             properties:
+     *               groupName:
+     *                 type: string
+     *               groupColor:
+     *                 type: string
+     *                 description: Optional display colour.
+     *               groupIcon:
+     *                 type: string
+     *                 description: Optional display icon.
+     *     responses:
+     *       200:
+     *         description: The created group.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/BasicNode'
+     *       400:
+     *         description: >-
+     *           `contextId` is not a context ("contextId does not refer to a SpinalContext"), or the
+     *           category does not belong to it ("categoryId does not belong to context provided").
+     *       401:
+     *         description: The profile is not allowed to write on this context.
+     */
     app.post("/api/v1/endPointsGroup/:contextId/category/:categoryId/create_group", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

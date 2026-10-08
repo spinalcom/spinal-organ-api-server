@@ -41,34 +41,45 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: read category attribut in specific node
-   *     summary: read category attribut
+   *     summary: Read one attribute category of a node, by ID
+   *     description: >-
+   *       Returns a single attribute category (`dynamicId`, `staticId`, `name`, `type`) after checking
+   *       that it really is attached to the given node. The attributes it holds are not returned - use
+   *       `/api/v1/node/{id}/attribute_list` for those.
+   *
+   *
+   *       When the category is not one of the node's categories the request fails with a 500 rather
+   *       than a clean 400.
    *     tags:
    *       - Node Attribut Categories
    *     parameters:
    *      - in: path
    *        name: nodeId
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the node.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *      - in: path
    *        name: categoryId
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the category.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The category.
    *         content:
    *           application/json:
    *             schema:
-   *                $ref: '#/components/schemas/CategoriesAttribute'
+   *              $ref: '#/components/schemas/CategoriesAttribute'
    *       400:
-   *         description: Bad request
+   *         description: The category is not attached to the node ("category not found in node").
+   *       401:
+   *         description: The profile is not allowed to read the node or the category.
+   *       500:
+   *         description: The node or the category could not be loaded, or the category is not attached to the node.
    */
 
   app.get(

@@ -55,7 +55,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
        *                     analysisModuleVersion:
        *                       type: string
        *       400:
-       *         description: Bad request
+       *         description: The trigger type list could not be read.
        */
     app.get("/api/v1/analysis/triggerTypes", async (req, res, next) => {
         try {

@@ -45,7 +45,9 @@ module.exports = function (
    *       - bearerAuth:
    *         - write
    *     summary: Update an Organization Context by ID
-   *     description: Update a specific Organization Context by its ID
+   *     description: >-
+   *       Renames an organization context. Only the fields present in the body are applied, so this is a
+   *       partial update; the organizations it holds are untouched.
    *     tags:
    *       - Organization
    *     parameters:
@@ -86,6 +88,8 @@ module.exports = function (
    *         description: Organization context not found
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.patch(
     '/api/v1/organization/context/:contextId',

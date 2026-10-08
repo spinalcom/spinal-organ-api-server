@@ -39,6 +39,64 @@ module.exports = function (
   spinalAPIMiddleware: ISpinalAPIMiddleware
 ) {
 
+  /**
+   * @swagger
+   * /api/v1/groupeContext/{contextId}/category/{categoryId}/create_group:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Create a group in a category (deprecated alias)
+   *     description: >-
+   *       Kept for backwards compatibility : `groupeContext` is a historical misspelling of
+   *       `groupContext`. Identical behaviour to
+   *       `/api/v1/groupContext/{contextId}/category/{categoryId}/create_group`, which should be used
+   *       instead.
+   *     deprecated: true
+   *     tags:
+   *       - Group Context
+   *     parameters:
+   *       - in: path
+   *         name: contextId
+   *         description: Dynamic ID of the group context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: categoryId
+   *         description: Dynamic ID of the category.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - groupName
+   *             properties:
+   *               groupName:
+   *                 type: string
+   *               groupColor:
+   *                 type: string
+   *               groupIcon:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: The created group.
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/BasicNode'
+   *       400:
+   *         description: Same errors as the non-deprecated route.
+   *       401:
+   *         description: The profile is not allowed to write on this context.
+   */
   // Deprecated Name typo in route
   app.post(
     '/api/v1/groupeContext/:contextId/category/:categoryId/create_group',
@@ -90,46 +148,61 @@ module.exports = function (
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - read
-   *     description: create group
-   *     summary: create group
+   *         - write
+   *     summary: Create a group in a category
+   *     description: >-
+   *       Adds a group to a category of a group context. Items are then assigned to the group through
+   *       the assignment routes of this family.
+   *
+   *
+   *       This family works on a group context of any type; use the type-specific routes (rooms, equipment, endpoints, nomenclature) when you want the check enforced.
    *     tags:
    *       - Group Context
    *     parameters:
-   *      - in: path
-   *        name: contextId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: categoryId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: contextId
+   *         description: Dynamic ID of the group context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: categoryId
+   *         description: Dynamic ID of the category, which must belong to that context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
    *             type: object
    *             required:
    *               - groupName
-   *               - groupColor
    *             properties:
-   *                groupName:
+   *               groupName:
    *                 type: string
-   *                groupColor:
+   *               groupColor:
    *                 type: string
-   *                groupIcon:
+   *                 description: Optional display colour.
+   *               groupIcon:
    *                 type: string
+   *                 description: Optional display icon.
    *     responses:
    *       200:
-   *         description: Create Successfully
+   *         description: The created group.
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/BasicNode'
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           `contextId` is not a context ("contextId does not refer to a SpinalContext"), or the
+   *           category does not belong to it ("categoryId does not belong to context provided").
+   *       401:
+   *         description: The profile is not allowed to write on this context.
    */
 
   app.post(

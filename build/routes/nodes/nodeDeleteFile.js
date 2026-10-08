@@ -27,37 +27,57 @@ const requestUtilities_1 = require("../../utilities/requestUtilities");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-     * @swagger
-     * /api/v1/node/{id}/delete_file/{fileServerId}:
-     *   delete:
-     *     security:
-     *       - bearerAuth:
-     *         - readOnly
-     *     description: Delete a file from a node
-     *     summary: Delete a file from a node
-     *     tags:
-     *       - Nodes
-     *     parameters:
-     *      - in: path
-     *        name: id
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: fileServerId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *     responses:
-     *       200:
-     *         description: File successfully deleted
-     *       400:
-     *         description: Bad request
-     */
+   * @swagger
+   * /api/v1/node/{id}/delete_file/{fileServerId}:
+   *   delete:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Delete a document attached to a node
+   *     description: >-
+   *       Removes one document from the node's `hasFiles` directory. `fileServerId` is the `dynamicId`
+   *       of the file as returned by `/api/v1/node/{id}/file_list` - the ID of the file itself, not of
+   *       the node.
+   *     tags:
+   *       - Nodes
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the node the document hangs on.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *      - in: path
+   *        name: fileServerId
+   *        description: Dynamic ID of the document, as returned by `/api/v1/node/{id}/file_list`.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The document was deleted.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: File successfully deleted
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *       400:
+   *         description: >-
+   *           No node with this ID ("No node found with id ..."), or no document with this ID
+   *           ("No file found with id ...").
+   *       401:
+   *         description: The profile is not allowed to write on this node.
+   *       500:
+   *         description: The node could not be loaded or the document could not be removed.
+   */
     app.delete("/api/v1/node/:id/delete_file/:fileServerId", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

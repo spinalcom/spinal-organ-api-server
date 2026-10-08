@@ -36,53 +36,64 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   delete:
      *     security:
      *       - bearerAuth:
-     *         - readOnly
-     *     description: delete equipement from group
-     *     summary: delete equipement from group
+     *         - write
+     *     summary: Remove equipment from a group
+     *     description: >-
+     *       Takes BIM objects out of a group of an equipment group context. The body is an array of
+     *       dynamic IDs.
+     *
+     *
+     *       The equipment itself is **not** deleted : it stays in the geographic context and only loses
+     *       this grouping. An empty array is rejected.
      *     tags:
      *       - Equipements Group
      *     parameters:
-     *      - in: path
-     *        name: contextId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: categoryId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: groupId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the equipment group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: groupId
+     *         description: Dynamic ID of the group, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
      *     requestBody:
-     *       description: array of string (dynamicId)
      *       required: true
+     *       description: The dynamic IDs of the equipment to remove.
      *       content:
      *         application/json:
      *           schema:
      *             type: array
      *             items:
-     *               type: number
+     *               type: integer
+     *               format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The equipment was removed from the group.
      *         content:
      *           application/json:
      *             schema:
      *               type: array
      *               items:
-     *                $ref: '#/components/schemas/BasicNode'
+     *                 $ref: '#/components/schemas/BasicNode'
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           One of the nodes is not a `BIMObject`, the array is empty, the context is not a
+     *           `BIMObjectGroupContext`, or the category or the group does not belong to it.
+     *       401:
+     *         description: The profile is not allowed to write on this context.
      */
     app.delete('/api/v1/equipementsGroup/:contextId/category/:categoryId/group/:groupId/deleteEquipement', async (req, res, next) => {
         try {

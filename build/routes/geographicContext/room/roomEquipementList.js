@@ -26,6 +26,42 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const getEquipmentListInfo_1 = require("../../../utilities/getEquipmentListInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
+    /**
+     * @swagger
+     * /api/v1/room/{id}/equipement_list:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the equipment of a room (deprecated alias)
+     *     description: >-
+     *       Kept for backwards compatibility : `equipement` is a historical misspelling. Identical result
+     *       to `/api/v1/room/{id}/equipment_list`, which should be used instead.
+     *     deprecated: true
+     *     tags:
+     *      - Geographic Context
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the room.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The equipment of the room.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                $ref: '#/components/schemas/Equipement'
+     *       400:
+     *         description: The room could not be loaded ("list of equipement is not loaded").
+     *       401:
+     *         description: The profile is not allowed to read this room.
+     */
     app.get("/api/v1/room/:id/equipement_list", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
@@ -40,36 +76,40 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         }
     });
     /**
-   * @swagger
-   * /api/v1/room/{id}/equipment_list:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return list of equipement
-   *     summary: Gets a list of equipement
-   *     tags:
-   *      - Geographic Context
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                $ref: '#/components/schemas/Equipement'
-   *       400:
-   *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/room/{id}/equipment_list:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the equipment of a room
+     *     description: >-
+     *       Returns the BIM objects attached to a room through `hasBimObject`, each with its BIM
+     *       identifiers (`dbid`, `bimFileId`, `externalId`, `version`).
+     *     tags:
+     *      - Geographic Context
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the room.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The equipment of the room (an empty array if there is none).
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                $ref: '#/components/schemas/Equipement'
+     *       400:
+     *         description: The room could not be loaded ("list of equipement is not loaded").
+     *       401:
+     *         description: The profile is not allowed to read this room.
+     */
     app.get("/api/v1/room/:id/equipment_list", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

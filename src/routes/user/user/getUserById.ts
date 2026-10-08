@@ -43,7 +43,10 @@ module.exports = function (
    *       - bearerAuth:
    *         - read
    *     summary: Retrieve a SpinalUser by ID
-   *     description: Retrieve a SpinalUser by their unique ID.
+   *     description: >-
+   *       Returns one SpinalUser by its dynamic ID. Pass `attributes`, `groups` or `organizations` to
+   *       also get the attributes it carries, the user groups it belongs to, and the organizations
+   *       reached through those groups - each one costs extra reads, so they are off by default.
    *     tags:
    *       - User
    *     parameters:
@@ -88,6 +91,8 @@ module.exports = function (
    *         description: User not found
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.get(
     '/api/v1/user/:userId',
@@ -96,9 +101,9 @@ module.exports = function (
         userId: z.coerce.number().positive(),
       }),
       query: z.strictObject({
-        attributes: z.coerce.boolean().optional().default(false),
-        groups: z.coerce.boolean().optional().default(false),
-        organizations: z.coerce.boolean().optional().default(false),
+        attributes: z.stringbool().optional().default(false),
+        groups: z.stringbool().optional().default(false),
+        organizations: z.stringbool().optional().default(false),
       }),
     }),
     async (req, res) => {

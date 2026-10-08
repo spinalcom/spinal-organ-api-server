@@ -31,36 +31,45 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/device/{id}/endpoint_list:
- *   get:
- *     security:
- *       - bearerAuth:
- *         - readOnly
- *     description: Return list of endpoint
- *     summary: Gets a list of endpoint
- *     tags:
- *      - IoTNetwork & Time Series
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *               type: array
- *               items: 
- *                $ref: '#/components/schemas/IoTNetwork'
- *       400:
- *         description: Bad request
- */
+   * @swagger
+   * /api/v1/device/{id}/endpoint_list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the endpoints of a device
+   *     description: >-
+   *       Returns the `BmsEndpoint` children of a device, as `{ dynamicId, staticId, name, type }`.
+   *
+   *
+   *       Values are not included here : read one endpoint with `/api/v1/endpoint/{id}/read`, several
+   *       at once with `/api/v1/endpoint/read_multiple`, or use
+   *       `/api/v1/node/{id}/endpoint_list` on the device to get the endpoints with their current
+   *       values in a single call.
+   *     tags:
+   *      - IoTNetwork & Time Series
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the device.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The endpoints of the device (an empty array if there are none).
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/IoTNetwork'
+   *       400:
+   *         description: The device could not be loaded ("list of endpoints is not loaded").
+   *       401:
+   *         description: The profile is not allowed to read this device.
+   */
 
 
 

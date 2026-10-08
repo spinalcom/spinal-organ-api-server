@@ -99,6 +99,8 @@ module.exports = function (
    *                 $ref: '#/components/schemas/IUser'
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.get(
     '/api/v1/user-group/context/:contextId/group/:groupId/user',
@@ -108,9 +110,9 @@ module.exports = function (
         groupId: z.coerce.number().positive(),
       }),
       query: z.object({
-        attributes: z.coerce.boolean().optional().default(false),
-        groups: z.coerce.boolean().optional().default(false),
-        organizations: z.coerce.boolean().optional().default(false),
+        attributes: z.stringbool().optional().default(false),
+        groups: z.stringbool().optional().default(false),
+        organizations: z.stringbool().optional().default(false),
       }),
     }),
     async (req, res) => {

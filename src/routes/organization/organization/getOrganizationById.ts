@@ -44,7 +44,9 @@ module.exports = function (
    *       - bearerAuth:
    *         - read
    *     summary: Get an Organization by ID
-   *     description: Retrieve a specific Organization by its ID
+   *     description: >-
+   *       Returns one organization by its dynamic ID, with the attributes it carries. Use the
+   *       `user-group` and `room-group` routes to see what it is linked to.
    *     tags:
    *       - Organization
    *     parameters:
@@ -70,6 +72,8 @@ module.exports = function (
    *         description: Organization context not found
    *       401:
    *         description: Unauthorized - No graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.get(
     '/api/v1/organization/:organizationId',

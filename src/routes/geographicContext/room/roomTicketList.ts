@@ -35,36 +35,47 @@ import { getTicketListInfo } from "../../../utilities/getTicketListInfo";
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 	/**
-	 * @swagger
-	 * /api/v1/room/{id}/ticket_list:
-	 *   get:
-	 *     security:
-	 *       - bearerAuth:
-	 *         - readOnly
-	 *     description: Returns list of tickets of room
-	 *     summary: Get list of tickets of room
-	 *     tags:
-	 *       - Geographic Context
-	 *     parameters:
-	 *      - in: path
-	 *        name: id
-	 *        description: use the dynamic ID
-	 *        required: true
-	 *        schema:
-	 *          type: integer
-	 *          format: int64
-	 *     responses:
-	 *       200:
-	 *         description: Success
-	 *         content:
-	 *           application/json:
-	 *             schema:
-	 *               type: array
-	 *               items:
-	 *                $ref: '#/components/schemas/Ticket'
-	 *       400:
-	 *         description: Bad request
-	 */
+   * @swagger
+   * /api/v1/room/{id}/ticket_list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the tickets declared on a room
+   *     description: >-
+   *       Returns the tickets attached to a room with their full details : priority, creation date,
+   *       declarer, description, current process and step, workflow and attribute categories.
+   *
+   *
+   *       Unlike the generic `/api/v1/node/{id}/ticket_list`, the items attached to each ticket
+   *       (documents, notes, linked elements) are **always** included - there is no option to leave
+   *       them out here.
+   *     tags:
+   *       - Geographic Context
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the room.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The tickets declared on the room (an empty array if there are none).
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/Ticket'
+   *       400:
+   *         description: >-
+   *           The node is not a room ("node is not of type geographicRoom"), or its tickets could not
+   *           be read (body is `ko`).
+   *       401:
+   *         description: The profile is not allowed to read this room.
+   */
 	app.get("/api/v1/room/:id/ticket_list", async (req, res, next) => {
 		try {
 			const profileId = getProfileId(req);

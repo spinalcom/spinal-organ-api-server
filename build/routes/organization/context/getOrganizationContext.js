@@ -69,6 +69,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Organization context not found
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.get('/api/v1/organization/context', (0, express_zod_safe_1.default)({
         query: zod_1.z.strictObject({

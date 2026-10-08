@@ -57,6 +57,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Successfully deleted the user group context
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.delete('/api/v1/user-group/context/:contextId', (0, express_zod_safe_1.default)({
         params: zod_1.z.object({ contextId: zod_1.z.coerce.number().positive() }),

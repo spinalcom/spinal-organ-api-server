@@ -27,37 +27,45 @@ const requestUtilities_1 = require("../../utilities/requestUtilities");
 const getParentNodesInfo_1 = require("../../utilities/getParentNodesInfo");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/node/{id}/parents:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: Return node's parents
-   *     summary: Gets Node parents
-   *     tags:
-   *       - Nodes
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: array
-   *               items:
-   *                 $ref: '#/components/schemas/BasicNode'
-   *
-   *       400:
-   *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/node/{id}/parents:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: List the parents of a node
+     *     description: >-
+     *       Returns the direct parents of a node, through **every** relation it belongs to - a node can
+     *       have several parents in the Spinal graph. To restrict the walk to named relations, or to stay
+     *       inside a context, use the POST variants `/api/v1/node/{id}/parents` and
+     *       `/api/v1/context/{idContext}/node/{idNode}/parents`.
+     *
+     *
+     *       Parents are returned in their short form only : `dynamicId`, `staticId`, `name` and `type`.
+     *     tags:
+     *       - Nodes
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the node.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The direct parents of the node (an empty array for a graph root).
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 $ref: '#/components/schemas/BasicNode'
+     *       400:
+     *         description: The node could not be loaded (unknown or stale dynamic ID).
+     *       401:
+     *         description: The profile is not allowed to read this node.
+     */
     app.get("/api/v1/node/:id/parents", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

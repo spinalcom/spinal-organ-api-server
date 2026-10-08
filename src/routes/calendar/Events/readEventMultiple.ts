@@ -39,13 +39,20 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns details for multiple events
-   *     summary: Get details of multiple events
+   *     summary: Read several calendar events at once
+   *     description: >-
+   *       Batch version of `/api/v1/event/{eventId}/read` : the body is an array of event dynamic IDs
+   *       and the response holds one event per ID, in the same order.
+   *
+   *
+   *       Each event is read independently : a failure turns its slot into an error object and the
+   *       response comes back with **206 Partial Content**. At most 1000 IDs per call (configurable
+   *       through `MULTIPLE_ROUTE_IDS_LIMIT`).
    *     tags:
    *       - Calendar & Event
    *     requestBody:
-   *       description: An array of event IDs to fetch details for
    *       required: true
+   *       description: The dynamic IDs of the events.
    *       content:
    *         application/json:
    *           schema:
@@ -55,7 +62,7 @@ module.exports = function (
    *               format: int64
    *     responses:
    *       200:
-   *         description: Success - All event details fetched
+   *         description: Every event was read.
    *         content:
    *           application/json:
    *             schema:
@@ -63,7 +70,7 @@ module.exports = function (
    *               items:
    *                 $ref: '#/components/schemas/Event'
    *       206:
-   *         description: Partial Content - Some event details could not be fetched
+   *         description: At least one event could not be read; those slots hold an error object instead.
    *         content:
    *           application/json:
    *             schema:
@@ -73,7 +80,9 @@ module.exports = function (
    *                   - $ref: '#/components/schemas/Event'
    *                   - $ref: '#/components/schemas/Error'
    *       400:
-   *         description: List of events is not loaded
+   *         description: >-
+   *           The body is not an array, it holds more IDs than the configured limit, or the events
+   *           could not be read ("List of events is not loaded").
    */
   app.post('/api/v1/event/read_multiple', async (req, res, next) => {
     try {

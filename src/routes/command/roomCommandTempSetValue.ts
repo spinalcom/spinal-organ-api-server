@@ -45,21 +45,27 @@ module.exports = function (
    *   post:
    *     security:
    *       - bearerAuth:
-   *         - readOnly
-   *     description: Set command temp value
-   *     summary: Set command temp value
+   *         - write
+   *     summary: Set the temperature command of a room
+   *     description: >-
+   *       Writes a new value on the `COMMAND_TEMP` control point of a room. The value goes through the same
+   *       path as an analytic result, so the control point is updated and its time series records the
+   *       change.
+   *
+   *
+   *       The room must carry a `Command` control-point profile holding a `COMMAND_TEMP` endpoint, otherwise
+   *       the request fails with 400.
    *     tags:
-   *      - Command
+   *       - Command
    *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: id
+   *         description: Dynamic ID of the room.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     requestBody:
-   *       description: set current value, float attribute
    *       required: true
    *       content:
    *         application/json:
@@ -72,13 +78,15 @@ module.exports = function (
    *                 type: number
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The value that was written.
    *         content:
    *           application/json:
    *             schema:
    *                $ref: '#/components/schemas/Command'
    *       400:
-   *         description: Bad request
+   *         description: The room has no `COMMAND_TEMP` control point, or the room could not be loaded.
+   *       401:
+   *         description: The profile is not allowed to write on this room.
    */
 
   app.post('/api/v1/command/room/:id/temp', async (req, res, next) => {
@@ -99,7 +107,7 @@ module.exports = function (
               const model = SpinalGraphService.getInfo(bmsEndPoint.getId().get());
               const element = await bmsEndPoint.element.load()
               await updateControlEndpointWithAnalytic(model, req.body.tempCurrentValue, InputDataEndpointDataType.Real, InputDataEndpointType.Other)
-
+              bmsEndPoint.info.directModificationDate.set(Date.now());
               // element.currentValue.set(req.body.tempCurrentValue)
               info = {
                 dynamicId: room._server_id,

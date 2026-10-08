@@ -34,41 +34,52 @@ module.exports = function (logger, app, spinalAPIMiddleware: ISpinalAPIMiddlewar
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Retrun the list of BimObjectsInfo
-   *     summary: Get getBimObjectsInfo
+   *     summary: Resolve viewer dbIds to graph nodes
+   *     description: >-
+   *       Takes the `dbid`s selected in a viewer and returns the corresponding `BIMObject` nodes of the
+   *       graph, so a selection in the 3D model can be turned into nodes the other routes accept.
+   *
+   *
+   *       The body is an array : one entry per BIM file, each holding the file id and the dbIds to
+   *       resolve for it. `bimFileId` accepts either the dynamic ID or the static ID of the BIM file.
+   *       A dbId that matches no node is simply absent from the answer.
    *     tags:
    *       - BIM
    *     requestBody:
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
    *             type: array
    *             items:
    *               type: object
+   *               required:
+   *                 - bimFileId
+   *                 - dbids
    *               properties:
    *                 bimFileId:
-   *                   description: serverId or staticId of the BimFile
+   *                   description: Dynamic ID or static ID of the BIM file.
    *                   oneOf:
    *                     - type: string
    *                     - type: integer
    *                 dbids:
-   *                   description: dbIds in the viewer
+   *                   description: The dbIds as the viewer knows them.
    *                   type: array
    *                   items:
    *                     type: integer
-   *             required:
-   *               - bimFileId
-   *               - dbids
    *     responses:
    *       200:
-   *         description: Array of BimObjectsInfo
+   *         description: The BIM objects matching the requested dbIds.
    *         content:
    *           application/json:
    *             schema:
    *               type: array
    *               items:
    *                $ref: '#/components/schemas/IBimObjectsInfo'
-   *
+   *       400:
+   *         description: The body is not an array ("Bad request body").
+   *       500:
+   *         description: The BIM objects could not be resolved.
    */
   app.post('/api/v1/BIM/getBimObjectsInfo', async (req, res) => {
     try {

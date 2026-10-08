@@ -34,21 +34,27 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Returns notes of room
-     *     summary: Get list notes of room
+     *     summary: List the notes attached to a room
+     *     description: >-
+     *       Returns the notes written on a room as `{ date, type, message }`, where `date` is a
+     *       timestamp in milliseconds and `type` the media type of the note.
+     *
+     *
+     *       Same data as the generic `/api/v1/node/{id}/note_list`, with an extra check that the node
+     *       really is a `geographicRoom`.
      *     tags:
      *       - Geographic Context
      *     parameters:
      *      - in: path
      *        name: id
-     *        description: use the dynamic ID
+     *        description: Dynamic ID of the room.
      *        required: true
      *        schema:
      *          type: integer
      *          format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The notes attached to the room (an empty array if there are none).
      *         content:
      *           application/json:
      *             schema:
@@ -56,7 +62,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                $ref: '#/components/schemas/Note'
      *       400:
-     *         description: Bad request
+     *         description: The node is not a room ("node is not of type geographic room").
+     *       401:
+     *         description: The profile is not allowed to read this room.
+     *       500:
+     *         description: The room could not be loaded or its notes could not be read.
      */
     app.get('/api/v1/room/:id/notes', async (req, res, next) => {
         try {

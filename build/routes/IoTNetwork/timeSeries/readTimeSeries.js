@@ -33,91 +33,133 @@ const aggregationUtils_1 = require("../../../utilities/aggregationUtils");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/endpoint/{id}/timeSeries/read/{begin}/{end}:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: get time series
-   *     summary: get time series
-   *     tags:
-   *       - IoTNetwork & Time Series
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: begin
-   *        description: Date Format is DD-MM-YYYY HH:mm:ss or DD MM YYYY HH:mm:ss
-   *        required: true
-   *        schema:
-   *          type: string
-   *      - in: path
-   *        name: end
-   *        description: Date Format is DD-MM-YYYY hh:mm:ss or DD MM YYYY HH:mm:ss
-   *        required: true
-   *        schema:
-   *          type: string
-   *      - in: query
-   *        name: valueAtBegin
-   *        description: If true, the last known timeserie before the begin date will be included. Default is 'false'.
-   *        required: false
-   *        schema:
-   *          type: string
-   *          enum: [false, true]
-   *      - in: query
-   *        name: aggregation
-   *        description: >
-   *          Comma-separated list of aggregation operations to apply on the data.
-   *          Supported values: sum, min, max, avg, twavg, time_weighted_avg, all.
-   *          Use 'all' to get sum, min, max, avg and twavg at once.
-   *          If not provided, raw time series data is returned.
-   *        required: false
-   *        schema:
-   *          type: string
-   *          example: "sum,min,max,avg"
-   *      - in: query
-   *        name: bucket
-   *        description: >
-   *          Split the interval into sub-intervals of the given size and compute
-   *          the requested aggregations per bucket. If no aggregation is specified,
-   *          defaults to twavg. Supported formats: hour, day, week, month.
-   *        required: false
-   *        schema:
-   *          type: string
-   *          example: "hour"
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *               oneOf:
-   *                 - $ref: '#/components/schemas/Timeserie'
-   *                 - type: object
-   *                   properties:
-   *                     sum:
-   *                       type: number
-   *                       nullable: true
-   *                     min:
-   *                       type: number
-   *                       nullable: true
-   *                     max:
-   *                       type: number
-   *                       nullable: true
-   *                     avg:
-   *                       type: number
-   *                       nullable: true
-   *                     count:
-   *                       type: integer
-   *       400:
-   *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/endpoint/{id}/timeSeries/read/{begin}/{end}:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: Read the time series of an endpoint over an interval
+     *     description: >-
+     *       Returns the recorded values of an endpoint between two dates. The shape of the response
+     *       depends on the query parameters :
+     *
+     *        * **no `aggregation`, no `bucket`** - the raw points, as `{ date, value }`;
+     *
+     *        * **`aggregation` alone** - a single object with the requested measures over the whole
+     *          interval;
+     *
+     *        * **`bucket` (with or without `aggregation`)** - `{ dynamicId, buckets }`, one aggregated
+     *          entry per sub-interval. Without `aggregation` the bucket measure defaults to `twavg`.
+     *
+     *
+     *       `twavg` is the time-weighted average : each value counts for as long as it stayed in place,
+     *       which is what you want for a measure that is only recorded on change. A plain `avg` instead
+     *       weighs every recorded point equally.
+     *
+     *
+     *       Both dates are read as `DD-MM-YYYY HH:mm:ss` or `DD MM YYYY HH:mm:ss`; anything else is
+     *       rejected. Remember to URL-encode the spaces in the path.
+     *     tags:
+     *       - IoTNetwork & Time Series
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the endpoint.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *      - in: path
+     *        name: begin
+     *        description: Start of the interval, as `DD-MM-YYYY HH:mm:ss` or `DD MM YYYY HH:mm:ss`.
+     *        required: true
+     *        schema:
+     *          type: string
+     *      - in: path
+     *        name: end
+     *        description: End of the interval, same formats as `begin`.
+     *        required: true
+     *        schema:
+     *          type: string
+     *      - in: query
+     *        name: valueAtBegin
+     *        description: >-
+     *          Set to `true` to prepend the last value known **before** `begin`, so the series starts
+     *          with the value that was in place at the start of the interval instead of at the first
+     *          change inside it.
+     *        required: false
+     *        schema:
+     *          type: string
+     *          enum: [false, true]
+     *          default: 'false'
+     *      - in: query
+     *        name: aggregation
+     *        description: >-
+     *          Comma-separated measures to compute instead of returning the raw points : `sum`, `min`,
+     *          `max`, `avg`, `twavg` (alias `time_weighted_avg`), or `all` for every one of them. An
+     *          unknown value is rejected with 400.
+     *        required: false
+     *        schema:
+     *          type: string
+     *          example: "sum,min,max,avg"
+     *      - in: query
+     *        name: bucket
+     *        description: >-
+     *          Split the interval into sub-intervals of this size and aggregate inside each one.
+     *          Accepts `hour`, `day`, `week` and `month`.
+     *        required: false
+     *        schema:
+     *          type: string
+     *          example: "hour"
+     *     responses:
+     *       200:
+     *         description: >-
+     *           The raw points, the aggregated measures, or the bucketed series, depending on the query
+     *           parameters.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               oneOf:
+     *                 - $ref: '#/components/schemas/Timeserie'
+     *                 - type: object
+     *                   description: Aggregated measures over the whole interval.
+     *                   properties:
+     *                     sum:
+     *                       type: number
+     *                       nullable: true
+     *                     min:
+     *                       type: number
+     *                       nullable: true
+     *                     max:
+     *                       type: number
+     *                       nullable: true
+     *                     avg:
+     *                       type: number
+     *                       nullable: true
+     *                     twavg:
+     *                       type: number
+     *                       nullable: true
+     *                       description: Time-weighted average.
+     *                     count:
+     *                       type: integer
+     *                 - type: object
+     *                   description: Bucketed aggregation.
+     *                   properties:
+     *                     dynamicId:
+     *                       type: integer
+     *                       format: int64
+     *                     buckets:
+     *                       type: array
+     *                       items:
+     *                         type: object
+     *       400:
+     *         description: >-
+     *           A date could not be parsed ("Invalid date make sure the date format is DD-MM-YYYY
+     *           HH:mm:ss"), the `aggregation` value is unknown, or the endpoint could not be loaded.
+     *       401:
+     *         description: The profile is not allowed to read this endpoint.
+     */
     app.get("/api/v1/endpoint/:id/timeSeries/read/:begin/:end", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

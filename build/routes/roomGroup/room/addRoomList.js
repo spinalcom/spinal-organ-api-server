@@ -36,53 +36,79 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - readOnly
-     *     description: add room list
-     *     summary: add room
+     *         - write
+     *     summary: Assign rooms to a group
+     *     description: >-
+     *       Adds rooms to a group of a room group context. The body is an array of room dynamic IDs; each
+     *       one must designate a node of type `geographicRoom`.
+     *
+     *
+     *       The context must be a `geographicRoomGroupContext`, and the category and the group must both
+     *       belong to it.
+     *
+     *
+     *       Rooms are assigned one by one : a room that cannot be added does not fail the request, its
+     *       slot holds an error instead and the response comes back with **206 Partial Content**. A room
+     *       already in the group is left as it is.
      *     tags:
      *       - Rooms Group
      *     parameters:
-     *      - in: path
-     *        name: contextId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: categoryId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: groupId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the room group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: groupId
+     *         description: Dynamic ID of the group, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
      *     requestBody:
-     *       description: array of string (dynamicId)
      *       required: true
+     *       description: The dynamic IDs of the rooms to assign.
      *       content:
      *         application/json:
      *           schema:
      *             type: array
      *             items:
-     *               type: number
+     *               type: integer
+     *               format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: Every room was assigned.
      *         content:
      *           application/json:
      *             schema:
      *               type: array
      *               items:
-     *                $ref: '#/components/schemas/BasicNode'
+     *                 $ref: '#/components/schemas/BasicNode'
+     *       206:
+     *         description: At least one room could not be assigned; those slots hold an error instead.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 oneOf:
+     *                   - $ref: '#/components/schemas/BasicNode'
+     *                   - $ref: '#/components/schemas/Error'
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           `contextId` is not a context, the context is not a `geographicRoomGroupContext`, or the
+     *           category or the group does not belong to it.
+     *       401:
+     *         description: The profile is not allowed to write on this context.
      */
     app.post('/api/v1/roomsGroup/:contextId/category/:categoryId/group/:groupId/addRooms', async (req, res, next) => {
         try {

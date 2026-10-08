@@ -34,34 +34,41 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   put:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: update the step
-     *     summary: update the step
+     *         - write
+     *     summary: Rename a step and change its colour
+     *     description: >-
+     *       Updates the name and the colour of a step. Both `newNameStep` and `newColor` are required -
+     *       there is no way to change only one of them here, and the order of the step cannot be changed
+     *       through this route.
+     *
+     *
+     *       The new name must not be used by another step of the same process.
      *     tags:
      *       - Workflow & ticket
      *     parameters:
-     *      - in: path
-     *        name: workflowId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: processId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: stepId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
+     *       - in: path
+     *         name: workflowId
+     *         description: Dynamic ID of the workflow context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: processId
+     *         description: Dynamic ID of the process, which must belong to that workflow.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: stepId
+     *         description: Dynamic ID of the step.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -70,15 +77,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               - newNameStep
      *               - newColor
      *             properties:
-     *                newNameStep:
+     *               newNameStep:
      *                 type: string
-     *                newColor:
+     *               newColor:
      *                 type: string
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The step was updated.
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           One of the IDs is not a number, a required field is missing ("Missing required fields"),
+     *           or the name is already taken ("Step name already exists").
+     *       401:
+     *         description: The profile is not allowed to write on this workflow.
+     *       500:
+     *         description: One of the nodes could not be loaded, or is not of the expected type.
      */
     app.put('/api/v1/workflow/:workflowId/process/:processId/step/:stepId/update_step', async (req, res) => {
         // check if workflowId, processId and stepId are valid

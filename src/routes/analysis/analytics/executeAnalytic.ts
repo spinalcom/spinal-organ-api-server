@@ -67,7 +67,7 @@ module.exports = function (logger: any, app: express.Express, spinalAPIMiddlewar
    *                     analysisModuleVersion:
    *                       type: string
    *       400:
-   *         description: Bad request
+   *         description: The analytic could not be loaded, or the execution failed.
    */
 
   app.post("/api/v1/analysis/analytics/:analyticId/execute", async (req, res, next) => {

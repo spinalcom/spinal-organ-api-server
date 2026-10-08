@@ -40,27 +40,37 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Return list of endpoint
-   *     summary: Gets a list of endpoint
+   *     summary: List the BMS endpoints under a node
+   *     description: >-
+   *       Walks the node through the BMS relations (`hasEndPoint`, `hasBmsDevice`, `hasBmsEndpoint`,
+   *       `hasBmsEndpointGroup`) and returns every `BmsEndpoint` found below it, at any depth. Works on
+   *       any node that carries BMS equipment : a room, a piece of equipment, a device, a network.
+   *
+   *
+   *       `currentValue` is the last value known by the hub, not a fresh reading from the field.
    *     tags:
    *      - Nodes
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the node to walk.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *      - in: query
    *        name: includeDetails
-   *        description: include detailed endpoint information
+   *        description: >-
+   *          Set to `true` to also read the `controlValue` and `timeSeries maxDay` attributes of every
+   *          endpoint (returned as `controlValue` and `timeseriesRetentionDays`). This costs one extra
+   *          attribute read per endpoint, so leave it off on large walks.
    *        required: false
    *        schema:
    *          type: boolean
+   *          default: false
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The endpoints found below the node (an empty array if there are none).
    *         content:
    *           application/json:
    *             schema:
@@ -68,7 +78,9 @@ module.exports = function (
    *               items:
    *                $ref: '#/components/schemas/EndPointNode'
    *       400:
-   *         description: Bad request
+   *         description: The node could not be loaded ("list of endpoints is not loaded").
+   *       401:
+   *         description: The profile is not allowed to read this node.
    */
 
   app.get('/api/v1/node/:id/endpoint_list', async (req, res, next) => {

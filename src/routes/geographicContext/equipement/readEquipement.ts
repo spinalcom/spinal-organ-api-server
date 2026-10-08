@@ -33,34 +33,40 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
- * @swagger
- * /api/v1/equipement/{id}/read:
- *   get:
- *     security: 
- *       - bearerAuth: 
- *         - readOnly
- *     description: read equipement 
- *     summary: Gets equipement
- *     tags:
- *       - Geographic Context
- *     parameters:
- *      - in: path
- *        name: id
- *        description: use the dynamic ID
- *        required: true
- *        schema:
- *          type: integer
- *          format: int64
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *                $ref: '#/components/schemas/Equipement'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/equipement/{id}/read:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: Read an equipment
+   *     description: >-
+   *       Returns the identity of a piece of equipment : `dynamicId`, `staticId`, `name`, `type` and its
+   *       BIM identifiers. The node must be of type `BIMObject`.
+   *     tags:
+   *       - Geographic Context
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the equipment (a `BIMObject`).
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The equipment.
+   *         content:
+   *           application/json:
+   *             schema:
+   *                $ref: '#/components/schemas/Equipement'
+   *       400:
+   *         description: The node is not a `BIMObject` (the message wrongly says "node is not of type geographic room").
+   *       401:
+   *         description: The profile is not allowed to read this equipment.
+   *       500:
+   *         description: The equipment could not be loaded.
+   */
 
   app.get("/api/v1/equipement/:id/read", async (req, res, next) => {
     try {

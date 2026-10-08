@@ -27,48 +27,54 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/equipementsGroup/{contextId}/category/{categoryId}/group/{groupId}/read:
-   *   get:
-   *     security:
-   *       - bearerAuth:
-   *         - readOnly
-   *     description: read group equipements Group
-   *     summary: Get group equipements Group
-   *     tags:
-   *       - Equipements Group
-   *     parameters:
-   *      - in: path
-   *        name: contextId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: categoryId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: groupId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     responses:
-   *       200:
-   *         description: Success
-   *         content:
-   *           application/json:
-   *             schema:
-   *                $ref: '#/components/schemas/BasicNode'
-   *       400:
-   *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/equipementsGroup/{contextId}/category/{categoryId}/group/{groupId}/read:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: Read a group of a category
+     *     description: >-
+     *       Returns the identity of a group, after checking that the category and the group both belong
+     *       to the given context.
+     *     tags:
+     *       - Equipements Group
+     *     parameters:
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: groupId
+     *         description: Dynamic ID of the group, which must belong to that category.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *     responses:
+     *       200:
+     *         description: The group.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/BasicNode'
+     *       400:
+     *         description: The category or the group does not belong to the context ("category or group not found in context").
+     *       401:
+     *         description: The profile is not allowed to read this context.
+     *       500:
+     *         description: One of the nodes could not be loaded.
+     */
     app.get("/api/v1/equipementsGroup/:contextId/category/:categoryId/group/:groupId/read", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

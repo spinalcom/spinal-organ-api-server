@@ -34,51 +34,62 @@ import { awaitSync } from '../../utilities/awaitSync';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
- * @swagger
- * /api/v1/node/{id}/category/create:
- *   post:
- *     security:
- *       - bearerAuth:
- *         - read
- *     description: create category attribute in specific node
- *     summary: create category attribut
- *     tags:
- *       - Node Attribut Categories
- *     parameters:
- *       - in: path
- *         name: id
- *         description: use the dynamic ID
- *         required: true
- *         schema:
- *           type: integer
- *           format: int64
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - categoryName
- *             properties:
- *               categoryName:
- *                 type: string
- *     responses:
- *       200:
- *         description: Created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 name:
- *                   type: string
- *                   description: The name of the created category
- *                 id:
- *                   type: string
- *                   description: The server ID of the created category node
- *       400:
- *         description: Bad request
- */
+   * @swagger
+   * /api/v1/node/{id}/category/create:
+   *   post:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Create an attribute category on a node
+   *     description: >-
+   *       Attaches a new, empty attribute category to a node. Attributes are then added to it with
+   *       `/api/v1/node/{IdNode}/category/{IdCategory}/attribut/create`, using the `id` returned here.
+   *
+   *
+   *       Category names are not unique : creating a category with a name the node already carries adds
+   *       a second one. The route waits for the hub to acknowledge the write before answering, so the
+   *       returned `id` is usable right away.
+   *     tags:
+   *       - Node Attribut Categories
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         description: Dynamic ID of the node the category is attached to.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - categoryName
+   *             properties:
+   *               categoryName:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: The category was created.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 name:
+   *                   type: string
+   *                   description: Name of the created category.
+   *                 id:
+   *                   type: integer
+   *                   format: int64
+   *                   description: Dynamic ID of the created category node.
+   *       401:
+   *         description: The profile is not allowed to write on this node.
+   *       500:
+   *         description: The node could not be loaded or the category could not be created.
+   */
 
   app.post("/api/v1/node/:id/category/create", async (req, res, next) => {
 

@@ -37,35 +37,54 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Return status of room
-     *     summary: Get Return status of room
+     *     summary: Get a status report for a room
+     *     description: >-
+     *       Gathers what is currently open on a room - its note, the tickets declared on it and on its
+     *       equipment, and the alarms of its equipment - and returns them at the level of detail asked
+     *       for by `option` :
+     *
+     *        * `summary` - the note, the number of tickets per criticality level, and the number of
+     *          alarms;
+     *
+     *        * `standard` - the note, the list of tickets with their name, note, workflow and current
+     *          step, and the list of alarms per equipment;
+     *
+     *        * `detail` - the note, the full details of every ticket, and the detailed alarms per
+     *          equipment.
+     *
+     *
+     *       Any other value for `option` currently falls through and answers with an empty body. The
+     *       node must be of type `geographicRoom`.
      *     tags:
      *       - Analytics
      *     parameters:
-     *      - in: path
-     *        name: id
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: option
-     *        description: choose an option among the three options, summary will give -note-the sum of tickets (part and equipment) by level of criticality-the sum of the alarms standard will give -Note -the list of tickets (part and equipment) with their name, note, -their workflow and their status -the list of alarms by equipment in the room detail will give  -Note -detailed list of tickets (part and equipment) -detailed list of alarms by equipment in the room
-     *        required: true
-     *        schema:
-     *          type: string
+     *       - in: path
+     *         name: id
+     *         description: Dynamic ID of the room.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: option
+     *         description: Level of detail of the report.
+     *         required: true
+     *         schema:
+     *           type: string
+     *           enum: [summary, standard, detail]
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The room status report, shaped by `option`.
      *         content:
      *           application/json:
      *             schema:
-     *               type: array
-     *               items:
-     *                $ref: '#/components/schemas/Ticket'
+     *               type: object
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           The node is not a room ("node is not of type geographic room"), or the report could not
+     *           be built (body is `ko`).
+     *       401:
+     *         description: The profile is not allowed to read this room.
      */
     app.get('/api/v1/analytics/room/:id/status/:option', async (req, res, next) => {
         try {

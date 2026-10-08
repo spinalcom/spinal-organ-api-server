@@ -32,35 +32,45 @@ import { ISpinalAPIMiddleware } from '../../interfaces';
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 
   /**
-* @swagger
-* /api/v1/node/{nodeId}/categoryByName/{categoryName}/delete:
-*   delete:
-*     security: 
-*       - bearerAuth: 
-*         - read
-*     description: Delete category from graph
-*     summary: Delete category attribut
-*     tags:
-*       - Node Attribut Categories
-*     parameters:
-*      - in: path
-*        name: nodeId
-*        description: use the dynamic ID
-*        required: true
-*        schema:
-*          type: integer
-*          format: int64
-*      - in: path
-*        name: categoryName
-*        required: true
-*        schema:
-*          type: string
-*     responses:
-*       202:
-*         description: Deleted successfully
-*       400:
-*         description: Bad request
-  */
+   * @swagger
+   * /api/v1/node/{nodeId}/categoryByName/{categoryName}/delete:
+   *   delete:
+   *     security:
+   *       - bearerAuth:
+   *         - write
+   *     summary: Delete an attribute category of a node, by name
+   *     description: >-
+   *       Removes the category named `categoryName` from the graph, with every attribute it holds.
+   *       When several categories share that name, the first one found is deleted.
+   *
+   *
+   *       A successful call answers **200 with an empty body**.
+   *     tags:
+   *       - Node Attribut Categories
+   *     parameters:
+   *      - in: path
+   *        name: nodeId
+   *        description: Dynamic ID of the node.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *      - in: path
+   *        name: categoryName
+   *        description: Name of the category to delete (exact match).
+   *        required: true
+   *        schema:
+   *          type: string
+   *     responses:
+   *       200:
+   *         description: The category was deleted. The body is empty.
+   *       400:
+   *         description: The node carries no category with this name ("category not found in node").
+   *       401:
+   *         description: The profile is not allowed to write on this node.
+   *       500:
+   *         description: The node could not be loaded.
+   */
 
   app.delete("/api/v1/node/:nodeId/categoryByName/:categoryName/delete", async (req, res, next) => {
 

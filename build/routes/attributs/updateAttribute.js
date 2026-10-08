@@ -28,36 +28,50 @@ const requestUtilities_1 = require("../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
-     * /api/v1/node/{idNode}/category/{idCategory}/attribut/{attributName}/update:
+     * /api/v1/node/{IdNode}/category/{IdCategory}/attribut/{attributName}/update:
      *   put:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: Update attribute
-     *     summary: update an attribute
+     *         - write
+     *     summary: Update an attribute of a node
+     *     description: >-
+     *       Replaces the label, value, type and unit of one attribute. All four body fields are applied,
+     *       so a field left out is written as `undefined` - send the current value for the fields that
+     *       should not change. Note that `attributeLabel` renames the attribute.
+     *
+     *
+     *       The attribute is matched by exact label inside the given category. When nothing matches, the
+     *       request still answers **200** and simply returns the node's categories unchanged, so compare
+     *       the response with what you sent to know whether the update landed.
+     *
+     *
+     *       The response is the full list of attribute categories of the node after the write, not just
+     *       the modified attribute.
      *     tags:
      *       - Node Attributs
      *     parameters:
      *       - in: path
-     *         name: idNode
-     *         description: use the dynamic ID
+     *         name: IdNode
+     *         description: Dynamic ID of the node.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *       - in: path
-     *         name: idCategory
-     *         description: use the dynamic ID
+     *         name: IdCategory
+     *         description: Dynamic ID of the category holding the attribute.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *       - in: path
      *         name: attributName
+     *         description: Current label of the attribute to update (exact match).
      *         required: true
      *         schema:
      *           type: string
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -70,6 +84,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               attributeLabel:
      *                 type: string
+     *                 description: New label. Pass the current one to keep it.
      *               attributeValue:
      *                 type: string
      *               attributeType:
@@ -78,7 +93,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                 type: string
      *     responses:
      *       200:
-     *         description: Update Successfully
+     *         description: All the attribute categories of the node, as they stand after the write.
      *         content:
      *           application/json:
      *             schema:
@@ -86,7 +101,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                 $ref: '#/components/schemas/NodeAttribut'
      *       400:
-     *         description: Bad request
+     *         description: The node or the category could not be loaded (body is `ko`).
+     *       401:
+     *         description: The profile is not allowed to write on this node.
      */
     app.put('/api/v1/node/:IdNode/category/:IdCategory/attribut/:attributName/update', async (req, res, next) => {
         try {

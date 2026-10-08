@@ -267,131 +267,139 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Internal server error
      */
     app.post('/api/v1/geographicContext/viewInfo2', async (req, res) => {
-        const body = req.body;
-        const profileId = (0, requestUtilities_1.getProfileId)(req);
-        const options = {
-            dynamicId: body.dynamicId,
-            floorRef: body.floorRef || false,
-            roomRef: body.roomRef || false,
-            equipements: body.equipements || false,
-        };
-        // Default behavior: if no dynamicId -> return whole building
-        if (!options.dynamicId) {
-            const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
-            const contexts = await graph.getChildren("hasContext");
-            const geoContexts = contexts.filter(el => el.getType().get() === "geographicContext");
-            const buildings = await geoContexts[0].getChildren("hasGeographicBuilding");
-            const building = buildings[0];
-            options.dynamicId = building._server_id;
-            options.floorRef = true;
-            options.roomRef = true;
-            options.equipements = true;
-        }
-        // PRELOAD allowed group node IDs when equipements is an array filter
-        let allowedGroupIds = null;
-        if (Array.isArray(options.equipements)) {
-            allowedGroupIds = new Set();
-            const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
-            const allContexts = await graph.getChildren('hasContext');
-            for (const filter of options.equipements) {
-                const ctx = allContexts.find((c) => c.info.name.get() === filter.contextName);
-                if (!ctx)
-                    continue;
-                const categories = await ctx.getChildren('hasCategory');
-                const cat = categories.find((c) => c.info.name.get() === filter.categoryName);
-                if (!cat)
-                    continue;
-                const groups = await cat.getChildren('hasGroup');
-                if (filter.groupNames.length === 0) {
-                    // empty groupNames means all groups in this category
-                    for (const g of groups)
-                        allowedGroupIds.add(g.getId().get());
-                }
-                else {
-                    for (const g of groups) {
-                        if (filter.groupNames.includes(g.info.name.get())) {
+        try {
+            const body = req.body;
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const options = {
+                dynamicId: body.dynamicId,
+                floorRef: body.floorRef || false,
+                roomRef: body.roomRef || false,
+                equipements: body.equipements || false,
+            };
+            // Default behavior: if no dynamicId -> return whole building
+            if (!options.dynamicId) {
+                const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
+                const contexts = await graph.getChildren("hasContext");
+                const geoContexts = contexts.filter(el => el.getType().get() === "geographicContext");
+                const buildings = await geoContexts[0].getChildren("hasGeographicBuilding");
+                const building = buildings[0];
+                options.dynamicId = building._server_id;
+                options.floorRef = true;
+                options.roomRef = true;
+                options.equipements = true;
+            }
+            // PRELOAD allowed group node IDs when equipements is an array filter
+            let allowedGroupIds = null;
+            if (Array.isArray(options.equipements)) {
+                allowedGroupIds = new Set();
+                const graph = await spinalAPIMiddleware.getProfileGraph(profileId);
+                const allContexts = await graph.getChildren('hasContext');
+                for (const filter of options.equipements) {
+                    const ctx = allContexts.find((c) => c.info.name.get() === filter.contextName);
+                    if (!ctx)
+                        continue;
+                    const categories = await ctx.getChildren('hasCategory');
+                    const cat = categories.find((c) => c.info.name.get() === filter.categoryName);
+                    if (!cat)
+                        continue;
+                    const groups = await cat.getChildren('hasGroup');
+                    if (filter.groupNames.length === 0) {
+                        // empty groupNames means all groups in this category
+                        for (const g of groups)
                             allowedGroupIds.add(g.getId().get());
+                    }
+                    else {
+                        for (const g of groups) {
+                            if (filter.groupNames.includes(g.info.name.get())) {
+                                allowedGroupIds.add(g.getId().get());
+                            }
                         }
                     }
                 }
             }
-        }
-        // LOAD ROOT NODES
-        const roots = await getRootNodes(options.dynamicId, profileId);
-        const relations = getRelationListFromOption(options);
-        // FLATTENED STRUCTURE
-        // const flatNodes: Array<{
-        //   dynamicId: number;
-        //   parentId: number | null;
-        //   dbId: number | null;
-        //   bimFileAlias: number | null;
-        //   type: string;
-        // }> = [];
-        const nodes = {};
-        // BIM alias dictionary
-        const bimFileAlias = {};
-        let aliasCounter = 1;
-        function getAlias(bimFileId) {
-            if (!bimFileAlias[bimFileId]) {
-                bimFileAlias[bimFileId] = aliasCounter++;
+            // LOAD ROOT NODES
+            const roots = await getRootNodes(options.dynamicId, profileId);
+            const relations = getRelationListFromOption(options);
+            // FLATTENED STRUCTURE
+            // const flatNodes: Array<{
+            //   dynamicId: number;
+            //   parentId: number | null;
+            //   dbId: number | null;
+            //   bimFileAlias: number | null;
+            //   type: string;
+            // }> = [];
+            const nodes = {};
+            // BIM alias dictionary
+            const bimFileAlias = {};
+            let aliasCounter = 1;
+            function getAlias(bimFileId) {
+                if (!bimFileAlias[bimFileId]) {
+                    bimFileAlias[bimFileId] = aliasCounter++;
+                }
+                return bimFileAlias[bimFileId];
             }
-            return bimFileAlias[bimFileId];
-        }
-        // TRAVERSE EACH ROOT
-        for (const root of roots) {
-            for await (const { node, parent, relation } of visitNodesWithParent(root, relations)) {
-                const dynamicId = node._server_id;
-                const parentId = parent ? parent._server_id : null;
-                let type = node.info.type.get();
-                // Override type for BIM objects reached via reference relations
-                if (relation === `${constants_1.REFERENCE_RELATION}.ROOM`) {
-                    type = 'roomRef'; // Room reference objects
-                }
-                else if (relation === constants_1.REFERENCE_RELATION && parent?.info.type.get() === constants_1.FLOOR_TYPE) {
-                    type = 'floorRef'; // Floor reference objects
-                }
-                // Filter equipment by allowed groups when using array filter
-                if (type === constants_1.EQUIPMENT_TYPE && allowedGroupIds !== null) {
-                    const parentGroups = await node.getParents('groupHasBIMObject');
-                    const belongsToAllowed = parentGroups.some((g) => allowedGroupIds.has(g.getId().get()));
-                    if (!belongsToAllowed)
-                        continue;
-                }
-                let dbId = null;
-                let alias = null;
-                if (type === constants_1.REFERENCE_TYPE || type === constants_1.EQUIPMENT_TYPE || type === 'roomRef' || type === 'floorRef') {
-                    dbId = node.info.dbid.get();
-                    alias = getAlias(node.info.bimFileId.get());
-                }
-                // Ensure current node exists
-                if (!nodes[dynamicId]) {
-                    nodes[dynamicId] = {
-                        parentId,
-                        children: [],
-                        dbId,
-                        bimFileAlias: alias,
-                        type
-                    };
-                }
-                // Ensure parent exists & register child
-                if (parentId !== null) {
-                    if (!nodes[parentId]) {
-                        nodes[parentId] = {
-                            parentId: null,
+            // TRAVERSE EACH ROOT
+            for (const root of roots) {
+                for await (const { node, parent, relation } of visitNodesWithParent(root, relations)) {
+                    const dynamicId = node._server_id;
+                    const parentId = parent ? parent._server_id : null;
+                    let type = node.info.type.get();
+                    // Override type for BIM objects reached via reference relations
+                    if (relation === `${constants_1.REFERENCE_RELATION}.ROOM`) {
+                        type = 'roomRef'; // Room reference objects
+                    }
+                    else if (relation === constants_1.REFERENCE_RELATION && parent?.info.type.get() === constants_1.FLOOR_TYPE) {
+                        type = 'floorRef'; // Floor reference objects
+                    }
+                    // Filter equipment by allowed groups when using array filter
+                    if (type === constants_1.EQUIPMENT_TYPE && allowedGroupIds !== null) {
+                        const parentGroups = await node.getParents('groupHasBIMObject');
+                        const belongsToAllowed = parentGroups.some((g) => allowedGroupIds.has(g.getId().get()));
+                        if (!belongsToAllowed)
+                            continue;
+                    }
+                    let dbId = null;
+                    let alias = null;
+                    if (type === constants_1.REFERENCE_TYPE || type === constants_1.EQUIPMENT_TYPE || type === 'roomRef' || type === 'floorRef') {
+                        dbId = node.info.dbid.get();
+                        alias = getAlias(node.info.bimFileId.get());
+                    }
+                    // Ensure current node exists
+                    if (!nodes[dynamicId]) {
+                        nodes[dynamicId] = {
+                            parentId,
                             children: [],
-                            dbId: null,
-                            bimFileAlias: null,
-                            type: parent.info.type.get()
+                            dbId,
+                            bimFileAlias: alias,
+                            type
                         };
                     }
-                    nodes[parentId].children.push(dynamicId);
+                    // Ensure parent exists & register child
+                    if (parentId !== null) {
+                        if (!nodes[parentId]) {
+                            nodes[parentId] = {
+                                parentId: null,
+                                children: [],
+                                dbId: null,
+                                bimFileAlias: null,
+                                type: parent.info.type.get()
+                            };
+                        }
+                        nodes[parentId].children.push(dynamicId);
+                    }
                 }
             }
+            return res.json({
+                bimFileAlias,
+                nodes
+            });
         }
-        return res.json({
-            bimFileAlias,
-            nodes
-        });
+        catch (error) {
+            console.error(error);
+            if (error.code && error.message)
+                return res.status(error.code).send(error.message);
+            return res.status(500).send('view info could not be computed');
+        }
     });
 };
 //# sourceMappingURL=viewInfo2.js.map

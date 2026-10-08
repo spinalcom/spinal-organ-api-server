@@ -42,24 +42,35 @@ module.exports = function (
    *   delete:
    *     security:
    *       - bearerAuth:
-   *         - readOnly
-   *     description: Delete a node
+   *         - write
    *     summary: Delete a node
+   *     description: >-
+   *       Removes a single node from the graph : it is detached from all of its parents and all of its
+   *       relations are removed.
+   *
+   *
+   *       Only this node is deleted. Its children stay in the graph and, unless another parent still
+   *       holds them, they become unreachable orphans - use `/api/v1/node/{id}/delete_smart` to drop a
+   *       whole branch instead.
    *     tags:
    *       - Nodes
    *     parameters:
    *      - in: path
    *        name: id
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the node to delete.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     responses:
    *       204:
-   *         description: Node successfully deleted
+   *         description: The node was deleted.
    *       400:
-   *         description: Bad request
+   *         description: The node could not be loaded (unknown or stale dynamic ID).
+   *       401:
+   *         description: The profile is not allowed to delete this node.
+   *       500:
+   *         description: The node could not be removed from the graph.
    */
 
   app.delete('/api/v1/node/:id/delete', async (req, res, next) => {

@@ -34,12 +34,25 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Return position for multiple rooms
-     *     summary: Gets position for multiple rooms
+     *     summary: Get the floor and building of several rooms at once
+     *     description: >-
+     *       Batch version of `/api/v1/room/{id}/get_position` : the body is an array of room dynamic IDs
+     *       and the response holds one position per ID, in the same order.
+     *
+     *
+     *       The lookup runs inside the geographic context **named `spatial`** : the digital twin must hold
+     *       a context of type `geographicContext` with that exact name, otherwise the request fails with
+     *       "spatial context not found".
+     *
+     *
+     *       Each room is resolved independently : a failure turns its slot into `{ dynamicId, error }`
+     *       and the response comes back with **206 Partial Content**. At most 1000 IDs per call
+     *       (configurable through `MULTIPLE_ROUTE_IDS_LIMIT`).
      *     tags:
-     *      - Geographic Context
+     *       - Geographic Context
      *     requestBody:
      *       required: true
+     *       description: The dynamic IDs of the rooms.
      *       content:
      *         application/json:
      *           schema:
@@ -49,7 +62,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               format: int64
      *     responses:
      *       200:
-     *         description: Success - All room positions fetched
+     *         description: Every room was located.
      *         content:
      *           application/json:
      *             schema:
@@ -57,7 +70,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                 $ref: '#/components/schemas/RoomPosition'
      *       206:
-     *         description: Partial Content - Some room positions could not be fetched
+     *         description: At least one room could not be located; those slots hold an error object instead.
      *         content:
      *           application/json:
      *             schema:
@@ -67,7 +80,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                   - $ref: '#/components/schemas/RoomPosition'
      *                   - $ref: '#/components/schemas/Error'
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           The body is not an array, it holds more IDs than the configured limit, or the spatial
+     *           context is missing.
      */
     app.post("/api/v1/room/get_position_multiple", async (req, res, next) => {
         try {

@@ -44,7 +44,10 @@ module.exports = function (
    *       - bearerAuth:
    *         - read
    *     summary: Retrieve multiple SpinalUsers by their IDs
-   *     description: Retrieve multiple SpinalUsers by their unique IDs.
+   *     description: >-
+   *       Batch version of `GET /api/v1/user/{userId}` : the body carries the user IDs to read and the
+   *       response holds one user per ID. The same `attributes`, `groups` and `organizations` options
+   *       apply to every user of the batch.
    *     tags:
    *       - User
    *     requestBody:
@@ -90,15 +93,17 @@ module.exports = function (
    *         description: Bad request - Invalid input or parameters
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.post(
     '/api/v1/user/multiple',
     validate({
       body: z.strictObject({
         userDynamicIds: z.array(z.coerce.number().positive()).min(1).max(100),
-        attributes: z.coerce.boolean().optional().default(false),
-        groups: z.coerce.boolean().optional().default(false),
-        organizations: z.coerce.boolean().optional().default(false),
+        attributes: z.boolean().optional().default(false),
+        groups: z.boolean().optional().default(false),
+        organizations: z.boolean().optional().default(false),
       }),
     }),
     async (req, res) => {

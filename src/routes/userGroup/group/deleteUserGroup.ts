@@ -62,6 +62,8 @@ module.exports = function (
    *         description: Successfully deleted the user group
    *       401:
    *         description: no graph found for the user
+   *       500:
+   *         description: Unexpected error while processing the request.
    */
   app.delete(
     '/api/v1/user-group/group/:groupId',

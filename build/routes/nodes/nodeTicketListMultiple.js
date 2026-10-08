@@ -33,12 +33,22 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Returns a list of ticket objects for multiple nodes, including error details where applicable.
-     *     summary: Get list of ticket objects for multiple nodes
+     *     summary: List the tickets of several nodes at once
+     *     description: >-
+     *       Batch version of `/api/v1/node/{id}/ticket_list` : the body is an array of dynamic IDs and the
+     *       response holds one `{ dynamicId, tickets }` entry per ID, in the same order.
+     *
+     *
+     *       Attached items are never included here (there is no `includeAttachedItems` on this route), so
+     *       the tickets come back with their details but without their documents and linked elements.
+     *       Each node is read independently : a failure turns its entry into `{ dynamicId, error }` and
+     *       the response comes back with **206 Partial Content**. At most 1000 IDs per call (configurable
+     *       through `MULTIPLE_ROUTE_IDS_LIMIT`).
      *     tags:
      *       - Nodes
      *     requestBody:
      *       required: true
+     *       description: The dynamic IDs of the nodes to read.
      *       content:
      *         application/json:
      *           schema:
@@ -48,7 +58,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               format: int64
      *     responses:
      *       200:
-     *         description: Success - All ticket lists fetched
+     *         description: Every node was read.
      *         content:
      *           application/json:
      *             schema:
@@ -58,12 +68,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                 properties:
      *                   dynamicId:
      *                     type: integer
+     *                     format: int64
      *                   tickets:
      *                     type: array
      *                     items:
      *                       $ref: '#/components/schemas/Ticket'
      *       206:
-     *         description: Partial Content - Some tickets could not be fetched
+     *         description: At least one node could not be read; those entries hold an error instead.
      *         content:
      *           application/json:
      *             schema:
@@ -74,13 +85,14 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                     properties:
      *                       dynamicId:
      *                         type: integer
+     *                         format: int64
      *                       tickets:
      *                         type: array
      *                         items:
      *                           $ref: '#/components/schemas/Ticket'
      *                   - $ref: '#/components/schemas/Error'
      *       400:
-     *         description: Bad request
+     *         description: The body is not an array, or it holds more IDs than the configured limit.
      */
     app.post('/api/v1/node/ticket_list_multiple', async (req, res, next) => {
         try {

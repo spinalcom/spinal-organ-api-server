@@ -38,13 +38,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Return list of contexts rooms group
-     *     summary: Gets a list of contexts rooms group
+     *     summary: List the group contexts
+     *     description: >-
+     *       Returns every group context the profile can reach, with its name, type and display colour.
+     *       Use a returned `dynamicId` to reach its categories with `/api/v1/roomsGroup/{id}/category_list`.
+     *
+     *
+     *       Note that this listing is **not filtered by type** : it returns the group contexts of every
+     *       family, not only the room ones.
+     *
      *     tags:
      *       - Rooms Group
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The group contexts (an empty array if there are none).
      *         content:
      *           application/json:
      *             schema:
@@ -52,7 +59,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                $ref: '#/components/schemas/Context'
      *       400:
-     *         description: Bad request
+     *         description: The profile graph could not be read.
+     *       401:
+     *         description: The profile is not allowed to read the graph.
      */
     app.get("/api/v1/roomsGroup/list", async (req, res, next) => {
         const nodes = [];

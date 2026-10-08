@@ -32,8 +32,14 @@ app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Test timeout behavior by delaying the response.
-     *     summary: Test timeout behavior
+     *     summary: Delay a response on purpose (diagnostics)
+     *     description: >-
+     *       Waits `ms` milliseconds and then answers. It touches no node and reads nothing from the
+     *       graph; it exists to check how a gateway, a proxy or a client behaves when a request takes
+     *       long or times out.
+     *
+     *
+     *       There is no upper bound on `ms` : a large value holds the connection open for that long.
      *     tags:
      *      - Health
      *     parameters:
@@ -42,13 +48,21 @@ app, spinalAPIMiddleware) {
      *         required: false
      *         schema:
      *           type: integer
+     *           default: 0
      *           example: 5000
-     *         description: Delay in milliseconds before sending response.
+     *         description: Delay in milliseconds before answering. Must be a non-negative number.
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The delay elapsed.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 message:
+     *                   type: string
      *       400:
-     *         description: Bad request
+     *         description: "`ms` is not a number or is negative (\"Invalid 'ms' value\")."
      */
     app.get('/api/v1/test-timeout', async (req, res, next) => {
         const ms = Number(req.query.ms ?? 0);

@@ -39,13 +39,21 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns entities for multiple tickets
-   *     summary: Get entities of multiple tickets
+   *     summary: Get the elements several tickets were declared on
+   *     description: >-
+   *       Batch version of `/api/v1/ticket/{ticketId}/find_entity` : the body is an array of ticket
+   *       dynamic IDs and the response holds one element per ID, in the same order.
+   *
+   *
+   *       Each ticket is resolved independently : one that cannot be read, or that is attached to
+   *       nothing, turns its slot into an error object and the response comes back with
+   *       **206 Partial Content**. At most 1000 IDs per call (configurable through
+   *       `MULTIPLE_ROUTE_IDS_LIMIT`).
    *     tags:
    *       - Workflow & ticket
    *     requestBody:
-   *       description: An array of ticket IDs to fetch entities for
    *       required: true
+   *       description: The dynamic IDs of the tickets.
    *       content:
    *         application/json:
    *           schema:
@@ -55,7 +63,7 @@ module.exports = function (
    *               format: int64
    *     responses:
    *       200:
-   *         description: Success - All entities fetched for the tickets
+   *         description: Every ticket resolved to an element.
    *         content:
    *           application/json:
    *             schema:
@@ -63,7 +71,7 @@ module.exports = function (
    *               items:
    *                 $ref: '#/components/schemas/BasicNode'
    *       206:
-   *         description: Partial Content - Some entities could not be fetched
+   *         description: At least one ticket could not be resolved; those slots hold an error object instead.
    *         content:
    *           application/json:
    *             schema:
@@ -73,7 +81,7 @@ module.exports = function (
    *                   - $ref: '#/components/schemas/BasicNode'
    *                   - $ref: '#/components/schemas/Error'
    *       400:
-   *         description: Bad request
+   *         description: The body is not an array, or it holds more IDs than the configured limit.
    */
   app.post('/api/v1/ticket/find_entity_multiple', async (req, res) => {
     try {

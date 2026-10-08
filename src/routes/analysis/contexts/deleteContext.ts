@@ -44,7 +44,7 @@ module.exports = function (logger: any, app: express.Express, spinalAPIMiddlewar
      *                     analysisModuleVersion:
      *                       type: string
      *       400:
-     *         description: Bad request
+     *         description: The context could not be loaded, or it is not an analysis context.
      */
 
     app.delete("/api/v1/analysis/contexts/:contextId", async (req, res, next) => {

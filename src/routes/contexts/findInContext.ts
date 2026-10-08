@@ -52,12 +52,24 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Find node object in a specific context
-   *     summary: Gets Node
+   *     summary: Look up several nodes inside one context
+   *     description: >-
+   *       Resolves a batch of nodes inside a single context. `array` holds the values to look up and
+   *       `optionSearchNodes` says how to read them (`dynamicId`, `staticId` or `name`); every
+   *       resolved node must belong to the context, otherwise its entry fails.
+   *
+   *
+   *       The lookups are independent : each value is resolved on its own and a failure only affects
+   *       its own entry. The response is always an array in the same order as `array`; a failed entry
+   *       is replaced by an object holding the searched value and an `error` message, and the whole
+   *       response is then returned with **206 Partial Content** instead of 200.
+   *
+   *
+   *       Searching by `name` walks the context until a node with that name is found, so it is much
+   *       slower than `dynamicId` / `staticId` and returns the first match only.
    *     tags:
    *      - Contexts/ontologies
    *     requestBody:
-   *       description: (optionSearchNodes) this field takes a string that allows us to search either by dynamicId, the staticId or by name, (dynamicId), (staticId), (name) / (optionResult) this field takes a string that allows us to choose the type of result / either a standard result, or a detailed result by putting the type of the node.(standard) / (type of node (example = ticket)) (context) this field takes a string either the name of the context, the dynamicId or the staticId / (array) this field takes a list of strings according to your choice of fields (optionNodes from research)
    *       required: true
    *       content:
    *         application/json:
@@ -71,23 +83,48 @@ module.exports = function (
    *             properties:
    *               optionSearchNodes:
    *                 type: string
+   *                 description: How the values of `array` are interpreted.
+   *                 enum: [dynamicId, staticId, name]
    *               optionResult:
    *                 type: string
+   *                 description: >-
+   *                   Shape of each result. `ticket` returns the full ticket details (priority,
+   *                   creation date, declarer, process, step, workflow, categories and the selected
+   *                   element); any other value returns the standard node summary
+   *                   (dynamicId, staticId, name, type).
+   *                 example: standard
    *               context:
    *                 type: string
+   *                 description: >-
+   *                   The context to search in, given as a dynamic ID, a static ID or a context name.
    *               array:
    *                 type: array
+   *                 description: The values to look up, read according to `optionSearchNodes`.
    *                 items:
    *                   type: string
    *     responses:
    *       200:
-   *         description: Success
+   *         description: Every node was resolved.
    *         content:
    *           application/json:
    *             schema:
+   *               type: array
+   *               items:
    *                $ref: '#/components/schemas/Node'
+   *       206:
+   *         description: >-
+   *           At least one node could not be resolved. The array holds the successful results and, in
+   *           place of each failure, an object with the searched value and an `error` message.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
    *       400:
-   *         description: Bad request
+   *         description: The context could not be resolved, or the request body is malformed.
+   *       401:
+   *         description: The profile is not allowed to read the context.
    */
 
   app.post('/api/v1/find_node_in_context', async (req, res, next) => {

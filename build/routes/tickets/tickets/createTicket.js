@@ -41,9 +41,32 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: add a Ticket
-     *     summary: add a Ticket
+     *         - write
+     *     summary: Declare a ticket
+     *     description: >-
+     *       Creates a ticket in a process of a workflow and attaches it to the element it concerns. The
+     *       workflow and the process are each named either by dynamic ID or by name, and the element is
+     *       given as `nodeDynamicId` or `nodeStaticId` - one of the two is required.
+     *
+     *
+     *       **Creation modes** (`mode` query parameter) :
+     *
+     *        * `regular` (default) - everything is written before the answer : the ticket is placed in
+     *          the first step of the process, linked to its element, and its images, attributes and
+     *          declarer are attached. The `dynamicId` returned is ready to use.
+     *
+     *        * `fast` - the ticket node is created and answered immediately with **201**, while the rest
+     *          (placing it in the process and step, linking the element, images, attributes, declarer) is
+     *          finished **in the background**. Use it when a caller must not wait; the trade-off is that
+     *          the ticket is briefly incomplete and a background failure is not reported back.
+     *
+     *
+     *       `additionalAttributes` maps a category name to the attributes to set in it, creating both if
+     *       needed. `email` attaches the declarer as a Spinal user, creating the user if it does not
+     *       exist yet. Images are attached as documents of the ticket.
+     *
+     *
+     *       This route accepts a request body of up to 500 MB, so images can be sent inline.
      *     tags:
      *       - Workflow & ticket
      *     parameters:
@@ -54,9 +77,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *           type: string
      *           enum: [regular, fast]
      *           default: regular
-     *         description: Ticket creation mode. `regular` keeps the current full synchronous behavior. `fast` uses the new fast path.
+     *         description: >-
+     *           `regular` finishes every write before answering; `fast` answers as soon as the ticket
+     *           node exists and finishes the rest in the background. Any other value is rejected.
      *     requestBody:
-     *       description: For the two parameters *workflow* and *process* you can use either the dynamicId or the name. To associate the ticket with an element, provide either *nodeDynamicId* or *nodeStaticId*.
+     *       description: >-
+     *         For `workflow` and `process`, either the dynamic ID or the name may be given. To attach the
+     *         ticket to an element, provide `nodeDynamicId` or `nodeStaticId`.
      *       required: true
      *       content:
      *         application/json:
@@ -70,51 +97,56 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               - description
      *             properties:
      *               workflow:
-     *                 description: The workflow's dynamicId or name
+     *                 description: The workflow's dynamicId or name.
      *                 oneOf:
      *                   - type: string
      *                   - type: integer
      *               process:
-     *                 description: The process's dynamicId or name
+     *                 description: The process's dynamicId or name, inside that workflow.
      *                 oneOf:
      *                   - type: string
      *                   - type: integer
      *               nodeDynamicId:
      *                 type: integer
-     *                 description: The node's target dynamicId. Provide either this or nodeStaticId.
+     *                 description: Dynamic ID of the element the ticket is about. Provide either this or nodeStaticId.
      *               nodeStaticId:
      *                 type: string
-     *                 description: The node's target staticId. Used when nodeDynamicId is not provided.
+     *                 description: Static ID of the element. Used when nodeDynamicId is not provided.
      *               name:
      *                 type: string
-     *                 description: The ticket's name
+     *                 description: The ticket's name.
      *               priority:
      *                 type: integer
      *                 enum: [0, 1, 2]
-     *                 description: "Priority levels — 0 (OCCASIONALLY), 1 (NORMAL), 2 (URGENT)"
+     *                 description: "Priority : 0 (OCCASIONALLY), 1 (NORMAL), 2 (URGENT)."
      *               description:
      *                 type: string
      *               declarer_id:
      *                 type: string
-     *                 description: Optional - The declarer's identifier
+     *                 description: Optional - free-text identifier of whoever declares the ticket.
      *               email:
      *                 type: string
-     *                 description: Optional - The email of the ticket's declarer
+     *                 description: >-
+     *                   Optional - email of the declarer. The matching Spinal user is attached to the
+     *                   ticket, and created if it does not exist.
      *               images:
      *                 type: array
-     *                 description: Optional - Array of images to attach to the ticket
+     *                 description: Optional - images attached to the ticket as documents.
      *                 items:
-     *                  type: object
-     *                  properties:
-     *                    name:
-     *                      type: string
-     *                    value:
-     *                      type: string
-     *                    comments:
-     *                      type: string
+     *                   type: object
+     *                   properties:
+     *                     name:
+     *                       type: string
+     *                     value:
+     *                       type: string
+     *                       description: The image content, base64 encoded.
+     *                     comments:
+     *                       type: string
      *               additionalAttributes:
      *                 type: object
-     *                 description: Optional - Custom attributes organized by category
+     *                 description: >-
+     *                   Optional - attributes to set on the ticket, keyed by category name. Missing
+     *                   categories and attributes are created.
      *                 additionalProperties:
      *                   type: object
      *                   additionalProperties: true
@@ -126,13 +158,20 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                     attributeName3: "value3"
      *     responses:
      *       201:
-     *         description: Success
+     *         description: >-
+     *           The ticket was created. In `fast` mode it is answered before the ticket is fully
+     *           attached.
      *         content:
      *           application/json:
      *             schema:
      *                $ref: '#/components/schemas/Ticket'
      *       400:
-     *         description: Add not Successfully
+     *         description: >-
+     *           A required field is missing, `mode` is not a known value, the workflow or process could
+     *           not be resolved, or neither `nodeDynamicId` nor `nodeStaticId` designates a node
+     *           ("invalid nodeDynamicId or nodeStaticId").
+     *       401:
+     *         description: The profile is not allowed to write on the workflow or the element.
      */
     app.post('/api/v1/ticket/create_ticket', validateTicketCreationData, routeTicketCreationByMode);
     // validate the body

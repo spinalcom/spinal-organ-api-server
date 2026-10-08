@@ -41,41 +41,60 @@ module.exports = function (
 ) {
   /**
    * @swagger
-   * /api/v1/ticket/{id}/event_list:
+   * /api/v1/ticket/{ticketDynamicId}/event_list:
    *   post:
    *     security:
    *       - bearerAuth:
    *         - readOnly
-   *     description: Returns events of ticket
-   *     summary: Get list events of ticket
+   *     summary: List the calendar events of a ticket over a period
+   *     description: >-
+   *       Returns the events attached to a ticket, restricted to the period given in the body :
+   *
+   *        * `all` - every event of the ticket, whatever its date;
+   *
+   *        * `today` - the events of the current day;
+   *
+   *        * `week` - the events of the current week. **This is also what an omitted `period`
+   *          gives**, not a date interval;
+   *
+   *        * `dateInterval` - the events between `startDate` and `endDate`, which then become
+   *          required.
+   *
+   *
+   *       Dates are read in `DD-MM-YYYY` / `DD-MM-YYYY HH:mm:ss` and their `/` and space variants; an
+   *       unparsable date is rejected with 400.
    *     tags:
    *       - Workflow & ticket
    *     parameters:
    *      - in: path
    *        name: ticketDynamicId
-   *        description: use the dynamic ID
+   *        description: Dynamic ID of the ticket.
    *        required: true
    *        schema:
    *          type: integer
    *          format: int64
    *     requestBody:
-   *       description: you have 3 choices to fill in the "period" field   (*all* => to retrieve the entire list of events,   *today* => to retrieve today's events,   *week* = > to retrieve the events of the current week,   *dateInterval* or *undefined* to retrieve a precise date by filling in the "startDate" and "endDate" fields)
+   *       required: true
    *       content:
    *         application/json:
    *           schema:
    *             type: object
-   *             required:
-   *               - period
    *             properties:
-   *               startDate:
-   *                 type: string
-   *               endDate:
-   *                 type: string
    *               period:
    *                 type: string
+   *                 description: Which events to return. Defaults to `week` when omitted.
+   *                 enum: [all, today, week, dateInterval]
+   *               startDate:
+   *                 type: string
+   *                 description: Start of the interval. Only read when `period` is `dateInterval`.
+   *                 example: 01-01-2024
+   *               endDate:
+   *                 type: string
+   *                 description: End of the interval. Only read when `period` is `dateInterval`.
+   *                 example: 31-01-2024
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The events of the ticket over the requested period.
    *         content:
    *           application/json:
    *             schema:
@@ -83,7 +102,11 @@ module.exports = function (
    *               items:
    *                $ref: '#/components/schemas/Event'
    *       400:
-   *         description: Bad request
+   *         description: A date could not be parsed ("invalid Date").
+   *       401:
+   *         description: The profile is not allowed to read this ticket.
+   *       500:
+   *         description: The ticket could not be loaded, or it is not a ticket node.
    */
   app.post('/api/v1/ticket/:ticketDynamicId/event_list', async (req, res) => {
     try {

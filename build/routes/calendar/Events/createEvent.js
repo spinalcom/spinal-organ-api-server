@@ -37,12 +37,25 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     description: create event, by using this api, please check the repeat attribute that it must be false, if you want to set it to true you must fill in the repeatend attribute, the startDate and endDate attributes must be in this format DD MM YYYY
-     *     summary: create event
+     *         - write
+     *     summary: Create a calendar event
+     *     description: >-
+     *       Creates an event in a group of an event context and links it to the node it concerns. The
+     *       four IDs (`contextId`, `categoryDynamicId`, `groupDynamicId`, `nodeDynamicId`) are all
+     *       dynamic IDs and all required : the first three place the event in the calendar tree, the
+     *       last says which element it is about.
+     *
+     *
+     *       Set `repeat` to true for a recurring event : `period` gives the unit (`day`, `week`, `month`
+     *       or `year`), `count` how many units between two occurrences, and `repeatEnd` when the
+     *       recurrence stops - it must be filled in that case. For a one-off event, `repeat` is false.
+     *
+     *
+     *       All dates use the format `DD MM YYYY HH:mm:ss`.
      *     tags:
      *       - Calendar & Event
      *     requestBody:
+     *       required: true
      *       content:
      *         application/json:
      *           schema:
@@ -65,12 +78,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                 type: string
      *               contextId:
      *                 type: number
+     *                 description: Dynamic ID of the event context.
      *               categoryDynamicId:
      *                 type: number
+     *                 description: Dynamic ID of the category inside that context.
      *               groupDynamicId:
      *                 type: number
+     *                 description: Dynamic ID of the group inside that category.
      *               nodeDynamicId:
      *                 type: number
+     *                 description: Dynamic ID of the element the event is about.
      *               startDate:
      *                 type: string
      *                 default: DD MM YYYY HH:mm:ss
@@ -82,18 +99,31 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               repeat:
      *                 type: boolean
      *               repeatEnd:
-     *                 type: number
+     *                 type: string
      *                 default: DD MM YYYY HH:mm:ss
+     *                 description: When the recurrence stops. Required when `repeat` is true.
      *               count:
      *                 type: number
+     *                 description: Number of `period` units between two occurrences.
      *               period:
-     *                 type: number
-     *                 default: day|week|month|year
+     *                 type: string
+     *                 description: Unit of the recurrence.
+     *                 enum: [day, week, month, year]
      *     responses:
      *       200:
-     *         description: Updated successfully
+     *         description: The created event.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/Event'
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           One of the four nodes could not be resolved, the category or group does not belong to the
+     *           context, or a date could not be parsed.
+     *       401:
+     *         description: The profile is not allowed to write on the context or the node.
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.post('/api/v1/event/create', async (req, res, next) => {
         try {

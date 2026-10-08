@@ -32,36 +32,44 @@ import { ISpinalAPIMiddleware } from "../../../interfaces";
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
 	/**
-	 * @swagger
-	 * /api/v1/room/{id}/file_list:
-	 *   get:
-	 *     security:
-	 *       - bearerAuth:
-	 *         - readOnly
-	 *     description: Returns files of room
-	 *     summary: Get list files of room
-	 *     tags:
-	 *       - Geographic Context
-	 *     parameters:
-	 *      - in: path
-	 *        name: id
-	 *        description: use the dynamic ID
-	 *        required: true
-	 *        schema:
-	 *          type: integer
-	 *          format: int64
-	 *     responses:
-	 *       200:
-	 *         description: Success
-	 *         content:
-	 *           application/json:
-	 *             schema:
-	 *               type: array
-	 *               items:
-	 *                $ref: '#/components/schemas/File'
-	 *       400:
-	 *         description: Bad request
-	 */
+   * @swagger
+   * /api/v1/room/{id}/file_list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the documents attached to a room
+   *     description: >-
+   *       Returns the documents stored under the room's `hasFiles` child as `{ dynamicId, Name }`
+   *       (note the capital N). Use the returned `dynamicId` with `/api/v1/node/{id}/download_file`.
+   *
+   *
+   *       Same data as the generic `/api/v1/node/{id}/file_list`, with an extra check that the node
+   *       really is a `geographicRoom`.
+   *     tags:
+   *       - Geographic Context
+   *     parameters:
+   *      - in: path
+   *        name: id
+   *        description: Dynamic ID of the room.
+   *        required: true
+   *        schema:
+   *          type: integer
+   *          format: int64
+   *     responses:
+   *       200:
+   *         description: The documents attached to the room.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/File'
+   *       400:
+   *         description: The node is not a room ("Node with id ... is not of type geographicRoom"), or it could not be loaded.
+   *       401:
+   *         description: The profile is not allowed to read this room.
+   */
 	app.get("/api/v1/room/:id/file_list", async (req, res, next) => {
 		try {
 			const profileId = getProfileId(req);

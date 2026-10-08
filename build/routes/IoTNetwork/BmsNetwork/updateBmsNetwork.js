@@ -27,40 +27,46 @@ const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-servi
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-   * @swagger
-   * /api/v1/Network/{id}/update:
-   *   put:
-   *     security:
-   *       - bearerAuth:
-   *         - read
-   *     description: update the Network
-   *     summary: update the Network
-   *     tags:
-   *       - IoTNetwork & Time Series
-   *     parameters:
-   *      - in: path
-   *        name: id
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *     requestBody:
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - newNameNetwork
-   *             properties:
-   *                newNameNetwork:
-   *                 type: string
-   *     responses:
-   *       200:
-   *         description: Update Success
-   *       400:
-   *         description: Bad request
-  */
+     * @swagger
+     * /api/v1/Network/{id}/update:
+     *   put:
+     *     security:
+     *       - bearerAuth:
+     *         - write
+     *     summary: Rename a network
+     *     description: >-
+     *       Renames a network. Only the name changes - the devices under it are untouched. The node must
+     *       be of type `BmsNetwork`.
+     *     tags:
+     *       - IoTNetwork & Time Series
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the network.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - newNameNetwork
+     *             properties:
+     *               newNameNetwork:
+     *                 type: string
+     *                 description: The new name of the network.
+     *     responses:
+     *       200:
+     *         description: The network was renamed. The body is empty.
+     *       400:
+     *         description: The node is not a network ("this node is not a BmsNetwork"), or it could not be loaded.
+     *       401:
+     *         description: The profile is not allowed to write on this network.
+     */
     app.put("/api/v1/Network/:id/update", async (req, res, next) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

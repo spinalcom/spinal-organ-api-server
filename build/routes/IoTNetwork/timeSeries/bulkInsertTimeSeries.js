@@ -85,55 +85,116 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - read
-     *     summary: Bulk insert values from an Excel file
-     *     description: >
-     *       Upload an Excel file (.xls/.xlsx) containing a **date** column and a **value** column.<br/>
-     *       Date formats supported in strings: "DD-MM-YYYY HH:mm:ss", "DD MM YYYY HH:mm:ss", "DD/MM/YYYY HH:mm:ss".<br/>
-     *       Also supports Excel native date cells and Excel date serial numbers.
+     *         - write
+     *     summary: Backfill a time series from an Excel file
+     *     description: >-
+     *       Uploads an Excel file (`.xls` / `.xlsx`) as `multipart/form-data` under the field `file`, and
+     *       records one time-series point per row. This is the bulk form of
+     *       `/api/v1/endpoint/{id}/timeSeries/insert`.
+     *
+     *
+     *       The sheet must hold a date column and a value column, named `date` and `value` by default -
+     *       use `dateCol` / `valueCol` to point at other headers. Dates are accepted as real Excel date
+     *       cells, as Excel date serial numbers, or as text in `DD-MM-YYYY HH:mm:ss`,
+     *       `DD MM YYYY HH:mm:ss` or `DD/MM/YYYY HH:mm:ss`.
+     *
+     *
+     *       Rows are validated first : invalid rows are reported in `rowErrors` and skipped, while the
+     *       valid ones are inserted. Run with `dryRun=true` first to check a file without writing
+     *       anything - the answer then reports what would be inserted and shows the first parsed rows.
      *     tags:
      *       - IoTNetwork & Time Series
      *     parameters:
      *       - in: path
      *         name: id
-     *         description: dynamic ID of the endpoint node
+     *         description: Dynamic ID of the endpoint.
      *         required: true
      *         schema:
      *           type: integer
      *           format: int64
      *       - in: query
      *         name: dateCol
-     *         schema: { type: string, default: date }
-     *         description: Name of the date column in the Excel sheet
+     *         description: Header of the date column.
+     *         required: false
+     *         schema:
+     *           type: string
+     *           default: date
      *       - in: query
      *         name: valueCol
-     *         schema: { type: string, default: value }
-     *         description: Name of the numeric value column in the Excel sheet
+     *         description: Header of the value column.
+     *         required: false
+     *         schema:
+     *           type: string
+     *           default: value
      *       - in: query
      *         name: sheet
-     *         schema: { type: string }
-     *         description: Optional sheet name to use (defaults to first sheet)
+     *         description: Name of the sheet to read. The first sheet of the workbook when omitted.
+     *         required: false
+     *         schema:
+     *           type: string
      *       - in: query
      *         name: dryRun
-     *         schema: { type: boolean, default: false }
-     *         description: Validate and preview without inserting anything
+     *         description: Parse and report without writing anything.
+     *         required: false
+     *         schema:
+     *           type: boolean
+     *           default: false
      *     requestBody:
      *       required: true
      *       content:
      *         multipart/form-data:
      *           schema:
      *             type: object
+     *             required:
+     *               - file
      *             properties:
      *               file:
      *                 type: string
      *                 format: binary
      *     responses:
      *       200:
-     *         description: Insert summary
+     *         description: >-
+     *           The insert summary : `inserted` (or `parsed` and `sample` on a dry run), `skipped`,
+     *           `totalRows` and the first `rowErrors`.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 sheet:
+     *                   type: string
+     *                 inserted:
+     *                   type: integer
+     *                   description: Rows written. Absent on a dry run.
+     *                 parsed:
+     *                   type: integer
+     *                   description: Rows that would be written. Dry run only.
+     *                 skipped:
+     *                   type: integer
+     *                 totalRows:
+     *                   type: integer
+     *                 dryRun:
+     *                   type: boolean
+     *                 sample:
+     *                   type: array
+     *                   description: First few parsed rows. Dry run only.
+     *                   items:
+     *                     type: object
+     *                 rowErrors:
+     *                   type: array
+     *                   description: Per-row errors, capped (50 on a write, 20 on a dry run).
+     *                   items:
+     *                     type: object
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           No `file` field was sent, the workbook holds no sheet, the named sheet does not exist, or
+     *           the endpoint could not be loaded.
+     *       401:
+     *         description: The profile is not allowed to write on this endpoint.
      *       422:
-     *         description: Validation errors
+     *         description: >-
+     *           The sheet holds no data row, the date or value column is missing, or no row could be
+     *           parsed - `rowErrors` says why.
      */
     app.post('/api/v1/endpoint/:id/timeSeries/bulk-insert', async (req, res) => {
         try {

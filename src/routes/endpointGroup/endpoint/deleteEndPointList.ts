@@ -68,51 +68,64 @@ module.exports = function (
    *   delete:
    *     security:
    *       - bearerAuth:
-   *         - readOnly
-   *     description: delete  endpoint
-   *     summary: delete  endpoint
+   *         - write
+   *     summary: Remove endpoints from a group
+   *     description: >-
+   *       Takes BMS endpoints out of a group of an endpoint group context. The body is an array of
+   *       endpoint dynamic IDs.
+   *
+   *
+   *       The endpoints themselves are **not** deleted : they stay in their network and only lose this
+   *       grouping. An empty array is rejected.
    *     tags:
    *       - EndPoints Group
    *     parameters:
-   *      - in: path
-   *        name: contextId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: categoryId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
-   *      - in: path
-   *        name: groupId
-   *        description: use the dynamic ID
-   *        required: true
-   *        schema:
-   *          type: integer
-   *          format: int64
+   *       - in: path
+   *         name: contextId
+   *         description: Dynamic ID of the endpoint group context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: categoryId
+   *         description: Dynamic ID of the category, which must belong to that context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
+   *       - in: path
+   *         name: groupId
+   *         description: Dynamic ID of the group, which must belong to that context.
+   *         required: true
+   *         schema:
+   *           type: integer
+   *           format: int64
    *     requestBody:
-   *       description: array of string (dynamicId)
    *       required: true
+   *       description: The dynamic IDs of the endpoints to remove.
    *       content:
    *         application/json:
    *           schema:
    *             type: array
    *             items:
-   *               type: number
+   *               type: integer
+   *               format: int64
    *     responses:
    *       200:
-   *         description: Success
+   *         description: The endpoints were removed from the group.
    *         content:
    *           application/json:
    *             schema:
-   *                $ref: '#/components/schemas/BasicNode'
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/BasicNode'
    *       400:
-   *         description: Bad request
+   *         description: >-
+   *           One of the nodes is of the wrong type, the array is empty, or the category or the group
+   *           does not belong to the context.
+   *       401:
+   *         description: The profile is not allowed to write on this context.
    */
 
   app.delete(

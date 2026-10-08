@@ -33,7 +33,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
        *                     analysisModuleVersion:
        *                       type: string
        *       400:
-       *         description: Bad request
+       *         description: The input type list could not be read.
        */
     app.get("/api/v1/analysis/inputTypes", async (req, res, next) => {
         try {

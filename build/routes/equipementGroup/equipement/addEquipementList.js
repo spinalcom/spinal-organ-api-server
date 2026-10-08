@@ -36,53 +36,65 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *   post:
      *     security:
      *       - bearerAuth:
-     *         - readOnly
-     *     description: add equipement list
-     *     summary: add equipement
+     *         - write
+     *     summary: Assign equipment to a group
+     *     description: >-
+     *       Adds BIM objects to a group of an equipment group context. The body is an array of dynamic
+     *       IDs; each one must designate a node of type `BIMObject`.
+     *
+     *
+     *       The context must be a `BIMObjectGroupContext`, and the category and the group must both
+     *       belong to it. An empty array is rejected.
      *     tags:
      *       - Equipements Group
      *     parameters:
-     *      - in: path
-     *        name: contextId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: categoryId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
-     *      - in: path
-     *        name: groupId
-     *        description: use the dynamic ID
-     *        required: true
-     *        schema:
-     *          type: integer
-     *          format: int64
+     *       - in: path
+     *         name: contextId
+     *         description: Dynamic ID of the equipment group context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: categoryId
+     *         description: Dynamic ID of the category, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
+     *       - in: path
+     *         name: groupId
+     *         description: Dynamic ID of the group, which must belong to that context.
+     *         required: true
+     *         schema:
+     *           type: integer
+     *           format: int64
      *     requestBody:
-     *       description: array of string (dynamicId)
      *       required: true
+     *       description: The dynamic IDs of the equipment to assign.
      *       content:
      *         application/json:
      *           schema:
      *             type: array
      *             items:
-     *               type: number
+     *               type: integer
+     *               format: int64
      *     responses:
      *       200:
-     *         description: Success
+     *         description: The equipment was assigned to the group.
      *         content:
      *           application/json:
      *             schema:
      *               type: array
      *               items:
-     *                $ref: '#/components/schemas/BasicNode'
+     *                 $ref: '#/components/schemas/BasicNode'
      *       400:
-     *         description: Bad request
+     *         description: >-
+     *           One of the nodes is not a `BIMObject` ("one of nodes is not type of BIMObject"), the
+     *           array is empty, the context is not a `BIMObjectGroupContext`, or the category or the
+     *           group does not belong to it.
+     *       401:
+     *         description: The profile is not allowed to write on this context.
      */
     app.post('/api/v1/equipementsGroup/:contextId/category/:categoryId/group/:groupId/addEquipements', async (req, res, next) => {
         try {

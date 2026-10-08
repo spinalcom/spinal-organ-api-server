@@ -28,34 +28,40 @@ const recTree_1 = require("../../../utilities/recTree");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
-    * @swagger
-    * /api/v1/IoTNetworkContext/{id}/tree:
-    *   get:
-    *     security:
-    *       - bearerAuth:
-    *         - readOnly
-    *     description: Return tree of IoTNetwork
-    *     summary: Get a tree IoTNetwork by ID
-    *     tags:
-    *       - IoTNetwork & Time Series
-    *     parameters:
-    *      - in: path
-    *        name: id
-    *        description: use the dynamic ID
-    *        required: true
-    *        schema:
-    *          type: integer
-    *          format: int64
-    *     responses:
-    *       200:
-    *         description: Success
-    *         content:
-    *           application/json:
-    *             schema:
-    *                $ref: '#/components/schemas/IoTNetworkTree'
-    *       400:
-    *         description: Bad request
-    */
+     * @swagger
+     * /api/v1/IoTNetworkContext/{id}/tree:
+     *   get:
+     *     security:
+     *       - bearerAuth:
+     *         - readOnly
+     *     summary: Get the whole tree of a network context
+     *     description: >-
+     *       Returns a network context with everything below it : its networks, their devices and their
+     *       endpoints. The walk has no depth limit, so on a large installation this response is big -
+     *       browse level by level with `/api/v1/Network/list` and `/api/v1/Network/{id}/device_list`
+     *       instead when you can.
+     *     tags:
+     *       - IoTNetwork & Time Series
+     *     parameters:
+     *      - in: path
+     *        name: id
+     *        description: Dynamic ID of the network context.
+     *        required: true
+     *        schema:
+     *          type: integer
+     *          format: int64
+     *     responses:
+     *       200:
+     *         description: The network context and its descendants.
+     *         content:
+     *           application/json:
+     *             schema:
+     *                $ref: '#/components/schemas/IoTNetworkTree'
+     *       401:
+     *         description: The profile is not allowed to read this context.
+     *       500:
+     *         description: The context could not be loaded or the tree could not be built.
+     */
     app.get("/api/v1/IoTNetworkContext/:id/tree", async (req, res, next) => {
         let IoTNetworks;
         try {

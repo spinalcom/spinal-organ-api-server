@@ -85,6 +85,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         description: Bad request - Invalid input or parameters
      *       401:
      *         description: no graph found for the user
+     *       500:
+     *         description: Unexpected error while processing the request.
      */
     app.post('/api/v1/organization', (0, express_zod_safe_1.default)({
         body: zod_1.z.strictObject({

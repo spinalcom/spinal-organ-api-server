@@ -33,28 +33,37 @@ import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
   /**
- * @swagger
- * /api/v1/equipementsGroup/list:
- *   get:
- *     security:
- *       - bearerAuth:
- *         - readOnly
- *     description: Return list of contexts equipements Group
- *     summary: Gets a list of contexts equipements Group
- *     tags:
- *       - Equipements Group
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema: 
- *               type: array
- *               items: 
- *                $ref: '#/components/schemas/Context'
- *       400:
- *         description: Bad request
-  */
+   * @swagger
+   * /api/v1/equipementsGroup/list:
+   *   get:
+   *     security:
+   *       - bearerAuth:
+   *         - readOnly
+   *     summary: List the group contexts
+   *     description: >-
+   *       Returns every group context the profile can reach, with its name, type and display colour.
+   *       Use a returned `dynamicId` to reach its categories with `/api/v1/equipementsGroup/{id}/category_list`.
+   *
+   *
+   *       Note that this listing is **not filtered by type** : it returns the group contexts of every
+   *       family, not only the equipment ones.
+   *
+   *     tags:
+   *       - Equipements Group
+   *     responses:
+   *       200:
+   *         description: The group contexts (an empty array if there are none).
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                $ref: '#/components/schemas/Context'
+   *       400:
+   *         description: The profile graph could not be read.
+   *       401:
+   *         description: The profile is not allowed to read the graph.
+   */
 
   app.get("/api/v1/equipementsGroup/list", async (req, res, next) => {
 

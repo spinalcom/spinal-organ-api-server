@@ -33,12 +33,22 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - readOnly
-     *     description: Returns an array of lists of endpoints for multiple nodes, or error details.
-     *     summary: Gets lists of endpoints for multiple nodes
+     *     summary: List the BMS endpoints of several nodes at once
+     *     description: >-
+     *       Batch version of `/api/v1/node/{id}/endpoint_list` : the body is an array of dynamic IDs and
+     *       the response holds one `{ dynamicId, endpoints }` entry per ID, in the same order.
+     *
+     *
+     *       This route always walks without details (there is no `includeDetails` here), so
+     *       `controlValue` and `timeseriesRetentionDays` are not filled. Each node is walked
+     *       independently : a failure turns its entry into `{ dynamicId, error }` and the response comes
+     *       back with **206 Partial Content**. At most 1000 IDs per call (configurable through
+     *       `MULTIPLE_ROUTE_IDS_LIMIT`).
      *     tags:
      *       - Nodes
      *     requestBody:
      *       required: true
+     *       description: The dynamic IDs of the nodes to walk.
      *       content:
      *         application/json:
      *           schema:
@@ -48,7 +58,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               format: int64
      *     responses:
      *       200:
-     *         description: Success - All endpoint lists fetched successfully
+     *         description: Every node was walked.
      *         content:
      *           application/json:
      *             schema:
@@ -56,7 +66,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               items:
      *                 $ref: '#/components/schemas/EndPointNodeMultiple'
      *       206:
-     *         description: Partial Content - Some endpoint lists could not be fetched
+     *         description: At least one node could not be walked; those entries hold an error instead.
      *         content:
      *           application/json:
      *             schema:
@@ -66,7 +76,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                   - $ref: '#/components/schemas/EndPointNodeMultiple'
      *                   - $ref: '#/components/schemas/Error'
      *       400:
-     *         description: Bad request
+     *         description: The body is not an array, or it holds more IDs than the configured limit.
      */
     app.post('/api/v1/node/endpoint_list_multiple', async (req, res, next) => {
         try {
