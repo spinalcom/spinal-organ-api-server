@@ -17,6 +17,7 @@ import {
   HTTP_ALGORITHMS,
   TICKET_ALGORITHMS,
   EXCEL_ALGORITHMS,
+  MAIL_ALGORITHMS,
   AlgorithmDefinition,
   localizeAlgorithm,
   VERSION,
@@ -74,6 +75,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *                       type: array
    *                       items:
    *                         type: object
+   *                     MAIL:
+   *                       type: array
+   *                       items:
+   *                         type: object
    *                     OTHER:
    *                       type: array
    *                       items:
@@ -113,6 +118,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         ...HTTP_ALGORITHMS,
         ...TICKET_ALGORITHMS,
         ...EXCEL_ALGORITHMS,
+        ...MAIL_ALGORITHMS,
       ];
       const categorizedNames = new Set(categorized.map(a => a.name));
       const other = ALGORITHM_DEFINITIONS.filter(a => !categorizedNames.has(a.name));
@@ -132,6 +138,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         HTTP: HTTP_ALGORITHMS.map(serialize),
         TICKET: TICKET_ALGORITHMS.map(serialize),
         EXCEL: EXCEL_ALGORITHMS.map(serialize),
+        MAIL: MAIL_ALGORITHMS.map(serialize),
         OTHER: other.map(serialize),
       };
 
