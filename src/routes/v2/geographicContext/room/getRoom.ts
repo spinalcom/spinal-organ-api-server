@@ -37,8 +37,13 @@ import {
   FLOOR_TYPE,
 } from 'spinal-env-viewer-context-geographic-service';
 import { getNodeChildrenFromParentDynId } from '../../../../utilities/v2/node/getNodeChildrenFromParentDynId';
-import { getSpatialContext } from '../../../../utilities/getSpatialContext';
-import type { INodeItem } from '../../openApiCompo/schemas/INodeItem';
+import { parseFilterQuery, parseOffsetQuery } from '../../../../utilities/v2/requestParse/parseFilterQuery';
+import { filterNodes } from '../../../../utilities/v2/node/filterNodes';
+import type { SpinalNode } from 'spinal-model-graph';
+import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
+import { getRoomInContextIterable } from '../../../../utilities/v2/geographicContext/getRoomInContextIterable';
+import { createErrorMsgItem } from '../../../../utilities/v2/errorHandler/createErrorMsgItem';
+import { EApiErrorType } from '../../../../utilities/v2/errorHandler/EApiErrorType';
 
 module.exports = function (
   logger: any,
@@ -52,8 +57,12 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - read
-   *     summary: Retrieve room by it's dynamic ID
-   *     description: Retrieve room by its dynamic ID.
+   *     summary: Retrieve rooms
+   *     description: >-
+   *       Retrieve rooms within the geographic context or if the `parent-dynamic-id` is provided,
+   *       under a parent of type `geographicFloor` or `groupHasgeographicRoom`.
+   *       Returns at most 200 matching rooms. Use offset=200 for the second page.
+   *       Example `/api/v2/room?filter[attributes.Geometry.Surface][exists]=true&offset=0`
    *     tags:
    *       - geographicContext
    *     parameters:
@@ -61,6 +70,8 @@ module.exports = function (
    *       - $ref: '#/components/parameters/queryAttributes'
    *       - $ref: '#/components/parameters/queryAddAttributesModificationDate'
    *       - $ref: '#/components/parameters/paramParentDynId'
+   *       - $ref: '#/components/parameters/queryFilter'
+   *       - $ref: '#/components/parameters/queryOffset'
    *     responses:
    *       200:
    *         $ref: '#/components/responses/INodeItemAttrMultiRes'
@@ -75,6 +86,8 @@ module.exports = function (
         attributes: z.coerce.string().optional(),
         'add-attributes-modification-date': z.stringbool().optional(),
         'parent-dynamic-id': z.coerce.number().min(1).optional(),
+        filter: z.union([z.record(z.string(), z.unknown()), z.string()]).optional(),
+        offset: z.coerce.number().min(0).optional().default(0),
       }),
     }),
     async (req, res) => {
@@ -85,14 +98,18 @@ module.exports = function (
         } = req.query;
         const parsedInfoQuery = parseInfoQuery(req.query.info);
         const parsedAttrQuery = parseAttributesQuery(attributes);
+        const filters = parseFilterQuery(req.query);
+        const { offset } = req.query;
         const { 'parent-dynamic-id': parentDynamicId } = req.query;
         const profileId = getProfileId(req);
+        const { geographicContext, building } = await getBuildingNode(
+          spinalAPIMiddleware,
+          profileId,
+          false
+        );
+        let roomNodes: Iterable<SpinalNode> | AsyncIterable<SpinalNode>;
         if (parentDynamicId) {
-          const geographicContext = await getSpatialContext(
-            spinalAPIMiddleware,
-            profileId
-          );
-          const children = await getNodeChildrenFromParentDynId(
+          roomNodes = await getNodeChildrenFromParentDynId(
             spinalAPIMiddleware,
             parentDynamicId,
             profileId,
@@ -110,27 +127,29 @@ module.exports = function (
             ]
           );
 
-          // TO DO
-          // filter query + pagination
-          const roomData = await Promise.all(
-            children.map((child) =>
-              getNodeData(
-                child,
-                parsedInfoQuery,
-                parsedAttrQuery,
-                addAttributesModificationDate,
-                parentDynamicId
-              )
-            )
-          );
-
-          return res.status(200).json({ data: roomData });
+        } else {
+          if (!building) {
+            throw createErrorMsgItem(
+              EApiErrorType.ERROR_DATABASE,
+              'No building found in database'
+            );
+          }
+          roomNodes = getRoomInContextIterable(geographicContext, building);
         }
 
-        // If no parentDynamicId is provided, fetch all rooms within the geographic context
-
-        const roomData: INodeItem[] = [];
-        return res.status(200).json({ data: roomData });
+        const page = await filterNodes(roomNodes, filters, offset);
+        const roomData = await Promise.all(
+          page.map((room) =>
+            getNodeData(
+              room,
+              parsedInfoQuery,
+              parsedAttrQuery,
+              addAttributesModificationDate,
+              parentDynamicId
+            )
+          )
+        );
+        return res.status(200).json({ data: roomData, offset });
       } catch (error: any) {
         sendResponseError(res, error);
       }

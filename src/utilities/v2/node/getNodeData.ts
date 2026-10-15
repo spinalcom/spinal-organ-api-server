@@ -55,7 +55,7 @@ export async function getNodeData(
   };
 }
 
-function extractNodeInfo(infoQuery: true | string[], node: SpinalNode<any>) {
+export function extractNodeInfo(infoQuery: true | string[], node: SpinalNode<any>) {
   let nodeInfo: INodeItemInfo | undefined = undefined;
   if (infoQuery === true) {
     infoQuery = node.info._attribute_names
@@ -89,7 +89,7 @@ function extractNodeInfo(infoQuery: true | string[], node: SpinalNode<any>) {
   return nodeInfo;
 }
 
-async function extractNodeAttr(
+export async function extractNodeAttr(
   node: SpinalNode,
   attrQuery: boolean | Record<string, string[] | boolean> | undefined,
   addAttributesModificationDate: boolean

@@ -24,6 +24,8 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getNodeData = getNodeData;
+exports.extractNodeInfo = extractNodeInfo;
+exports.extractNodeAttr = extractNodeAttr;
 const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
 const awaitSync_1 = require("../../awaitSync");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
