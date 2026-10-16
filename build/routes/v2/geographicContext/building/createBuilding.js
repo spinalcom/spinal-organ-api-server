@@ -47,8 +47,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - write
-     *     summary: create the building
-     *     description: Create a building.
+     *     summary: Create the building
+     *     description: |-
+     *       Create the building in the profile's spatial context, creating that context if needed.
+     *
+     *       ### Requirements
+     *       - No building may already exist; otherwise returns **HTTP 400**.
+     *
+     *       ### Defaults
+     *       - `Spatial.area`: `"0"`.
+     *       - `Spinal Building Information.Adresse`: `"To configure"`.
+     *       - Supplied values override these defaults.
+     *
+     *       **Response:** all info fields (including nested objects and arrays) and categorized attributes.
      *     tags:
      *       - geographicContext
      *     requestBody:
@@ -119,6 +130,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (buildingOld)
                 throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'A building already exists');
             const { info, attributes } = req.body;
+            const resolvedInfo = await (0, handleSetInfo_1.resolveInfo)(info, spinalAPIMiddleware, profileId);
             const newBuilding = await (0, spinal_env_viewer_context_geographic_service_1.addBuilding)(geographicContext, geographicContext, info.name);
             await (0, handleSetAttribute_1.handleSetAttribute)(newBuilding, attributes, {
                 'Spinal Building Information': {
@@ -128,7 +140,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     area: '0',
                 },
             });
-            (0, handleSetInfo_1.handleSetInfo)(newBuilding, info);
+            await (0, handleSetInfo_1.handleSetInfo)(newBuilding, resolvedInfo);
             const resObj = await (0, getNodeData_1.getNodeData)(newBuilding, true, true);
             return res.status(201).json({ data: resObj });
         }

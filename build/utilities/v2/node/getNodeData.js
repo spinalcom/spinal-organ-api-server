@@ -26,49 +26,46 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getNodeData = getNodeData;
 exports.extractNodeInfo = extractNodeInfo;
 exports.extractNodeAttr = extractNodeAttr;
-const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
 const awaitSync_1 = require("../../awaitSync");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
-async function getNodeData(node, info, attr, addAttributesModificationDate, parentDynamicId) {
+const createErrorMsgItem_1 = require("../errorHandler/createErrorMsgItem");
+const EApiErrorType_1 = require("../errorHandler/EApiErrorType");
+const getNodeElement_1 = require("./getNodeElement");
+async function getNodeData(node, info, attr, addAttributesModificationDate, parentDynamicId, parsedElementQuery) {
     const nodeInfo = extractNodeInfo(info, node);
     const nodeAttributes = await extractNodeAttr(node, attr, !!addAttributesModificationDate);
+    const element = await (0, getNodeElement_1.getNodeElement)(node, parsedElementQuery ?? false);
     await (0, awaitSync_1.awaitSync)(node); // Wait for the _server_id to be assigned by hub
     return {
         dynamicId: node._server_id,
         parentDynamicId,
         info: nodeInfo,
         attributes: nodeAttributes,
+        ...(element === undefined ? {} : { element }),
     };
 }
 function extractNodeInfo(infoQuery, node) {
-    let nodeInfo = undefined;
-    if (infoQuery === true) {
-        infoQuery = node.info._attribute_names
-            .filter((attrName) => node.info[attrName] instanceof spinal_core_connectorjs_1.Str ||
-            node.info[attrName] instanceof spinal_core_connectorjs_1.Val ||
-            node.info[attrName] instanceof spinal_core_connectorjs_1.Bool)
-            .map((attrName) => (attrName === 'id' ? 'staticId' : attrName));
-    }
-    if (Array.isArray(infoQuery) && infoQuery.length > 0) {
-        nodeInfo = {};
-        for (let key of infoQuery) {
-            const originalKey = key;
-            if (key === 'staticId')
-                key = 'id';
-            if (node.info[key] === undefined)
-                continue;
-            if (node.info[key] instanceof spinal_core_connectorjs_1.Str ||
-                node.info[key] instanceof spinal_core_connectorjs_1.Val ||
-                node.info[key] instanceof spinal_core_connectorjs_1.Bool) {
-                const value = node.info[key]?.get();
-                nodeInfo[originalKey] = value;
-            }
+    if (infoQuery !== true && infoQuery.length === 0)
+        return undefined;
+    const paths = infoQuery === true ? true : infoQuery.map((field) => {
+        const parsed = (0, getNodeElement_1.parseElementQuery)(field);
+        if (!Array.isArray(parsed) || parsed.length !== 1) {
+            throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, 'Invalid info field path');
         }
-        if (Object.keys(nodeInfo).length === 0) {
-            nodeInfo = undefined;
-        }
+        const path = parsed[0];
+        if (path[0] === 'staticId')
+            path[0] = 'id';
+        return path;
+    });
+    const value = (0, getNodeElement_1.serializeModel)(node.info, paths);
+    if (!value || typeof value !== 'object' || Array.isArray(value))
+        return undefined;
+    const result = value;
+    if (Object.hasOwn(result, 'id')) {
+        result.staticId = result.id;
+        delete result.id;
     }
-    return nodeInfo;
+    return Object.keys(result).length ? result : undefined;
 }
 async function extractNodeAttr(node, attrQuery, addAttributesModificationDate) {
     if (attrQuery === false)

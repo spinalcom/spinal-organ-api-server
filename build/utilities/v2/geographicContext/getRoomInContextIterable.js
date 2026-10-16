@@ -8,7 +8,7 @@ async function* getRoomInContextIterable(geographicContext, buildingNode) {
     for (const floorNode of floors) {
         const rooms = await floorNode.getChildrenInContext(geographicContext, spinal_env_viewer_context_geographic_service_1.ROOM_RELATION);
         for (const roomNode of rooms) {
-            yield roomNode;
+            yield { node: roomNode, parentId: floorNode._server_id };
         }
     }
 }

@@ -50,8 +50,23 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - write
-     *     summary: create an equipment
-     *     description: Create an equipment, either as a regular equipment or as a reference object.
+     *     summary: Create equipment
+     *     description: |-
+     *       Create a BIMObject under a room, or a reference object under a room or floor.
+     *
+     *       ### Requirements
+     *       - A building must exist in the profile's spatial context.
+     *       - Names must be unique among children of the selected equipment/reference relation.
+     *       - Regular equipment requires a room parent.
+     *       - With `isRefObject=true`, the parent may be a room or a floor.
+     *
+     *       ### Defaults
+     *       - `virtual`: `false`.
+     *       - No default attributes are added.
+     *
+     *       ### Response
+     *       - Returns all info (including nested objects and arrays) and attributes.
+     *       - Optional group linking happens after creation. Failures **do not roll back** the equipment.
      *     tags:
      *       - geographicContext
      *     requestBody:
@@ -66,11 +81,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             properties:
      *               parentDynamicId:
      *                 type: number
-     *                 description: The dynamic ID of the room to which the equipment belongs, can be an floor if it's for adding a reference object.
+     *                 description: Dynamic ID of a geographicRoom parent, or a geographicFloor parent when isRefObject=true.
      *                 minimum: 1
      *               isRefObject:
      *                 type: boolean
-     *                 description: Indicates if the equipment is to be added as an reference object
+     *                 description: Use a room reference relation or floor reference relation instead of the regular equipment relation.
      *                 default: false
      *               info:
      *                 allOf:
@@ -80,13 +95,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *                     properties:
      *                       dbid:
      *                         type: number
-     *                         description: dbid of the equipment, for use in the APS Viewer
+     *                         description: Numeric dbid of the equipment for use in the APS Viewer.
      *                       externalId:
      *                         type: string
-     *                         description: External ID of the equipment comming from Revit
+     *                         description: External ID of the equipment from Revit.
      *                       bimFileId:
      *                         type: string
-     *                         description: staticId of the BimFile which the equipment belongs to
+     *                         description: Static ID of the BIM file to which the equipment belongs.
      *               attributes:
      *                 $ref: '#/components/schemas/ICreateNodeItemAttr'
      *               linkToGroups:
@@ -167,6 +182,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 }
             }
             const newEquipment = new spinal_model_graph_1.SpinalNode(info.name, spinal_env_viewer_context_geographic_service_1.EQUIPMENT_TYPE, undefined);
+            const resolvedInfo = await (0, handleSetInfo_1.resolveInfo)(info, spinalAPIMiddleware, profileId);
             if (isRefObject) {
                 await parentNode.addChild(newEquipment, relationParentToChild, spinal_model_graph_1.SPINAL_RELATION_LST_PTR_TYPE);
             }
@@ -174,7 +190,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 await parentNode.addChildInContext(newEquipment, relationParentToChild, spinal_model_graph_1.SPINAL_RELATION_LST_PTR_TYPE, geographicContext);
             }
             await (0, handleSetAttribute_1.handleSetAttribute)(newEquipment, attributes, undefined);
-            (0, handleSetInfo_1.handleSetInfo)(newEquipment, info);
+            await (0, handleSetInfo_1.handleSetInfo)(newEquipment, resolvedInfo);
             const resObj = await (0, getNodeData_1.getNodeData)(newEquipment, true, true);
             if (Array.isArray(linkToGroups) && linkToGroups.length > 0) {
                 const linkResult = await (0, linkNodeToGroups_1.linkNodeToGroups)(spinalAPIMiddleware, profileId, newEquipment, linkToGroups);

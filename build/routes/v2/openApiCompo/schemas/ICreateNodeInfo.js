@@ -26,27 +26,32 @@
  * components:
  *   schemas:
  *     ICreateNodeInfo:
- *       description: Information about the node to create, including its name, color, and icon.
- *         The following fields are forbidden `id`, `staticId`, `type`, `dynamicId`
+ *       type: object
+ *       description: >-
+ *         Information about the node to create. Additional scalar, object and array
+ *         fields are accepted, including nested { "$modelRef": dynamicId } references loaded using the current profile.
+ *         Administration rights may be required for $modelRef. Null and reserved Model member names are not supported.
+ *         Info keys starting with `_` are forbidden at every nesting level, including objects inside arrays; invalid keys return HTTP 400.
+ *         IDs and node type are assigned by the server;
+ *         id, staticId, type and dynamicId are forbidden.
  *       required:
  *         - name
  *       properties:
  *         name:
  *           type: string
- *           description: name of the node
+ *           description: Name of the node. Floor, room and equipment names must be unique within the relevant parent relation.
  *           maxLength: 200
  *           minLength: 1
  *         color:
  *           type: string
- *           description:  Hexadecimal color code for the node (e.g., \#FFFFFF)
+ *           description: Six-digit hexadecimal color code, for example "#FFFFFF".
  *           pattern: "^#([A-Fa-f0-9]{6})$"
  *         icon:
  *           type: string
- *           description: icon of the node
+ *           description: Icon identifier for the node.
+ *           minLength: 1
+ *           maxLength: 200
  *       additionalProperties:
- *         oneOf:
- *           - type: string
- *           - type: number
- *           - type: boolean
+ *         $ref: '#/components/schemas/INodeElementValue'
  */
 //# sourceMappingURL=ICreateNodeInfo.js.map

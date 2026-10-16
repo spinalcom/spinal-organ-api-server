@@ -23,16 +23,43 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.resolveInfo = resolveInfo;
 exports.handleSetInfo = handleSetInfo;
+const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
 const setOrCreateInfo_1 = require("./setOrCreateInfo");
-function handleSetInfo(node, info) {
+const createElement_1 = require("./createElement");
+const createErrorMsgItem_1 = require("../errorHandler/createErrorMsgItem");
+const EApiErrorType_1 = require("../errorHandler/EApiErrorType");
+async function resolveInfo(info, middleware, profileId) {
+    const data = {};
+    for (const [key, value] of Object.entries(info)) {
+        if (value !== undefined)
+            data[key] = value;
+    }
+    return (0, createElement_1.createElement)(data, middleware, profileId);
+}
+async function handleSetInfo(node, info, middleware, profileId) {
     if (!info)
         return;
+    if (info instanceof spinal_core_connectorjs_1.Model) {
+        for (const key of info._attribute_names) {
+            node.info.mod_attr(key === 'staticId' ? 'id' : key, info[key]);
+        }
+        return;
+    }
+    if (Object.values(info).some((value) => typeof value === 'object' && value !== null)) {
+        if (!middleware || profileId === undefined) {
+            throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, 'Structured info requires middleware and profile ID');
+        }
+        return handleSetInfo(node, await resolveInfo(info, middleware, profileId));
+    }
     for (const attrName in info) {
         if (!Object.hasOwn(info, attrName))
             continue;
         const element = info[attrName];
         if (element === undefined)
+            continue;
+        if (typeof element === 'object')
             continue;
         let name = attrName === 'staticId' ? 'id' : attrName;
         (0, setOrCreateInfo_1.setOrCreateInfo)(node, name, element);

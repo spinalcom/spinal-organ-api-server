@@ -37,7 +37,7 @@ import {
   FLOOR_TYPE,
 } from 'spinal-env-viewer-context-geographic-service';
 import { getNodeChildrenFromParentDynId } from '../../../../utilities/v2/node/getNodeChildrenFromParentDynId';
-import { parseFilterQuery, parseOffsetQuery } from '../../../../utilities/v2/requestParse/parseFilterQuery';
+import { parseFilterQuery } from '../../../../utilities/v2/requestParse/parseFilterQuery';
 import { filterNodes } from '../../../../utilities/v2/node/filterNodes';
 import type { SpinalNode } from 'spinal-model-graph';
 import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
@@ -58,11 +58,33 @@ module.exports = function (
    *       - bearerAuth:
    *         - read
    *     summary: Retrieve rooms
-   *     description: >-
-   *       Retrieve rooms within the geographic context or if the `parent-dynamic-id` is provided,
-   *       under a parent of type `geographicFloor` or `groupHasgeographicRoom`.
-   *       Returns at most 200 matching rooms. Use offset=200 for the second page.
-   *       Example `/api/v2/room?filter[attributes.Geometry.Surface][exists]=true&offset=0`
+   *     description: |-
+   *       Retrieve rooms from the floors of the profile's building or from a supplied parent.
+   *
+   *       > **Performance recommendation:** provide `parent-dynamic-id`.
+   *       > Running this endpoint without it is **not recommended**, especially for large buildings,
+   *       > because it may traverse many floors and rooms. Filters and the 200-item page limit
+   *       > do not guarantee a small traversal.
+   *
+   *       ### Scope
+   *       - Without `parent-dynamic-id`: traverse the building's floors.
+   *       - With `parent-dynamic-id`: retrieve direct children of a `geographicFloor` or `geographicRoomGroup`.
+   *       - `groupHasgeographicRoom` is a relation name, not a node type.
+   *
+   *       ### Filtering and pagination
+   *       - All filter conditions use **AND**.
+   *       - Filtering runs **before** `offset` and output projection.
+   *       - Returns at most **200 matching rooms**. Use `offset=200` for the second page.
+   *
+   *       ### Response
+   *       - Each item includes `parentDynamicId`, even without a parent parameter.
+   *       - With a parent parameter, `total` counts eligible children **before filtering**.
+   *       - `total` is omitted for building-wide traversal.
+   *
+   *       ### Example
+   *       ```http
+   *       GET /api/v2/room?parent-dynamic-id=132456&filter[attributes.Spatial.area][exists]=true&offset=0
+   *       ```
    *     tags:
    *       - geographicContext
    *     parameters:
@@ -77,12 +99,14 @@ module.exports = function (
    *         $ref: '#/components/responses/INodeItemAttrMultiRes'
    *       400:
    *         $ref: '#/components/responses/IErrorItemRes400'
+   *       500:
+   *         $ref: '#/components/responses/IErrorItemRes500'
    */
   app.get(
     '/api/v2/room',
     validate({
       query: z.strictObject({
-        info: z.coerce.string().optional().default('false'),
+        info: z.coerce.string().optional(),
         attributes: z.coerce.string().optional(),
         'add-attributes-modification-date': z.stringbool().optional(),
         'parent-dynamic-id': z.coerce.number().min(1).optional(),
@@ -107,9 +131,9 @@ module.exports = function (
           profileId,
           false
         );
-        let roomNodes: Iterable<SpinalNode> | AsyncIterable<SpinalNode>;
+        let roomFound: Iterable<{ node: SpinalNode; parentId: number }> | AsyncIterable<{ node: SpinalNode; parentId: number }>;
         if (parentDynamicId) {
-          roomNodes = await getNodeChildrenFromParentDynId(
+          const roomNodes = await getNodeChildrenFromParentDynId(
             spinalAPIMiddleware,
             parentDynamicId,
             profileId,
@@ -126,7 +150,7 @@ module.exports = function (
               },
             ]
           );
-
+          roomFound = roomNodes.map(node => ({ node, parentId: parentDynamicId }));
         } else {
           if (!building) {
             throw createErrorMsgItem(
@@ -134,22 +158,26 @@ module.exports = function (
               'No building found in database'
             );
           }
-          roomNodes = getRoomInContextIterable(geographicContext, building);
+          roomFound = getRoomInContextIterable(geographicContext, building);
         }
 
-        const page = await filterNodes(roomNodes, filters, offset);
+        const page = await filterNodes(roomFound, filters, offset);
         const roomData = await Promise.all(
-          page.map((room) =>
+          page.map(({ node, parentId }) =>
             getNodeData(
-              room,
+              node,
               parsedInfoQuery,
               parsedAttrQuery,
               addAttributesModificationDate,
-              parentDynamicId
+              parentId
             )
           )
         );
-        return res.status(200).json({ data: roomData, offset });
+        return res.status(200).json({
+          data: roomData,
+          offset,
+          total: Array.isArray(roomFound) ? roomFound.length : undefined,
+        });
       } catch (error: any) {
         sendResponseError(res, error);
       }

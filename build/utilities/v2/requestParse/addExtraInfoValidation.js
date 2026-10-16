@@ -24,13 +24,8 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addExtraInfoValidation = addExtraInfoValidation;
-const zod_1 = require("zod");
-const extraValueSchema = zod_1.z.union([
-    zod_1.z.string(),
-    zod_1.z.boolean(),
-    zod_1.z.number(),
-    zod_1.z.undefined(),
-]);
+const createElement_1 = require("../node/createElement");
+const extraValueSchema = createElement_1.elementValue.optional();
 /**
  * Adds extra validation to a Zod object schema to catch all additional fields and forbid certain keys.
  * @param {z.ZodObject<T>} schema
@@ -38,6 +33,15 @@ const extraValueSchema = zod_1.z.union([
  */
 function addExtraInfoValidation(schema, forbiddenKeys) {
     return schema.catchall(extraValueSchema).superRefine((obj, ctx) => {
+        for (const key of Object.keys(obj)) {
+            if (!createElement_1.elementKey.safeParse(key).success) {
+                ctx.addIssue({
+                    code: 'custom',
+                    path: [key],
+                    message: 'Info keys must not shadow Model members or use reserved names',
+                });
+            }
+        }
         for (const key of forbiddenKeys) {
             if (Object.prototype.hasOwnProperty.call(obj, key)) {
                 ctx.addIssue({

@@ -32,7 +32,6 @@ import type { INodeItemAttrCatAttrAndDate } from './INodeItemAttrCatAttrAndDate'
  *       type: object
  *       description: Attribute category containing individual attributes.
  *       additionalProperties:
- *         type: object
  *         description: Value of the attribute.
  *           Depending on the `add-attributes-modification-date` flag,
  *           either as a string or an object with its value and last modification date.

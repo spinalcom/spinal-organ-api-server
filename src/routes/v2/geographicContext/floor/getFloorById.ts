@@ -46,25 +46,31 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - read
-   *     summary: Retrieve floor by it's dynamic ID
-   *     description: Retrieve floor by its dynamic ID.
+   *     summary: Retrieve a floor by its dynamic ID
+   *     description: |-
+   *       Load a `geographicFloor` using its dynamic ID and the current profile.
+   *
+   *       - **Output:** select fields using `info` and `attributes`.
+   *       - **Error:** returns HTTP 400 if loading fails or the node is not a `geographicFloor`.
    *     tags:
    *       - geographicContext
    *     parameters:
-   *       - $ref: '#/components/parameters/queryInfo'
-   *       - $ref: '#/components/parameters/queryAttributes'
-   *       - $ref: '#/components/parameters/queryAddAttributesModificationDate'
    *       - name: floorId
    *         in: path
    *         required: true
    *         schema:
    *           type: integer
    *           minimum: 1
+   *       - $ref: '#/components/parameters/queryInfo'
+   *       - $ref: '#/components/parameters/queryAttributes'
+   *       - $ref: '#/components/parameters/queryAddAttributesModificationDate'
    *     responses:
    *       200:
    *         $ref: '#/components/responses/INodeItemAttrRes'
    *       400:
    *         $ref: '#/components/responses/IErrorItemRes400'
+   *       500:
+   *         $ref: '#/components/responses/IErrorItemRes500'
    */
   app.get(
     '/api/v2/floor/:floorId',
@@ -73,7 +79,7 @@ module.exports = function (
         floorId: z.coerce.number().min(1),
       }),
       query: z.strictObject({
-        info: z.coerce.string().optional().default('false'),
+        info: z.coerce.string().optional(),
         attributes: z.coerce.string().optional(),
         'add-attributes-modification-date': z.stringbool().optional(),
       }),

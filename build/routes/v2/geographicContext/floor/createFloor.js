@@ -48,8 +48,23 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - write
-     *     summary: create a floor
-     *     description: Create a floor.
+     *     summary: Create a floor
+     *     description: |-
+     *       Create a floor under the building in the profile's spatial context.
+     *
+     *       ### Requirements
+     *       - A building must exist.
+     *       - The floor name must be unique within that building.
+     *
+     *       ### Defaults
+     *       - `virtual`: `false`.
+     *       - `Spatial.area`: `"0"`.
+     *       - `Spatial.category`: `"Revit Level"`.
+     *       - Supplied values override these defaults.
+     *
+     *       ### Response
+     *       - Returns all info (including nested objects and arrays) and attributes.
+     *       - Optional group linking happens after creation. Failures **do not roll back** the floor.
      *     tags:
      *       - geographicContext
      *     requestBody:
@@ -123,6 +138,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'A floor with the same name already exists');
                 }
             }
+            const resolvedInfo = await (0, handleSetInfo_1.resolveInfo)(info, spinalAPIMiddleware, profileId);
             const newFloor = await (0, spinal_env_viewer_context_geographic_service_1.addFloor)(geographicContext, building, info.name);
             await (0, handleSetAttribute_1.handleSetAttribute)(newFloor, attributes, {
                 Spatial: {
@@ -130,7 +146,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     area: '0',
                 },
             });
-            (0, handleSetInfo_1.handleSetInfo)(newFloor, info);
+            await (0, handleSetInfo_1.handleSetInfo)(newFloor, resolvedInfo);
             const resObj = await (0, getNodeData_1.getNodeData)(newFloor, true, true);
             if (Array.isArray(linkToGroups) && linkToGroups.length > 0) {
                 const linkResult = await (0, linkNodeToGroups_1.linkNodeToGroups)(spinalAPIMiddleware, profileId, newFloor, linkToGroups);

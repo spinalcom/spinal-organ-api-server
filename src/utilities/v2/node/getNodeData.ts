@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { Str, Val, Bool, type Lst } from 'spinal-core-connectorjs';
+import type { Lst } from 'spinal-core-connectorjs';
 import { SpinalNode } from 'spinal-model-graph';
 import type { INodeItem } from '../../../routes/v2/openApiCompo/schemas/INodeItem';
 import type { INodeItemAttrCat } from '../../../routes/v2/openApiCompo/schemas/INodeItemAttrCat';
@@ -31,13 +31,17 @@ import type { INodeItemInfo } from '../../../routes/v2/openApiCompo/schemas/INod
 import { awaitSync } from '../../awaitSync';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 import { SpinalAttribute } from 'spinal-models-documentation';
+import { createErrorMsgItem } from '../errorHandler/createErrorMsgItem';
+import { EApiErrorType } from '../errorHandler/EApiErrorType';
+import { getNodeElement, serializeModel, parseElementQuery, type ElementQuery } from './getNodeElement';
 
 export async function getNodeData(
   node: SpinalNode,
   info: true | string[],
   attr: Record<string, string[] | boolean> | boolean,
   addAttributesModificationDate?: boolean,
-  parentDynamicId?: number
+  parentDynamicId?: number,
+  parsedElementQuery?: ElementQuery
 ): Promise<INodeItem> {
   const nodeInfo = extractNodeInfo(info, node);
   const nodeAttributes = await extractNodeAttr(
@@ -46,47 +50,36 @@ export async function getNodeData(
     !!addAttributesModificationDate
   );
 
+  const element = await getNodeElement(node, parsedElementQuery ?? false);
   await awaitSync(node); // Wait for the _server_id to be assigned by hub
   return {
     dynamicId: node._server_id!,
     parentDynamicId,
     info: nodeInfo,
     attributes: nodeAttributes,
+    ...(element === undefined ? {} : { element }),
   };
 }
 
 export function extractNodeInfo(infoQuery: true | string[], node: SpinalNode<any>) {
-  let nodeInfo: INodeItemInfo | undefined = undefined;
-  if (infoQuery === true) {
-    infoQuery = node.info._attribute_names
-      .filter(
-        (attrName) =>
-          node.info[attrName] instanceof Str ||
-          node.info[attrName] instanceof Val ||
-          node.info[attrName] instanceof Bool
-      )
-      .map((attrName) => (attrName === 'id' ? 'staticId' : attrName));
-  }
-  if (Array.isArray(infoQuery) && infoQuery.length > 0) {
-    nodeInfo = {};
-    for (let key of infoQuery) {
-      const originalKey = key;
-      if (key === 'staticId') key = 'id';
-      if (node.info[key] === undefined) continue;
-      if (
-        node.info[key] instanceof Str ||
-        node.info[key] instanceof Val ||
-        node.info[key] instanceof Bool
-      ) {
-        const value = node.info[key]?.get();
-        nodeInfo[originalKey] = value;
-      }
+  if (infoQuery !== true && infoQuery.length === 0) return undefined;
+  const paths = infoQuery === true ? true : infoQuery.map((field) => {
+    const parsed = parseElementQuery(field);
+    if (!Array.isArray(parsed) || parsed.length !== 1) {
+      throw createErrorMsgItem(EApiErrorType.INVALID_REQUEST, 'Invalid info field path');
     }
-    if (Object.keys(nodeInfo).length === 0) {
-      nodeInfo = undefined;
-    }
+    const path = parsed[0];
+    if (path[0] === 'staticId') path[0] = 'id';
+    return path;
+  });
+  const value = serializeModel(node.info, paths);
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const result: INodeItemInfo = value;
+  if (Object.hasOwn(result, 'id')) {
+    result.staticId = result.id;
+    delete result.id;
   }
-  return nodeInfo;
+  return Object.keys(result).length ? result : undefined;
 }
 
 export async function extractNodeAttr(

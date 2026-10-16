@@ -43,32 +43,38 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - read
-     *     summary: Retrieve room by it's dynamic ID
-     *     description: Retrieve room by its dynamic ID.
+     *     summary: Retrieve a room by its dynamic ID
+     *     description: |-
+     *       Load a `geographicRoom` using its dynamic ID and the current profile.
+     *
+     *       - **Output:** select fields using `info` and `attributes`.
+     *       - **Error:** returns HTTP 400 if loading fails or the node is not a `geographicRoom`.
      *     tags:
      *       - geographicContext
      *     parameters:
-     *       - $ref: '#/components/parameters/queryInfo'
-     *       - $ref: '#/components/parameters/queryAttributes'
-     *       - $ref: '#/components/parameters/queryAddAttributesModificationDate'
      *       - name: roomId
      *         in: path
      *         required: true
      *         schema:
      *           type: integer
      *           minimum: 1
+     *       - $ref: '#/components/parameters/queryInfo'
+     *       - $ref: '#/components/parameters/queryAttributes'
+     *       - $ref: '#/components/parameters/queryAddAttributesModificationDate'
      *     responses:
      *       200:
      *         $ref: '#/components/responses/INodeItemAttrRes'
      *       400:
      *         $ref: '#/components/responses/IErrorItemRes400'
+     *       500:
+     *         $ref: '#/components/responses/IErrorItemRes500'
      */
     app.get('/api/v2/room/:roomId', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({
             roomId: zod_1.z.coerce.number().min(1),
         }),
         query: zod_1.z.strictObject({
-            info: zod_1.z.coerce.string().optional().default('false'),
+            info: zod_1.z.coerce.string().optional(),
             attributes: zod_1.z.coerce.string().optional(),
             'add-attributes-modification-date': zod_1.z.stringbool().optional(),
         }),

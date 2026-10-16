@@ -50,7 +50,9 @@ async function filterNodes(nodes, filters, offset = 0) {
     let matched = 0;
     let batch = [];
     async function processBatch() {
-        const matches = await Promise.all(batch.map((node) => (0, matchesNodeFilter_1.matchesNodeFilter)(node, filters)));
+        const matches = await Promise.all(batch.map(({ node }) => {
+            return (0, matchesNodeFilter_1.matchesNodeFilter)(node, filters);
+        }));
         for (let index = 0; index < batch.length; index++) {
             if (!matches[index])
                 continue;

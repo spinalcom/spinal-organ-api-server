@@ -26,7 +26,7 @@ import type { ISpinalAPIMiddleware } from '../../../interfaces';
 import type { SpinalContext } from 'spinal-model-graph';
 import { loadAndValidateNode } from '../../loadAndValidateNode';
 
-interface IParentChildRelation {
+export interface IParentChildRelation {
   relationName: string;
   parentType: string;
   context?: SpinalContext;

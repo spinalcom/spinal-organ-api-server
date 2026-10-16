@@ -13,6 +13,9 @@ import {
   FLOOR_TYPE,
   ROOM_TYPE,
   ROOM_RELATION,
+  BUILDING_TYPE,
+  BUILDING_RELATION,
+  FLOOR_RELATION,
 } from 'spinal-env-viewer-context-geographic-service';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 import { SpinalAttribute } from 'spinal-models-documentation';
@@ -33,8 +36,13 @@ describe('GET /api/v2/room filters and pagination', () => {
     const context = new SpinalContext('spatial', CONTEXT_TYPE);
     await graph.addContext(context);
     const floor = new SpinalNode('Floor', FLOOR_TYPE);
+    floor._server_id = 50;
+    const building = new SpinalNode('Building', BUILDING_TYPE);
     await context.addChildInContext(
-      floor, 'hasGeographicFloor', SPINAL_RELATION_PTR_LST_TYPE, context
+      building, BUILDING_RELATION, SPINAL_RELATION_PTR_LST_TYPE, context
+    );
+    await building.addChildInContext(
+      floor, FLOOR_RELATION, SPINAL_RELATION_PTR_LST_TYPE, context
     );
     for (let index = 0; index < 205; index++) {
       const room = new SpinalNode(`Room ${index}`, ROOM_TYPE);
@@ -89,7 +97,7 @@ describe('GET /api/v2/room filters and pagination', () => {
     expect(response.body.offset).to.equal(0);
     expect(response.body.data).to.have.length(200);
     expect(response.body.data[0]).to.deep.equal({
-      dynamicId: 900000, info: { name: 'Room 0' },
+      dynamicId: 900000, parentDynamicId: 50, info: { name: 'Room 0' },
     });
   });
 
@@ -118,7 +126,7 @@ describe('GET /api/v2/room filters and pagination', () => {
       info: 'name',
     }).expect(200);
     expect(response.body.data).to.deep.equal([
-      { dynamicId: 900000, info: { name: 'Room 0' } },
+      { dynamicId: 900000, parentDynamicId: 50, info: { name: 'Room 0' } },
     ]);
   });
 
@@ -155,6 +163,7 @@ describe('GET /api/v2/room filters and pagination', () => {
       expect(response.body).to.deep.equal({
         data: [{ dynamicId: 900000, parentDynamicId: 50, info: { name: 'Room 0' } }],
         offset: 0,
+        total: 205,
       });
     }
   });
@@ -178,7 +187,7 @@ describe('GET /api/v2/room filters and pagination', () => {
       const response = await request(app).get('/api/v2/room')
         .query({ ...query, info: 'name' }).expect(200);
       expect(response.body).to.deep.equal({
-        data: [{ dynamicId: 900000, info: { name: 'Room 0' } }], offset: 0,
+        data: [{ dynamicId: 900000, parentDynamicId: 50, info: { name: 'Room 0' } }], offset: 0,
       });
     }
   });

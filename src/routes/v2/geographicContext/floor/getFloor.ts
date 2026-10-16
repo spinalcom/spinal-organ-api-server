@@ -49,7 +49,15 @@ module.exports = function (
    *       - bearerAuth:
    *         - read
    *     summary: Retrieve floors
-   *     description: Retrieve floors.
+   *     description: |-
+   *       Retrieve the floors directly linked to the building in the profile's spatial context.
+   *
+   *       - **Output:** select fields using `info` and `attributes`.
+   *       - **Empty result:** returns `data: []` if the building has no floors.
+   *       - **Error:** returns HTTP 400 if no building exists.
+   *
+   *       **No pagination:** returns all floors. Unlike room and equipment lists,
+   *       this endpoint does not accept `filter` or `offset`.
    *     tags:
    *       - geographicContext
    *     parameters:
@@ -61,12 +69,14 @@ module.exports = function (
    *         $ref: '#/components/responses/INodeItemAttrMultiRes'
    *       400:
    *         $ref: '#/components/responses/IErrorItemRes400'
+   *       500:
+   *         $ref: '#/components/responses/IErrorItemRes500'
    */
   app.get(
     '/api/v2/floor',
     validate({
       query: z.strictObject({
-        info: z.coerce.string().optional().default('false'),
+        info: z.coerce.string().optional(),
         attributes: z.coerce.string().optional(),
         'add-attributes-modification-date': z.stringbool().optional(),
       }),

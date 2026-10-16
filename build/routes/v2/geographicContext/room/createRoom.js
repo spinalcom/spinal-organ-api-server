@@ -38,6 +38,9 @@ const handleSetInfo_1 = require("../../../../utilities/v2/node/handleSetInfo");
 const getNodeData_1 = require("../../../../utilities/v2/node/getNodeData");
 const getBuilding_1 = require("../../../../utilities/v2/geographicContext/getBuilding");
 const addExtraInfoValidation_1 = require("../../../../utilities/v2/requestParse/addExtraInfoValidation");
+const createErrorMsgItem_1 = require("../../../../utilities/v2/errorHandler/createErrorMsgItem");
+const EApiErrorType_1 = require("../../../../utilities/v2/errorHandler/EApiErrorType");
+const sendResponseError_1 = require("../../../../utilities/v2/errorHandler/sendResponseError");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -46,8 +49,23 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     security:
      *       - bearerAuth:
      *         - write
-     *     summary: create a room
-     *     description: Create a room.
+     *     summary: Create a room
+     *     description: |-
+     *       Create a room under the floor identified by `dynamicFloorId`, using the profile's spatial context.
+     *
+     *       ### Requirements
+     *       - A building must exist.
+     *       - The room name must be unique within the floor.
+     *
+     *       ### Defaults
+     *       - `virtual`: `false`.
+     *       - `Spatial.area`: `"0"`.
+     *       - `Spatial.category`: `"Revit Pièces"`.
+     *       - Supplied values override these defaults.
+     *
+     *       ### Response
+     *       - Returns all info (including nested objects and arrays) and attributes.
+     *       - Optional group linking happens after creation. Failures **do not roll back** the room.
      *     tags:
      *       - geographicContext
      *     requestBody:
@@ -120,17 +138,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const { geographicContext, building } = await (0, getBuilding_1.getBuildingNode)(spinalAPIMiddleware, profileId, false);
             if (!building)
-                return res.status(404).send('Building not found');
+                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'No building found in database');
             const { dynamicFloorId, info, attributes, linkToGroups } = req.body;
             const floorNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, dynamicFloorId, profileId, spinal_env_viewer_context_geographic_service_1.FLOOR_TYPE);
             const oldRooms = await floorNode.getChildrenInContext(geographicContext, spinal_env_viewer_context_geographic_service_1.ROOM_RELATION);
             for (const oldRoom of oldRooms) {
                 if (oldRoom.info.name.get() === info.name) {
-                    return res
-                        .status(400)
-                        .send('A room with the same name already exists');
+                    throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'A room with the same name already exists');
                 }
             }
+            const resolvedInfo = await (0, handleSetInfo_1.resolveInfo)(info, spinalAPIMiddleware, profileId);
             const newRoom = await (0, spinal_env_viewer_context_geographic_service_1.addRoom)(geographicContext, floorNode, info.name);
             await (0, handleSetAttribute_1.handleSetAttribute)(newRoom, attributes, {
                 Spatial: {
@@ -138,22 +155,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     category: 'Revit Pièces',
                 },
             });
-            (0, handleSetInfo_1.handleSetInfo)(newRoom, info);
+            await (0, handleSetInfo_1.handleSetInfo)(newRoom, resolvedInfo);
             const resObj = await (0, getNodeData_1.getNodeData)(newRoom, true, true);
             if (Array.isArray(linkToGroups) && linkToGroups.length > 0) {
                 const linkResult = await (0, linkNodeToGroups_1.linkNodeToGroups)(spinalAPIMiddleware, profileId, newRoom, linkToGroups);
                 return res
                     .status(201)
-                    .json({ data: resObj, error: linkResult.errors });
+                    .json({
+                    data: resObj,
+                    error: linkResult.errors.length > 0 ? linkResult.errors : undefined,
+                });
             }
             return res.status(201).json({ data: resObj });
         }
         catch (error) {
-            if (error?.code && error?.message)
-                return res.status(error.code).send(error.message);
-            return res
-                .status(500)
-                .send('An unexpected error occurred while creating the room');
+            (0, sendResponseError_1.sendResponseError)(res, error);
         }
     });
 };

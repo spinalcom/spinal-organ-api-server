@@ -48,17 +48,19 @@ const NODE_FILTER_BATCH_SIZE = 20;
  * res.json({ data });
  */
 export async function filterNodes(
-  nodes: Iterable<SpinalNode> | AsyncIterable<SpinalNode>,
+  nodes: Iterable<{ node: SpinalNode; parentId: number }> | AsyncIterable<{ node: SpinalNode; parentId: number }>,
   filters: readonly IQueryFilterNode[],
   offset = 0
-): Promise<SpinalNode[]> {
+): Promise<{ node: SpinalNode; parentId: number }[]> {
   offset = parseOffsetQuery({ offset });
-  const result: SpinalNode[] = [];
+  const result: { node: SpinalNode; parentId: number }[] = [];
   let matched = 0;
-  let batch: SpinalNode[] = [];
+  let batch: { node: SpinalNode; parentId: number }[] = [];
   async function processBatch(): Promise<void> {
     const matches = await Promise.all(
-      batch.map((node) => matchesNodeFilter(node, filters))
+      batch.map(({ node }) => {
+        return matchesNodeFilter(node, filters);
+      })
     );
     for (let index = 0; index < batch.length; index++) {
       if (!matches[index]) continue;

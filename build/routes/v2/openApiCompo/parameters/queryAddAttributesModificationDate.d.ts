@@ -6,8 +6,11 @@
  *       in: query
  *       name: add-attributes-modification-date
  *       required: false
- *       description: add the modification date of the attributes
- *       example: ""
+ *       description: >-
+ *         Return selected attributes as objects containing value and lastModification
+ *         instead of plain strings. lastModification is a Unix timestamp in milliseconds
+ *         when available. Has no effect when attributes are not requested.
+ *       example: true
  *       schema:
  *         type: boolean
  *         default: false

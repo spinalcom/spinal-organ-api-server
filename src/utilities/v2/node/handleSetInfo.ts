@@ -23,18 +23,50 @@
  */
 
 import type { SpinalNode } from 'spinal-model-graph';
+import { Model } from 'spinal-core-connectorjs';
 import { setOrCreateInfo } from './setOrCreateInfo';
+import { createElement, type ElementValue } from './createElement';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import { createErrorMsgItem } from '../errorHandler/createErrorMsgItem';
+import { EApiErrorType } from '../errorHandler/EApiErrorType';
 
-export function handleSetInfo(
+export async function resolveInfo(
+  info: Record<string, ElementValue | undefined>,
+  middleware: ISpinalAPIMiddleware,
+  profileId: string
+): Promise<Model> {
+  const data: Record<string, ElementValue> = {};
+  for (const [key, value] of Object.entries(info)) {
+    if (value !== undefined) data[key] = value;
+  }
+  return createElement(data, middleware, profileId);
+}
+
+export async function handleSetInfo(
   node: SpinalNode,
-  info: Record<string, string | number | boolean | undefined> | undefined
+  info: Record<string, ElementValue | undefined> | Model | undefined,
+  middleware?: ISpinalAPIMiddleware,
+  profileId?: string
 ) {
   if (!info) return;
+  if (info instanceof Model) {
+    for (const key of info._attribute_names) {
+      node.info.mod_attr(key === 'staticId' ? 'id' : key, info[key]);
+    }
+    return;
+  }
+  if (Object.values(info).some((value) => typeof value === 'object' && value !== null)) {
+    if (!middleware || profileId === undefined) {
+      throw createErrorMsgItem(EApiErrorType.INTERNAL_ERROR, 'Structured info requires middleware and profile ID');
+    }
+    return handleSetInfo(node, await resolveInfo(info, middleware, profileId));
+  }
   for (const attrName in info) {
     if (!Object.hasOwn(info, attrName)) continue;
 
     const element = info[attrName];
     if (element === undefined) continue;
+    if (typeof element === 'object') continue;
     let name = attrName === 'staticId' ? 'id' : attrName;
 
     setOrCreateInfo(node, name, element);

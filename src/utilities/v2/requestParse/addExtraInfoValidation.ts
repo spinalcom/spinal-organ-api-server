@@ -23,13 +23,9 @@
  */
 
 import { z } from 'zod';
+import { elementKey, elementValue } from '../node/createElement';
 
-const extraValueSchema = z.union([
-  z.string(),
-  z.boolean(),
-  z.number(),
-  z.undefined(),
-]);
+const extraValueSchema = elementValue.optional();
 
 /**
  * Adds extra validation to a Zod object schema to catch all additional fields and forbid certain keys.
@@ -41,6 +37,15 @@ export function addExtraInfoValidation<T extends z.ZodRawShape>(
   forbiddenKeys: readonly string[]
 ) {
   return schema.catchall(extraValueSchema).superRefine((obj, ctx) => {
+    for (const key of Object.keys(obj)) {
+      if (!elementKey.safeParse(key).success) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [key],
+          message: 'Info keys must not shadow Model members or use reserved names',
+        });
+      }
+    }
     for (const key of forbiddenKeys) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         ctx.addIssue({

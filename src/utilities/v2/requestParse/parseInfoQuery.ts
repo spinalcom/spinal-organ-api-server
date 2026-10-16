@@ -26,14 +26,15 @@
  * Parses the 'info' query string into an object representation.
  * The query string can have the following values:
  * - 'true' or an empty string: returns `true`.
- * - 'false' or `undefined`: returns the default fields array.
+ * - 'false': returns an empty fields array, omitting info from the response.
+ * - `undefined`: returns the default fields array.
  * - A comma-separated list of field names: returns an array of trimmed field names.
  *
  * @param query The value of the 'info' query string to parse.
  * @returns An object representing the parsed info fields.
  */
 export function parseInfoQuery(query?: string): true | string[] {
-  if (query === undefined || query.trim().toLocaleLowerCase() === 'false')
+  if (query === undefined)
     return [
       'staticId',
       'name',
@@ -45,6 +46,7 @@ export function parseInfoQuery(query?: string): true | string[] {
       'dbid',
     ];
   const trimmedQuery = query.trim();
+  if (trimmedQuery.toLocaleLowerCase() === 'false') return [];
   if (trimmedQuery.toLocaleLowerCase() === 'true' || trimmedQuery === '')
     return true;
   const fields = trimmedQuery.split(',').reduce((acc, field) => {

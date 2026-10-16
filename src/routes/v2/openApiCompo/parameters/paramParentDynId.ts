@@ -30,10 +30,15 @@
  *       in: query
  *       name: parent-dynamic-id
  *       required: false
- *       description: filter the results by the dynamic ID of the parent node.
- *         If not provided, will search from the whole building.
- *         This id should correspond to an existing parent node of type from a Spatial context or Group, such as `geographicFloor` or `groupHasgeographicRoom`.
- *       example: "132456"
+ *       description: |-
+ *         Restrict results to direct children of an existing parent loaded using the current profile.
+ *
+ *         - **Room lists:** `geographicFloor` or `geographicRoomGroup`.
+ *         - **Equipment lists:** `geographicRoom`, `geographicFloor` (floor references only),
+ *           or `BIMObjectGroup`.
+ *         - **Without this parameter:** traverse the profile's building.
+ *         - A valid but unsupported parent type returns an empty list.
+ *       example: 132456
  *       schema:
  *         type: integer
  *         minimum: 1

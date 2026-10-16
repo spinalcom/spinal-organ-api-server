@@ -36,7 +36,7 @@ export async function* getRoomInContextIterable(
   for (const floorNode of floors) {
     const rooms = await floorNode.getChildrenInContext(geographicContext, ROOM_RELATION);
     for (const roomNode of rooms) {
-      yield roomNode;
+      yield { node: roomNode, parentId: floorNode._server_id! };
     }
   }
 }

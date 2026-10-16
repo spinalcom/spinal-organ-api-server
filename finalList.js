@@ -423,12 +423,15 @@ module.exports = [
   "../src/routes/v2/geographicContext/room/getRoom.ts",
   "../src/routes/v2/geographicContext/room/getRoomById.ts",
   "../src/routes/v2/geographicContext/equipment/createEquipment.ts",
+  "../src/routes/v2/geographicContext/equipment/getEquipment.ts",
+  "../src/routes/v2/geographicContext/equipment/getEquipmentById.ts",
   "../src/routes/v2/openApiCompo/parameters/paramParentDynId.ts",
   "../src/routes/v2/openApiCompo/parameters/queryAddAttributesModificationDate.ts",
   "../src/routes/v2/openApiCompo/parameters/queryAttributes.ts",
   "../src/routes/v2/openApiCompo/parameters/queryFilter.ts",
   "../src/routes/v2/openApiCompo/parameters/queryInfo.ts",
   "../src/routes/v2/openApiCompo/parameters/queryOffset.ts",
+  "../src/routes/v2/openApiCompo/parameters/queryElement.ts",
   "../src/routes/v2/openApiCompo/responses/IErrorItemRes.ts",
   "../src/routes/v2/openApiCompo/responses/INodeItemAttrMultiRes.ts",
   "../src/routes/v2/openApiCompo/responses/INodeItemAttrRes.ts",
@@ -442,5 +445,9 @@ module.exports = [
   "../src/routes/v2/openApiCompo/schemas/INodeItemAttrCat.ts",
   "../src/routes/v2/openApiCompo/schemas/INodeItemAttrCatAttrAndDate.ts",
   "../src/routes/v2/openApiCompo/schemas/INodeItemInfo.ts",
-  "../src/routes/v2/openApiCompo/schemas/props/INodeItemInfoPropVirtual.ts"
+  "../src/routes/v2/openApiCompo/schemas/props/INodeItemInfoPropVirtual.ts",
+  "../src/routes/v2/openApiCompo/schemas/INodeParentAttachment.ts",
+  "../src/routes/v2/openApiCompo/schemas/ICreateNodeElement.ts",
+  "../src/routes/v2/node/createNode.ts",
+  "../src/routes/v2/node/getNodeById.ts"
 ]

@@ -45,7 +45,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - read
      *     summary: Retrieve the building
-     *     description: Retrieve a building.
+     *     description: |-
+     *       Retrieve the first building found in the profile's spatial context,
+     *       including buildings linked through a site.
+     *
+     *       - **Output:** select fields using `info` and `attributes`.
+     *       - **Error:** returns HTTP 400 if no building is found.
      *     tags:
      *       - geographicContext
      *     parameters:
@@ -57,10 +62,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         $ref: '#/components/responses/INodeItemAttrRes'
      *       400:
      *         $ref: '#/components/responses/IErrorItemRes400'
+     *       500:
+     *         $ref: '#/components/responses/IErrorItemRes500'
      */
     app.get('/api/v2/building', (0, express_zod_safe_1.default)({
         query: zod_1.z.strictObject({
-            info: zod_1.z.coerce.string().optional().default('false'),
+            info: zod_1.z.coerce.string().optional(),
             attributes: zod_1.z.coerce.string().optional(),
             'add-attributes-modification-date': zod_1.z.stringbool().optional(),
         }),

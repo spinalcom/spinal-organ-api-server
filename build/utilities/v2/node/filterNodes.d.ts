@@ -16,4 +16,13 @@ export declare const NODE_FILTER_PAGE_SIZE = 200;
  * );
  * res.json({ data });
  */
-export declare function filterNodes(nodes: Iterable<SpinalNode> | AsyncIterable<SpinalNode>, filters: readonly IQueryFilterNode[], offset?: number): Promise<SpinalNode[]>;
+export declare function filterNodes(nodes: Iterable<{
+    node: SpinalNode;
+    parentId: number;
+}> | AsyncIterable<{
+    node: SpinalNode;
+    parentId: number;
+}>, filters: readonly IQueryFilterNode[], offset?: number): Promise<{
+    node: SpinalNode;
+    parentId: number;
+}[]>;

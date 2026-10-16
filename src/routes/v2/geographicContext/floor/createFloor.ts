@@ -36,7 +36,7 @@ import {
 } from '../../../../utilities/v2/requestParse/addExtraAttrValidation';
 import { linkNodeToGroups } from '../../../../utilities/v2/node/linkNodeToGroups';
 import { handleSetAttribute } from '../../../../utilities/v2/node/handleSetAttribute';
-import { handleSetInfo } from '../../../../utilities/v2/node/handleSetInfo';
+import { handleSetInfo, resolveInfo } from '../../../../utilities/v2/node/handleSetInfo';
 import { getProfileId } from '../../../../utilities/requestUtilities';
 import { getNodeData } from '../../../../utilities/v2/node/getNodeData';
 import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
@@ -57,8 +57,23 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - write
-   *     summary: create a floor
-   *     description: Create a floor.
+   *     summary: Create a floor
+   *     description: |-
+   *       Create a floor under the building in the profile's spatial context.
+   *
+   *       ### Requirements
+   *       - A building must exist.
+   *       - The floor name must be unique within that building.
+   *
+   *       ### Defaults
+   *       - `virtual`: `false`.
+   *       - `Spatial.area`: `"0"`.
+   *       - `Spatial.category`: `"Revit Level"`.
+   *       - Supplied values override these defaults.
+   *
+   *       ### Response
+   *       - Returns all info (including nested objects and arrays) and attributes.
+   *       - Optional group linking happens after creation. Failures **do not roll back** the floor.
    *     tags:
    *       - geographicContext
    *     requestBody:
@@ -160,6 +175,7 @@ module.exports = function (
           }
         }
 
+        const resolvedInfo = await resolveInfo(info, spinalAPIMiddleware, profileId);
         const newFloor = await addFloor(geographicContext, building, info.name);
         await handleSetAttribute(newFloor, attributes, {
           Spatial: {
@@ -167,7 +183,7 @@ module.exports = function (
             area: '0',
           },
         });
-        handleSetInfo(newFloor, info);
+        await handleSetInfo(newFloor, resolvedInfo);
 
         const resObj = await getNodeData(newFloor, true, true);
 

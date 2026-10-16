@@ -1488,6 +1488,8 @@ function routes(
     spinalAPIMiddleware
   );
 
+  require('./v2/node/createNode')(logger, app, spinalAPIMiddleware);
+  require('./v2/node/getNodeById')(logger, app, spinalAPIMiddleware);
   require('./v2/geographicContext/building/getBuilding')(
     logger,
     app,

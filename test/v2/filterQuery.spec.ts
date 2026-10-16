@@ -192,9 +192,9 @@ describe('v2 filter query helpers', () => {
       app.get('/nodes', async (req, res, next) => {
         try {
           const filters = parseFilterQuery(req.query);
-          const page = await filterNodes([node], filters, parseOffsetQuery(req.query));
+          const page = await filterNodes([{ node, parentId: 456 }], filters, parseOffsetQuery(req.query));
           const data = await Promise.all(
-            page.map((item) => getNodeData(item, ['name'], false))
+            page.map(({ node, parentId }) => getNodeData(node, ['name'], false, false, parentId))
           );
           res.json({ data });
         } catch (error) {
@@ -216,7 +216,7 @@ describe('v2 filter query helpers', () => {
           })
           .expect(200);
         expect(response.body).to.deep.equal({
-          data: [{ dynamicId: 123, info: { name: 'Room 001' } }],
+          data: [{ dynamicId: 123, parentDynamicId: 456, info: { name: 'Room 001' } }],
         });
         const emptyPage = await request(app)
           .get('/nodes')
@@ -379,7 +379,7 @@ describe('v2 filter query helpers', () => {
           completed.push(index);
           return [];
         };
-        return item;
+        return { node: item, parentId: index + 100 };
       });
       const filters = parseFilterQuery({
         filter: { 'attributes.Geometry.Surface': { exists: false } },
@@ -400,11 +400,20 @@ describe('v2 filter query helpers', () => {
         filter: { 'attributes.Geometry.Surface': { exists: true } },
       });
       try {
-        await filterNodes([node, broken], filters);
+        await filterNodes([{ node, parentId: 1 }, { node: broken, parentId: 2 }], filters);
         expect.fail('Expected batch read failure');
       } catch (error) {
         expect(error).to.have.property('message', 'batch read failed');
       }
+    });
+
+    it('preserves wrapper identity and distinct parents for the same node', async () => {
+      const first = { node, parentId: 100 };
+      const second = { node, parentId: 200 };
+      const page = await filterNodes([first, second], []);
+      expect(page[0]).to.equal(first);
+      expect(page[1]).to.equal(second);
+      expect(await filterNodes([first, second], [], 1)).to.deep.equal([second]);
     });
 
     it('returns exactly 200 items and stops reading when the page is full', async () => {
@@ -412,7 +421,7 @@ describe('v2 filter query helpers', () => {
       function* nodes() {
         for (let index = 0; index < 500; index++) {
           visited++;
-          yield node;
+          yield { node, parentId: index };
         }
       }
       expect(NODE_FILTER_PAGE_SIZE).to.equal(200);
@@ -425,7 +434,7 @@ describe('v2 filter query helpers', () => {
       function* nodes() {
         for (let index = 0; index < 500; index++) {
           visited++;
-          yield node;
+          yield { node, parentId: index };
         }
       }
       expect(await filterNodes(nodes(), [], 1)).to.have.length(200);
@@ -435,7 +444,7 @@ describe('v2 filter query helpers', () => {
     it('applies offset after filtering, preserving order', async () => {
       const nodes = Array.from({ length: 405 }, (_, index) => {
         const item = new SpinalNode(String(index), index % 2 ? 'floor' : 'room');
-        return item;
+        return { node: item, parentId: index + 100 };
       });
       const filters = parseFilterQuery({ filter: { 'info.type': { eq: 'room' } } });
       const firstPage = await filterNodes(nodes, filters);
@@ -447,10 +456,11 @@ describe('v2 filter query helpers', () => {
     });
 
     it('accepts asynchronous sources and propagates source errors', async () => {
-      async function* nodes() { yield node; }
-      expect(await filterNodes(nodes(), [])).to.deep.equal([node]);
+      const item = { node, parentId: 456 };
+      async function* nodes() { yield item; }
+      expect(await filterNodes(nodes(), [])).to.deep.equal([item]);
       async function* broken() {
-        yield node;
+        yield item;
         throw new Error('source failed');
       }
       try {

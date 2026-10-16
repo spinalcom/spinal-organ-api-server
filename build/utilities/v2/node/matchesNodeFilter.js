@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.matchesNodeFilter = matchesNodeFilter;
+const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
 const parseFilterQuery_1 = require("../requestParse/parseFilterQuery");
 const getNodeData_1 = require("./getNodeData");
 /**
@@ -19,10 +20,10 @@ async function matchesNodeFilter(node, filters) {
             value = node._server_id;
         }
         else if (root === 'info') {
-            const info = (0, getNodeData_1.extractNodeInfo)([category], node);
-            value = info && Object.prototype.hasOwnProperty.call(info, category)
-                ? info[category]
-                : undefined;
+            const key = category === 'staticId' ? 'id' : category;
+            const model = node.info._attribute_names.includes(key) ? node.info[key] : undefined;
+            value = model instanceof spinal_core_connectorjs_1.Str || model instanceof spinal_core_connectorjs_1.Bool || model instanceof spinal_core_connectorjs_1.Val
+                ? model.get() : undefined;
         }
         else if (root === 'attributes') {
             if (!attributesLoaded) {

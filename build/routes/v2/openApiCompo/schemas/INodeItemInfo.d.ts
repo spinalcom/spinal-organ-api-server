@@ -1,3 +1,4 @@
+import type { ElementJson } from './INodeItem';
 /**
  * @swagger
  * components:
@@ -20,11 +21,15 @@
  *           description: Color of the node must be in hexadecimal format (e.g., #FFFFFF)
  *         directModificationDate:
  *           type: number
- *           description: Timestamp of the direct modification date of the node
+ *           description: Unix timestamp in milliseconds of the node's direct modification date.
  *       additionalProperties:
  *         oneOf:
  *           - type: string
  *           - type: number
  *           - type: boolean
+ *           - type: object
+ *             additionalProperties: true
+ *           - type: array
+ *             items: {}
  */
-export type INodeItemInfo = Record<string, string | number | boolean>;
+export type INodeItemInfo = Record<string, ElementJson>;

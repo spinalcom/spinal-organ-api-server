@@ -3,7 +3,7 @@
  * components:
  *   responses:
  *     INodeItemAttrMultiRes:
- *       description: Retrieve Successfully
+ *       description: Nodes retrieved successfully.
  *       content:
  *         application/json:
  *           schema:
@@ -13,16 +13,15 @@
  *             properties:
  *               data:
  *                 type: array
- *                 description: List of retrieved nodes. There is a maximum of 200 items in one response.
- *                 maxItems: 200
+ *                 description: Retrieved nodes. Room and equipment lists return at most 200 items; floor lists are not paginated.
  *                 items:
  *                   $ref: '#/components/schemas/INodeItem'
  *               offset:
  *                 type: integer
- *                 description: The offset of the retrieved nodes in the overall list.
+ *                 description: Requested number of matching nodes skipped. Returned by paginated room and equipment lists.
  *               total:
  *                 type: integer
- *                 description: The total number of nodes available in the overall list. Will be given only if the total count is known or calculable.
+ *                 description: Number of eligible children before filtering when a parent-dynamic-id is supplied. Omitted for building-wide traversal and floor lists. This is not a count of filter matches.
  *               errors:
  *                 type: array
  *                 description: List of errors encountered during the request.

@@ -37,7 +37,7 @@ async function linkNodeToGroups(spinalAPIMiddleware, profileId, node, groups) {
             // load context and group nodes
             const [contextNode, groupNode] = await Promise.all([
                 (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, contextDynamicId, profileId, `${node.info.type.get()}GroupContext`),
-                (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, contextDynamicId, profileId, `${node.info.type.get()}Group`),
+                (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, groupDynamicId, profileId, `${node.info.type.get()}Group`),
             ]);
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(contextNode);
             spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(groupNode);

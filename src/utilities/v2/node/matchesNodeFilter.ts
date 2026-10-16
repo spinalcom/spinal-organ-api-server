@@ -1,10 +1,11 @@
 import type { SpinalNode } from 'spinal-model-graph';
+import { Bool, Str, Val } from 'spinal-core-connectorjs';
 import type { INodeItemAttr } from '../../../routes/v2/openApiCompo/schemas/INodeItemAttr';
 import {
   type IQueryFilterNode,
   parseFilterNumber,
 } from '../requestParse/parseFilterQuery';
-import { extractNodeAttr, extractNodeInfo } from './getNodeData';
+import { extractNodeAttr } from './getNodeData';
 
 /**
  * Tests a node against parsed filters, independently of response projections.
@@ -24,10 +25,10 @@ export async function matchesNodeFilter(
     if (root === 'dynamicId' || root === 'server_id') {
       value = node._server_id;
     } else if (root === 'info') {
-      const info = extractNodeInfo([category], node);
-      value = info && Object.prototype.hasOwnProperty.call(info, category)
-        ? info[category]
-        : undefined;
+      const key = category === 'staticId' ? 'id' : category;
+      const model = node.info._attribute_names.includes(key) ? node.info[key] : undefined;
+      value = model instanceof Str || model instanceof Bool || model instanceof Val
+        ? model.get() : undefined;
     } else if (root === 'attributes') {
       if (!attributesLoaded) {
         const query: Record<string, string[]> = Object.create(null);

@@ -39,10 +39,13 @@ import {
 } from '../../../../utilities/v2/requestParse/addExtraAttrValidation';
 import { linkNodeToGroups } from '../../../../utilities/v2/node/linkNodeToGroups';
 import { handleSetAttribute } from '../../../../utilities/v2/node/handleSetAttribute';
-import { handleSetInfo } from '../../../../utilities/v2/node/handleSetInfo';
+import { handleSetInfo, resolveInfo } from '../../../../utilities/v2/node/handleSetInfo';
 import { getNodeData } from '../../../../utilities/v2/node/getNodeData';
 import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
 import { addExtraInfoValidation } from '../../../../utilities/v2/requestParse/addExtraInfoValidation';
+import { createErrorMsgItem } from '../../../../utilities/v2/errorHandler/createErrorMsgItem';
+import { EApiErrorType } from '../../../../utilities/v2/errorHandler/EApiErrorType';
+import { sendResponseError } from '../../../../utilities/v2/errorHandler/sendResponseError';
 
 module.exports = function (
   logger: any,
@@ -56,8 +59,23 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - write
-   *     summary: create a room
-   *     description: Create a room.
+   *     summary: Create a room
+   *     description: |-
+   *       Create a room under the floor identified by `dynamicFloorId`, using the profile's spatial context.
+   *
+   *       ### Requirements
+   *       - A building must exist.
+   *       - The room name must be unique within the floor.
+   *
+   *       ### Defaults
+   *       - `virtual`: `false`.
+   *       - `Spatial.area`: `"0"`.
+   *       - `Spatial.category`: `"Revit Pièces"`.
+   *       - Supplied values override these defaults.
+   *
+   *       ### Response
+   *       - Returns all info (including nested objects and arrays) and attributes.
+   *       - Optional group linking happens after creation. Failures **do not roll back** the room.
    *     tags:
    *       - geographicContext
    *     requestBody:
@@ -145,7 +163,11 @@ module.exports = function (
           profileId,
           false
         );
-        if (!building) return res.status(404).send('Building not found');
+        if (!building)
+          throw createErrorMsgItem(
+            EApiErrorType.ERROR_DATABASE,
+            'No building found in database'
+          );
         const { dynamicFloorId, info, attributes, linkToGroups } = req.body;
         const floorNode = await loadAndValidateNode(
           spinalAPIMiddleware,
@@ -161,12 +183,14 @@ module.exports = function (
 
         for (const oldRoom of oldRooms) {
           if (oldRoom.info.name.get() === info.name) {
-            return res
-              .status(400)
-              .send('A room with the same name already exists');
+            throw createErrorMsgItem(
+              EApiErrorType.ERROR_DATABASE,
+              'A room with the same name already exists'
+            );
           }
         }
 
+        const resolvedInfo = await resolveInfo(info, spinalAPIMiddleware, profileId);
         const newRoom = await addRoom(geographicContext, floorNode, info.name);
         await handleSetAttribute(newRoom, attributes, {
           Spatial: {
@@ -174,7 +198,7 @@ module.exports = function (
             category: 'Revit Pièces',
           },
         });
-        handleSetInfo(newRoom, info);
+        await handleSetInfo(newRoom, resolvedInfo);
 
         const resObj = await getNodeData(newRoom, true, true);
 
@@ -187,15 +211,14 @@ module.exports = function (
           );
           return res
             .status(201)
-            .json({ data: resObj, error: linkResult.errors });
+            .json({
+              data: resObj,
+              error: linkResult.errors.length > 0 ? linkResult.errors : undefined,
+            });
         }
         return res.status(201).json({ data: resObj });
       } catch (error: any) {
-        if (error?.code && error?.message)
-          return res.status(error.code).send(error.message);
-        return res
-          .status(500)
-          .send('An unexpected error occurred while creating the room');
+        sendResponseError(res, error);
       }
     }
   );

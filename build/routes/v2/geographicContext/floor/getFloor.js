@@ -46,7 +46,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - read
      *     summary: Retrieve floors
-     *     description: Retrieve floors.
+     *     description: |-
+     *       Retrieve the floors directly linked to the building in the profile's spatial context.
+     *
+     *       - **Output:** select fields using `info` and `attributes`.
+     *       - **Empty result:** returns `data: []` if the building has no floors.
+     *       - **Error:** returns HTTP 400 if no building exists.
+     *
+     *       **No pagination:** returns all floors. Unlike room and equipment lists,
+     *       this endpoint does not accept `filter` or `offset`.
      *     tags:
      *       - geographicContext
      *     parameters:
@@ -58,10 +66,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         $ref: '#/components/responses/INodeItemAttrMultiRes'
      *       400:
      *         $ref: '#/components/responses/IErrorItemRes400'
+     *       500:
+     *         $ref: '#/components/responses/IErrorItemRes500'
      */
     app.get('/api/v2/floor', (0, express_zod_safe_1.default)({
         query: zod_1.z.strictObject({
-            info: zod_1.z.coerce.string().optional().default('false'),
+            info: zod_1.z.coerce.string().optional(),
             attributes: zod_1.z.coerce.string().optional(),
             'add-attributes-modification-date': zod_1.z.stringbool().optional(),
         }),

@@ -2316,39 +2316,32 @@
         }
       },
       "ICreateNodeInfo": {
-        "description": "Information about the node to create, including its name, color, and icon. The following fields are forbidden `id`, `staticId`, `type`, `dynamicId`",
+        "type": "object",
+        "description": "Information about the node to create. Additional scalar, object and array fields are accepted, including nested { \"$modelRef\": dynamicId } references loaded using the current profile. Administration rights may be required for $modelRef. Null and reserved Model member names are not supported. Info keys starting with `_` are forbidden at every nesting level, including objects inside arrays; invalid keys return HTTP 400. IDs and node type are assigned by the server; id, staticId, type and dynamicId are forbidden.",
         "required": [
           "name"
         ],
         "properties": {
           "name": {
             "type": "string",
-            "description": "name of the node",
+            "description": "Name of the node. Floor, room and equipment names must be unique within the relevant parent relation.",
             "maxLength": 200,
             "minLength": 1
           },
           "color": {
             "type": "string",
-            "description": "Hexadecimal color code for the node (e.g., \\#FFFFFF)",
+            "description": "Six-digit hexadecimal color code, for example \"#FFFFFF\".",
             "pattern": "^#([A-Fa-f0-9]{6})$"
           },
           "icon": {
             "type": "string",
-            "description": "icon of the node"
+            "description": "Icon identifier for the node.",
+            "minLength": 1,
+            "maxLength": 200
           }
         },
         "additionalProperties": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "number"
-            },
-            {
-              "type": "boolean"
-            }
-          ]
+          "$ref": "#/components/schemas/INodeElementValue"
         }
       },
       "ICreateNodeItemAttr": {
@@ -2385,7 +2378,7 @@
       },
       "ICreateNodeLinkToGroups": {
         "type": "array",
-        "description": "optionnal, link the floor to groups after creation.",
+        "description": "Optional group links for the newly created floor, room or equipment. Context and group types must match the created node's type. Linking occurs after creation; failures are reported in the response's error array without rolling back the node or successful links.",
         "items": {
           "type": "object",
           "required": [
@@ -2432,10 +2425,11 @@
         ],
         "properties": {
           "dynamicId": {
-            "type": "number"
+            "type": "number",
+            "description": "Runtime database ID used by dynamic-ID request parameters. Distinct from info.staticId."
           },
           "parentDynamicId": {
-            "description": "given when the request use the parent-dynamic-id parameter",
+            "description": "Parent dynamic ID returned by room and equipment list endpoints, including building-wide traversal. For group requests this is the group ID.",
             "type": "number"
           },
           "info": {
@@ -2443,6 +2437,29 @@
           },
           "attributes": {
             "$ref": "#/components/schemas/INodeItemAttr"
+          },
+          "element": {
+            "description": "Serialized element data when requested on endpoints supporting the element query. Null if the node has no element; omitted when not requested. Nested pointers are represented as objects with a $ptr dynamic ID (or null).",
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array",
+                "items": {}
+              },
+              {
+                "type": "object",
+                "additionalProperties": true
+              }
+            ]
           }
         },
         "example": {
@@ -2453,7 +2470,7 @@
             "name": "Node Name",
             "type": "Node Type",
             "color": "#FFFFFF",
-            "directModificationDate": 1627849200
+            "directModificationDate": 1627849200000
           },
           "attributes": {
             "categoryName1_without_add-attributes-modification-date": {
@@ -2462,7 +2479,7 @@
             "categoryName2_with_add-attributes-modification-date": {
               "attributeName2": {
                 "value": "example value",
-                "lastModification": 1627849200
+                "lastModification": 1627849200000
               }
             }
           }
@@ -2479,7 +2496,6 @@
         "type": "object",
         "description": "Attribute category containing individual attributes.",
         "additionalProperties": {
-          "type": "object",
           "description": "Value of the attribute. Depending on the `add-attributes-modification-date` flag, either as a string or an object with its value and last modification date.",
           "oneOf": [
             {
@@ -2496,18 +2512,19 @@
       },
       "INodeItemAttrCatAttrAndDate": {
         "type": "object",
-        "description": "attribute value and its last modification date",
+        "description": "Attribute value and its last modification date, when requested.",
         "properties": {
           "value": {
             "type": "string"
           },
           "lastModification": {
-            "type": "number"
+            "type": "number",
+            "description": "Unix timestamp in milliseconds. Omitted if unavailable on the stored attribute."
           }
         },
         "example": {
           "value": "example value",
-          "lastModification": 1627849200
+          "lastModification": 1627849200000
         }
       },
       "INodeItemInfo": {
@@ -2532,7 +2549,7 @@
           },
           "directModificationDate": {
             "type": "number",
-            "description": "Timestamp of the direct modification date of the node"
+            "description": "Unix timestamp in milliseconds of the node's direct modification date."
           }
         },
         "additionalProperties": {
@@ -2545,6 +2562,14 @@
             },
             {
               "type": "boolean"
+            },
+            {
+              "type": "object",
+              "additionalProperties": true
+            },
+            {
+              "type": "array",
+              "items": {}
             }
           ]
         }
@@ -2558,6 +2583,164 @@
             "default": false
           }
         }
+      },
+      "INodeParentAttachment": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "parentDynamicId",
+          "relationName"
+        ],
+        "properties": {
+          "parentDynamicId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "description": "Dynamic ID of an existing parent SpinalNode."
+          },
+          "relationName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Non-blank relation name. Surrounding whitespace is trimmed."
+          },
+          "relationType": {
+            "type": "string",
+            "enum": [
+              "PtrLst",
+              "LstPtr",
+              "Ref"
+            ],
+            "default": "PtrLst"
+          },
+          "contextDynamicId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "description": "Optional dynamic ID of a SpinalContext. Uses addChildInContext when supplied."
+          }
+        }
+      },
+      "INodeParentAttachmentError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/IErrorItem"
+          },
+          {
+            "type": "object",
+            "required": [
+              "index",
+              "parent"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Zero-based position of the failed entry in parents."
+              },
+              "parent": {
+                "$ref": "#/components/schemas/INodeParentAttachment"
+              }
+            }
+          }
+        ]
+      },
+      "INodeAttachmentFailure": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/IErrorItem"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "errors": {
+                "type": "array",
+                "description": "Per-entry failures when no attachment succeeded.",
+                "items": {
+                  "$ref": "#/components/schemas/INodeParentAttachmentError"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ICreateNodeElement": {
+        "type": "object",
+        "description": "Create a generic Model from this object. The node retains its element pointer.\nNested values can reference existing Models with `{ \"$modelRef\": 789012 }`.\n**Administration rights may be required to use `$modelRef`.**\nReferences are loaded using the current profile and assigned directly as Model attributes, not copied or wrapped in additional pointers.\nKeys must not start with an underscore, shadow Model members, or equal `$modelRef` on an ordinary object.\nThe root element must be an ordinary object, not a reference.",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/INodeElementValue"
+        },
+        "not": {
+          "required": [
+            "$modelRef"
+          ]
+        },
+        "example": {
+          "value": 21.5,
+          "enabled": true,
+          "device": {
+            "$modelRef": 789012
+          },
+          "metadata": {
+            "unit": "Celsius"
+          },
+          "samples": [
+            20,
+            21.5
+          ]
+        }
+      },
+      "INodeElementModelReference": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "$modelRef"
+        ],
+        "properties": {
+          "$modelRef": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "description": "Dynamic ID of an existing SpinalCore Model accessible through the current profile. Administration rights may be required. Repeated IDs share the same loaded Model."
+          }
+        },
+        "example": {
+          "$modelRef": 789012
+        }
+      },
+      "INodeElementValue": {
+        "description": "Recursive non-null JSON value. Numbers must be finite; object keys must follow the Model attribute naming restrictions.",
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/INodeElementValue"
+            }
+          },
+          {
+            "type": "object",
+            "description": "Ordinary object; keys cannot equal $modelRef, start with an underscore or shadow Model members.",
+            "not": {
+              "required": [
+                "$modelRef"
+              ]
+            },
+            "additionalProperties": {
+              "$ref": "#/components/schemas/INodeElementValue"
+            }
+          },
+          {
+            "$ref": "#/components/schemas/INodeElementModelReference"
+          }
+        ]
       }
     },
     "parameters": {
@@ -2565,8 +2748,8 @@
         "in": "query",
         "name": "parent-dynamic-id",
         "required": false,
-        "description": "filter the results by the dynamic ID of the parent node. If not provided, will search from the whole building. This id should correspond to an existing parent node of type from a Spatial context or Group, such as `geographicFloor` or `groupHasgeographicRoom`.",
-        "example": "132456",
+        "description": "Restrict results to direct children of an existing parent loaded using the current profile.\n\n- **Room lists:** `geographicFloor` or `geographicRoomGroup`.\n- **Equipment lists:** `geographicRoom`, `geographicFloor` (floor references only),\n  or `BIMObjectGroup`.\n- **Without this parameter:** traverse the profile's building.\n- A valid but unsupported parent type returns an empty list.",
+        "example": 132456,
         "schema": {
           "type": "integer",
           "minimum": 1
@@ -2576,8 +2759,8 @@
         "in": "query",
         "name": "add-attributes-modification-date",
         "required": false,
-        "description": "add the modification date of the attributes",
-        "example": "",
+        "description": "Return selected attributes as objects containing value and lastModification instead of plain strings. lastModification is a Unix timestamp in milliseconds when available. Has no effect when attributes are not requested.",
+        "example": true,
         "schema": {
           "type": "boolean",
           "default": false
@@ -2587,18 +2770,39 @@
         "in": "query",
         "name": "attributes",
         "required": false,
-        "description": "Add attributes to the response.\n- `true` will include all attributes from all categories.\n- `false` or omitting the parameter will include no attributes.\n- A comma-separated list like `Spatial/area,Spatial/volume,OtherCategories`. Inputting only the category will include all the attributes within that category.",
+        "description": "Select categorized attributes for the response. Does not affect filtering.\n\n- `true` will include all attributes from all categories.\n- `false` or omitting the parameter will include no attributes.\n- A comma-separated list like `Spatial/area,Spatial/volume,OtherCategories`. Inputting only the category will include all the attributes within that category.\n- Missing attributes and empty categories are omitted. Names are case-sensitive.",
         "schema": {
           "type": "string"
         },
-        "example": true
+        "examples": {
+          "all": {
+            "summary": "All attributes in all categories",
+            "value": "true"
+          },
+          "none": {
+            "summary": "Omit attributes from the response",
+            "value": "false"
+          },
+          "category": {
+            "summary": "All attributes in one category",
+            "value": "Spatial"
+          },
+          "selected": {
+            "summary": "Selected attributes in one category",
+            "value": "Spatial/area,Spatial/volume"
+          },
+          "mixed": {
+            "summary": "Selected attributes and a complete category",
+            "value": "Spatial/area,Technical/Code,OtherCategories"
+          }
+        }
       },
       "queryFilter": {
         "in": "query",
         "name": "filter",
         "style": "deepObject",
         "explode": true,
-        "description": "Filter nodes based on various attributes and conditions. There are multiple ways to specify filters. But every filter condition is combined using `AND` logical operator.\n- A complete JSON filter syntax `filter={\"info.virtual\":{\"eq\":\"false\"}}`.\n- A JSON operator objects syntax: `filter[info.virtual]={\"eq\":\"false\"}`\n- Bracket syntax `filter[info.virtual][eq]=value`.\n\nIn the examples above, replace `info.virtual` and `eq` with the appropriate `field` and `operator` for your use case.\n- Fields are `info.key`, `attributes.category.attribute`, `dynamicId` or `server_id`.\n- Operators are `eq`, `ne`, `gt`, `gte`, `lt`, `lte` and `exists`.\n    - Operators default to eq, it shortens the syntax to `filter[info.virtual]=false`\n    - for the operator `exists`, use `exists=true` for checking presence or `exists=false` for checking absence.\n      Empty strings, false and 0 count as present.",
+        "description": "All conditions are combined using **AND**. Filtering runs before pagination,\nindependently of the requested `info` and `attributes`.\n\n\n#### Equivalent URL formats\n- Brackets: `filter[info.virtual][eq]=false`\n- JSON operators: `filter[info.virtual]={\"eq\":\"false\"}`\n- Full JSON: `filter={\"info.virtual\":{\"eq\":\"false\"}}`\n- Default equality: `filter[info.virtual]=false`\n\nURL-encode JSON values when constructing URLs manually.\n\n#### Fields and operators\n- Fields: `info.key`, `attributes.category.attribute`, `dynamicId`, `server_id`.\n- `info.staticId` maps to the model's `info.id`.\n- `dynamicId` and `server_id` both refer to the node's dynamic ID.\n- Operators: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `exists`.\n- Scalar values default to **`eq`**.\n- Numeric comparisons require finite numbers, including for numeric attribute strings.\n- Equality preserves strings such as `\"001\"` and uses the stored type for numeric/boolean info.\n\n#### Existence checks\n- `\"exists\": true`: the value is present, including `\"\"`, `false` and `0`.\n- `\"exists\": false`: the field is missing or undefined.\n- A missing category also makes its attributes absent.\n- Missing fields never match `eq`, `ne` or numeric comparisons.\n\n#### Value restrictions\n- Only scalar info fields are exposed.\n- Null and arrays are invalid filter values.\n- Strings starting with `{` or `[` are interpreted as JSON operator objects.\n  Use explicit `eq` to compare literal strings starting with those characters.\n\n#### Swagger UI input testing\nSwagger UI will render the filter parameter as a nested object editor. The explicit equality example is equivalent to:\n`?filter[info.virtual][eq]=false`",
         "schema": {
           "type": "object",
           "additionalProperties": {
@@ -2631,9 +2835,61 @@
             ]
           }
         },
-        "example": {
-          "info.virtual": {
-            "eq": "false"
+        "examples": {
+          "equality": {
+            "summary": "Explicit equality on a boolean info field",
+            "value": {
+              "info.virtual": {
+                "eq": false
+              }
+            }
+          },
+          "defaultEquality": {
+            "summary": "Scalar values default to equality",
+            "value": {
+              "info.name": "Room A",
+              "info.virtual": false
+            }
+          },
+          "range": {
+            "summary": "Attribute numeric range (AND)",
+            "value": {
+              "attributes.Spatial.area": {
+                "gte": 20,
+                "lt": 100
+              }
+            }
+          },
+          "exists": {
+            "summary": "Require one field and exclude nodes with another",
+            "value": {
+              "info.bimFileId": {
+                "exists": true
+              },
+              "attributes.Technical.Code": {
+                "exists": false
+              }
+            }
+          },
+          "notEqual": {
+            "summary": "Exclude a name (missing names do not match)",
+            "value": {
+              "info.name": {
+                "ne": "Unassigned"
+              }
+            }
+          },
+          "combined": {
+            "summary": "Combine info, attribute and dynamic ID conditions",
+            "value": {
+              "info.virtual": false,
+              "attributes.Technical.Code": {
+                "eq": "001"
+              },
+              "dynamicId": {
+                "gt": 1000
+              }
+            }
           }
         }
       },
@@ -2641,20 +2897,65 @@
         "in": "query",
         "name": "info",
         "required": false,
-        "description": "Add fields information to the response.\n- `true` will include all fields and in the latter case.\n- `false` or `omitting the parameter` will use the default fields (`staticId,name,type,color,icon,virtual,bimFileId,dbid`) if they are present in the node.\n- A comma-separated list like `staticId,name` will include only the `staticId` and `name` fields.",
+        "description": "Select fields from `node.info` for the response. Does not affect filtering.\n- `true` or an empty value includes all info fields, including nested objects and arrays.\n- `false` omits the `info` property entirely.\n- Omitting the parameter uses the default fields (`staticId,name,type,color,icon,virtual,bimFileId,dbid`) if they are present in the node.\n- A comma-separated list like `staticId,name` will include only the `staticId` and `name` fields.\n- Dot paths select nested fields and zero-based array indexes, for example `metadata.unit,samples.0`. The selected structure is preserved; unselected earlier array entries are `null`.\n- `staticId` maps to the model's info.id; `id` is accepted as an alias in field lists.\n\nMissing fields are omitted. Directly embedded Models are traversed, including `$modelRef` data; nested pointers return `{ \"$ptr\": dynamicId }` without loading.\nCycles, non-finite numbers, depth greater than 32, more than 10000 visited Models, or arrays longer than 10000 produce HTTP 500.\nDot paths cannot address literal dots in field names. Internal Model members are not selectable.\nThe top-level `dynamicId` is always returned.",
         "schema": {
           "type": "string"
         },
-        "example": false
+        "examples": {
+          "all": {
+            "summary": "All info, including objects and arrays",
+            "value": "true"
+          },
+          "none": {
+            "summary": "Omit info from the response",
+            "value": "false"
+          },
+          "selected": {
+            "summary": "Static ID, name and type",
+            "value": "staticId,name,type"
+          },
+          "nested": {
+            "summary": "Selected nested fields",
+            "value": "name,metadata.unit,metadata.device.value"
+          },
+          "array": {
+            "summary": "First sample and a field in the second sample",
+            "value": "samples.0,samples.1.value"
+          }
+        }
       },
       "queryOffset": {
         "in": "query",
         "name": "offset",
-        "description": "Number of matching nodes to skip. As the maximum number of matching nodes returned is limited to `200`, use this parameter to retrieve subsequent pages of results.",
+        "description": "Number of matching nodes to skip **after filtering**.\n\n- Must be a non-negative safe integer.\n- Pages contain at most **200 items**.\n- Use `0`, `200`, `400`, etc. for successive pages.\n- An offset beyond the matches returns `data: []`.",
         "schema": {
           "type": "integer",
           "minimum": 0,
+          "maximum": 9007199254740991,
           "default": 0
+        }
+      },
+      "queryElement": {
+        "in": "query",
+        "name": "element",
+        "required": false,
+        "description": "Select data from the SpinalNode element.\n\n- `true` or an empty value returns the whole element.\n- Omitting the parameter or using `false` omits the element without loading it.\n- A comma-separated list of dot paths selects fields, preserving their structure (for example `value,metadata.unit,samples.0`).\n- Array indexes are zero-based; unselected earlier entries appear as `null`.\n- A missing element returns `null` without creating one. Missing fields are omitted.\n- Directly embedded Models are traversed. Nested pointers return `{ \"$ptr\": dynamicId }` without loading their targets; unset pointer IDs are `null`.\n- Dot paths cannot address field names containing dots. Internal Model members are not selectable.\n- Cycles, non-finite numbers, depth greater than 32, more than 10000 visited Models, or arrays longer than 10000 produce HTTP 500.",
+        "schema": {
+          "type": "string"
+        },
+        "examples": {
+          "all": {
+            "summary": "Return the whole element",
+            "value": "true"
+          },
+          "selected": {
+            "summary": "Selected fields, nested fields and an array entry",
+            "value": "value,metadata.unit,samples.0"
+          },
+          "omitted": {
+            "summary": "Omit the element without loading it",
+            "value": "false"
+          }
         }
       }
     },
@@ -2680,7 +2981,7 @@
         }
       },
       "INodeItemAttrMultiRes": {
-        "description": "Retrieve Successfully",
+        "description": "Nodes retrieved successfully.",
         "content": {
           "application/json": {
             "schema": {
@@ -2691,19 +2992,18 @@
               "properties": {
                 "data": {
                   "type": "array",
-                  "description": "List of retrieved nodes. There is a maximum of 200 items in one response.",
-                  "maxItems": 200,
+                  "description": "Retrieved nodes. Room and equipment lists return at most 200 items; floor lists are not paginated.",
                   "items": {
                     "$ref": "#/components/schemas/INodeItem"
                   }
                 },
                 "offset": {
                   "type": "integer",
-                  "description": "The offset of the retrieved nodes in the overall list."
+                  "description": "Requested number of matching nodes skipped. Returned by paginated room and equipment lists."
                 },
                 "total": {
                   "type": "integer",
-                  "description": "The total number of nodes available in the overall list. Will be given only if the total count is known or calculable."
+                  "description": "Number of eligible children before filtering when a parent-dynamic-id is supplied. Omitted for building-wide traversal and floor lists. This is not a count of filter matches."
                 },
                 "errors": {
                   "type": "array",
@@ -2718,7 +3018,7 @@
         }
       },
       "INodeItemAttrRes": {
-        "description": "Retrieve Successfully",
+        "description": "Node retrieved or created successfully.",
         "content": {
           "application/json": {
             "schema": {
@@ -2731,9 +3031,9 @@
                   "type": "object",
                   "$ref": "#/components/schemas/INodeItem"
                 },
-                "errors": {
+                "error": {
                   "type": "array",
-                  "description": "List of errors encountered during the request.",
+                  "description": "Group-link failures after successful creation. The created node is retained. Omitted when there are no link errors.",
                   "items": {
                     "$ref": "#/components/schemas/IErrorItem"
                   }
@@ -27249,8 +27549,8 @@
             ]
           }
         ],
-        "summary": "create the building",
-        "description": "Create a building.",
+        "summary": "Create the building",
+        "description": "Create the building in the profile's spatial context, creating that context if needed.\n\n### Requirements\n- No building may already exist; otherwise returns **HTTP 400**.\n\n### Defaults\n- `Spatial.area`: `\"0\"`.\n- `Spinal Building Information.Adresse`: `\"To configure\"`.\n- Supplied values override these defaults.\n\n**Response:** all info fields (including nested objects and arrays) and categorized attributes.",
         "tags": [
           "geographicContext"
         ],
@@ -27333,7 +27633,7 @@
           }
         ],
         "summary": "Retrieve the building",
-        "description": "Retrieve a building.",
+        "description": "Retrieve the first building found in the profile's spatial context,\nincluding buildings linked through a site.\n\n- **Output:** select fields using `info` and `attributes`.\n- **Error:** returns HTTP 400 if no building is found.",
         "tags": [
           "geographicContext"
         ],
@@ -27354,100 +27654,6 @@
           },
           "400": {
             "$ref": "#/components/responses/IErrorItemRes400"
-          }
-        }
-      }
-    },
-    "/api/v2/equipment": {
-      "post": {
-        "security": [
-          {
-            "bearerAuth": [
-              "write"
-            ]
-          }
-        ],
-        "summary": "create an equipment",
-        "description": "Create an equipment, either as a regular equipment or as a reference object.",
-        "tags": [
-          "geographicContext"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "parentDynamicId",
-                  "info"
-                ],
-                "properties": {
-                  "parentDynamicId": {
-                    "type": "number",
-                    "description": "The dynamic ID of the room to which the equipment belongs, can be an floor if it's for adding a reference object.",
-                    "minimum": 1
-                  },
-                  "isRefObject": {
-                    "type": "boolean",
-                    "description": "Indicates if the equipment is to be added as an reference object",
-                    "default": false
-                  },
-                  "info": {
-                    "allOf": [
-                      {
-                        "$ref": "#/components/schemas/ICreateNodeInfo"
-                      },
-                      {
-                        "$ref": "#/components/schemas/INodeItemInfoPropVirtual"
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "dbid": {
-                            "type": "number",
-                            "description": "dbid of the equipment, for use in the APS Viewer"
-                          },
-                          "externalId": {
-                            "type": "string",
-                            "description": "External ID of the equipment comming from Revit"
-                          },
-                          "bimFileId": {
-                            "type": "string",
-                            "description": "staticId of the BimFile which the equipment belongs to"
-                          }
-                        }
-                      }
-                    ]
-                  },
-                  "attributes": {
-                    "$ref": "#/components/schemas/ICreateNodeItemAttr"
-                  },
-                  "linkToGroups": {
-                    "$ref": "#/components/schemas/ICreateNodeLinkToGroups"
-                  }
-                },
-                "example": {
-                  "parentDynamicId": 123456789,
-                  "info": {
-                    "name": "equipment Name",
-                    "color": "#FF0000",
-                    "icon": "room-icon",
-                    "dbid": 123,
-                    "externalId": "external-id",
-                    "bimFileId": "123-abc-123-abc-456789"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "$ref": "#/components/responses/INodeItemAttrRes"
-          },
-          "400": {
-            "$ref": "#/components/responses/IErrorItemRes400"
           },
           "500": {
             "$ref": "#/components/responses/IErrorItemRes500"
@@ -27464,8 +27670,8 @@
             ]
           }
         ],
-        "summary": "create a floor",
-        "description": "Create a floor.",
+        "summary": "Create a floor",
+        "description": "Create a floor under the building in the profile's spatial context.\n\n### Requirements\n- A building must exist.\n- The floor name must be unique within that building.\n\n### Defaults\n- `virtual`: `false`.\n- `Spatial.area`: `\"0\"`.\n- `Spatial.category`: `\"Revit Level\"`.\n- Supplied values override these defaults.\n\n### Response\n- Returns all info (including nested objects and arrays) and attributes.\n- Optional group linking happens after creation. Failures **do not roll back** the floor.",
         "tags": [
           "geographicContext"
         ],
@@ -27540,7 +27746,7 @@
           }
         ],
         "summary": "Retrieve floors",
-        "description": "Retrieve floors.",
+        "description": "Retrieve the floors directly linked to the building in the profile's spatial context.\n\n- **Output:** select fields using `info` and `attributes`.\n- **Empty result:** returns `data: []` if the building has no floors.\n- **Error:** returns HTTP 400 if no building exists.\n\n**No pagination:** returns all floors. Unlike room and equipment lists,\nthis endpoint does not accept `filter` or `offset`.",
         "tags": [
           "geographicContext"
         ],
@@ -27561,6 +27767,9 @@
           },
           "400": {
             "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
           }
         }
       }
@@ -27574,21 +27783,12 @@
             ]
           }
         ],
-        "summary": "Retrieve floor by it's dynamic ID",
-        "description": "Retrieve floor by its dynamic ID.",
+        "summary": "Retrieve a floor by its dynamic ID",
+        "description": "Load a `geographicFloor` using its dynamic ID and the current profile.\n\n- **Output:** select fields using `info` and `attributes`.\n- **Error:** returns HTTP 400 if loading fails or the node is not a `geographicFloor`.",
         "tags": [
           "geographicContext"
         ],
         "parameters": [
-          {
-            "$ref": "#/components/parameters/queryInfo"
-          },
-          {
-            "$ref": "#/components/parameters/queryAttributes"
-          },
-          {
-            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
-          },
           {
             "name": "floorId",
             "in": "path",
@@ -27597,6 +27797,15 @@
               "type": "integer",
               "minimum": 1
             }
+          },
+          {
+            "$ref": "#/components/parameters/queryInfo"
+          },
+          {
+            "$ref": "#/components/parameters/queryAttributes"
+          },
+          {
+            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
           }
         ],
         "responses": {
@@ -27605,6 +27814,9 @@
           },
           "400": {
             "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
           }
         }
       }
@@ -27618,8 +27830,8 @@
             ]
           }
         ],
-        "summary": "create a room",
-        "description": "Create a room.",
+        "summary": "Create a room",
+        "description": "Create a room under the floor identified by `dynamicFloorId`, using the profile's spatial context.\n\n### Requirements\n- A building must exist.\n- The room name must be unique within the floor.\n\n### Defaults\n- `virtual`: `false`.\n- `Spatial.area`: `\"0\"`.\n- `Spatial.category`: `\"Revit Pièces\"`.\n- Supplied values override these defaults.\n\n### Response\n- Returns all info (including nested objects and arrays) and attributes.\n- Optional group linking happens after creation. Failures **do not roll back** the room.",
         "tags": [
           "geographicContext"
         ],
@@ -27701,7 +27913,7 @@
           }
         ],
         "summary": "Retrieve rooms",
-        "description": "Retrieve rooms under a parent or within the geographic context. Returns at most 200 matching rooms. Use offset=200 for the second page. Example `/api/v2/room?filter[attributes.Geometry.Surface][exists]=true&offset=0`",
+        "description": "Retrieve rooms from the floors of the profile's building or from a supplied parent.\n\n> **Performance recommendation:** provide `parent-dynamic-id`.\n> Running this endpoint without it is **not recommended**, especially for large buildings,\n> because it may traverse many floors and rooms. Filters and the 200-item page limit\n> do not guarantee a small traversal.\n\n### Scope\n- Without `parent-dynamic-id`: traverse the building's floors.\n- With `parent-dynamic-id`: retrieve direct children of a `geographicFloor` or `geographicRoomGroup`.\n- `groupHasgeographicRoom` is a relation name, not a node type.\n\n### Filtering and pagination\n- All filter conditions use **AND**.\n- Filtering runs **before** `offset` and output projection.\n- Returns at most **200 matching rooms**. Use `offset=200` for the second page.\n\n### Response\n- Each item includes `parentDynamicId`, even without a parent parameter.\n- With a parent parameter, `total` counts eligible children **before filtering**.\n- `total` is omitted for building-wide traversal.\n\n### Example\n```http\nGET /api/v2/room?parent-dynamic-id=132456&filter[attributes.Spatial.area][exists]=true&offset=0\n```",
         "tags": [
           "geographicContext"
         ],
@@ -27719,10 +27931,10 @@
             "$ref": "#/components/parameters/paramParentDynId"
           },
           {
-            "$ref": "#/components/parameters/queryOffset"
+            "$ref": "#/components/parameters/queryFilter"
           },
           {
-            "$ref": "#/components/parameters/queryFilter"
+            "$ref": "#/components/parameters/queryOffset"
           }
         ],
         "responses": {
@@ -27731,6 +27943,9 @@
           },
           "400": {
             "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
           }
         }
       }
@@ -27744,8 +27959,150 @@
             ]
           }
         ],
-        "summary": "Retrieve room by it's dynamic ID",
-        "description": "Retrieve room by its dynamic ID.",
+        "summary": "Retrieve a room by its dynamic ID",
+        "description": "Load a `geographicRoom` using its dynamic ID and the current profile.\n\n- **Output:** select fields using `info` and `attributes`.\n- **Error:** returns HTTP 400 if loading fails or the node is not a `geographicRoom`.",
+        "tags": [
+          "geographicContext"
+        ],
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "$ref": "#/components/parameters/queryInfo"
+          },
+          {
+            "$ref": "#/components/parameters/queryAttributes"
+          },
+          {
+            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/INodeItemAttrRes"
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      }
+    },
+    "/api/v2/equipment": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Create equipment",
+        "description": "Create a BIMObject under a room, or a reference object under a room or floor.\n\n### Requirements\n- A building must exist in the profile's spatial context.\n- Names must be unique among children of the selected equipment/reference relation.\n- Regular equipment requires a room parent.\n- With `isRefObject=true`, the parent may be a room or a floor.\n\n### Defaults\n- `virtual`: `false`.\n- No default attributes are added.\n\n### Response\n- Returns all info (including nested objects and arrays) and attributes.\n- Optional group linking happens after creation. Failures **do not roll back** the equipment.",
+        "tags": [
+          "geographicContext"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "parentDynamicId",
+                  "info"
+                ],
+                "properties": {
+                  "parentDynamicId": {
+                    "type": "number",
+                    "description": "Dynamic ID of a geographicRoom parent, or a geographicFloor parent when isRefObject=true.",
+                    "minimum": 1
+                  },
+                  "isRefObject": {
+                    "type": "boolean",
+                    "description": "Use a room reference relation or floor reference relation instead of the regular equipment relation.",
+                    "default": false
+                  },
+                  "info": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ICreateNodeInfo"
+                      },
+                      {
+                        "$ref": "#/components/schemas/INodeItemInfoPropVirtual"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "dbid": {
+                            "type": "number",
+                            "description": "Numeric dbid of the equipment for use in the APS Viewer."
+                          },
+                          "externalId": {
+                            "type": "string",
+                            "description": "External ID of the equipment from Revit."
+                          },
+                          "bimFileId": {
+                            "type": "string",
+                            "description": "Static ID of the BIM file to which the equipment belongs."
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "attributes": {
+                    "$ref": "#/components/schemas/ICreateNodeItemAttr"
+                  },
+                  "linkToGroups": {
+                    "$ref": "#/components/schemas/ICreateNodeLinkToGroups"
+                  }
+                },
+                "example": {
+                  "parentDynamicId": 123456789,
+                  "info": {
+                    "name": "equipment Name",
+                    "color": "#FF0000",
+                    "icon": "room-icon",
+                    "dbid": 123,
+                    "externalId": "external-id",
+                    "bimFileId": "123-abc-123-abc-456789"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/INodeItemAttrRes"
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve equipment",
+        "description": "Retrieve equipment from the profile's building or from a supplied parent.\n\n> **Performance recommendation:** provide `parent-dynamic-id`.\n> Running this endpoint without it is **not recommended**, especially for large buildings,\n> because it may traverse many floors, rooms and equipment nodes. Filters and the\n> 200-item page limit do not guarantee a small traversal.\n\n### Scope\n- `bimobject`: regular equipment under a `geographicRoom`.\n- `referenceRoom`: reference objects under a `geographicRoom`.\n- `referenceFloor`: reference objects under a `geographicFloor`.\n- A `BIMObjectGroup` parent supports every `bimObjectType`.\n\n### Filtering and pagination\n- All filter conditions use **AND**.\n- Filtering runs **before** `offset` and output projection.\n- Returns at most **200 matching items**. Use `offset=200` for the second page.\n\n### Response\n- Each item includes `parentDynamicId`.\n- Equipment linked to multiple rooms may appear once per room.\n- With a parent parameter, `total` counts eligible children **before filtering**.\n- `total` is omitted for building-wide traversal.\n\n### Example\n```http\nGET /api/v2/equipment?parent-dynamic-id=132456&filter[attributes.Geometry.Surface][exists]=true&offset=0\n```",
         "tags": [
           "geographicContext"
         ],
@@ -27760,13 +28117,74 @@
             "$ref": "#/components/parameters/queryAddAttributesModificationDate"
           },
           {
-            "name": "roomId",
+            "$ref": "#/components/parameters/paramParentDynId"
+          },
+          {
+            "in": "query",
+            "name": "bimObjectType",
+            "description": "Select the **relation to traverse**, not a different node type:\n\n- `bimobject`: regular room equipment (default).\n- `referenceRoom`: room reference objects.\n- `referenceFloor`: floor reference objects.\n\nIgnored when the supplied parent is a `BIMObjectGroup`.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bimobject",
+                "referenceRoom",
+                "referenceFloor"
+              ],
+              "default": "bimobject"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/queryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/queryOffset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/INodeItemAttrMultiRes"
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      }
+    },
+    "/api/v2/equipment/{equipmentId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve equipment by its dynamic ID",
+        "description": "Load a `BIMObject` using its dynamic ID and the current profile.\n\n- **Supported objects:** regular equipment and reference objects.\n- **Output:** select fields using `info` and `attributes`.\n- **Error:** returns HTTP 400 if loading fails or the node is not a `BIMObject`.",
+        "tags": [
+          "geographicContext"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
             "in": "path",
             "required": true,
             "schema": {
               "type": "integer",
               "minimum": 1
             }
+          },
+          {
+            "$ref": "#/components/parameters/queryInfo"
+          },
+          {
+            "$ref": "#/components/parameters/queryAttributes"
+          },
+          {
+            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
           }
         ],
         "responses": {
@@ -27775,6 +28193,222 @@
           },
           "400": {
             "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      }
+    },
+    "/api/v2/node": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Create a node and attach it to parents",
+        "description": "Create one `SpinalNode` with a caller-supplied name and type.\n\n### Parents and relations\n- Supply at least one entry in `parents`. All entries attach the **same node**.\n- Each entry requires `parentDynamicId` and `relationName`.\n- `relationType` defaults to `PtrLst`; `LstPtr` and `Ref` are also supported.\n- With `contextDynamicId`, load a `SpinalContext` and use `addChildInContext`.\n- Without a context, use `addChild`.\n- Parents and contexts are loaded using the current profile.\n\n### Element (optional)\n- Supply an object directly in `element` to create a generic SpinalCore `Model`.\n- Values may be strings, finite numbers, booleans, nested objects or arrays. `null` is not supported.\n- Object keys must not start with `_` or shadow Model members (for example `get`, `set`, `constructor`, `model_id`).\n- Use `{ \"$modelRef\": 789012 }` as a value to load an existing Model by dynamic ID using the current profile. References work in nested objects and arrays.\n- A reference object must contain only `$modelRef`, with a positive safe integer ID. `$modelRef` is reserved, and cannot be a field on the root element.\n- **Administration rights may be required to use `$modelRef`**, depending on access to the referenced model.\n- Referenced Models are assigned directly as attributes, not copied or wrapped in additional pointers. Repeated IDs share one loaded Model.\n- The newly created element Model is passed to the SpinalNode constructor, which keeps it behind the node's element pointer.\n- All references are validated and loaded before any parent attachment. Invalid or inaccessible references reject the request.\n- If omitted, no element is created by this endpoint.\n- The response remains `INodeItem`; element contents are not included.\n\n### Results\n- **201:** at least one attachment succeeded. Returns the node with all info and attributes.\n- Extra info supports nested objects, arrays and `$modelRef` values with the same rules as element data. Administration rights may be required for `$modelRef`.\n- Info keys starting with `_` are forbidden at every nesting level, including objects inside arrays. Invalid keys return HTTP 400.\n- Successful attachments are retained when others fail.\n- Failed entries are reported in `error`, including their zero-based index and requested parent/relation.\n- **400:** invalid input, or all attachments failed due to invalid parents or contexts.\n- **500:** unexpected failure; also used when all attachments fail and an internal error occurred.\n- No uniqueness constraint is imposed on the name. No default attributes are added.",
+        "tags": [
+          "node"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "info",
+                  "parents"
+                ],
+                "properties": {
+                  "info": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "description": "Info fields, including nested objects, arrays and $modelRef values. Keys starting with an underscore are forbidden at every nesting level, including objects inside arrays (HTTP 400). IDs (id, staticId, dynamicId) are assigned by the server and cannot be supplied.",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "type": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      }
+                    },
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/INodeElementValue"
+                    }
+                  },
+                  "attributes": {
+                    "$ref": "#/components/schemas/ICreateNodeItemAttr"
+                  },
+                  "element": {
+                    "$ref": "#/components/schemas/ICreateNodeElement"
+                  },
+                  "parents": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "$ref": "#/components/schemas/INodeParentAttachment"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "info": {
+                  "name": "My sensor",
+                  "type": "sensor"
+                },
+                "attributes": {
+                  "Technical": {
+                    "Code": "001"
+                  }
+                },
+                "element": {
+                  "value": 21.5,
+                  "unit": "Celsius",
+                  "enabled": true,
+                  "device": {
+                    "$modelRef": 789012
+                  }
+                },
+                "parents": [
+                  {
+                    "parentDynamicId": 123456,
+                    "relationName": "hasSensor",
+                    "contextDynamicId": 654321
+                  },
+                  {
+                    "parentDynamicId": 123457,
+                    "relationName": "hasSensor",
+                    "relationType": "PtrLst"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Node created with at least one successful parent attachment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/INodeItem"
+                    },
+                    "error": {
+                      "type": "array",
+                      "description": "Failed attachments. Omitted if all attachments succeeded.",
+                      "items": {
+                        "$ref": "#/components/schemas/INodeParentAttachmentError"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, inaccessible or invalid referenced element, or no parent attachment succeeded. When all attachments fail, errors contains the per-entry failures.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/INodeAttachmentFailure"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error, or all attachments failed with at least one internal error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/INodeAttachmentFailure"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/node/{nodeId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve a node by its dynamic ID",
+        "description": "Load any `SpinalNode` using its dynamic ID and the current profile.\nNo geographic type or parent relation is required.\n\n### Output\n- Returns `{ data: INodeItem }`, without traversing children.\n- Select fields using `info` and `attributes`.\n- Omitting `info` returns the default info projection; `info=false` omits info and `info=true` returns all info, including nested objects and arrays. Use dot paths such as `info=metadata.unit,samples.0` to select nested values.\n- Attributes are omitted by default. Use `attributes=true` for all attributes, or select categories/attributes.\n- Element contents are omitted unless requested with `element`.\n\n### Element selection\n- `element=true` returns the whole element; omitted or `false` does not load it.\n- Select comma-separated dot paths, for example `element=value,metadata.unit,samples.0`.\n- Selected paths preserve their structure. Array indexes are zero-based; unselected earlier entries appear as `null`.\n- A missing element returns `element: null` without creating one. Missing fields are omitted.\n- Directly embedded Models are traversed; nested pointers are not loaded and return `{ \"$ptr\": dynamicId }` (or `null` for an unset pointer ID).\n- Dot paths cannot address field names containing dots. Internal Model members are not selectable.\n- Cycles, non-finite numbers, serialization exceeding depth 32 or 10000 visited Models, or arrays longer than 10000 return HTTP 500. Select narrower paths to avoid unrelated branches.\n\n### Errors\n- **400:** invalid request, loading failure, or the loaded model is not a `SpinalNode`.\n- **500:** unexpected internal error.",
+        "tags": [
+          "node"
+        ],
+        "parameters": [
+          {
+            "name": "nodeId",
+            "in": "path",
+            "required": true,
+            "description": "Dynamic ID of the SpinalNode.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "$ref": "#/components/parameters/queryInfo"
+          },
+          {
+            "$ref": "#/components/parameters/queryAttributes"
+          },
+          {
+            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
+          },
+          {
+            "$ref": "#/components/parameters/queryElement"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requested node with the selected info and attributes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/INodeItem"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
           }
         }
       }

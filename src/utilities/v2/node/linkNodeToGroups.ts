@@ -54,7 +54,7 @@ export async function linkNodeToGroups(
         ),
         loadAndValidateNode(
           spinalAPIMiddleware,
-          contextDynamicId,
+          groupDynamicId,
           profileId,
           `${node.info.type.get()}Group`
         ),

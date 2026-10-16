@@ -4,4 +4,4 @@ import { z } from 'zod';
  * @param {z.ZodObject<T>} schema
  * @param {readonly string[]} forbiddenKeys - An array of keys that are not allowed in the object.
  */
-export declare function addExtraInfoValidation<T extends z.ZodRawShape>(schema: z.ZodObject<T>, forbiddenKeys: readonly string[]): z.ZodObject<T, z.core.$catchall<z.ZodUnion<readonly [z.ZodString, z.ZodBoolean, z.ZodNumber, z.ZodUndefined]>>>;
+export declare function addExtraInfoValidation<T extends z.ZodRawShape>(schema: z.ZodObject<T>, forbiddenKeys: readonly string[]): z.ZodObject<T, z.core.$catchall<z.ZodOptional<z.ZodType<import("../node/createElement").ElementValue, unknown, z.core.$ZodTypeInternals<import("../node/createElement").ElementValue, unknown>>>>>;

@@ -26,7 +26,7 @@
  * components:
  *   responses:
  *     INodeItemAttrRes:
- *       description: Retrieve Successfully
+ *       description: Node retrieved or created successfully.
  *       content:
  *         application/json:
  *           schema:
@@ -37,9 +37,9 @@
  *               data:
  *                 type: object
  *                 $ref: '#/components/schemas/INodeItem'
- *               errors:
+ *               error:
  *                 type: array
- *                 description: List of errors encountered during the request.
+ *                 description: Group-link failures after successful creation. The created node is retained. Omitted when there are no link errors.
  *                 items:
  *                   $ref: '#/components/schemas/IErrorItem'
  */

@@ -4,7 +4,11 @@
  *   schemas:
  *     ICreateNodeLinkToGroups:
  *       type: array
- *       description: optionnal, link the floor to groups after creation.
+ *       description: >-
+ *         Optional group links for the newly created floor, room or equipment.
+ *         Context and group types must match the created node's type.
+ *         Linking occurs after creation; failures are reported in the response's
+ *         error array without rolling back the node or successful links.
  *       items:
  *           type: object
  *           required:

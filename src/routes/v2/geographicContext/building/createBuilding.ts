@@ -36,7 +36,7 @@ import {
   addExtraCatAttrValidation,
 } from '../../../../utilities/v2/requestParse/addExtraAttrValidation';
 import { handleSetAttribute } from '../../../../utilities/v2/node/handleSetAttribute';
-import { handleSetInfo } from '../../../../utilities/v2/node/handleSetInfo';
+import { handleSetInfo, resolveInfo } from '../../../../utilities/v2/node/handleSetInfo';
 import { EApiErrorType } from '../../../../utilities/v2/errorHandler/EApiErrorType';
 import { createErrorMsgItem } from '../../../../utilities/v2/errorHandler/createErrorMsgItem';
 import { sendResponseError } from '../../../../utilities/v2/errorHandler/sendResponseError';
@@ -53,8 +53,19 @@ module.exports = function (
    *     security:
    *       - bearerAuth:
    *         - write
-   *     summary: create the building
-   *     description: Create a building.
+   *     summary: Create the building
+   *     description: |-
+   *       Create the building in the profile's spatial context, creating that context if needed.
+   *
+   *       ### Requirements
+   *       - No building may already exist; otherwise returns **HTTP 400**.
+   *
+   *       ### Defaults
+   *       - `Spatial.area`: `"0"`.
+   *       - `Spinal Building Information.Adresse`: `"To configure"`.
+   *       - Supplied values override these defaults.
+   *
+   *       **Response:** all info fields (including nested objects and arrays) and categorized attributes.
    *     tags:
    *       - geographicContext
    *     requestBody:
@@ -141,6 +152,7 @@ module.exports = function (
             'A building already exists'
           );
         const { info, attributes } = req.body;
+        const resolvedInfo = await resolveInfo(info, spinalAPIMiddleware, profileId);
         const newBuilding = await addBuilding(
           geographicContext,
           geographicContext,
@@ -154,7 +166,7 @@ module.exports = function (
             area: '0',
           },
         });
-        handleSetInfo(newBuilding, info);
+        await handleSetInfo(newBuilding, resolvedInfo);
         const resObj = await getNodeData(newBuilding, true, true);
         return res.status(201).json({ data: resObj });
       } catch (error: any) {
