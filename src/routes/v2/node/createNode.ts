@@ -79,10 +79,11 @@ module.exports = function (
    *       - Supply an object directly in `element` to create a generic SpinalCore `Model`.
    *       - Values may be strings, finite numbers, booleans, nested objects or arrays. `null` is not supported.
    *       - Object keys must not start with `_` or shadow Model members (for example `get`, `set`, `constructor`, `model_id`).
-   *       - Use `{ "$modelRef": 789012 }` as a value to load an existing Model by dynamic ID using the current profile. References work in nested objects and arrays.
-   *       - A reference object must contain only `$modelRef`, with a positive safe integer ID. `$modelRef` is reserved, and cannot be a field on the root element.
-   *       - **Administration rights may be required to use `$modelRef`**, depending on access to the referenced model.
-   *       - Referenced Models are assigned directly as attributes, not copied or wrapped in additional pointers. Repeated IDs share one loaded Model.
+   *       - Use `{ "$modelRef": 789012, "path": "info.name" }` to share a Model from an existing SpinalNode. References work in nested objects and arrays.
+   *       - A reference object must contain exactly `$modelRef` (a positive safe integer node ID) and `path`. `$modelRef` is reserved, and cannot be a field on the root element.
+   *       - **The current profile must have access to the target SpinalNode specified by `$modelRef`.**
+   *       - Paths support `info.name`, `info.metadata.unit`, `element.samples.0`, and `attr.Category.Label` (the attribute value Model). `info` and `element` select the whole Model. Missing or invalid paths return HTTP 400; nested pointers are not traversed.
+   *       - Referenced Models are assigned directly as attributes, not copied or wrapped in additional pointers. Each target node is loaded once per object creation; repeated node/path pairs share the same Model.
    *       - The newly created element Model is passed to the SpinalNode constructor, which keeps it behind the node's element pointer.
    *       - All references are validated and loaded before any parent attachment. Invalid or inaccessible references reject the request.
    *       - If omitted, no element is created by this endpoint.
@@ -90,7 +91,7 @@ module.exports = function (
    *
    *       ### Results
    *       - **201:** at least one attachment succeeded. Returns the node with all info and attributes.
-   *       - Extra info supports nested objects, arrays and `$modelRef` values with the same rules as element data. Administration rights may be required for `$modelRef`.
+   *       - Extra info supports nested objects, arrays and `$modelRef` values with the same rules as element data. The current profile must have access to the target SpinalNode specified by `$modelRef`.
    *       - Info keys starting with `_` are forbidden at every nesting level, including objects inside arrays. Invalid keys return HTTP 400.
    *       - Successful attachments are retained when others fail.
    *       - Failed entries are reported in `error`, including their zero-based index and requested parent/relation.
@@ -148,6 +149,7 @@ module.exports = function (
    *               enabled: true
    *               device:
    *                 $modelRef: 789012
+   *                 path: info.name
    *             parents:
    *               - parentDynamicId: 123456
    *                 relationName: hasSensor

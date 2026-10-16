@@ -77,7 +77,7 @@ describe('v2 extra info and attribute validation', () => {
   });
 
   it('accepts nested objects and arrays while rejecting null extra info', () => {
-    for (const value of [[], {}, { values: [false, 0, { $modelRef: 123 }] }]) {
+    for (const value of [[], {}, { values: [false, 0, { $modelRef: 123, path: 'info.name' }] }]) {
       expect(infoSchema.safeParse({ name: 'Room', extra: value }).success).to.equal(true);
     }
     for (const value of [null, { invalid: null }]) {

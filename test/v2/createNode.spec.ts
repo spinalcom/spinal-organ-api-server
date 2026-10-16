@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import request from "supertest";
-import { Model } from "spinal-core-connectorjs";
+import { Model, Ptr } from "spinal-core-connectorjs";
+import { attributeService, NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service";
 import {
   SpinalNode,
   SPINAL_RELATION_PTR_LST_TYPE,
@@ -66,15 +67,114 @@ describe("POST /api/v2/node", () => {
     expect(await node.getElement(true)).to.equal(undefined);
   });
 
+  it("shares different info paths from the same target without confusing cached references", async () => {
+    await request(fixture.app).post("/api/v2/node").send({
+      ...body(), element: {
+        name: { $modelRef: fixture.room._server_id, path: "info.name" },
+        type: { $modelRef: fixture.room._server_id, path: "info.type" },
+        id: { $modelRef: fixture.room._server_id, path: "info.staticId" },
+        again: { $modelRef: fixture.room._server_id, path: "info.name" },
+      },
+    }).expect(201);
+    const [created] = await fixture.room.getChildren("hasSensor");
+    const element = await created.getElement(true);
+    expect(element.name).to.equal(fixture.room.info.name);
+    expect(element.type).to.equal(fixture.room.info.type);
+    expect(element.id).to.equal(fixture.room.info.id);
+    expect(element.again).to.equal(element.name);
+    expect(fixture.loads).to.deep.equal([fixture.room._server_id, fixture.room._server_id]);
+    element.name.set("Updated room");
+    expect(fixture.room.getName().get()).to.equal("Updated room");
+  });
+
+  it("shares nested element models, array entries and categorized attribute values", async () => {
+    const targetElement = new Model({ metadata: { unit: "Celsius" }, samples: [20, 21] });
+    const target = new SpinalNode("Target", "target", targetElement);
+    fixture.register(target);
+    await attributeService.createOrUpdateAttrsAndCategories(target, "Technical", { Code: "001" });
+    const [category] = await target.getChildren(NODE_TO_CATEGORY_RELATION);
+    const attributes = await category.getElement(true);
+    const attribute = attributes[0];
+    await request(fixture.app).post("/api/v2/node").send({
+      ...body(), info: {
+        ...body().info,
+        code: { $modelRef: target._server_id, path: "attr.Technical.Code" },
+      }, element: {
+        unit: { $modelRef: target._server_id, path: "element.metadata.unit" },
+        sample: { $modelRef: target._server_id, path: "element.samples.1" },
+        all: { $modelRef: target._server_id, path: "element" },
+      },
+    }).expect(201);
+    const [created] = await fixture.room.getChildren("hasSensor");
+    const element = await created.getElement(true);
+    expect(element.unit).to.equal(targetElement.metadata.unit);
+    expect(element.sample).to.equal(targetElement.samples[1]);
+    expect(element.all).to.equal(targetElement);
+    expect(created.info.code).to.equal(attribute.value);
+    created.info.code.set("002");
+    expect(attribute.value.get()).to.equal("002");
+  });
+
+  it("rejects invalid or missing reference paths without attaching or creating target elements", async () => {
+    fixture.room.info.add_attr({
+      samples: [1], scalar: "text", pointer: new Ptr(new Model({ value: 42 })),
+    });
+    fixture.room.info.pointer.load = () => { throw new Error("Must not load"); };
+    await attributeService.createOrUpdateAttrsAndCategories(fixture.room, "Technical", { Code: "001" });
+    for (const path of [
+      "info.missing", "info.scalar.missing", "info.samples.2",
+      "info.samples.01", "element", "element.missing", "attr.Missing.Label",
+      "attr", "attr.Category", "attr.Category.Label.extra", "children",
+      "info.__proto__", "info._server_id", "info.constructor",
+      "info..name", "info.pointer.value", "attr.Technical.Missing",
+      "", Array(34).fill("info").join("."),
+    ]) {
+      await request(fixture.app).post("/api/v2/node").send({
+        ...body(), element: { value: { $modelRef: fixture.room._server_id, path } },
+      }).expect(400);
+    }
+    for (const reference of [
+      { $modelRef: fixture.room._server_id },
+      { $modelRef: fixture.room._server_id, path: 12 },
+      { $modelRef: fixture.room._server_id, path: "info.name", extra: true },
+    ]) {
+      await request(fixture.app).post("/api/v2/node").send({
+        ...body(), element: { value: reference },
+      }).expect(400);
+    }
+    expect(await fixture.room.getElement(true)).to.equal(undefined);
+    expect(await fixture.room.getChildren("hasSensor")).to.deep.equal([]);
+  });
+
+  it("rejects non-node targets and profile-denied node loads", async () => {
+    const model = new Model({ value: 42 });
+    fixture.register(model);
+    const response = await request(fixture.app).post("/api/v2/node").send({
+      ...body(), element: { value: { $modelRef: model._server_id, path: "info.name" } },
+    }).expect(400);
+    expect(response.body.errorType).to.equal("INVALID_LOAD_NODE_TYPE");
+    fixture.middleware.load = async (_id, profileId) => {
+      expect(profileId).to.equal(fixture.profileId);
+      throw new Error("Access denied");
+    };
+    await request(fixture.app).post("/api/v2/node").send({
+      ...body(), info: {
+        ...body().info, value: { $modelRef: fixture.room._server_id, path: "info.name" },
+      },
+    }).expect(400);
+    expect(await fixture.room.getChildren("hasSensor")).to.deep.equal([]);
+  });
+
   it("creates nested info and shares referenced Models in objects and arrays", async () => {
     const shared = new Model({ value: 42 });
-    fixture.register(shared);
+    const target = fixture.node("Target", "target");
+    target.info.add_attr("payload", shared);
     const response = await request(fixture.app).post("/api/v2/node").send({
       ...body(),
       info: {
         ...body().info,
-        metadata: { unit: "Celsius", device: { $modelRef: shared._server_id } },
-        samples: [0, false, { $modelRef: shared._server_id }],
+        metadata: { unit: "Celsius", device: { $modelRef: target._server_id, path: "info.payload" } },
+        samples: [0, false, { $modelRef: target._server_id, path: "info.payload" }],
         empty: {},
       },
     }).expect(201);
@@ -84,12 +184,12 @@ describe("POST /api/v2/node", () => {
     const [node] = await fixture.room.getChildren("hasSensor");
     expect(node.info.metadata.device).to.equal(shared);
     expect(node.info.samples[2]).to.equal(shared);
-    expect(fixture.loads).to.deep.equal([shared._server_id, fixture.room._server_id]);
+    expect(fixture.loads).to.deep.equal([target._server_id, fixture.room._server_id]);
   });
 
   it("rejects inaccessible info references before attaching a node", async () => {
     await request(fixture.app).post("/api/v2/node").send({
-      ...body(), info: { ...body().info, device: { $modelRef: 9999999 } },
+      ...body(), info: { ...body().info, device: { $modelRef: 9999999, path: "info.name" } },
     }).expect(400);
     expect(await fixture.room.getChildren("hasSensor")).to.deep.equal([]);
     expect(fixture.loads).to.deep.equal([9999999]);
@@ -161,12 +261,13 @@ describe("POST /api/v2/node", () => {
 
   it("references the existing model using the current profile without copying it", async () => {
     const model = new Model({ value: 20 });
-    fixture.register(model);
+    const target = fixture.node("Target", "target");
+    target.info.add_attr("payload", model);
     const response = await request(fixture.app)
       .post("/api/v2/node")
       .send({
         ...body(),
-        element: { device: { $modelRef: model._server_id } },
+        element: { device: { $modelRef: target._server_id, path: "info.payload" } },
       })
       .expect(201);
     const [node] = await fixture.room.getChildren("hasSensor");
@@ -177,7 +278,7 @@ describe("POST /api/v2/node", () => {
     model.value.set(25);
     expect(element.get()).to.deep.equal({ device: { value: 25 } });
     expect(fixture.loads).to.deep.equal([
-      model._server_id,
+      target._server_id,
       fixture.room._server_id,
     ]);
     expect(response.body.data).not.to.have.property("element");
@@ -188,29 +289,31 @@ describe("POST /api/v2/node", () => {
       .post("/api/v2/node")
       .send({
         ...body(),
-        element: { device: { $modelRef: fixture.equipment._server_id } },
+        element: { device: { $modelRef: fixture.equipment._server_id, path: "info" } },
       })
       .expect(201);
     const [node] = await fixture.room.getChildren("hasSensor");
-    expect((await node.getElement(true)).device).to.equal(fixture.equipment);
+    expect((await node.getElement(true)).device).to.equal(fixture.equipment.info);
   });
 
   it("resolves nested and array references once per ID, preserving Model identity", async () => {
     const first = new Model({ value: 20 });
     const second = new Model({ value: 30 });
-    fixture.register(first);
-    fixture.register(second);
+    const firstTarget = fixture.node("First", "target");
+    const secondTarget = fixture.node("Second", "target");
+    firstTarget.info.add_attr("payload", first);
+    secondTarget.info.add_attr("payload", second);
     await request(fixture.app)
       .post("/api/v2/node")
       .send({
         ...body(),
         element: {
-          device: { $modelRef: first._server_id },
-          metadata: { source: { $modelRef: second._server_id } },
+          device: { $modelRef: firstTarget._server_id, path: "info.payload" },
+          metadata: { source: { $modelRef: secondTarget._server_id, path: "info.payload" } },
           sources: [
-            { $modelRef: first._server_id },
-            { nested: { $modelRef: second._server_id } },
-            [{ $modelRef: first._server_id }],
+            { $modelRef: firstTarget._server_id, path: "info.payload" },
+            { nested: { $modelRef: secondTarget._server_id, path: "info.payload" } },
+            [{ $modelRef: firstTarget._server_id, path: "info.payload" }],
           ],
         },
       })
@@ -223,8 +326,8 @@ describe("POST /api/v2/node", () => {
     expect(element.sources[1].nested).to.equal(second);
     expect(element.sources[2][0]).to.equal(first);
     expect(fixture.loads).to.deep.equal([
-      first._server_id,
-      second._server_id,
+      firstTarget._server_id,
+      secondTarget._server_id,
       fixture.room._server_id,
     ]);
   });
@@ -235,8 +338,8 @@ describe("POST /api/v2/node", () => {
       .send({
         ...body(),
         element: {
-          device: { $modelRef: fixture.equipment._server_id },
-          nested: [{ source: { $modelRef: 9999999 } }],
+          device: { $modelRef: fixture.equipment._server_id, path: "info.name" },
+          nested: [{ source: { $modelRef: 9999999, path: "info.name" } }],
         },
       })
       .expect(400);
@@ -252,7 +355,7 @@ describe("POST /api/v2/node", () => {
       .post("/api/v2/node")
       .send({
         ...body(),
-        element: { device: { $modelRef: 9999999 } },
+        element: { device: { $modelRef: 9999999, path: "info.name" } },
       })
       .expect(400);
     expect(response.body.errorType).to.equal("INVALID_LOAD_NODE");
@@ -294,7 +397,7 @@ describe("POST /api/v2/node", () => {
       .post("/api/v2/node")
       .send({
         ...body(),
-        element: { device: { $modelRef: 9999999 } },
+        element: { device: { $modelRef: 9999999, path: "info.name" } },
       })
       .expect(400);
     expect(response.body.errorType).to.equal("INVALID_LOAD_NODE_TYPE");
@@ -303,12 +406,13 @@ describe("POST /api/v2/node", () => {
 
   it("preserves the element when only some parent attachments succeed", async () => {
     const model = new Model({ value: 20 });
-    fixture.register(model);
+    const target = fixture.node("Target", "target");
+    target.info.add_attr("payload", model);
     const response = await request(fixture.app)
       .post("/api/v2/node")
       .send({
         ...body(),
-        element: { device: { $modelRef: model._server_id } },
+        element: { device: { $modelRef: target._server_id, path: "info.payload" } },
         parents: [
           { parentDynamicId: 9999999, relationName: "missing" },
           body().parents[0],

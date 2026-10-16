@@ -43,7 +43,7 @@ describe('GET /api/v2/node/:nodeId', () => {
     registerCreateNode(null, fixture.app, fixture.middleware);
     const created = await request(fixture.app).post('/api/v2/node').send({
       info: { name: 'Sensor', type: 'sensor' },
-      element: { device: { $modelRef: fixture.equipment._server_id } },
+      element: { device: { $modelRef: fixture.equipment._server_id, path: 'info' } },
       parents: [{ parentDynamicId: fixture.room._server_id, relationName: 'hasSensor' }],
     }).expect(201);
     const response = await request(fixture.app).get(`/api/v2/node/${created.body.data.dynamicId}`)

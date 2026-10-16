@@ -24,12 +24,13 @@ describe('v2 geographic node POST routes', () => {
       it('supports nested info and model references', async () => {
         if (kind === 'building') await fixture.removeBuilding();
         const shared = new Model({ value: 42 });
-        fixture.register(shared);
+        const target = fixture.node('Target', 'target');
+        target.info.add_attr('payload', shared);
         const payload = body(kind);
         const response = await request(fixture.app).post(`/api/v2/${kind}`).send({
           ...payload, info: {
-            ...payload.info, metadata: { device: { $modelRef: shared._server_id } },
-            samples: [0, false, { $modelRef: shared._server_id }],
+            ...payload.info, metadata: { device: { $modelRef: target._server_id, path: 'info.payload' } },
+            samples: [0, false, { $modelRef: target._server_id, path: 'info.payload' }],
           },
         }).expect(201);
         expect(response.body.data.info.metadata).to.deep.equal({ device: { value: 42 } });
@@ -42,7 +43,7 @@ describe('v2 geographic node POST routes', () => {
         const before = await parent.getChildren();
         const payload = body(kind);
         await request(fixture.app).post(`/api/v2/${kind}`).send({
-          ...payload, info: { ...payload.info, source: { $modelRef: 9999999 } },
+          ...payload, info: { ...payload.info, source: { $modelRef: 9999999, path: 'info.name' } },
         }).expect(400);
         expect(await parent.getChildren()).to.deep.equal(before);
       });

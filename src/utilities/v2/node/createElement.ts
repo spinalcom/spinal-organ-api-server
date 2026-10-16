@@ -27,6 +27,8 @@ import { Model } from "spinal-core-connectorjs";
 import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { createErrorMsgItem } from "../errorHandler/createErrorMsgItem";
 import { EApiErrorType } from "../errorHandler/EApiErrorType";
+import { SpinalNode } from "spinal-model-graph";
+import { isModelReferencePath, resolveModelReference } from "./resolveModelReference";
 
 export type ElementValue =
   | string
@@ -56,6 +58,7 @@ export const elementValue: z.ZodType<ElementValue> = z.lazy(() =>
       z.union([
         z.strictObject({
           $modelRef: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
+          path: z.string().refine(isModelReferencePath, "Invalid $modelRef path"),
         }),
         elementObject,
       ])
@@ -89,7 +92,8 @@ export async function createElement(
   middleware: ISpinalAPIMiddleware,
   profileId: string
 ): Promise<Model> {
-  const references = new Map<number, Model>();
+  const nodes = new Map<number, SpinalNode>();
+  const references = new Map<string, Model>();
   type ResolvedValue = string | number | boolean | Model | ResolvedValue[];
 
   async function resolve(value: ElementValue): Promise<ResolvedValue> {
@@ -104,25 +108,35 @@ export async function createElement(
       typeof value.$modelRef === "number"
     ) {
       const id = value.$modelRef;
-      const cached = references.get(id);
+      if (typeof value.path !== "string" || !isModelReferencePath(value.path)) {
+        throw createErrorMsgItem(EApiErrorType.INVALID_REQUEST, "Invalid $modelRef path");
+      }
+      const key = JSON.stringify([id, value.path]);
+      const cached = references.get(key);
       if (cached) return cached;
-      let model: Model;
-      try {
-        model = await middleware.load<Model>(id, profileId);
-      } catch (error) {
-        console.error(error);
-        throw createErrorMsgItem(
-          EApiErrorType.INVALID_LOAD_NODE,
-          `Error: Loading $modelRef ${id} failed`
-        );
+      let node = nodes.get(id);
+      if (!node) {
+        let loaded: Model;
+        try {
+          loaded = await middleware.load<Model>(id, profileId);
+        } catch (error) {
+          console.error(error);
+          throw createErrorMsgItem(
+            EApiErrorType.INVALID_LOAD_NODE,
+            `Error: Loading $modelRef node ${id} failed`
+          );
+        }
+        if (!(loaded instanceof SpinalNode)) {
+          throw createErrorMsgItem(
+            EApiErrorType.INVALID_LOAD_NODE_TYPE,
+            `$modelRef ${id} is not a SpinalNode`
+          );
+        }
+        node = loaded;
+        nodes.set(id, node);
       }
-      if (!(model instanceof Model)) {
-        throw createErrorMsgItem(
-          EApiErrorType.INVALID_LOAD_NODE_TYPE,
-          `$modelRef ${id} is not a Model`
-        );
-      }
-      references.set(id, model);
+      const model = await resolveModelReference(node, value.path);
+      references.set(key, model);
       return model;
     }
     return createObject(value);
