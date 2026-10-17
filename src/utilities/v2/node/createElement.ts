@@ -57,7 +57,7 @@ export const elementValue: z.ZodType<ElementValue> = z.lazy(() =>
       rejectPrototypeKey,
       z.union([
         z.strictObject({
-          $modelRef: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
+          $modelRef: z.union([z.number().int().min(1).max(Number.MAX_SAFE_INTEGER), z.literal("self")]),
           path: z.string().refine(isModelReferencePath, "Invalid $modelRef path"),
         }),
         elementObject,
@@ -90,26 +90,44 @@ export const elementObject = z.preprocess(
 export async function createElement(
   data: Record<string, ElementValue>,
   middleware: ISpinalAPIMiddleware,
-  profileId: string
+  profileId: string,
+  self?: (path: string) => Promise<Model>,
+  build?: (value: ElementValue, path: string[], resolve: () => Promise<Model>) => Promise<Model>
 ): Promise<Model> {
   const nodes = new Map<number, SpinalNode>();
   const references = new Map<string, Model>();
   type ResolvedValue = string | number | boolean | Model | ResolvedValue[];
 
-  async function resolve(value: ElementValue): Promise<ResolvedValue> {
+  async function resolve(value: ElementValue, path: string[] = []): Promise<ResolvedValue> {
+    if (build) {
+      return build(value, path, async () => {
+        const result = await resolveUncached(value, path);
+        if (result instanceof Model) return result;
+        const wrapper = new Model();
+        wrapper.add_attr("value", result);
+        return wrapper.value;
+      });
+    }
+    return resolveUncached(value, path);
+  }
+  async function resolveUncached(value: ElementValue, path: string[]): Promise<ResolvedValue> {
     if (Array.isArray(value)) {
       const result: ResolvedValue[] = [];
-      for (const item of value) result.push(await resolve(item));
+      for (const [index, item] of value.entries()) result.push(await resolve(item, [...path, String(index)]));
       return result;
     }
     if (typeof value !== "object") return value;
     if (
       Object.hasOwn(value, "$modelRef") &&
-      typeof value.$modelRef === "number"
+      (typeof value.$modelRef === "number" || value.$modelRef === "self")
     ) {
       const id = value.$modelRef;
       if (typeof value.path !== "string" || !isModelReferencePath(value.path)) {
         throw createErrorMsgItem(EApiErrorType.INVALID_REQUEST, "Invalid $modelRef path");
+      }
+      if (id === "self") {
+        if (!self) throw createErrorMsgItem(EApiErrorType.INVALID_REQUEST, "Self reference is unavailable in this creation context");
+        return self(value.path);
       }
       const key = JSON.stringify([id, value.path]);
       const cached = references.get(key);
@@ -139,15 +157,16 @@ export async function createElement(
       references.set(key, model);
       return model;
     }
-    return createObject(value);
+    return createObject(value, path);
   }
 
   async function createObject(
-    value: Record<string, ElementValue>
+    value: Record<string, ElementValue>,
+    path: string[] = []
   ): Promise<Model> {
     const model = new Model();
     for (const [key, item] of Object.entries(value)) {
-      model.add_attr(key, await resolve(item));
+      model.add_attr(key, await resolve(item, [...path, key]));
     }
     return model;
   }

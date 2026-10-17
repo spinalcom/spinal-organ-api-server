@@ -27,12 +27,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const zod_1 = require("zod");
-const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
 const spinal_env_viewer_context_geographic_service_1 = require("spinal-env-viewer-context-geographic-service");
+const prepareNodeCreation_1 = require("../../../../utilities/v2/node/prepareNodeCreation");
+const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
+const spinal_env_viewer_context_geographic_service_2 = require("spinal-env-viewer-context-geographic-service");
 const addExtraAttrValidation_1 = require("../../../../utilities/v2/requestParse/addExtraAttrValidation");
 const linkNodeToGroups_1 = require("../../../../utilities/v2/node/linkNodeToGroups");
-const handleSetAttribute_1 = require("../../../../utilities/v2/node/handleSetAttribute");
-const handleSetInfo_1 = require("../../../../utilities/v2/node/handleSetInfo");
 const requestUtilities_1 = require("../../../../utilities/requestUtilities");
 const getNodeData_1 = require("../../../../utilities/v2/node/getNodeData");
 const getBuilding_1 = require("../../../../utilities/v2/geographicContext/getBuilding");
@@ -132,21 +132,15 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!building)
                 throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'No building found in database');
             const { info, attributes, linkToGroups } = req.body;
-            const oldFloors = await building.getChildrenInContext(geographicContext, spinal_env_viewer_context_geographic_service_1.FLOOR_RELATION);
+            const oldFloors = await building.getChildrenInContext(geographicContext, spinal_env_viewer_context_geographic_service_2.FLOOR_RELATION);
             for (const oldFloor of oldFloors) {
                 if (oldFloor.info.name.get() === info.name) {
                     throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'A floor with the same name already exists');
                 }
             }
-            const resolvedInfo = await (0, handleSetInfo_1.resolveInfo)(info, spinalAPIMiddleware, profileId);
-            const newFloor = await (0, spinal_env_viewer_context_geographic_service_1.addFloor)(geographicContext, building, info.name);
-            await (0, handleSetAttribute_1.handleSetAttribute)(newFloor, attributes, {
-                Spatial: {
-                    category: 'Revit Level',
-                    area: '0',
-                },
-            });
-            await (0, handleSetInfo_1.handleSetInfo)(newFloor, resolvedInfo);
+            const prepared = await (0, prepareNodeCreation_1.prepareNodeCreation)(info.name, spinal_env_viewer_context_geographic_service_1.FLOOR_TYPE, info, undefined, attributes, { Spatial: { category: 'Revit Level', area: '0' } }, spinalAPIMiddleware, profileId);
+            const newFloor = await (0, spinal_env_viewer_context_geographic_service_2.addFloor)(geographicContext, building, info.name);
+            await (0, prepareNodeCreation_1.applyPreparedNode)(newFloor, prepared);
             const resObj = await (0, getNodeData_1.getNodeData)(newFloor, true, true);
             if (Array.isArray(linkToGroups) && linkToGroups.length > 0) {
                 const linkResult = await (0, linkNodeToGroups_1.linkNodeToGroups)(spinalAPIMiddleware, profileId, newFloor, linkToGroups);

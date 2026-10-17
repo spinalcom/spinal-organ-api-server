@@ -23,6 +23,7 @@
  */
 
 import { z } from 'zod';
+import { prepareNodeCreation } from '../../../../utilities/v2/node/prepareNodeCreation';
 import validate from 'express-zod-safe';
 import type { ISpinalAPIMiddleware } from '../../../../interfaces';
 import type { Express } from 'express';
@@ -43,10 +44,8 @@ import {
   addExtraCatAttrValidation,
 } from '../../../../utilities/v2/requestParse/addExtraAttrValidation';
 import { linkNodeToGroups } from '../../../../utilities/v2/node/linkNodeToGroups';
-import { handleSetAttribute } from '../../../../utilities/v2/node/handleSetAttribute';
-import { handleSetInfo, resolveInfo } from '../../../../utilities/v2/node/handleSetInfo';
 import { loadAndValidateNode } from '../../../../utilities/loadAndValidateNode';
-import { SPINAL_RELATION_LST_PTR_TYPE, SpinalNode } from 'spinal-model-graph';
+import { SPINAL_RELATION_LST_PTR_TYPE } from 'spinal-model-graph';
 import { createErrorMsgItem } from '../../../../utilities/v2/errorHandler/createErrorMsgItem';
 import { EApiErrorType } from '../../../../utilities/v2/errorHandler/EApiErrorType';
 import { sendResponseError } from '../../../../utilities/v2/errorHandler/sendResponseError';
@@ -232,12 +231,8 @@ module.exports = function (
           }
         }
 
-        const newEquipment = new SpinalNode(
-          info.name,
-          EQUIPMENT_TYPE,
-          undefined
-        );
-        const resolvedInfo = await resolveInfo(info, spinalAPIMiddleware, profileId);
+        const newEquipment = await prepareNodeCreation(info.name, EQUIPMENT_TYPE, info,
+          undefined, attributes, undefined, spinalAPIMiddleware, profileId);
         if (isRefObject) {
           await parentNode.addChild(
             newEquipment,
@@ -252,8 +247,6 @@ module.exports = function (
             geographicContext
           );
         }
-        await handleSetAttribute(newEquipment, attributes, undefined);
-        await handleSetInfo(newEquipment, resolvedInfo);
 
         const resObj = await getNodeData(newEquipment, true, true);
 

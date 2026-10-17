@@ -27,7 +27,8 @@ import validate from 'express-zod-safe';
 import type { ISpinalAPIMiddleware } from '../../../../interfaces';
 import type { Express } from 'express';
 import { getProfileId } from '../../../../utilities/requestUtilities';
-import { addBuilding } from 'spinal-env-viewer-context-geographic-service';
+import { addBuilding, BUILDING_TYPE } from 'spinal-env-viewer-context-geographic-service';
+import { prepareNodeCreation, applyPreparedNode } from '../../../../utilities/v2/node/prepareNodeCreation';
 import { getNodeData } from '../../../../utilities/v2/node/getNodeData';
 import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
 import { addExtraInfoValidation } from '../../../../utilities/v2/requestParse/addExtraInfoValidation';
@@ -35,8 +36,6 @@ import {
   addExtraAttrValidation,
   addExtraCatAttrValidation,
 } from '../../../../utilities/v2/requestParse/addExtraAttrValidation';
-import { handleSetAttribute } from '../../../../utilities/v2/node/handleSetAttribute';
-import { handleSetInfo, resolveInfo } from '../../../../utilities/v2/node/handleSetInfo';
 import { EApiErrorType } from '../../../../utilities/v2/errorHandler/EApiErrorType';
 import { createErrorMsgItem } from '../../../../utilities/v2/errorHandler/createErrorMsgItem';
 import { sendResponseError } from '../../../../utilities/v2/errorHandler/sendResponseError';
@@ -152,21 +151,16 @@ module.exports = function (
             'A building already exists'
           );
         const { info, attributes } = req.body;
-        const resolvedInfo = await resolveInfo(info, spinalAPIMiddleware, profileId);
+        const prepared = await prepareNodeCreation(info.name, BUILDING_TYPE, info, undefined, attributes, {
+          'Spinal Building Information': { Adresse: 'To configure' },
+          Spatial: { area: '0' },
+        }, spinalAPIMiddleware, profileId);
         const newBuilding = await addBuilding(
           geographicContext,
           geographicContext,
           info.name
         );
-        await handleSetAttribute(newBuilding, attributes, {
-          'Spinal Building Information': {
-            Adresse: 'To configure',
-          },
-          Spatial: {
-            area: '0',
-          },
-        });
-        await handleSetInfo(newBuilding, resolvedInfo);
+        await applyPreparedNode(newBuilding, prepared);
         const resObj = await getNodeData(newBuilding, true, true);
         return res.status(201).json({ data: resObj });
       } catch (error: any) {

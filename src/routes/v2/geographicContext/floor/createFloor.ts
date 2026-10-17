@@ -23,6 +23,8 @@
  */
 
 import { z } from 'zod';
+import { FLOOR_TYPE } from 'spinal-env-viewer-context-geographic-service';
+import { prepareNodeCreation, applyPreparedNode } from '../../../../utilities/v2/node/prepareNodeCreation';
 import validate from 'express-zod-safe';
 import type { ISpinalAPIMiddleware } from '../../../../interfaces';
 import type { Express } from 'express';
@@ -35,8 +37,6 @@ import {
   addExtraCatAttrValidation,
 } from '../../../../utilities/v2/requestParse/addExtraAttrValidation';
 import { linkNodeToGroups } from '../../../../utilities/v2/node/linkNodeToGroups';
-import { handleSetAttribute } from '../../../../utilities/v2/node/handleSetAttribute';
-import { handleSetInfo, resolveInfo } from '../../../../utilities/v2/node/handleSetInfo';
 import { getProfileId } from '../../../../utilities/requestUtilities';
 import { getNodeData } from '../../../../utilities/v2/node/getNodeData';
 import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
@@ -175,15 +175,10 @@ module.exports = function (
           }
         }
 
-        const resolvedInfo = await resolveInfo(info, spinalAPIMiddleware, profileId);
+        const prepared = await prepareNodeCreation(info.name, FLOOR_TYPE, info, undefined, attributes,
+          { Spatial: { category: 'Revit Level', area: '0' } }, spinalAPIMiddleware, profileId);
         const newFloor = await addFloor(geographicContext, building, info.name);
-        await handleSetAttribute(newFloor, attributes, {
-          Spatial: {
-            category: 'Revit Level',
-            area: '0',
-          },
-        });
-        await handleSetInfo(newFloor, resolvedInfo);
+        await applyPreparedNode(newFloor, prepared);
 
         const resObj = await getNodeData(newFloor, true, true);
 

@@ -23,6 +23,8 @@
  */
 
 import { z } from 'zod';
+import { ROOM_TYPE } from 'spinal-env-viewer-context-geographic-service';
+import { prepareNodeCreation, applyPreparedNode } from '../../../../utilities/v2/node/prepareNodeCreation';
 import validate from 'express-zod-safe';
 import type { Express } from 'express';
 import { getProfileId } from '../../../../utilities/requestUtilities';
@@ -38,8 +40,6 @@ import {
   addExtraCatAttrValidation,
 } from '../../../../utilities/v2/requestParse/addExtraAttrValidation';
 import { linkNodeToGroups } from '../../../../utilities/v2/node/linkNodeToGroups';
-import { handleSetAttribute } from '../../../../utilities/v2/node/handleSetAttribute';
-import { handleSetInfo, resolveInfo } from '../../../../utilities/v2/node/handleSetInfo';
 import { getNodeData } from '../../../../utilities/v2/node/getNodeData';
 import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
 import { addExtraInfoValidation } from '../../../../utilities/v2/requestParse/addExtraInfoValidation';
@@ -190,15 +190,10 @@ module.exports = function (
           }
         }
 
-        const resolvedInfo = await resolveInfo(info, spinalAPIMiddleware, profileId);
+        const prepared = await prepareNodeCreation(info.name, ROOM_TYPE, info, undefined, attributes,
+          { Spatial: { area: '0', category: 'Revit Pièces' } }, spinalAPIMiddleware, profileId);
         const newRoom = await addRoom(geographicContext, floorNode, info.name);
-        await handleSetAttribute(newRoom, attributes, {
-          Spatial: {
-            area: '0',
-            category: 'Revit Pièces',
-          },
-        });
-        await handleSetInfo(newRoom, resolvedInfo);
+        await applyPreparedNode(newRoom, prepared);
 
         const resObj = await getNodeData(newRoom, true, true);
 

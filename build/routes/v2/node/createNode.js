@@ -32,13 +32,12 @@ const spinal_model_graph_1 = require("spinal-model-graph");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
 const addExtraInfoValidation_1 = require("../../../utilities/v2/requestParse/addExtraInfoValidation");
-const handleSetInfo_1 = require("../../../utilities/v2/node/handleSetInfo");
-const handleSetAttribute_1 = require("../../../utilities/v2/node/handleSetAttribute");
 const getNodeData_1 = require("../../../utilities/v2/node/getNodeData");
 const createErrorMsgItem_1 = require("../../../utilities/v2/errorHandler/createErrorMsgItem");
 const EApiErrorType_1 = require("../../../utilities/v2/errorHandler/EApiErrorType");
 const sendResponseError_1 = require("../../../utilities/v2/errorHandler/sendResponseError");
 const createElement_1 = require("../../../utilities/v2/node/createElement");
+const prepareNodeCreation_1 = require("../../../utilities/v2/node/prepareNodeCreation");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -64,7 +63,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - Values may be strings, finite numbers, booleans, nested objects or arrays. `null` is not supported.
      *       - Object keys must not start with `_` or shadow Model members (for example `get`, `set`, `constructor`, `model_id`).
      *       - Use `{ "$modelRef": 789012, "path": "info.name" }` to share a Model from an existing SpinalNode. References work in nested objects and arrays.
-     *       - A reference object must contain exactly `$modelRef` (a positive safe integer node ID) and `path`. `$modelRef` is reserved, and cannot be a field on the root element.
+     *       - Use `{ "$modelRef": "self", "path": "info.unit" }` to share a Model from the node being created. Forward references work regardless of field order, including across info and element. `attr.Category.Label` can target supplied or default attribute values.
+     *       - Self references do not load a node by dynamic ID. Missing self paths, circular dependencies and embedding an ancestor into itself return HTTP 400 before parent attachment.
+     *       - A reference object must contain exactly `$modelRef` (a positive safe integer node ID or `"self"`) and `path`. `$modelRef` is reserved, and cannot be a field on the root element.
      *       - **The current profile must have access to the target SpinalNode specified by `$modelRef`.**
      *       - Paths support `info.name`, `info.metadata.unit`, `element.samples.0`, and `attr.Category.Label` (the attribute value Model). `element` selects the whole element Model. `info`, `info.id`, `info.staticId` and descendants of these ID fields are forbidden to prevent sharing the node ID. Missing or invalid paths return HTTP 400; nested pointers are not traversed.
      *       - Referenced Models are assigned directly as attributes, not copied or wrapped in additional pointers. Each target node is loaded once per object creation; repeated node/path pairs share the same Model.
@@ -131,6 +132,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               value: 21.5
      *               unit: Celsius
      *               enabled: true
+     *               code:
+     *                 $modelRef: "self"
+     *                 path: attr.Technical.Code
      *               device:
      *                 $modelRef: 789012
      *                 path: info.name
@@ -210,12 +214,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
         try {
             const { info, attributes, parents, element: elementRequest } = req.body;
             const profileId = (0, requestUtilities_1.getProfileId)(req);
-            const element = elementRequest === undefined
-                ? undefined
-                : await (0, createElement_1.createElement)(elementRequest, spinalAPIMiddleware, profileId);
-            const node = new spinal_model_graph_1.SpinalNode(info.name, info.type, element);
-            await (0, handleSetInfo_1.handleSetInfo)(node, info, spinalAPIMiddleware, profileId);
-            await (0, handleSetAttribute_1.handleSetAttribute)(node, attributes);
+            const node = await (0, prepareNodeCreation_1.prepareNodeCreation)(info.name, info.type, info, elementRequest, attributes, undefined, spinalAPIMiddleware, profileId);
             const errors = [];
             let attached = false;
             for (const [index, parent] of parents.entries()) {

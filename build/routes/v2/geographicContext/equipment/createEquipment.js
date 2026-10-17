@@ -27,6 +27,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const zod_1 = require("zod");
+const prepareNodeCreation_1 = require("../../../../utilities/v2/node/prepareNodeCreation");
 const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
 const requestUtilities_1 = require("../../../../utilities/requestUtilities");
 const spinal_env_viewer_context_geographic_service_1 = require("spinal-env-viewer-context-geographic-service");
@@ -35,8 +36,6 @@ const getBuilding_1 = require("../../../../utilities/v2/geographicContext/getBui
 const addExtraInfoValidation_1 = require("../../../../utilities/v2/requestParse/addExtraInfoValidation");
 const addExtraAttrValidation_1 = require("../../../../utilities/v2/requestParse/addExtraAttrValidation");
 const linkNodeToGroups_1 = require("../../../../utilities/v2/node/linkNodeToGroups");
-const handleSetAttribute_1 = require("../../../../utilities/v2/node/handleSetAttribute");
-const handleSetInfo_1 = require("../../../../utilities/v2/node/handleSetInfo");
 const loadAndValidateNode_1 = require("../../../../utilities/loadAndValidateNode");
 const spinal_model_graph_1 = require("spinal-model-graph");
 const createErrorMsgItem_1 = require("../../../../utilities/v2/errorHandler/createErrorMsgItem");
@@ -181,16 +180,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'An equipment with the same name already exists');
                 }
             }
-            const newEquipment = new spinal_model_graph_1.SpinalNode(info.name, spinal_env_viewer_context_geographic_service_1.EQUIPMENT_TYPE, undefined);
-            const resolvedInfo = await (0, handleSetInfo_1.resolveInfo)(info, spinalAPIMiddleware, profileId);
+            const newEquipment = await (0, prepareNodeCreation_1.prepareNodeCreation)(info.name, spinal_env_viewer_context_geographic_service_1.EQUIPMENT_TYPE, info, undefined, attributes, undefined, spinalAPIMiddleware, profileId);
             if (isRefObject) {
                 await parentNode.addChild(newEquipment, relationParentToChild, spinal_model_graph_1.SPINAL_RELATION_LST_PTR_TYPE);
             }
             else {
                 await parentNode.addChildInContext(newEquipment, relationParentToChild, spinal_model_graph_1.SPINAL_RELATION_LST_PTR_TYPE, geographicContext);
             }
-            await (0, handleSetAttribute_1.handleSetAttribute)(newEquipment, attributes, undefined);
-            await (0, handleSetInfo_1.handleSetInfo)(newEquipment, resolvedInfo);
             const resObj = await (0, getNodeData_1.getNodeData)(newEquipment, true, true);
             if (Array.isArray(linkToGroups) && linkToGroups.length > 0) {
                 const linkResult = await (0, linkNodeToGroups_1.linkNodeToGroups)(spinalAPIMiddleware, profileId, newEquipment, linkToGroups);

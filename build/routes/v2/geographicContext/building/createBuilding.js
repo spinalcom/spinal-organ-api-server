@@ -30,12 +30,11 @@ const zod_1 = require("zod");
 const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
 const requestUtilities_1 = require("../../../../utilities/requestUtilities");
 const spinal_env_viewer_context_geographic_service_1 = require("spinal-env-viewer-context-geographic-service");
+const prepareNodeCreation_1 = require("../../../../utilities/v2/node/prepareNodeCreation");
 const getNodeData_1 = require("../../../../utilities/v2/node/getNodeData");
 const getBuilding_1 = require("../../../../utilities/v2/geographicContext/getBuilding");
 const addExtraInfoValidation_1 = require("../../../../utilities/v2/requestParse/addExtraInfoValidation");
 const addExtraAttrValidation_1 = require("../../../../utilities/v2/requestParse/addExtraAttrValidation");
-const handleSetAttribute_1 = require("../../../../utilities/v2/node/handleSetAttribute");
-const handleSetInfo_1 = require("../../../../utilities/v2/node/handleSetInfo");
 const EApiErrorType_1 = require("../../../../utilities/v2/errorHandler/EApiErrorType");
 const createErrorMsgItem_1 = require("../../../../utilities/v2/errorHandler/createErrorMsgItem");
 const sendResponseError_1 = require("../../../../utilities/v2/errorHandler/sendResponseError");
@@ -130,17 +129,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (buildingOld)
                 throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'A building already exists');
             const { info, attributes } = req.body;
-            const resolvedInfo = await (0, handleSetInfo_1.resolveInfo)(info, spinalAPIMiddleware, profileId);
+            const prepared = await (0, prepareNodeCreation_1.prepareNodeCreation)(info.name, spinal_env_viewer_context_geographic_service_1.BUILDING_TYPE, info, undefined, attributes, {
+                'Spinal Building Information': { Adresse: 'To configure' },
+                Spatial: { area: '0' },
+            }, spinalAPIMiddleware, profileId);
             const newBuilding = await (0, spinal_env_viewer_context_geographic_service_1.addBuilding)(geographicContext, geographicContext, info.name);
-            await (0, handleSetAttribute_1.handleSetAttribute)(newBuilding, attributes, {
-                'Spinal Building Information': {
-                    Adresse: 'To configure',
-                },
-                Spatial: {
-                    area: '0',
-                },
-            });
-            await (0, handleSetInfo_1.handleSetInfo)(newBuilding, resolvedInfo);
+            await (0, prepareNodeCreation_1.applyPreparedNode)(newBuilding, prepared);
             const resObj = await (0, getNodeData_1.getNodeData)(newBuilding, true, true);
             return res.status(201).json({ data: resObj });
         }

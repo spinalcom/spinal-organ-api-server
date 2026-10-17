@@ -67,6 +67,78 @@ describe("POST /api/v2/node", () => {
     expect(await node.getElement(true)).to.equal(undefined);
   });
 
+  it("resolves self references across info and element independently of field order", async () => {
+    const response = await request(fixture.app).post("/api/v2/node").send({
+      ...body(),
+      info: {
+        ...body().info,
+        fromElement: { $modelRef: "self", path: "element.samples.1.value" },
+        alias: { $modelRef: "self", path: "info.unit" },
+        code: { $modelRef: "self", path: "attr.Technical.Code" },
+        unit: "Celsius",
+      },
+      element: {
+        unit: { $modelRef: "self", path: "info.alias" },
+        first: { $modelRef: "self", path: "element.samples.1" },
+        samples: [0, { value: 42 }],
+      },
+      attributes: { Technical: { Code: "001" } },
+    }).expect(201);
+    expect(response.body.data.info.fromElement).to.equal(42);
+    expect(response.body.data.info.alias).to.equal("Celsius");
+    const [node] = await fixture.room.getChildren("hasSensor");
+    const element = await node.getElement(true);
+    expect(node.info.alias).to.equal(node.info.unit);
+    expect(element.unit).to.equal(node.info.unit);
+    expect(element.first).to.equal(element.samples[1]);
+    expect(node.info.fromElement).to.equal(element.samples[1].value);
+    const [category] = await node.getChildren(NODE_TO_CATEGORY_RELATION);
+    expect(node.info.code).to.equal((await category.getElement(true))[0].value);
+    node.info.unit.set("Kelvin");
+    expect(element.unit.get()).to.equal("Kelvin");
+    expect(fixture.loads).to.deep.equal([fixture.room._server_id]);
+  });
+
+  it("supports forward paths through aliases and repeated self references in arrays", async () => {
+    await request(fixture.app).post("/api/v2/node").send({
+      ...body(), element: {
+        value: { $modelRef: "self", path: "element.alias.nested.value" },
+        alias: { $modelRef: "self", path: "element.source" },
+        repeats: [{ $modelRef: "self", path: "element.source" }, { $modelRef: "self", path: "element.source" }],
+        source: { nested: { value: false } },
+      },
+    }).expect(201);
+    const [node] = await fixture.room.getChildren("hasSensor");
+    const element = await node.getElement(true);
+    expect(element.value).to.equal(element.source.nested.value);
+    expect(element.alias).to.equal(element.source);
+    expect(element.repeats[0]).to.equal(element.source);
+    expect(element.repeats[1]).to.equal(element.source);
+  });
+
+  it("rejects self cycles, ancestor embedding and missing paths before attachment", async () => {
+    for (const element of [
+      { a: { $modelRef: "self", path: "element.a" } },
+      { a: { $modelRef: "self", path: "element.b" }, b: { $modelRef: "self", path: "element.a" } },
+      { nested: { parent: { $modelRef: "self", path: "element" } } },
+      { nested: { parent: { $modelRef: "self", path: "element.nested" } } },
+      { a: { $modelRef: "self", path: "element.missing" } },
+      { a: { $modelRef: "self", path: "attr.Missing.Code" } },
+      { a: { $modelRef: "self", path: "info.id" } },
+    ]) {
+      const response = await request(fixture.app).post("/api/v2/node").send({
+        ...body(), element,
+      }).expect(400);
+      expect(response.body).not.to.have.property("data");
+    }
+    await request(fixture.app).post("/api/v2/node").send({
+      ...body(), info: { ...body().info, a: { $modelRef: "self", path: "element.a" } },
+      element: { a: { $modelRef: "self", path: "info.a" } },
+    }).expect(400);
+    expect(await fixture.room.getChildren("hasSensor")).to.deep.equal([]);
+    expect(fixture.loads).to.deep.equal([]);
+  });
+
   it("rejects node ID reference paths in both info and element before loading targets", async () => {
     const originalId = fixture.room.getId().get();
     for (const path of ["info", "info.id", "info.staticId", "info.id.value", "info.staticId.value"]) {

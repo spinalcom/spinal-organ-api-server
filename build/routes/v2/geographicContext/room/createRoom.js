@@ -27,14 +27,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const zod_1 = require("zod");
+const spinal_env_viewer_context_geographic_service_1 = require("spinal-env-viewer-context-geographic-service");
+const prepareNodeCreation_1 = require("../../../../utilities/v2/node/prepareNodeCreation");
 const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
 const requestUtilities_1 = require("../../../../utilities/requestUtilities");
-const spinal_env_viewer_context_geographic_service_1 = require("spinal-env-viewer-context-geographic-service");
+const spinal_env_viewer_context_geographic_service_2 = require("spinal-env-viewer-context-geographic-service");
 const loadAndValidateNode_1 = require("../../../../utilities/loadAndValidateNode");
 const addExtraAttrValidation_1 = require("../../../../utilities/v2/requestParse/addExtraAttrValidation");
 const linkNodeToGroups_1 = require("../../../../utilities/v2/node/linkNodeToGroups");
-const handleSetAttribute_1 = require("../../../../utilities/v2/node/handleSetAttribute");
-const handleSetInfo_1 = require("../../../../utilities/v2/node/handleSetInfo");
 const getNodeData_1 = require("../../../../utilities/v2/node/getNodeData");
 const getBuilding_1 = require("../../../../utilities/v2/geographicContext/getBuilding");
 const addExtraInfoValidation_1 = require("../../../../utilities/v2/requestParse/addExtraInfoValidation");
@@ -140,22 +140,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             if (!building)
                 throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'No building found in database');
             const { dynamicFloorId, info, attributes, linkToGroups } = req.body;
-            const floorNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, dynamicFloorId, profileId, spinal_env_viewer_context_geographic_service_1.FLOOR_TYPE);
-            const oldRooms = await floorNode.getChildrenInContext(geographicContext, spinal_env_viewer_context_geographic_service_1.ROOM_RELATION);
+            const floorNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, dynamicFloorId, profileId, spinal_env_viewer_context_geographic_service_2.FLOOR_TYPE);
+            const oldRooms = await floorNode.getChildrenInContext(geographicContext, spinal_env_viewer_context_geographic_service_2.ROOM_RELATION);
             for (const oldRoom of oldRooms) {
                 if (oldRoom.info.name.get() === info.name) {
                     throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'A room with the same name already exists');
                 }
             }
-            const resolvedInfo = await (0, handleSetInfo_1.resolveInfo)(info, spinalAPIMiddleware, profileId);
-            const newRoom = await (0, spinal_env_viewer_context_geographic_service_1.addRoom)(geographicContext, floorNode, info.name);
-            await (0, handleSetAttribute_1.handleSetAttribute)(newRoom, attributes, {
-                Spatial: {
-                    area: '0',
-                    category: 'Revit Pièces',
-                },
-            });
-            await (0, handleSetInfo_1.handleSetInfo)(newRoom, resolvedInfo);
+            const prepared = await (0, prepareNodeCreation_1.prepareNodeCreation)(info.name, spinal_env_viewer_context_geographic_service_1.ROOM_TYPE, info, undefined, attributes, { Spatial: { area: '0', category: 'Revit Pièces' } }, spinalAPIMiddleware, profileId);
+            const newRoom = await (0, spinal_env_viewer_context_geographic_service_2.addRoom)(geographicContext, floorNode, info.name);
+            await (0, prepareNodeCreation_1.applyPreparedNode)(newRoom, prepared);
             const resObj = await (0, getNodeData_1.getNodeData)(newRoom, true, true);
             if (Array.isArray(linkToGroups) && linkToGroups.length > 0) {
                 const linkResult = await (0, linkNodeToGroups_1.linkNodeToGroups)(spinalAPIMiddleware, profileId, newRoom, linkToGroups);

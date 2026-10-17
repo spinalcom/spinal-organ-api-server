@@ -21,6 +21,54 @@ describe('v2 geographic node POST routes', () => {
 
   for (const kind of ['building', 'floor', 'room', 'equipment'] as const) {
     describe(`POST /api/v2/${kind}`, () => {
+      it('supports forward self references and shares categorized attribute values', async () => {
+        if (kind === 'building') await fixture.removeBuilding();
+        const payload = body(kind);
+        const response = await request(fixture.app).post(`/api/v2/${kind}`).send({
+          ...payload, info: {
+            ...payload.info,
+            alias: { $modelRef: 'self', path: 'info.later' },
+            code: { $modelRef: 'self', path: 'attr.Technical.Code' },
+            later: { value: 42 },
+          }, attributes: { Technical: { Code: '001' } },
+        }).expect(201);
+        expect(response.body.data.info.alias).to.deep.equal({ value: 42 });
+        const created = await fixture.middleware.load<import('spinal-model-graph').SpinalNode>(
+          response.body.data.dynamicId, fixture.profileId);
+        expect(created.info.alias).to.equal(created.info.later);
+        created.info.code.set('002');
+        const { getNodeData } = await import('../../src/utilities/v2/node/getNodeData');
+        expect((await getNodeData(created, true, true)).attributes!.Technical.Code).to.equal('002');
+      });
+
+      it('rejects circular self info before attaching geographic nodes', async () => {
+        if (kind === 'building') await fixture.removeBuilding();
+        const parent = { building: fixture.context, floor: fixture.building, room: fixture.floor, equipment: fixture.room }[kind];
+        const before = await parent.getChildren();
+        const payload = body(kind);
+        await request(fixture.app).post(`/api/v2/${kind}`).send({
+          ...payload, info: {
+            ...payload.info,
+            a: { $modelRef: 'self', path: 'info.b' },
+            b: { $modelRef: 'self', path: 'info.a' },
+          },
+        }).expect(400);
+        expect(await parent.getChildren()).to.deep.equal(before);
+      });
+
+      if (kind !== 'equipment') {
+        it('can reference default categorized values using self', async () => {
+          if (kind === 'building') await fixture.removeBuilding();
+          const payload = body(kind);
+          const response = await request(fixture.app).post(`/api/v2/${kind}`).send({
+            ...payload, info: {
+              ...payload.info, defaultArea: { $modelRef: 'self', path: 'attr.Spatial.area' },
+            },
+          }).expect(201);
+          expect(response.body.data.info.defaultArea).to.equal('0');
+          expect(response.body.data.attributes.Spatial.area).to.equal('0');
+        });
+      }
       it('supports nested info and model references', async () => {
         if (kind === 'building') await fixture.removeBuilding();
         const shared = new Model({ value: 42 });

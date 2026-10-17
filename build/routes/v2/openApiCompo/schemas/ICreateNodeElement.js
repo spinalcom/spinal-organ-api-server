@@ -30,6 +30,8 @@
  *       description: |-
  *         Create a generic Model from this object. The node retains its element pointer.
  *         Nested values can reference a Model on an existing SpinalNode with `{ "$modelRef": 789012, "path": "info.name" }`.
+ *         Use `{ "$modelRef": "self", "path": "info.unit" }` to share a Model from the node being created. Forward references work across info and element regardless of field order; self attribute paths can target supplied or default categorized values.
+ *         Missing self paths, circular dependencies and ancestor embedding return HTTP 400 before attachment. Self does not load a node by dynamic ID.
  *         **The current profile must have access to the target SpinalNode specified by `$modelRef`.**
  *         References are loaded using the current profile and assigned directly as Model attributes, not copied or wrapped in additional pointers.
  *         Keys must not start with an underscore, shadow Model members, or equal `$modelRef` on an ordinary object.
@@ -53,10 +55,13 @@
  *       required: [$modelRef, path]
  *       properties:
  *         $modelRef:
- *           type: integer
- *           minimum: 1
- *           maximum: 9007199254740991
- *           description: Dynamic ID of an existing SpinalNode. The current profile must have access to this target node.
+ *           oneOf:
+ *             - type: integer
+ *               minimum: 1
+ *               maximum: 9007199254740991
+ *             - type: string
+ *               enum: [self]
+ *           description: Dynamic ID of an existing SpinalNode accessible to the current profile, or "self" for the node being created. Self references resolve in memory and do not require a dynamic ID.
  *         path:
  *           type: string
  *           description: |-

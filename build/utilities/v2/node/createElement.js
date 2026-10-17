@@ -44,7 +44,7 @@ exports.elementValue = zod_1.z.lazy(() => zod_1.z.union([
     zod_1.z.array(exports.elementValue),
     zod_1.z.preprocess(rejectPrototypeKey, zod_1.z.union([
         zod_1.z.strictObject({
-            $modelRef: zod_1.z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
+            $modelRef: zod_1.z.union([zod_1.z.number().int().min(1).max(Number.MAX_SAFE_INTEGER), zod_1.z.literal("self")]),
             path: zod_1.z.string().refine(resolveModelReference_1.isModelReferencePath, "Invalid $modelRef path"),
         }),
         exports.elementObject,
@@ -65,23 +65,41 @@ function rejectPrototypeKey(data, ctx) {
     return data;
 }
 exports.elementObject = zod_1.z.preprocess(rejectPrototypeKey, zod_1.z.record(exports.elementKey, exports.elementValue));
-async function createElement(data, middleware, profileId) {
+async function createElement(data, middleware, profileId, self, build) {
     const nodes = new Map();
     const references = new Map();
-    async function resolve(value) {
+    async function resolve(value, path = []) {
+        if (build) {
+            return build(value, path, async () => {
+                const result = await resolveUncached(value, path);
+                if (result instanceof spinal_core_connectorjs_1.Model)
+                    return result;
+                const wrapper = new spinal_core_connectorjs_1.Model();
+                wrapper.add_attr("value", result);
+                return wrapper.value;
+            });
+        }
+        return resolveUncached(value, path);
+    }
+    async function resolveUncached(value, path) {
         if (Array.isArray(value)) {
             const result = [];
-            for (const item of value)
-                result.push(await resolve(item));
+            for (const [index, item] of value.entries())
+                result.push(await resolve(item, [...path, String(index)]));
             return result;
         }
         if (typeof value !== "object")
             return value;
         if (Object.hasOwn(value, "$modelRef") &&
-            typeof value.$modelRef === "number") {
+            (typeof value.$modelRef === "number" || value.$modelRef === "self")) {
             const id = value.$modelRef;
             if (typeof value.path !== "string" || !(0, resolveModelReference_1.isModelReferencePath)(value.path)) {
                 throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, "Invalid $modelRef path");
+            }
+            if (id === "self") {
+                if (!self)
+                    throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, "Self reference is unavailable in this creation context");
+                return self(value.path);
             }
             const key = JSON.stringify([id, value.path]);
             const cached = references.get(key);
@@ -107,12 +125,12 @@ async function createElement(data, middleware, profileId) {
             references.set(key, model);
             return model;
         }
-        return createObject(value);
+        return createObject(value, path);
     }
-    async function createObject(value) {
+    async function createObject(value, path = []) {
         const model = new spinal_core_connectorjs_1.Model();
         for (const [key, item] of Object.entries(value)) {
-            model.add_attr(key, await resolve(item));
+            model.add_attr(key, await resolve(item, [...path, key]));
         }
         return model;
     }
