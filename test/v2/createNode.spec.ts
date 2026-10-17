@@ -67,12 +67,27 @@ describe("POST /api/v2/node", () => {
     expect(await node.getElement(true)).to.equal(undefined);
   });
 
+  it("rejects node ID reference paths in both info and element before loading targets", async () => {
+    const originalId = fixture.room.getId().get();
+    for (const path of ["info", "info.id", "info.staticId", "info.id.value", "info.staticId.value"]) {
+      const reference = { $modelRef: fixture.room._server_id, path };
+      for (const data of [
+        { ...body(), element: { reference } },
+        { ...body(), info: { ...body().info, reference } },
+      ]) {
+        await request(fixture.app).post("/api/v2/node").send(data).expect(400);
+      }
+    }
+    expect(fixture.loads).to.deep.equal([]);
+    expect(fixture.room.getId().get()).to.equal(originalId);
+    expect(await fixture.room.getChildren("hasSensor")).to.deep.equal([]);
+  });
+
   it("shares different info paths from the same target without confusing cached references", async () => {
     await request(fixture.app).post("/api/v2/node").send({
       ...body(), element: {
         name: { $modelRef: fixture.room._server_id, path: "info.name" },
         type: { $modelRef: fixture.room._server_id, path: "info.type" },
-        id: { $modelRef: fixture.room._server_id, path: "info.staticId" },
         again: { $modelRef: fixture.room._server_id, path: "info.name" },
       },
     }).expect(201);
@@ -80,7 +95,6 @@ describe("POST /api/v2/node", () => {
     const element = await created.getElement(true);
     expect(element.name).to.equal(fixture.room.info.name);
     expect(element.type).to.equal(fixture.room.info.type);
-    expect(element.id).to.equal(fixture.room.info.id);
     expect(element.again).to.equal(element.name);
     expect(fixture.loads).to.deep.equal([fixture.room._server_id, fixture.room._server_id]);
     element.name.set("Updated room");
@@ -289,11 +303,11 @@ describe("POST /api/v2/node", () => {
       .post("/api/v2/node")
       .send({
         ...body(),
-        element: { device: { $modelRef: fixture.equipment._server_id, path: "info" } },
+        element: { device: { $modelRef: fixture.equipment._server_id, path: "info.name" } },
       })
       .expect(201);
     const [node] = await fixture.room.getChildren("hasSensor");
-    expect((await node.getElement(true)).device).to.equal(fixture.equipment.info);
+    expect((await node.getElement(true)).device).to.equal(fixture.equipment.info.name);
   });
 
   it("resolves nested and array references once per ID, preserving Model identity", async () => {

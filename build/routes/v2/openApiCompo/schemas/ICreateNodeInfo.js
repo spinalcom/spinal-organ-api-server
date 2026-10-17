@@ -31,7 +31,7 @@
  *         Information about the node to create. Additional scalar, object and array
  *         fields are accepted, including nested { "$modelRef": nodeDynamicId, "path": "info.name" } references.
  *         The current profile must have access to the target SpinalNode specified by $modelRef.
- *         Paths support info, element and attr.Category.Label (the attribute value Model); references share the selected Model. Missing or invalid paths return HTTP 400.
+ *         Paths support info fields, element and attr.Category.Label (the attribute value Model); references share the selected Model. The whole info Model, info.id, info.staticId and descendants of those ID fields are forbidden. Missing or invalid paths return HTTP 400.
  *         Null and reserved Model member names are not supported.
  *         Info keys starting with `_` are forbidden at every nesting level, including objects inside arrays; invalid keys return HTTP 400.
  *         IDs and node type are assigned by the server;

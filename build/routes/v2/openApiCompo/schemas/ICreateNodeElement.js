@@ -60,8 +60,9 @@
  *         path:
  *           type: string
  *           description: |-
- *             Model to share from the target node. Supports `info` or `info.name`, nested paths like `info.metadata.unit`, `element` or `element.samples.0`, and `attr.Category.Label` for the categorized attribute's value Model.
- *             `info.staticId` aliases `info.id`. Paths are case-sensitive, limited to 32 segments, and cannot traverse internal members or nested pointers.
+ *             Model to share from the target node. Supports `info.name`, nested paths like `info.metadata.unit`, `element` or `element.samples.0`, and `attr.Category.Label` for the categorized attribute's value Model.
+ *             `info.id`, its alias `info.staticId`, and their descendant paths are forbidden. Referencing the whole `info` Model is also forbidden because it contains the node ID. Invalid paths return HTTP 400.
+ *             Paths are case-sensitive, limited to 32 segments, and cannot traverse internal members or nested pointers.
  *             Category and label names containing dots cannot be addressed. Missing elements, categories, attributes or paths return HTTP 400. Resolving a missing element never creates it.
  *             References share the selected Model, not a copy. Repeated node/path pairs share the same resolved instance; each target node is loaded once per object creation.
  *           example: info.name

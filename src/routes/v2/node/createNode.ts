@@ -82,7 +82,7 @@ module.exports = function (
    *       - Use `{ "$modelRef": 789012, "path": "info.name" }` to share a Model from an existing SpinalNode. References work in nested objects and arrays.
    *       - A reference object must contain exactly `$modelRef` (a positive safe integer node ID) and `path`. `$modelRef` is reserved, and cannot be a field on the root element.
    *       - **The current profile must have access to the target SpinalNode specified by `$modelRef`.**
-   *       - Paths support `info.name`, `info.metadata.unit`, `element.samples.0`, and `attr.Category.Label` (the attribute value Model). `info` and `element` select the whole Model. Missing or invalid paths return HTTP 400; nested pointers are not traversed.
+   *       - Paths support `info.name`, `info.metadata.unit`, `element.samples.0`, and `attr.Category.Label` (the attribute value Model). `element` selects the whole element Model. `info`, `info.id`, `info.staticId` and descendants of these ID fields are forbidden to prevent sharing the node ID. Missing or invalid paths return HTTP 400; nested pointers are not traversed.
    *       - Referenced Models are assigned directly as attributes, not copied or wrapped in additional pointers. Each target node is loaded once per object creation; repeated node/path pairs share the same Model.
    *       - The newly created element Model is passed to the SpinalNode constructor, which keeps it behind the node's element pointer.
    *       - All references are validated and loaded before any parent attachment. Invalid or inaccessible references reject the request.

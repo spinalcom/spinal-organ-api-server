@@ -43,7 +43,7 @@ describe('GET /api/v2/node/:nodeId', () => {
     registerCreateNode(null, fixture.app, fixture.middleware);
     const created = await request(fixture.app).post('/api/v2/node').send({
       info: { name: 'Sensor', type: 'sensor' },
-      element: { device: { $modelRef: fixture.equipment._server_id, path: 'info' } },
+      element: { device: { $modelRef: fixture.equipment._server_id, path: 'info.name' } },
       parents: [{ parentDynamicId: fixture.room._server_id, relationName: 'hasSensor' }],
     }).expect(201);
     const response = await request(fixture.app).get(`/api/v2/node/${created.body.data.dynamicId}`)
@@ -113,6 +113,21 @@ describe('GET /api/v2/node/:nodeId', () => {
     const response = await request(fixture.app).get(path).query({ element: 'true', info: 'false' }).expect(200);
     expect(response.body.data.element).to.deep.equal(data);
     expect(response.body.data).not.to.have.property('info');
+  });
+
+  it('only returns registered Model attributes at every element path level', async () => {
+    const element = new Model({ visible: 'public', nested: { visible: 'nested public' } });
+    element.hidden = new Model({ value: 'private' });
+    element.nested.hidden = new Model({ value: 'nested private' });
+    const path = await withElement(element);
+    const all = await request(fixture.app).get(path).query({ element: 'true' }).expect(200);
+    expect(all.body.data.element).to.deep.equal({
+      visible: 'public', nested: { visible: 'nested public' },
+    });
+    const selected = await request(fixture.app).get(path).query({
+      element: 'hidden.value,nested.hidden.value,nested.visible',
+    }).expect(200);
+    expect(selected.body.data.element).to.deep.equal({ nested: { visible: 'nested public' } });
   });
 
   it('selects nested paths and array indexes while preserving structure', async () => {

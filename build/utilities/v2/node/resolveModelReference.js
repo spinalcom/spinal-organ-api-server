@@ -10,6 +10,8 @@ const EApiErrorType_1 = require("../errorHandler/EApiErrorType");
 function isModelReferencePath(path) {
     const parts = path.split('.');
     return parts.length <= 32 &&
+        !(parts[0] === 'info' &&
+            (parts.length === 1 || parts[1] === 'id' || parts[1] === 'staticId')) &&
         parts.every((part) => part.length > 0 && !part.startsWith('_') &&
             part !== 'constructor' && part !== 'prototype' && part !== 'model_id') &&
         (parts[0] === 'info' || parts[0] === 'element' ||
@@ -37,8 +39,6 @@ async function resolveModelReference(node, path) {
         throw invalid();
     }
     let current = root === 'info' ? node.info : await node.getElement(true);
-    if (root === 'info' && parts[0] === 'staticId')
-        parts[0] = 'id';
     for (const key of parts) {
         if (!(current instanceof spinal_core_connectorjs_1.Model) || current instanceof spinal_core_connectorjs_1.Ptr || current instanceof spinal_model_graph_1.SpinalNodePointer) {
             throw invalid();

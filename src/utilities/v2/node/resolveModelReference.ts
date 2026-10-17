@@ -8,6 +8,8 @@ import { EApiErrorType } from '../errorHandler/EApiErrorType';
 export function isModelReferencePath(path: string): boolean {
   const parts = path.split('.');
   return parts.length <= 32 &&
+    !(parts[0] === 'info' &&
+      (parts.length === 1 || parts[1] === 'id' || parts[1] === 'staticId')) &&
     parts.every((part) => part.length > 0 && !part.startsWith('_') &&
       part !== 'constructor' && part !== 'prototype' && part !== 'model_id') &&
     (parts[0] === 'info' || parts[0] === 'element' ||
@@ -36,7 +38,6 @@ export async function resolveModelReference(node: SpinalNode, path: string): Pro
     throw invalid();
   }
   let current: Model | undefined = root === 'info' ? node.info : await node.getElement(true);
-  if (root === 'info' && parts[0] === 'staticId') parts[0] = 'id';
   for (const key of parts) {
     if (!(current instanceof Model) || current instanceof Ptr || current instanceof SpinalNodePointer) {
       throw invalid();
