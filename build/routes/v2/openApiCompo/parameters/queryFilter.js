@@ -4,7 +4,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -66,11 +66,6 @@
  *         - Null and arrays are invalid filter values.
  *         - Strings starting with `{` or `[` are interpreted as JSON operator objects.
  *           Use explicit `eq` to compare literal strings starting with those characters.
- *
- *         #### Swagger UI input testing
- *
- *         Swagger UI will render the filter parameter as a nested object editor. The explicit equality example is equivalent to:
- *         `?filter[info.virtual][eq]=false`
  *       schema:
  *         type: object
  *         additionalProperties:
@@ -87,22 +82,34 @@
  *       examples:
  *         equality:
  *           summary: Explicit equality on a boolean info field
+ *           description: |-
+ *             Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:
+ *             `?filter[info.virtual][eq]=false`
  *           value:
  *             info.virtual:
  *               eq: false
  *         defaultEquality:
  *           summary: Scalar values default to equality
+ *           description: |-
+ *             Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:
+ *             `?filter[info.name][eq]='Room A'&filter[info.virtual][eq]=false`
  *           value:
  *             info.name: 'Room A'
  *             info.virtual: false
  *         range:
  *           summary: Attribute numeric range (AND)
+ *           description: |-
+ *             Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:
+ *             `?filter[attributes.Spatial.area][gte]=20&filter[attributes.Spatial.area][lt]=100`
  *           value:
  *             attributes.Spatial.area:
  *               gte: 20
  *               lt: 100
  *         exists:
  *           summary: Require one field and exclude nodes with another
+ *           description: |-
+ *             Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:
+ *             `?filter[info.bimFileId][exists]=true&filter[attributes.Technical.Code][exists]=false`
  *           value:
  *             info.bimFileId:
  *               exists: true
@@ -110,11 +117,17 @@
  *               exists: false
  *         notEqual:
  *           summary: Exclude a name (missing names do not match)
+ *           description: |-
+ *             Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:
+ *             `?filter[info.name][ne]='Unassigned'`
  *           value:
  *             info.name:
  *               ne: 'Unassigned'
  *         combined:
  *           summary: Combine info, attribute and dynamic ID conditions
+ *           description: |-
+ *             Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:
+ *             `?filter[info.virtual][eq]=false&filter[attributes.Technical.Code][eq]='001'&filter[dynamicId][gt]=1000`
  *           value:
  *             info.virtual: false
  *             attributes.Technical.Code:

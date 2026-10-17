@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -41,9 +41,9 @@ exports.relationsQuerySchema = zod_1.z.strictObject({
         .string()
         .trim()
         .min(1)
-        .refine((value) => value.split(",").every((name) => name.trim().length > 0), "relationName must contain nonempty comma-separated names")
+        .refine((value) => value.split(',').every((name) => name.trim().length > 0), 'relationName must contain nonempty comma-separated names')
         .optional(),
-    relationType: zod_1.z.enum(["PtrLst", "LstPtr", "Ref", "LstPtrLst"]).optional(),
+    relationType: zod_1.z.enum(['PtrLst', 'LstPtr', 'Ref', 'LstPtrLst']).optional(),
     contextDynamicId: zod_1.z.coerce
         .number()
         .int()
@@ -60,7 +60,7 @@ exports.relationsQuerySchema = zod_1.z.strictObject({
         .min(0)
         .max(Number.MAX_SAFE_INTEGER)
         .default(0),
-    "add-attributes-modification-date": zod_1.z.stringbool().optional(),
+    'add-attributes-modification-date': zod_1.z.stringbool().optional(),
 });
 async function listNodeRelations(middleware, profileId, nodeId, query, grouped, direction) {
     const filters = (0, parseFilterQuery_1.parseFilterQuery)(query);
@@ -69,26 +69,26 @@ async function listNodeRelations(middleware, profileId, nodeId, query, grouped, 
     const element = (0, getNodeElement_1.parseElementQuery)(query.element);
     const relationNames = query.relationName === undefined
         ? undefined
-        : new Set(query.relationName.split(",").map((name) => name.trim()));
+        : new Set(query.relationName.split(',').map((name) => name.trim()));
     const source = await (0, loadAndValidateNode_1.loadAndValidateNode)(middleware, nodeId, profileId);
     let context;
     if (query.contextDynamicId !== undefined) {
         const loaded = await (0, loadAndValidateNode_1.loadAndValidateNode)(middleware, query.contextDynamicId, profileId);
         if (!(loaded instanceof spinal_model_graph_1.SpinalContext))
-            throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_LOAD_NODE_TYPE, "contextDynamicId must identify a SpinalContext");
+            throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_LOAD_NODE_TYPE, 'contextDynamicId must identify a SpinalContext');
         context = loaded;
     }
     const metadata = new Map();
     const seen = new Set();
     const accessible = new Map();
     function supportsType(type) {
-        if (type === "LstPtrLst")
+        if (type === 'LstPtrLst')
             console.warn(`[listNodeRelations] Skipping unsupported relation type LstPtrLst on node ${nodeId}`);
-        return (["PtrLst", "LstPtr", "Ref"].includes(type) &&
+        return (['PtrLst', 'LstPtr', 'Ref'].includes(type) &&
             (query.relationType === undefined || query.relationType === type));
     }
     async function* relatedNodes() {
-        if (direction === "parents") {
+        if (direction === 'parents') {
             if (context && !source.belongsToContext(context))
                 return;
             for (const name of source.parents.keys()) {
@@ -106,7 +106,7 @@ async function listNodeRelations(middleware, profileId, nodeId, query, grouped, 
                         continue;
                     const node = await relation.getParent();
                     if (!(node instanceof spinal_model_graph_1.SpinalNode))
-                        throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, "Relation has no valid parent");
+                        throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, 'Relation has no valid parent');
                     if (context && !node.belongsToContext(context))
                         continue;
                     yield { node, relationType: type, relationName: name };
@@ -141,7 +141,7 @@ async function listNodeRelations(middleware, profileId, nodeId, query, grouped, 
             seen.add(id);
             const dynamicId = related.node._server_id;
             if (!dynamicId)
-                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, "Related node has no dynamic ID");
+                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, 'Related node has no dynamic ID');
             let node = accessible.get(dynamicId);
             if (!node) {
                 node = await (0, loadAndValidateNode_1.loadAndValidateNode)(middleware, dynamicId, profileId);
@@ -149,7 +149,7 @@ async function listNodeRelations(middleware, profileId, nodeId, query, grouped, 
             }
             const entry = {
                 node,
-                parentId: direction === "children" ? nodeId : dynamicId,
+                parentId: direction === 'children' ? nodeId : dynamicId,
                 relationType: related.relationType,
                 relationName: related.relationName,
             };
@@ -158,7 +158,7 @@ async function listNodeRelations(middleware, profileId, nodeId, query, grouped, 
         }
     }
     const page = await (0, filterNodes_1.filterNodes)(entries(), filters, query.offset);
-    const items = await Promise.all(page.map(({ node }) => (0, getNodeData_1.getNodeData)(node, info, attributes, query["add-attributes-modification-date"], direction === "children" ? nodeId : undefined, element)));
+    const items = await Promise.all(page.map(({ node }) => (0, getNodeData_1.getNodeData)(node, info, attributes, query['add-attributes-modification-date'], direction === 'children' ? nodeId : undefined, element)));
     if (!grouped)
         return { data: items, offset: query.offset, total: items.length };
     const data = Object.create(null);
@@ -171,7 +171,7 @@ async function listNodeRelations(middleware, profileId, nodeId, query, grouped, 
         data[relationType][relationName].push(items[index]);
     });
     return {
-        ...(direction === "children"
+        ...(direction === 'children'
             ? { parentDynamicId: nodeId }
             : { nodeDynamicId: nodeId }),
         data,

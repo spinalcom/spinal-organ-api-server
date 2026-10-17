@@ -47,16 +47,18 @@ async function getNodeData(node, info, attr, addAttributesModificationDate, pare
 function extractNodeInfo(infoQuery, node) {
     if (infoQuery !== true && infoQuery.length === 0)
         return undefined;
-    const paths = infoQuery === true ? true : infoQuery.map((field) => {
-        const parsed = (0, getNodeElement_1.parseElementQuery)(field);
-        if (!Array.isArray(parsed) || parsed.length !== 1) {
-            throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, 'Invalid info field path');
-        }
-        const path = parsed[0];
-        if (path[0] === 'staticId')
-            path[0] = 'id';
-        return path;
-    });
+    const paths = infoQuery === true
+        ? true
+        : infoQuery.map((field) => {
+            const parsed = (0, getNodeElement_1.parseElementQuery)(field);
+            if (!Array.isArray(parsed) || parsed.length !== 1) {
+                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, 'Invalid info field path');
+            }
+            const path = parsed[0];
+            if (path[0] === 'staticId')
+                path[0] = 'id';
+            return path;
+        });
     const value = (0, getNodeElement_1.serializeModel)(node.info, paths);
     if (!value || typeof value !== 'object' || Array.isArray(value))
         return undefined;

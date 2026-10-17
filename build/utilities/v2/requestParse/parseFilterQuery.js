@@ -152,10 +152,17 @@ function parseFilterQuery(query) {
                 invalidQuery(`Filter ${field}.${operator} requires a finite value`);
             }
             if (operator === 'exists') {
-                if (value !== true && value !== false && value !== 'true' && value !== 'false') {
+                if (value !== true &&
+                    value !== false &&
+                    value !== 'true' &&
+                    value !== 'false') {
                     invalidQuery(`Filter ${field}.exists requires true or false`);
                 }
-                filters.push({ field, operator, value: value === true || value === 'true' });
+                filters.push({
+                    field,
+                    operator,
+                    value: value === true || value === 'true',
+                });
             }
             else if (operator !== 'eq' && operator !== 'ne') {
                 const numericValue = parseFilterNumber(value);

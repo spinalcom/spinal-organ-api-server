@@ -1,19 +1,43 @@
-import { Model, Ptr, Lst } from "spinal-core-connectorjs";
+/*
+ * Copyright 2026 SpinalCom - www.spinalcom.com
+ *
+ * This file is part of SpinalCore.
+ *
+ * Please read all of the following terms and conditions
+ * of the Software license Agreement ("Agreement")
+ * carefully.
+ *
+ * This Agreement is a legally binding contract between
+ * the Licensee (as defined below) and SpinalCom that
+ * sets forth the terms and conditions that govern your
+ * use of the Program. By installing and/or using the
+ * Program, you agree to abide by all the terms and
+ * conditions stated or referenced herein.
+ *
+ * If you do not agree to abide by these terms and
+ * conditions, do not demonstrate your acceptance and do
+ * not install or use the Program.
+ * You should have received a copy of the license along
+ * with this file. If not, see
+ * <http://resources.spinalcom.com/licenses.pdf>.
+ */
+
+import { Model, Ptr, Lst } from 'spinal-core-connectorjs';
 import {
   SpinalNode,
   SpinalNodePointer,
   SPINAL_RELATION_PTR_LST_TYPE,
   SPINAL_RELATION_LST_PTR_TYPE,
   SPINAL_RELATION_TYPE,
-} from "spinal-model-graph";
-import type { ISpinalAPIMiddleware } from "../../../interfaces";
-import { createElement, type ElementValue } from "./createElement";
-import { handleSetAttribute } from "./handleSetAttribute";
-import { handleSetInfo } from "./handleSetInfo";
-import { resolveModelReference } from "./resolveModelReference";
-import { createErrorMsgItem } from "../errorHandler/createErrorMsgItem";
-import { EApiErrorType } from "../errorHandler/EApiErrorType";
-import { NODE_TO_CATEGORY_RELATION } from "spinal-env-viewer-plugin-documentation-service";
+} from 'spinal-model-graph';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import { createElement, type ElementValue } from './createElement';
+import { handleSetAttribute } from './handleSetAttribute';
+import { handleSetInfo } from './handleSetInfo';
+import { resolveModelReference } from './resolveModelReference';
+import { createErrorMsgItem } from '../errorHandler/createErrorMsgItem';
+import { EApiErrorType } from '../errorHandler/EApiErrorType';
+import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 
 export async function prepareNodeCreation(
   name: string,
@@ -46,7 +70,7 @@ export async function prepareNodeCreation(
     const cached = cache.get(key);
     if (cached) return cached;
     if (active.has(key))
-      throw invalid(`Circular self reference at ${path.join(".")}`);
+      throw invalid(`Circular self reference at ${path.join('.')}`);
     active.add(key);
     try {
       const result = await resolve();
@@ -58,15 +82,15 @@ export async function prepareNodeCreation(
   }
 
   async function self(path: string): Promise<Model> {
-    if (path.startsWith("attr.")) return resolveModelReference(node, path);
-    const parts = path.split(".");
+    if (path.startsWith('attr.')) return resolveModelReference(node, path);
+    const parts = path.split('.');
     let value: ElementValue = raw;
     let index = 0;
     for (; index < parts.length; index++) {
       if (
-        typeof value !== "object" ||
+        typeof value !== 'object' ||
         value === null ||
-        Object.hasOwn(value, "$modelRef")
+        Object.hasOwn(value, '$modelRef')
       )
         break;
       const key = parts[index];
@@ -116,7 +140,7 @@ export async function prepareNodeCreation(
   if (element !== undefined) {
     // Use the constructor to preserve the normal element-pointer representation.
     const holder = new SpinalNode(name, type, result.element);
-    node.add_attr("element", holder.element);
+    node.add_attr('element', holder.element);
   }
   return node;
 }
@@ -127,7 +151,7 @@ export async function applyPreparedNode(
 ): Promise<void> {
   const info = new Model();
   for (const key of prepared.info._attribute_names) {
-    if (key !== "id") info.add_attr(key, prepared.info[key]);
+    if (key !== 'id') info.add_attr(key, prepared.info[key]);
   }
   await handleSetInfo(target, info);
   for (const category of await prepared.getChildren(

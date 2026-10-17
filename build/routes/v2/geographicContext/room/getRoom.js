@@ -104,7 +104,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             attributes: zod_1.z.coerce.string().optional(),
             'add-attributes-modification-date': zod_1.z.stringbool().optional(),
             'parent-dynamic-id': zod_1.z.coerce.number().min(1).optional(),
-            filter: zod_1.z.union([zod_1.z.record(zod_1.z.string(), zod_1.z.unknown()), zod_1.z.string()]).optional(),
+            filter: zod_1.z
+                .union([zod_1.z.record(zod_1.z.string(), zod_1.z.unknown()), zod_1.z.string()])
+                .optional(),
             offset: zod_1.z.coerce.number().min(0).optional().default(0),
         }),
     }), async (req, res) => {
@@ -130,7 +132,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                         parentType: `${spinal_env_viewer_context_geographic_service_1.ROOM_TYPE}Group`,
                     },
                 ]);
-                roomFound = roomNodes.map(node => ({ node, parentId: parentDynamicId }));
+                roomFound = roomNodes.map((node) => ({
+                    node,
+                    parentId: parentDynamicId,
+                }));
             }
             else {
                 if (!building) {

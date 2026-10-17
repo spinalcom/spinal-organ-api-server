@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -90,7 +90,7 @@ module.exports = function (logger, app, middleware) {
      *       500:
      *         $ref: '#/components/responses/IErrorItemRes500'
      */
-    app.get("/api/v2/node/:nodeId/parent-relationships", (0, express_zod_safe_1.default)({
+    app.get('/api/v2/node/:nodeId/parent-relationships', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({
             nodeId: zod_1.z.coerce.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
         }),
@@ -99,7 +99,7 @@ module.exports = function (logger, app, middleware) {
         try {
             return res
                 .status(200)
-                .json(await (0, listNodeRelations_1.listNodeRelations)(middleware, (0, requestUtilities_1.getProfileId)(req), req.params.nodeId, req.query, true, "parents"));
+                .json(await (0, listNodeRelations_1.listNodeRelations)(middleware, (0, requestUtilities_1.getProfileId)(req), req.params.nodeId, req.query, true, 'parents'));
         }
         catch (error) {
             (0, sendResponseError_1.sendResponseError)(res, error);

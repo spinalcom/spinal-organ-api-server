@@ -1,4 +1,4 @@
-import type { Patch } from "./schema";
+import type { Patch } from './schema';
 export declare function selectPatchBranches(patch: Patch): {
     selected: {
         info: Set<string>;

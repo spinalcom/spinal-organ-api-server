@@ -16,6 +16,9 @@
  *       schema:
  *         type: string
  *       examples:
+ *         missing:
+ *           summary: --
+ *           value: ''
  *         all:
  *           summary: All attributes in all categories
  *           value: 'true'

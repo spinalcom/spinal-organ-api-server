@@ -1,19 +1,19 @@
 /*
  * Copyright 2026 SpinalCom - www.spinalcom.com
- * 
+ *
  * This file is part of SpinalCore.
- * 
+ *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
- * 
+ *
  * This Agreement is a legally binding contract between
  * the Licensee (as defined below) and SpinalCom that
  * sets forth the terms and conditions that govern your
  * use of the Program. By installing and/or using the
  * Program, you agree to abide by all the terms and
  * conditions stated or referenced herein.
- * 
+ *
  * If you do not agree to abide by these terms and
  * conditions, do not demonstrate your acceptance and do
  * not install or use the Program.
@@ -22,12 +22,12 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { SpinalContext } from "spinal-model-graph";
-import type { ISpinalAPIMiddleware } from "../../../../interfaces";
-import { loadAndValidateNode } from "../../../loadAndValidateNode";
-import { createErrorMsgItem } from "../../errorHandler/createErrorMsgItem";
-import { EApiErrorType } from "../../errorHandler/EApiErrorType";
-import type { MoveNodeRequest } from "./schemas";
+import { SpinalContext } from 'spinal-model-graph';
+import type { ISpinalAPIMiddleware } from '../../../../interfaces';
+import { loadAndValidateNode } from '../../../loadAndValidateNode';
+import { createErrorMsgItem } from '../../errorHandler/createErrorMsgItem';
+import { EApiErrorType } from '../../errorHandler/EApiErrorType';
+import type { MoveNodeRequest } from './schemas';
 
 export async function moveNode(
   middleware: ISpinalAPIMiddleware,
@@ -38,7 +38,7 @@ export async function moveNode(
   if (to.parentDynamicId === nodeId)
     throw createErrorMsgItem(
       EApiErrorType.INVALID_REQUEST,
-      "Destination parent cannot be the moved node"
+      'Destination parent cannot be the moved node'
     );
   const node = await loadAndValidateNode(middleware, nodeId, profileId);
   const source = await loadAndValidateNode(
@@ -60,7 +60,7 @@ export async function moveNode(
     if (!(loaded instanceof SpinalContext))
       throw createErrorMsgItem(
         EApiErrorType.INVALID_LOAD_NODE_TYPE,
-        "contextDynamicId must identify a SpinalContext"
+        'contextDynamicId must identify a SpinalContext'
       );
     context = loaded;
   }
@@ -84,29 +84,29 @@ export async function moveNode(
   )
     throw createErrorMsgItem(
       EApiErrorType.INVALID_REQUEST,
-      "Destination link exists but does not satisfy the requested context membership"
+      'Destination link exists but does not satisfy the requested context membership'
     );
   if (!sourceExists && !destinationExists)
     throw createErrorMsgItem(
       EApiErrorType.INVALID_REQUEST,
-      "Source link is absent and destination link is absent"
+      'Source link is absent and destination link is absent'
     );
   const sameLink =
     from.parentDynamicId === to.parentDynamicId &&
     from.relationType === to.relationType &&
     from.relationName === to.relationName;
   const result = (
-    status: "moved" | "alreadyMoved" | "unchanged",
-    destinationAction: "attached" | "alreadyAttached" | "unchanged",
-    sourceAction: "detached" | "alreadyDetached" | "unchanged"
+    status: 'moved' | 'alreadyMoved' | 'unchanged',
+    destinationAction: 'attached' | 'alreadyAttached' | 'unchanged',
+    sourceAction: 'detached' | 'alreadyDetached' | 'unchanged'
   ) => ({
     data: { nodeDynamicId: nodeId, status, destinationAction, sourceAction },
   });
-  if (sameLink) return result("unchanged", "unchanged", "unchanged");
+  if (sameLink) return result('unchanged', 'unchanged', 'unchanged');
   if (!sourceExists)
-    return result("alreadyMoved", "alreadyAttached", "alreadyDetached");
+    return result('alreadyMoved', 'alreadyAttached', 'alreadyDetached');
 
-  let stage: "attachDestination" | "detachSource" = "attachDestination";
+  let stage: 'attachDestination' | 'detachSource' = 'attachDestination';
   try {
     if (!destinationExists) {
       if (context)
@@ -118,32 +118,32 @@ export async function moveNode(
         );
       else await destination.addChild(node, to.relationName, to.relationType);
     }
-    stage = "detachSource";
+    stage = 'detachSource';
     await source.removeChild(node, from.relationName, from.relationType);
   } catch (error) {
     console.error(error);
     throw {
       ...createErrorMsgItem(
         EApiErrorType.INTERNAL_ERROR,
-        stage === "attachDestination"
-          ? "Destination attachment failed; source detachment was not attempted"
-          : "Destination attachment completed or already existed, but source detachment failed"
+        stage === 'attachDestination'
+          ? 'Destination attachment failed; source detachment was not attempted'
+          : 'Destination attachment completed or already existed, but source detachment failed'
       ),
       stage,
       state: {
         destination:
-          stage === "attachDestination"
-            ? "unknown"
+          stage === 'attachDestination'
+            ? 'unknown'
             : destinationExists
-              ? "alreadyAttached"
-              : "attached",
-        source: stage === "attachDestination" ? "notAttempted" : "unknown",
+            ? 'alreadyAttached'
+            : 'attached',
+        source: stage === 'attachDestination' ? 'notAttempted' : 'unknown',
       },
     };
   }
   return result(
-    "moved",
-    destinationExists ? "alreadyAttached" : "attached",
-    "detached"
+    'moved',
+    destinationExists ? 'alreadyAttached' : 'attached',
+    'detached'
   );
 }

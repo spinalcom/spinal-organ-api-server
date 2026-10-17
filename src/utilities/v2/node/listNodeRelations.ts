@@ -1,19 +1,19 @@
 /*
  * Copyright 2026 SpinalCom - www.spinalcom.com
- * 
+ *
  * This file is part of SpinalCore.
- * 
+ *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
- * 
+ *
  * This Agreement is a legally binding contract between
  * the Licensee (as defined below) and SpinalCom that
  * sets forth the terms and conditions that govern your
  * use of the Program. By installing and/or using the
  * Program, you agree to abide by all the terms and
  * conditions stated or referenced herein.
- * 
+ *
  * If you do not agree to abide by these terms and
  * conditions, do not demonstrate your acceptance and do
  * not install or use the Program.
@@ -22,19 +22,19 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { z } from "zod";
-import { SpinalContext, SpinalNode } from "spinal-model-graph";
-import type { ISpinalAPIMiddleware } from "../../../interfaces";
-import { loadAndValidateNode } from "../../loadAndValidateNode";
-import { filterNodes } from "./filterNodes";
-import { getNodeData } from "./getNodeData";
-import { parseInfoQuery } from "../requestParse/parseInfoQuery";
-import { parseAttributesQuery } from "../requestParse/parseAttributesQuery";
-import { parseFilterQuery } from "../requestParse/parseFilterQuery";
-import { parseElementQuery } from "./getNodeElement";
-import { createErrorMsgItem } from "../errorHandler/createErrorMsgItem";
-import { EApiErrorType } from "../errorHandler/EApiErrorType";
-import type { INodeItem } from "../../../routes/v2/openApiCompo/schemas/INodeItem";
+import { z } from 'zod';
+import { SpinalContext, SpinalNode } from 'spinal-model-graph';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import { loadAndValidateNode } from '../../loadAndValidateNode';
+import { filterNodes } from './filterNodes';
+import { getNodeData } from './getNodeData';
+import { parseInfoQuery } from '../requestParse/parseInfoQuery';
+import { parseAttributesQuery } from '../requestParse/parseAttributesQuery';
+import { parseFilterQuery } from '../requestParse/parseFilterQuery';
+import { parseElementQuery } from './getNodeElement';
+import { createErrorMsgItem } from '../errorHandler/createErrorMsgItem';
+import { EApiErrorType } from '../errorHandler/EApiErrorType';
+import type { INodeItem } from '../../../routes/v2/openApiCompo/schemas/INodeItem';
 
 export const relationsQuerySchema = z.strictObject({
   relationName: z
@@ -42,11 +42,11 @@ export const relationsQuerySchema = z.strictObject({
     .trim()
     .min(1)
     .refine(
-      (value) => value.split(",").every((name) => name.trim().length > 0),
-      "relationName must contain nonempty comma-separated names"
+      (value) => value.split(',').every((name) => name.trim().length > 0),
+      'relationName must contain nonempty comma-separated names'
     )
     .optional(),
-  relationType: z.enum(["PtrLst", "LstPtr", "Ref", "LstPtrLst"]).optional(),
+  relationType: z.enum(['PtrLst', 'LstPtr', 'Ref', 'LstPtrLst']).optional(),
   contextDynamicId: z.coerce
     .number()
     .int()
@@ -63,7 +63,7 @@ export const relationsQuerySchema = z.strictObject({
     .min(0)
     .max(Number.MAX_SAFE_INTEGER)
     .default(0),
-  "add-attributes-modification-date": z.stringbool().optional(),
+  'add-attributes-modification-date': z.stringbool().optional(),
 });
 
 export async function listNodeRelations(
@@ -72,7 +72,7 @@ export async function listNodeRelations(
   nodeId: number,
   query: z.infer<typeof relationsQuerySchema>,
   grouped: boolean,
-  direction: "children" | "parents"
+  direction: 'children' | 'parents'
 ) {
   const filters = parseFilterQuery(query);
   const info = parseInfoQuery(query.info);
@@ -81,7 +81,7 @@ export async function listNodeRelations(
   const relationNames =
     query.relationName === undefined
       ? undefined
-      : new Set(query.relationName.split(",").map((name) => name.trim()));
+      : new Set(query.relationName.split(',').map((name) => name.trim()));
   const source = await loadAndValidateNode(middleware, nodeId, profileId);
   let context: SpinalContext | undefined;
   if (query.contextDynamicId !== undefined) {
@@ -93,7 +93,7 @@ export async function listNodeRelations(
     if (!(loaded instanceof SpinalContext))
       throw createErrorMsgItem(
         EApiErrorType.INVALID_LOAD_NODE_TYPE,
-        "contextDynamicId must identify a SpinalContext"
+        'contextDynamicId must identify a SpinalContext'
       );
     context = loaded;
   }
@@ -107,17 +107,17 @@ export async function listNodeRelations(
   const seen = new Set<string>();
   const accessible = new Map<number, SpinalNode>();
   function supportsType(type: string): boolean {
-    if (type === "LstPtrLst")
+    if (type === 'LstPtrLst')
       console.warn(
         `[listNodeRelations] Skipping unsupported relation type LstPtrLst on node ${nodeId}`
       );
     return (
-      ["PtrLst", "LstPtr", "Ref"].includes(type) &&
+      ['PtrLst', 'LstPtr', 'Ref'].includes(type) &&
       (query.relationType === undefined || query.relationType === type)
     );
   }
   async function* relatedNodes() {
-    if (direction === "parents") {
+    if (direction === 'parents') {
       if (context && !source.belongsToContext(context)) return;
       for (const name of source.parents.keys()) {
         if (relationNames && !relationNames.has(name)) continue;
@@ -133,7 +133,7 @@ export async function listNodeRelations(
           if (!(node instanceof SpinalNode))
             throw createErrorMsgItem(
               EApiErrorType.INTERNAL_ERROR,
-              "Relation has no valid parent"
+              'Relation has no valid parent'
             );
           if (context && !node.belongsToContext(context)) continue;
           yield { node, relationType: type, relationName: name };
@@ -166,7 +166,7 @@ export async function listNodeRelations(
       if (!dynamicId)
         throw createErrorMsgItem(
           EApiErrorType.INTERNAL_ERROR,
-          "Related node has no dynamic ID"
+          'Related node has no dynamic ID'
         );
       let node = accessible.get(dynamicId);
       if (!node) {
@@ -175,7 +175,7 @@ export async function listNodeRelations(
       }
       const entry = {
         node,
-        parentId: direction === "children" ? nodeId : dynamicId,
+        parentId: direction === 'children' ? nodeId : dynamicId,
         relationType: related.relationType,
         relationName: related.relationName,
       };
@@ -190,8 +190,8 @@ export async function listNodeRelations(
         node,
         info,
         attributes,
-        query["add-attributes-modification-date"],
-        direction === "children" ? nodeId : undefined,
+        query['add-attributes-modification-date'],
+        direction === 'children' ? nodeId : undefined,
         element
       )
     )
@@ -207,7 +207,7 @@ export async function listNodeRelations(
     data[relationType][relationName].push(items[index]);
   });
   return {
-    ...(direction === "children"
+    ...(direction === 'children'
       ? { parentDynamicId: nodeId }
       : { nodeDynamicId: nodeId }),
     data,

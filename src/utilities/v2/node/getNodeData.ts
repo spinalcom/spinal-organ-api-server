@@ -33,7 +33,12 @@ import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentatio
 import { SpinalAttribute } from 'spinal-models-documentation';
 import { createErrorMsgItem } from '../errorHandler/createErrorMsgItem';
 import { EApiErrorType } from '../errorHandler/EApiErrorType';
-import { getNodeElement, serializeModel, parseElementQuery, type ElementQuery } from './getNodeElement';
+import {
+  getNodeElement,
+  serializeModel,
+  parseElementQuery,
+  type ElementQuery,
+} from './getNodeElement';
 
 export async function getNodeData(
   node: SpinalNode,
@@ -61,19 +66,29 @@ export async function getNodeData(
   };
 }
 
-export function extractNodeInfo(infoQuery: true | string[], node: SpinalNode<any>) {
+export function extractNodeInfo(
+  infoQuery: true | string[],
+  node: SpinalNode<any>
+) {
   if (infoQuery !== true && infoQuery.length === 0) return undefined;
-  const paths = infoQuery === true ? true : infoQuery.map((field) => {
-    const parsed = parseElementQuery(field);
-    if (!Array.isArray(parsed) || parsed.length !== 1) {
-      throw createErrorMsgItem(EApiErrorType.INVALID_REQUEST, 'Invalid info field path');
-    }
-    const path = parsed[0];
-    if (path[0] === 'staticId') path[0] = 'id';
-    return path;
-  });
+  const paths =
+    infoQuery === true
+      ? true
+      : infoQuery.map((field) => {
+          const parsed = parseElementQuery(field);
+          if (!Array.isArray(parsed) || parsed.length !== 1) {
+            throw createErrorMsgItem(
+              EApiErrorType.INVALID_REQUEST,
+              'Invalid info field path'
+            );
+          }
+          const path = parsed[0];
+          if (path[0] === 'staticId') path[0] = 'id';
+          return path;
+        });
   const value = serializeModel(node.info, paths);
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  if (!value || typeof value !== 'object' || Array.isArray(value))
+    return undefined;
   const result: INodeItemInfo = value;
   if (Object.hasOwn(result, 'id')) {
     result.staticId = result.id;

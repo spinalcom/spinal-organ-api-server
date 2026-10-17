@@ -42,7 +42,8 @@ export function addExtraInfoValidation<T extends z.ZodRawShape>(
         ctx.addIssue({
           code: 'custom',
           path: [key],
-          message: 'Info keys must not shadow Model members or use reserved names',
+          message:
+            'Info keys must not shadow Model members or use reserved names',
         });
       }
     }

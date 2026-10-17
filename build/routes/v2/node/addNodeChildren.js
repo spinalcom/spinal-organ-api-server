@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -116,7 +116,7 @@ module.exports = function (logger, app, middleware) {
      *             schema:
      *               $ref: '#/components/schemas/INodeChildrenFailure'
      */
-    app.post("/api/v2/node/:parentId/children", (0, express_zod_safe_1.default)({
+    app.post('/api/v2/node/:parentId/children', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({
             parentId: zod_1.z.coerce.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
         }),
@@ -129,7 +129,7 @@ module.exports = function (logger, app, middleware) {
                 return res.status(internal ? 500 : 400).json({
                     ...(0, createErrorMsgItem_1.createErrorMsgItem)(internal
                         ? EApiErrorType_1.EApiErrorType.INTERNAL_ERROR
-                        : EApiErrorType_1.EApiErrorType.INVALID_REQUEST, "No child attachment succeeded"),
+                        : EApiErrorType_1.EApiErrorType.INVALID_REQUEST, 'No child attachment succeeded'),
                     errors,
                 });
             }

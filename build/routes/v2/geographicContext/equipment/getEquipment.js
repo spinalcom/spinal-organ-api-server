@@ -120,7 +120,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             attributes: zod_1.z.coerce.string().optional(),
             'add-attributes-modification-date': zod_1.z.stringbool().optional(),
             'parent-dynamic-id': zod_1.z.coerce.number().min(1).optional(),
-            bimObjectType: zod_1.z.enum(['bimobject', 'referenceRoom', 'referenceFloor']).optional().default('bimobject'),
+            bimObjectType: zod_1.z
+                .enum(['bimobject', 'referenceRoom', 'referenceFloor'])
+                .optional()
+                .default('bimobject'),
             filter: zod_1.z
                 .union([zod_1.z.record(zod_1.z.string(), zod_1.z.unknown()), zod_1.z.string()])
                 .optional(),
@@ -163,12 +166,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 if (!relationObj)
                     throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'No valid relation found for the given bimObjectType');
                 const nodes = await (0, getNodeChildrenFromParentDynId_1.getNodeChildrenFromParentDynId)(spinalAPIMiddleware, parentDynamicId, profileId, spinal_env_viewer_context_geographic_service_1.EQUIPMENT_TYPE, [
-                    relationObj, {
+                    relationObj,
+                    {
                         relationName: `groupHas${spinal_env_viewer_context_geographic_service_1.EQUIPMENT_TYPE}`,
                         parentType: `${spinal_env_viewer_context_geographic_service_1.EQUIPMENT_TYPE}Group`,
-                    }
+                    },
                 ]);
-                foundNodes = nodes.map(node => ({ node, parentId: parentDynamicId }));
+                foundNodes = nodes.map((node) => ({
+                    node,
+                    parentId: parentDynamicId,
+                }));
             }
             else {
                 if (!building) {
@@ -178,7 +185,13 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             }
             const page = await (0, filterNodes_1.filterNodes)(foundNodes, filters, offset);
             const equipmentData = await Promise.all(page.map(({ node, parentId }) => (0, getNodeData_1.getNodeData)(node, parsedInfoQuery, parsedAttrQuery, addAttributesModificationDate, parentId)));
-            return res.status(200).json({ data: equipmentData, offset, total: Array.isArray(foundNodes) ? foundNodes.length : undefined });
+            return res
+                .status(200)
+                .json({
+                data: equipmentData,
+                offset,
+                total: Array.isArray(foundNodes) ? foundNodes.length : undefined,
+            });
         }
         catch (error) {
             (0, sendResponseError_1.sendResponseError)(res, error);

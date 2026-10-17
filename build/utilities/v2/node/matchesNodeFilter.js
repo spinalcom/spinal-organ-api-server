@@ -1,4 +1,27 @@
 "use strict";
+/*
+ * Copyright 2026 SpinalCom - www.spinalcom.com
+ *
+ * This file is part of SpinalCore.
+ *
+ * Please read all of the following terms and conditions
+ * of the Software license Agreement ("Agreement")
+ * carefully.
+ *
+ * This Agreement is a legally binding contract between
+ * the Licensee (as defined below) and SpinalCom that
+ * sets forth the terms and conditions that govern your
+ * use of the Program. By installing and/or using the
+ * Program, you agree to abide by all the terms and
+ * conditions stated or referenced herein.
+ *
+ * If you do not agree to abide by these terms and
+ * conditions, do not demonstrate your acceptance and do
+ * not install or use the Program.
+ * You should have received a copy of the license along
+ * with this file. If not, see
+ * <http://resources.spinalcom.com/licenses.pdf>.
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.matchesNodeFilter = matchesNodeFilter;
 const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
@@ -21,9 +44,13 @@ async function matchesNodeFilter(node, filters) {
         }
         else if (root === 'info') {
             const key = category === 'staticId' ? 'id' : category;
-            const model = node.info._attribute_names.includes(key) ? node.info[key] : undefined;
-            value = model instanceof spinal_core_connectorjs_1.Str || model instanceof spinal_core_connectorjs_1.Bool || model instanceof spinal_core_connectorjs_1.Val
-                ? model.get() : undefined;
+            const model = node.info._attribute_names.includes(key)
+                ? node.info[key]
+                : undefined;
+            value =
+                model instanceof spinal_core_connectorjs_1.Str || model instanceof spinal_core_connectorjs_1.Bool || model instanceof spinal_core_connectorjs_1.Val
+                    ? model.get()
+                    : undefined;
         }
         else if (root === 'attributes') {
             if (!attributesLoaded) {
@@ -39,13 +66,13 @@ async function matchesNodeFilter(node, filters) {
                 attributes = await (0, getNodeData_1.extractNodeAttr)(node, query, false);
                 attributesLoaded = true;
             }
-            const cat = attributes &&
-                Object.prototype.hasOwnProperty.call(attributes, category)
+            const cat = attributes && Object.prototype.hasOwnProperty.call(attributes, category)
                 ? attributes[category]
                 : undefined;
-            value = cat && Object.prototype.hasOwnProperty.call(cat, attribute)
-                ? cat[attribute]
-                : undefined;
+            value =
+                cat && Object.prototype.hasOwnProperty.call(cat, attribute)
+                    ? cat[attribute]
+                    : undefined;
         }
         if (!matchesValue(value, filter))
             return false;
@@ -87,10 +114,14 @@ function matchesValue(value, filter) {
     if (actual === undefined || expected === undefined)
         return false;
     switch (filter.operator) {
-        case 'gt': return actual > expected;
-        case 'gte': return actual >= expected;
-        case 'lt': return actual < expected;
-        case 'lte': return actual <= expected;
+        case 'gt':
+            return actual > expected;
+        case 'gte':
+            return actual >= expected;
+        case 'lt':
+            return actual < expected;
+        case 'lte':
+            return actual <= expected;
     }
 }
 //# sourceMappingURL=matchesNodeFilter.js.map

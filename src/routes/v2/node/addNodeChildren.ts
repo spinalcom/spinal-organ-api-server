@@ -1,19 +1,19 @@
 /*
  * Copyright 2026 SpinalCom - www.spinalcom.com
- * 
+ *
  * This file is part of SpinalCore.
- * 
+ *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
- * 
+ *
  * This Agreement is a legally binding contract between
  * the Licensee (as defined below) and SpinalCom that
  * sets forth the terms and conditions that govern your
  * use of the Program. By installing and/or using the
  * Program, you agree to abide by all the terms and
  * conditions stated or referenced herein.
- * 
+ *
  * If you do not agree to abide by these terms and
  * conditions, do not demonstrate your acceptance and do
  * not install or use the Program.
@@ -22,16 +22,16 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { z } from "zod";
-import validate from "express-zod-safe";
-import type { Express } from "express";
-import type { ISpinalAPIMiddleware } from "../../../interfaces";
-import { getProfileId } from "../../../utilities/requestUtilities";
-import { createErrorMsgItem } from "../../../utilities/v2/errorHandler/createErrorMsgItem";
-import { EApiErrorType } from "../../../utilities/v2/errorHandler/EApiErrorType";
-import { sendResponseError } from "../../../utilities/v2/errorHandler/sendResponseError";
-import { childAttachmentSchema } from "../../../utilities/v2/node/relationships/schemas";
-import { attachChildren } from "../../../utilities/v2/node/relationships/attachChildren";
+import { z } from 'zod';
+import validate from 'express-zod-safe';
+import type { Express } from 'express';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { createErrorMsgItem } from '../../../utilities/v2/errorHandler/createErrorMsgItem';
+import { EApiErrorType } from '../../../utilities/v2/errorHandler/EApiErrorType';
+import { sendResponseError } from '../../../utilities/v2/errorHandler/sendResponseError';
+import { childAttachmentSchema } from '../../../utilities/v2/node/relationships/schemas';
+import { attachChildren } from '../../../utilities/v2/node/relationships/attachChildren';
 
 module.exports = function (
   logger: any,
@@ -42,7 +42,7 @@ module.exports = function (
    * @swagger
    * /api/v2/node/{parentId}/children:
    *   post:
-   *     security: 
+   *     security:
    *       - bearerAuth: [write]
    *     tags: [node]
    *     summary: Attach existing children to a node
@@ -120,7 +120,7 @@ module.exports = function (
    *               $ref: '#/components/schemas/INodeChildrenFailure'
    */
   app.post(
-    "/api/v2/node/:parentId/children",
+    '/api/v2/node/:parentId/children',
     validate({
       params: z.strictObject({
         parentId: z.coerce.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
@@ -144,7 +144,7 @@ module.exports = function (
               internal
                 ? EApiErrorType.INTERNAL_ERROR
                 : EApiErrorType.INVALID_REQUEST,
-              "No child attachment succeeded"
+              'No child attachment succeeded'
             ),
             errors,
           });

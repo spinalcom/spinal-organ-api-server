@@ -39,10 +39,11 @@ import {
   REFERENCE_ROOM_RELATION,
   REFERENCE_RELATION,
 } from 'spinal-env-viewer-context-geographic-service';
-import { getNodeChildrenFromParentDynId, type IParentChildRelation } from '../../../../utilities/v2/node/getNodeChildrenFromParentDynId';
 import {
-  parseFilterQuery,
-} from '../../../../utilities/v2/requestParse/parseFilterQuery';
+  getNodeChildrenFromParentDynId,
+  type IParentChildRelation,
+} from '../../../../utilities/v2/node/getNodeChildrenFromParentDynId';
+import { parseFilterQuery } from '../../../../utilities/v2/requestParse/parseFilterQuery';
 import { filterNodes } from '../../../../utilities/v2/node/filterNodes';
 import type { SpinalNode } from 'spinal-model-graph';
 import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
@@ -135,7 +136,10 @@ module.exports = function (
         attributes: z.coerce.string().optional(),
         'add-attributes-modification-date': z.stringbool().optional(),
         'parent-dynamic-id': z.coerce.number().min(1).optional(),
-        bimObjectType: z.enum(['bimobject', 'referenceRoom', 'referenceFloor']).optional().default('bimobject'),
+        bimObjectType: z
+          .enum(['bimobject', 'referenceRoom', 'referenceFloor'])
+          .optional()
+          .default('bimobject'),
         filter: z
           .union([z.record(z.string(), z.unknown()), z.string()])
           .optional(),
@@ -159,7 +163,9 @@ module.exports = function (
           profileId,
           false
         );
-        let foundNodes: Iterable<{ node: SpinalNode; parentId: number }> | AsyncIterable<{ node: SpinalNode; parentId: number }>;
+        let foundNodes:
+          | Iterable<{ node: SpinalNode; parentId: number }>
+          | AsyncIterable<{ node: SpinalNode; parentId: number }>;
         const { bimObjectType } = req.query;
         if (parentDynamicId) {
           let relationObj: IParentChildRelation | undefined;
@@ -193,13 +199,17 @@ module.exports = function (
             profileId,
             EQUIPMENT_TYPE,
             [
-              relationObj, {
+              relationObj,
+              {
                 relationName: `groupHas${EQUIPMENT_TYPE}`,
                 parentType: `${EQUIPMENT_TYPE}Group`,
-              }
+              },
             ]
           );
-          foundNodes = nodes.map(node => ({ node, parentId: parentDynamicId }));
+          foundNodes = nodes.map((node) => ({
+            node,
+            parentId: parentDynamicId,
+          }));
         } else {
           if (!building) {
             throw createErrorMsgItem(
@@ -207,7 +217,11 @@ module.exports = function (
               'No building found in database'
             );
           }
-          foundNodes = getEquipmentInContextIterable(geographicContext, building, bimObjectType);
+          foundNodes = getEquipmentInContextIterable(
+            geographicContext,
+            building,
+            bimObjectType
+          );
         }
 
         const page = await filterNodes(foundNodes, filters, offset);
@@ -222,7 +236,13 @@ module.exports = function (
             )
           )
         );
-        return res.status(200).json({ data: equipmentData, offset, total: Array.isArray(foundNodes) ? foundNodes.length : undefined });
+        return res
+          .status(200)
+          .json({
+            data: equipmentData,
+            offset,
+            total: Array.isArray(foundNodes) ? foundNodes.length : undefined,
+          });
       } catch (error: any) {
         sendResponseError(res, error);
       }

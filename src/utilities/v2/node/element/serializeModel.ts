@@ -4,7 +4,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -22,11 +22,11 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { Bool, Lst, Model, Ptr, Str, Val } from "spinal-core-connectorjs";
-import { SpinalNodePointer } from "spinal-model-graph";
-import { createErrorMsgItem } from "../../errorHandler/createErrorMsgItem";
-import { EApiErrorType } from "../../errorHandler/EApiErrorType";
-import type { ElementJson } from "../../../../routes/v2/openApiCompo/schemas/INodeItem";
+import { Bool, Lst, Model, Ptr, Str, Val } from 'spinal-core-connectorjs';
+import { SpinalNodePointer } from 'spinal-model-graph';
+import { createErrorMsgItem } from '../../errorHandler/createErrorMsgItem';
+import { EApiErrorType } from '../../errorHandler/EApiErrorType';
+import type { ElementJson } from '../../../../routes/v2/openApiCompo/schemas/INodeItem';
 
 interface Selection {
   all: boolean;
@@ -62,7 +62,7 @@ export function serializeModel(
     if (++visits > 10000 || depth > 32) {
       throw createErrorMsgItem(
         EApiErrorType.INTERNAL_ERROR,
-        "Element serialization exceeds maximum depth (32) or model count (10000)"
+        'Element serialization exceeds maximum depth (32) or model count (10000)'
       );
     }
     const pointer =
@@ -75,10 +75,10 @@ export function serializeModel(
       if (!fields.all) return undefined;
       const id: unknown = pointer.data.model?._server_id ?? pointer.data.value;
       if (id === undefined || id === 0) return { $ptr: null };
-      if (typeof id !== "number" || !Number.isSafeInteger(id) || id < 1) {
+      if (typeof id !== 'number' || !Number.isSafeInteger(id) || id < 1) {
         throw createErrorMsgItem(
           EApiErrorType.INTERNAL_ERROR,
-          "Element pointer has an invalid dynamic ID"
+          'Element pointer has an invalid dynamic ID'
         );
       }
       return { $ptr: id };
@@ -86,10 +86,10 @@ export function serializeModel(
     if (model instanceof Str || model instanceof Bool || model instanceof Val) {
       if (!fields.all) return undefined;
       const value = model.get();
-      if (typeof value === "number" && !Number.isFinite(value)) {
+      if (typeof value === 'number' && !Number.isFinite(value)) {
         throw createErrorMsgItem(
           EApiErrorType.INTERNAL_ERROR,
-          "Element contains a non-finite number"
+          'Element contains a non-finite number'
         );
       }
       return value;
@@ -97,7 +97,7 @@ export function serializeModel(
     if (ancestors.has(model)) {
       throw createErrorMsgItem(
         EApiErrorType.INTERNAL_ERROR,
-        "Element contains a cyclic Model reference"
+        'Element contains a cyclic Model reference'
       );
     }
     ancestors.add(model);
@@ -108,7 +108,7 @@ export function serializeModel(
       if (isList && model.length > 10000) {
         throw createErrorMsgItem(
           EApiErrorType.INTERNAL_ERROR,
-          "Element array exceeds maximum length (10000)"
+          'Element array exceeds maximum length (10000)'
         );
       }
       const keys = fields.all
@@ -127,7 +127,7 @@ export function serializeModel(
         if (!(child instanceof Model)) {
           throw createErrorMsgItem(
             EApiErrorType.INTERNAL_ERROR,
-            "Element contains an invalid Model attribute"
+            'Element contains an invalid Model attribute'
           );
         }
         const value = serialize(

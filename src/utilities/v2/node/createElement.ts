@@ -4,7 +4,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -22,23 +22,23 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { Model } from "spinal-core-connectorjs";
-import type { ISpinalAPIMiddleware } from "../../../interfaces";
-import { createErrorMsgItem } from "../errorHandler/createErrorMsgItem";
-import { EApiErrorType } from "../errorHandler/EApiErrorType";
-import { SpinalNode } from "spinal-model-graph";
+import { Model } from 'spinal-core-connectorjs';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import { createErrorMsgItem } from '../errorHandler/createErrorMsgItem';
+import { EApiErrorType } from '../errorHandler/EApiErrorType';
+import { SpinalNode } from 'spinal-model-graph';
 import {
   isModelReferencePath,
   resolveModelReference,
-} from "./resolveModelReference";
+} from './resolveModelReference';
 
-import type { ElementValue } from "./element/schema";
+import type { ElementValue } from './element/schema';
 export {
   elementKey,
   elementValue,
   elementObject,
   type ElementValue,
-} from "./element/schema";
+} from './element/schema';
 
 export async function createElement(
   data: Record<string, ElementValue>,
@@ -64,7 +64,7 @@ export async function createElement(
         const result = await resolveUncached(value, path);
         if (result instanceof Model) return result;
         const wrapper = new Model();
-        wrapper.add_attr("value", result);
+        wrapper.add_attr('value', result);
         return wrapper.value;
       });
     }
@@ -80,23 +80,23 @@ export async function createElement(
         result.push(await resolve(item, [...path, String(index)]));
       return result;
     }
-    if (typeof value !== "object") return value;
+    if (typeof value !== 'object') return value;
     if (
-      Object.hasOwn(value, "$modelRef") &&
-      (typeof value.$modelRef === "number" || value.$modelRef === "self")
+      Object.hasOwn(value, '$modelRef') &&
+      (typeof value.$modelRef === 'number' || value.$modelRef === 'self')
     ) {
       const id = value.$modelRef;
-      if (typeof value.path !== "string" || !isModelReferencePath(value.path)) {
+      if (typeof value.path !== 'string' || !isModelReferencePath(value.path)) {
         throw createErrorMsgItem(
           EApiErrorType.INVALID_REQUEST,
-          "Invalid $modelRef path"
+          'Invalid $modelRef path'
         );
       }
-      if (id === "self") {
+      if (id === 'self') {
         if (!self)
           throw createErrorMsgItem(
             EApiErrorType.INVALID_REQUEST,
-            "Self reference is unavailable in this creation context"
+            'Self reference is unavailable in this creation context'
           );
         return self(value.path);
       }

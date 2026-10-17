@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -108,7 +108,7 @@ module.exports = function (logger, app, middleware) {
      *                 - $ref: '#/components/schemas/IErrorItem'
      *                 - $ref: '#/components/schemas/IMoveNodeFailure'
      */
-    app.post("/api/v2/node/:nodeId/move", (0, express_zod_safe_1.default)({
+    app.post('/api/v2/node/:nodeId/move', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({
             nodeId: zod_1.z.coerce.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
         }),

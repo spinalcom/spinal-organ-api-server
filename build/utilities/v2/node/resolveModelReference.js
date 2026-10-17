@@ -1,4 +1,27 @@
 "use strict";
+/*
+ * Copyright 2026 SpinalCom - www.spinalcom.com
+ *
+ * This file is part of SpinalCore.
+ *
+ * Please read all of the following terms and conditions
+ * of the Software license Agreement ("Agreement")
+ * carefully.
+ *
+ * This Agreement is a legally binding contract between
+ * the Licensee (as defined below) and SpinalCom that
+ * sets forth the terms and conditions that govern your
+ * use of the Program. By installing and/or using the
+ * Program, you agree to abide by all the terms and
+ * conditions stated or referenced herein.
+ *
+ * If you do not agree to abide by these terms and
+ * conditions, do not demonstrate your acceptance and do
+ * not install or use the Program.
+ * You should have received a copy of the license along
+ * with this file. If not, see
+ * <http://resources.spinalcom.com/licenses.pdf>.
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isModelReferencePath = isModelReferencePath;
 exports.resolveModelReference = resolveModelReference;
@@ -9,13 +32,17 @@ const createErrorMsgItem_1 = require("../errorHandler/createErrorMsgItem");
 const EApiErrorType_1 = require("../errorHandler/EApiErrorType");
 function isModelReferencePath(path) {
     const parts = path.split('.');
-    return parts.length <= 32 &&
+    return (parts.length <= 32 &&
         !(parts[0] === 'info' &&
             (parts.length === 1 || parts[1] === 'id' || parts[1] === 'staticId')) &&
-        parts.every((part) => part.length > 0 && !part.startsWith('_') &&
-            part !== 'constructor' && part !== 'prototype' && part !== 'model_id') &&
-        (parts[0] === 'info' || parts[0] === 'element' ||
-            (parts[0] === 'attr' && parts.length === 3));
+        parts.every((part) => part.length > 0 &&
+            !part.startsWith('_') &&
+            part !== 'constructor' &&
+            part !== 'prototype' &&
+            part !== 'model_id') &&
+        (parts[0] === 'info' ||
+            parts[0] === 'element' ||
+            (parts[0] === 'attr' && parts.length === 3)));
 }
 async function resolveModelReference(node, path) {
     const invalid = () => (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, `$modelRef path "${path}" does not resolve to a Model on node ${node._server_id}`);
@@ -40,7 +67,9 @@ async function resolveModelReference(node, path) {
     }
     let current = root === 'info' ? node.info : await node.getElement(true);
     for (const key of parts) {
-        if (!(current instanceof spinal_core_connectorjs_1.Model) || current instanceof spinal_core_connectorjs_1.Ptr || current instanceof spinal_model_graph_1.SpinalNodePointer) {
+        if (!(current instanceof spinal_core_connectorjs_1.Model) ||
+            current instanceof spinal_core_connectorjs_1.Ptr ||
+            current instanceof spinal_model_graph_1.SpinalNodePointer) {
             throw invalid();
         }
         if (current instanceof spinal_core_connectorjs_1.Lst) {

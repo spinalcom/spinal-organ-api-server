@@ -4,7 +4,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -22,26 +22,26 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { Bool, Lst, Model, Ptr, Str, Val } from "spinal-core-connectorjs";
-import { SpinalNode, SpinalNodePointer } from "spinal-model-graph";
+import { Bool, Lst, Model, Ptr, Str, Val } from 'spinal-core-connectorjs';
+import { SpinalNode, SpinalNodePointer } from 'spinal-model-graph';
 import {
   attributeService,
   NODE_TO_CATEGORY_RELATION,
-} from "spinal-env-viewer-plugin-documentation-service";
-import { SpinalAttribute } from "spinal-models-documentation";
-import type { ISpinalAPIMiddleware } from "../../../interfaces";
-import { createElement, elementKey, type ElementValue } from "./createElement";
+} from 'spinal-env-viewer-plugin-documentation-service';
+import { SpinalAttribute } from 'spinal-models-documentation';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import { createElement, elementKey, type ElementValue } from './createElement';
 import {
   createErrorMsgItem,
   isErrorItem,
-} from "../errorHandler/createErrorMsgItem";
-import { EApiErrorType } from "../errorHandler/EApiErrorType";
-import { serializeModel } from "./getNodeElement";
-import type { Patch } from "./patch/schema";
-import { selectPatchBranches } from "./patch/selectBranches";
-import { createModelStaging } from "./patch/modelStaging";
+} from '../errorHandler/createErrorMsgItem';
+import { EApiErrorType } from '../errorHandler/EApiErrorType';
+import { serializeModel } from './getNodeElement';
+import type { Patch } from './patch/schema';
+import { selectPatchBranches } from './patch/selectBranches';
+import { createModelStaging } from './patch/modelStaging';
 
-export { patchNodeSchema } from "./patch/schema";
+export { patchNodeSchema } from './patch/schema';
 const invalid = (message: string) =>
   createErrorMsgItem(EApiErrorType.INVALID_REQUEST, message);
 
@@ -89,7 +89,7 @@ export async function patchNode(
     const list: Lst<SpinalAttribute> | undefined = await category.getElement(
       true
     );
-    if (!(list instanceof Lst)) throw invalid("Invalid attribute category");
+    if (!(list instanceof Lst)) throw invalid('Invalid attribute category');
     for (const attr of list) {
       if (!labels.has(attr.label.get())) continue;
       attrs.push({
@@ -110,29 +110,29 @@ export async function patchNode(
         return other.slice(0, length).every((key, i) => key === path[i]);
       })
     )
-      throw invalid(`Conflicting patch operations at ${path.join(".")}`);
+      throw invalid(`Conflicting patch operations at ${path.join('.')}`);
     touched.push(path);
   }
   let count = 0;
   for (const item of patch.attributes?.rename ?? []) {
     count++;
-    claim(["attr", item.category, item.from]);
-    if (item.from !== item.to) claim(["attr", item.category, item.to]);
+    claim(['attr', item.category, item.from]);
+    if (item.from !== item.to) claim(['attr', item.category, item.to]);
     const attr = attrs.find(
       (a) => a.category === item.category && a.label === item.from
     );
-    if (!attr) throw invalid("Attribute to rename does not exist");
+    if (!attr) throw invalid('Attribute to rename does not exist');
     if (
       item.from !== item.to &&
       attrs.some((a) => a.category === item.category && a.label === item.to)
     ) {
-      throw invalid("Destination attribute label already exists");
+      throw invalid('Destination attribute label already exists');
     }
     attr.label = item.to;
   }
   for (const item of patch.attributes?.remove ?? []) {
     count++;
-    claim(["attr", item.category, item.label]);
+    claim(['attr', item.category, item.label]);
     const index = attrs.findIndex(
       (a) => a.category === item.category && a.label === item.label
     );
@@ -143,7 +143,7 @@ export async function patchNode(
   )) {
     for (const [label, value] of Object.entries(values)) {
       count++;
-      claim(["attr", category, label]);
+      claim(['attr', category, label]);
       const attr = attrs.find(
         (a) => a.category === category && a.label === label
       );
@@ -152,23 +152,23 @@ export async function patchNode(
     }
   }
   function pathKeys(root: string, path: string, action: string): string[] {
-    const keys = path.split(".");
+    const keys = path.split('.');
     if (
       keys.length > 32 ||
       keys.some(
         (key) =>
-          !elementKey.safeParse(key).success || key === "prototype" || !key
+          !elementKey.safeParse(key).success || key === 'prototype' || !key
       )
     )
       throw invalid(`Invalid patch path: ${path}`);
-    if (root === "info") {
-      if (["id", "staticId", "dynamicId"].includes(keys[0]))
-        throw invalid("Node IDs cannot be patched");
-      if (keys[0] === "type" && (action !== "set" || keys.length !== 1)) {
-        throw invalid("info.type can only be set");
+    if (root === 'info') {
+      if (['id', 'staticId', 'dynamicId'].includes(keys[0]))
+        throw invalid('Node IDs cannot be patched');
+      if (keys[0] === 'type' && (action !== 'set' || keys.length !== 1)) {
+        throw invalid('info.type can only be set');
       }
-      if (keys[0] === "name" && (action !== "set" || keys.length !== 1)) {
-        throw invalid("info.name can only be set");
+      if (keys[0] === 'name' && (action !== 'set' || keys.length !== 1)) {
+        throw invalid('info.name can only be set');
       }
     }
     return keys;
@@ -181,10 +181,10 @@ export async function patchNode(
       model instanceof Bool ||
       model instanceof Val
     )
-      throw invalid("Cannot traverse a scalar or pointer");
+      throw invalid('Cannot traverse a scalar or pointer');
     if (model instanceof Lst) {
       if (!/^(0|[1-9]\d*)$/.test(key) || Number(key) >= model.length)
-        throw invalid("Array index must already exist");
+        throw invalid('Array index must already exist');
     } else if (!model._attribute_names.includes(key)) return undefined;
     return model[key];
   }
@@ -212,59 +212,59 @@ export async function patchNode(
   }
   const pending = new Map<
     string,
-    { root: "info" | "element"; keys: string[]; value: ElementValue }
+    { root: 'info' | 'element'; keys: string[]; value: ElementValue }
   >();
-  for (const root of ["info", "element"] as const) {
+  for (const root of ['info', 'element'] as const) {
     const ops = patch[root];
     if (!ops) continue;
-    if (root === "element" && !element) element = new Model();
-    const model = root === "info" ? info : element!;
+    if (root === 'element' && !element) element = new Model();
+    const model = root === 'info' ? info : element!;
     for (const path of ops.remove ?? []) {
       count++;
-      const keys = pathKeys(root, path, "remove");
+      const keys = pathKeys(root, path, 'remove');
       claim([root, ...keys]);
       const target = parent(model, keys, false);
       if (target instanceof Lst)
-        throw invalid("Array entries cannot be removed");
+        throw invalid('Array entries cannot be removed');
       if (target && child(target, keys.at(-1)!)) target.rem_attr(keys.at(-1)!);
     }
     for (const rename of ops.rename ?? []) {
       count++;
-      const from = pathKeys(root, rename.from, "rename");
-      const to = pathKeys(root, rename.to, "rename");
-      if (from.slice(0, -1).join(".") !== to.slice(0, -1).join("."))
-        throw invalid("Rename must stay in the same parent object");
+      const from = pathKeys(root, rename.from, 'rename');
+      const to = pathKeys(root, rename.to, 'rename');
+      if (from.slice(0, -1).join('.') !== to.slice(0, -1).join('.'))
+        throw invalid('Rename must stay in the same parent object');
       claim([root, ...from]);
       if (rename.from !== rename.to) claim([root, ...to]);
       const target = parent(model, from, false);
       if (!target || target instanceof Lst)
-        throw invalid("Rename requires an existing object field");
+        throw invalid('Rename requires an existing object field');
       const source = child(target, from.at(-1)!);
-      if (!source) throw invalid("Rename source does not exist");
+      if (!source) throw invalid('Rename source does not exist');
       if (rename.from !== rename.to) {
         if (child(target, to.at(-1)!))
-          throw invalid("Rename destination already exists");
+          throw invalid('Rename destination already exists');
         target.add_attr(to.at(-1)!, source);
         target.rem_attr(from.at(-1)!);
       }
     }
     for (const [path, value] of Object.entries(ops.set ?? {})) {
       count++;
-      const keys = pathKeys(root, path, "set");
+      const keys = pathKeys(root, path, 'set');
       if (
-        root === "info" &&
-        ["name", "type"].includes(path) &&
-        (typeof value !== "string" || !value.length || value.length > 200)
+        root === 'info' &&
+        ['name', 'type'].includes(path) &&
+        (typeof value !== 'string' || !value.length || value.length > 200)
       )
         throw invalid(
           `info.${path} must be a nonempty string of at most 200 characters`
         );
       claim([root, ...keys]);
       parent(model, keys, true);
-      pending.set([root, ...keys].join("."), { root, keys, value });
+      pending.set([root, ...keys].join('.'), { root, keys, value });
     }
   }
-  if (!count) throw invalid("Patch must contain at least one operation");
+  if (!count) throw invalid('Patch must contain at least one operation');
   const active = new Set<string>();
   const resolved = new Set<string>();
   const builtValues = new Map<string, Model>();
@@ -283,23 +283,23 @@ export async function patchNode(
         const cached = builtValues.get(key);
         if (cached) return cached;
         if (building.has(key))
-          throw invalid(`Circular self reference at ${base.join(".")}`);
+          throw invalid(`Circular self reference at ${base.join('.')}`);
         building.add(key);
         try {
           let result = await build();
           const operation =
-            local.length === 1 ? pending.get(base.join(".")) : undefined;
+            local.length === 1 ? pending.get(base.join('.')) : undefined;
           if (operation) {
             const target = parent(
-              operation.root === "info" ? info : element!,
+              operation.root === 'info' ? info : element!,
               operation.keys,
               true
             )!;
             const old = child(target, operation.keys.at(-1)!);
             if (
-              (typeof operation.value === "string" && old instanceof Str) ||
-              (typeof operation.value === "number" && old instanceof Val) ||
-              (typeof operation.value === "boolean" && old instanceof Bool)
+              (typeof operation.value === 'string' && old instanceof Str) ||
+              (typeof operation.value === 'number' && old instanceof Val) ||
+              (typeof operation.value === 'boolean' && old instanceof Bool)
             ) {
               old.set(operation.value);
               result = old;
@@ -315,8 +315,8 @@ export async function patchNode(
     return wrapper.value;
   }
   async function self(path: string): Promise<Model> {
-    if (path.startsWith("attr.")) {
-      const [, category, label] = path.split(".");
+    if (path.startsWith('attr.')) {
+      const [, category, label] = path.split('.');
       const attr = attrs.find(
         (a) => a.category === category && a.label === label
       );
@@ -324,13 +324,13 @@ export async function patchNode(
       return attr.value;
     }
     for (const [key, operation] of pending) {
-      if (key === path || path.startsWith(key + ".")) {
+      if (key === path || path.startsWith(key + '.')) {
         const suffix =
-          path === key ? [] : path.slice(key.length + 1).split(".");
+          path === key ? [] : path.slice(key.length + 1).split('.');
         let raw = operation.value;
         let index = 0;
         for (; index < suffix.length; index++) {
-          if (typeof raw !== "object" || Object.hasOwn(raw, "$modelRef")) break;
+          if (typeof raw !== 'object' || Object.hasOwn(raw, '$modelRef')) break;
           const part = suffix[index];
           if (Array.isArray(raw)) {
             if (!/^(0|[1-9]\d*)$/.test(part) || Number(part) >= raw.length)
@@ -355,10 +355,10 @@ export async function patchNode(
         }
         return model;
       }
-      if (key.startsWith(path + ".")) await resolve(key);
+      if (key.startsWith(path + '.')) await resolve(key);
     }
-    const [root, ...keys] = path.split(".");
-    let model: Model | undefined = root === "info" ? info : element;
+    const [root, ...keys] = path.split('.');
+    let model: Model | undefined = root === 'info' ? info : element;
     for (const key of keys) model = model ? child(model, key) : undefined;
     if (!model) throw invalid(`Missing self path: ${path}`);
     return model;
@@ -373,7 +373,7 @@ export async function patchNode(
       ...operation.keys,
     ]);
     const target = parent(
-      operation.root === "info" ? info : element!,
+      operation.root === 'info' ? info : element!,
       operation.keys,
       true
     )!;
@@ -381,9 +381,9 @@ export async function patchNode(
     const old = child(target, field);
     const value = built;
     if (
-      (typeof operation.value === "string" && old instanceof Str) ||
-      (typeof operation.value === "number" && old instanceof Val) ||
-      (typeof operation.value === "boolean" && old instanceof Bool)
+      (typeof operation.value === 'string' && old instanceof Str) ||
+      (typeof operation.value === 'number' && old instanceof Val) ||
+      (typeof operation.value === 'boolean' && old instanceof Bool)
     )
       old.set(operation.value);
     else assign(target, field, value);
@@ -413,7 +413,7 @@ export async function patchNode(
     (hadElement || Object.keys(patch.element?.set ?? {}).length > 0)
   ) {
     const result = commit(element);
-    if (!node.element) node.add_attr("element", new SpinalNodePointer(result));
+    if (!node.element) node.add_attr('element', new SpinalNodePointer(result));
   }
   for (const attr of originalAttrs) {
     if (!attrs.includes(attr)) {
@@ -441,7 +441,7 @@ export async function patchNode(
       const list: Lst<SpinalAttribute> = await category.getElement(true);
       for (const item of list)
         if (item.label.get() === attr.label)
-          item.mod_attr("value", commit(attr.value));
+          item.mod_attr('value', commit(attr.value));
     }
   }
   node.setDirectModificationDate();

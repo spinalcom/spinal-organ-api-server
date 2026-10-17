@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 export declare const childAttachmentSchema: z.ZodObject<{
     childDynamicId: z.ZodNumber;
     relationName: z.ZodString;

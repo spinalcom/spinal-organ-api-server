@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -27,19 +27,19 @@ exports.parseElementQuery = parseElementQuery;
 const createErrorMsgItem_1 = require("../errorHandler/createErrorMsgItem");
 const EApiErrorType_1 = require("../errorHandler/EApiErrorType");
 function parseElementQuery(query) {
-    if (query === undefined || query.trim().toLowerCase() === "false")
+    if (query === undefined || query.trim().toLowerCase() === 'false')
         return false;
-    if (query.trim() === "" || query.trim().toLowerCase() === "true")
+    if (query.trim() === '' || query.trim().toLowerCase() === 'true')
         return true;
-    return query.split(",").map((field) => {
-        const path = field.trim().split(".");
+    return query.split(',').map((field) => {
+        const path = field.trim().split('.');
         if (path.some((key) => !key ||
-            key.startsWith("_") ||
-            key === "constructor" ||
-            key === "prototype" ||
-            key === "model_id") ||
+            key.startsWith('_') ||
+            key === 'constructor' ||
+            key === 'prototype' ||
+            key === 'model_id') ||
             path.length > 32) {
-            throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, "Invalid element field path (maximum depth: 32)");
+            throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, 'Invalid element field path (maximum depth: 32)');
         }
         return path;
     });

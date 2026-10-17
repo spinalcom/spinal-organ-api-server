@@ -4,7 +4,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -22,22 +22,22 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import validate from "express-zod-safe";
-import type { Express } from "express";
-import { SpinalContext } from "spinal-model-graph";
-import type { ISpinalAPIMiddleware } from "../../../interfaces";
-import { getProfileId } from "../../../utilities/requestUtilities";
-import { loadAndValidateNode } from "../../../utilities/loadAndValidateNode";
-import { getNodeData } from "../../../utilities/v2/node/getNodeData";
+import validate from 'express-zod-safe';
+import type { Express } from 'express';
+import { SpinalContext } from 'spinal-model-graph';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import { getProfileId } from '../../../utilities/requestUtilities';
+import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
+import { getNodeData } from '../../../utilities/v2/node/getNodeData';
 import {
   createErrorMsgItem,
   isErrorItem,
-} from "../../../utilities/v2/errorHandler/createErrorMsgItem";
-import { EApiErrorType } from "../../../utilities/v2/errorHandler/EApiErrorType";
-import { sendResponseError } from "../../../utilities/v2/errorHandler/sendResponseError";
-import type { IErrorItem } from "../openApiCompo/schemas/IErrorItem";
-import { createNodeSchema } from "../../../utilities/v2/node/creation/schema";
-import { prepareNodeCreation } from "../../../utilities/v2/node/prepareNodeCreation";
+} from '../../../utilities/v2/errorHandler/createErrorMsgItem';
+import { EApiErrorType } from '../../../utilities/v2/errorHandler/EApiErrorType';
+import { sendResponseError } from '../../../utilities/v2/errorHandler/sendResponseError';
+import type { IErrorItem } from '../openApiCompo/schemas/IErrorItem';
+import { createNodeSchema } from '../../../utilities/v2/node/creation/schema';
+import { prepareNodeCreation } from '../../../utilities/v2/node/prepareNodeCreation';
 
 module.exports = function (
   logger: any,
@@ -184,7 +184,7 @@ module.exports = function (
    *               $ref: '#/components/schemas/INodeAttachmentFailure'
    */
   app.post(
-    "/api/v2/node",
+    '/api/v2/node',
     validate({
       body: createNodeSchema,
     }),
@@ -245,9 +245,9 @@ module.exports = function (
             const item = isErrorItem(error)
               ? error
               : createErrorMsgItem(
-                EApiErrorType.INTERNAL_ERROR,
-                "Unexpected error while attaching node to parent"
-              );
+                  EApiErrorType.INTERNAL_ERROR,
+                  'Unexpected error while attaching node to parent'
+                );
             errors.push({ ...item, index, parent });
           }
         }
@@ -260,7 +260,7 @@ module.exports = function (
               internal
                 ? EApiErrorType.INTERNAL_ERROR
                 : EApiErrorType.INVALID_REQUEST,
-              "No parent attachment succeeded"
+              'No parent attachment succeeded'
             ),
             errors,
           });

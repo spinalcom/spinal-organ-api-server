@@ -1,3 +1,27 @@
+/*
+ * Copyright 2026 SpinalCom - www.spinalcom.com
+ *
+ * This file is part of SpinalCore.
+ *
+ * Please read all of the following terms and conditions
+ * of the Software license Agreement ("Agreement")
+ * carefully.
+ *
+ * This Agreement is a legally binding contract between
+ * the Licensee (as defined below) and SpinalCom that
+ * sets forth the terms and conditions that govern your
+ * use of the Program. By installing and/or using the
+ * Program, you agree to abide by all the terms and
+ * conditions stated or referenced herein.
+ *
+ * If you do not agree to abide by these terms and
+ * conditions, do not demonstrate your acceptance and do
+ * not install or use the Program.
+ * You should have received a copy of the license along
+ * with this file. If not, see
+ * <http://resources.spinalcom.com/licenses.pdf>.
+ */
+
 import type { SpinalNode } from 'spinal-model-graph';
 import { Bool, Str, Val } from 'spinal-core-connectorjs';
 import type { INodeItemAttr } from '../../../routes/v2/openApiCompo/schemas/INodeItemAttr';
@@ -26,9 +50,13 @@ export async function matchesNodeFilter(
       value = node._server_id;
     } else if (root === 'info') {
       const key = category === 'staticId' ? 'id' : category;
-      const model = node.info._attribute_names.includes(key) ? node.info[key] : undefined;
-      value = model instanceof Str || model instanceof Bool || model instanceof Val
-        ? model.get() : undefined;
+      const model = node.info._attribute_names.includes(key)
+        ? node.info[key]
+        : undefined;
+      value =
+        model instanceof Str || model instanceof Bool || model instanceof Val
+          ? model.get()
+          : undefined;
     } else if (root === 'attributes') {
       if (!attributesLoaded) {
         const query: Record<string, string[]> = Object.create(null);
@@ -41,13 +69,14 @@ export async function matchesNodeFilter(
         attributes = await extractNodeAttr(node, query, false);
         attributesLoaded = true;
       }
-      const cat = attributes &&
-        Object.prototype.hasOwnProperty.call(attributes, category)
-        ? attributes[category]
-        : undefined;
-      value = cat && Object.prototype.hasOwnProperty.call(cat, attribute)
-        ? cat[attribute]
-        : undefined;
+      const cat =
+        attributes && Object.prototype.hasOwnProperty.call(attributes, category)
+          ? attributes[category]
+          : undefined;
+      value =
+        cat && Object.prototype.hasOwnProperty.call(cat, attribute)
+          ? cat[attribute]
+          : undefined;
     }
     if (!matchesValue(value, filter)) return false;
   }
@@ -84,9 +113,13 @@ function matchesValue(value: unknown, filter: IQueryFilterNode): boolean {
   const expected = parseFilterNumber(filter.value);
   if (actual === undefined || expected === undefined) return false;
   switch (filter.operator) {
-    case 'gt': return actual > expected;
-    case 'gte': return actual >= expected;
-    case 'lt': return actual < expected;
-    case 'lte': return actual <= expected;
+    case 'gt':
+      return actual > expected;
+    case 'gte':
+      return actual >= expected;
+    case 'lt':
+      return actual < expected;
+    case 'lte':
+      return actual <= expected;
   }
 }

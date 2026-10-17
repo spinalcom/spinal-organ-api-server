@@ -114,7 +114,9 @@ module.exports = function (
         attributes: z.coerce.string().optional(),
         'add-attributes-modification-date': z.stringbool().optional(),
         'parent-dynamic-id': z.coerce.number().min(1).optional(),
-        filter: z.union([z.record(z.string(), z.unknown()), z.string()]).optional(),
+        filter: z
+          .union([z.record(z.string(), z.unknown()), z.string()])
+          .optional(),
         offset: z.coerce.number().min(0).optional().default(0),
       }),
     }),
@@ -135,7 +137,9 @@ module.exports = function (
           profileId,
           false
         );
-        let roomFound: Iterable<{ node: SpinalNode; parentId: number }> | AsyncIterable<{ node: SpinalNode; parentId: number }>;
+        let roomFound:
+          | Iterable<{ node: SpinalNode; parentId: number }>
+          | AsyncIterable<{ node: SpinalNode; parentId: number }>;
         if (parentDynamicId) {
           const roomNodes = await getNodeChildrenFromParentDynId(
             spinalAPIMiddleware,
@@ -154,7 +158,10 @@ module.exports = function (
               },
             ]
           );
-          roomFound = roomNodes.map(node => ({ node, parentId: parentDynamicId }));
+          roomFound = roomNodes.map((node) => ({
+            node,
+            parentId: parentDynamicId,
+          }));
         } else {
           if (!building) {
             throw createErrorMsgItem(

@@ -55,9 +55,16 @@ export async function handleSetInfo(
     }
     return;
   }
-  if (Object.values(info).some((value) => typeof value === 'object' && value !== null)) {
+  if (
+    Object.values(info).some(
+      (value) => typeof value === 'object' && value !== null
+    )
+  ) {
     if (!middleware || profileId === undefined) {
-      throw createErrorMsgItem(EApiErrorType.INTERNAL_ERROR, 'Structured info requires middleware and profile ID');
+      throw createErrorMsgItem(
+        EApiErrorType.INTERNAL_ERROR,
+        'Structured info requires middleware and profile ID'
+      );
     }
     return handleSetInfo(node, await resolveInfo(info, middleware, profileId));
   }

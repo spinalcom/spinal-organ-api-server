@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -36,7 +36,7 @@ function createModelStaging() {
     let visits = 0;
     function clone(model, depth = 0) {
         if (++visits > 10000 || depth > 32)
-            throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, "Patch staging exceeds maximum depth (32) or model count (10000)");
+            throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, 'Patch staging exceeds maximum depth (32) or model count (10000)');
         const cached = clones.get(model);
         if (cached)
             return cached;

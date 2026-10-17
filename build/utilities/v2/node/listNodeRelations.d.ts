@@ -1,6 +1,6 @@
-import { z } from "zod";
-import type { ISpinalAPIMiddleware } from "../../../interfaces";
-import type { INodeItem } from "../../../routes/v2/openApiCompo/schemas/INodeItem";
+import { z } from 'zod';
+import type { ISpinalAPIMiddleware } from '../../../interfaces';
+import type { INodeItem } from '../../../routes/v2/openApiCompo/schemas/INodeItem';
 export declare const relationsQuerySchema: z.ZodObject<{
     relationName: z.ZodOptional<z.ZodString>;
     relationType: z.ZodOptional<z.ZodEnum<{
@@ -15,9 +15,9 @@ export declare const relationsQuerySchema: z.ZodObject<{
     element: z.ZodOptional<z.ZodString>;
     filter: z.ZodOptional<z.ZodUnknown>;
     offset: z.ZodDefault<z.ZodCoercedNumber<unknown>>;
-    "add-attributes-modification-date": z.ZodOptional<z.ZodCodec<z.ZodString, z.ZodBoolean>>;
+    'add-attributes-modification-date': z.ZodOptional<z.ZodCodec<z.ZodString, z.ZodBoolean>>;
 }, z.core.$strict>;
-export declare function listNodeRelations(middleware: ISpinalAPIMiddleware, profileId: string, nodeId: number, query: z.infer<typeof relationsQuerySchema>, grouped: boolean, direction: "children" | "parents"): Promise<{
+export declare function listNodeRelations(middleware: ISpinalAPIMiddleware, profileId: string, nodeId: number, query: z.infer<typeof relationsQuerySchema>, grouped: boolean, direction: 'children' | 'parents'): Promise<{
     data: INodeItem[];
     offset: number;
     total: number;

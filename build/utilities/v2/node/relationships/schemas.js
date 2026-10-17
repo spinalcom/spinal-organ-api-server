@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -41,7 +41,7 @@ exports.childAttachmentSchema = zod_1.z.strictObject({
 const moveLinkFields = {
     parentDynamicId: dynamicId,
     relationName: zod_1.z.string().refine((name) => name.trim().length > 0, {
-        message: "relationName must not be blank",
+        message: 'relationName must not be blank',
     }),
     relationType,
 };

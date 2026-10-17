@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -125,7 +125,7 @@ module.exports = function (logger, app, middleware) {
      *       500:
      *         $ref: '#/components/responses/IErrorItemRes500'
      */
-    app.patch("/api/v2/node/:nodeId", (0, express_zod_safe_1.default)({
+    app.patch('/api/v2/node/:nodeId', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({
             nodeId: zod_1.z.coerce.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
         }),
@@ -133,7 +133,7 @@ module.exports = function (logger, app, middleware) {
             info: zod_1.z.string().optional(),
             attributes: zod_1.z.string().optional(),
             element: zod_1.z.string().optional(),
-            "add-attributes-modification-date": zod_1.z.stringbool().optional(),
+            'add-attributes-modification-date': zod_1.z.stringbool().optional(),
         }),
         body: patchNode_1.patchNodeSchema,
     }), async (req, res) => {
@@ -143,7 +143,7 @@ module.exports = function (logger, app, middleware) {
                 for (const field of info) {
                     const parsed = (0, getNodeElement_1.parseElementQuery)(field);
                     if (!Array.isArray(parsed) || parsed.length !== 1) {
-                        throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, "Invalid info field path");
+                        throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, 'Invalid info field path');
                     }
                 }
             }
@@ -152,7 +152,7 @@ module.exports = function (logger, app, middleware) {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const node = await (0, loadAndValidateNode_1.loadAndValidateNode)(middleware, req.params.nodeId, profileId);
             await (0, patchNode_1.patchNode)(node, req.body, middleware, profileId);
-            const data = await (0, getNodeData_1.getNodeData)(node, info, attributes, req.query["add-attributes-modification-date"], undefined, element);
+            const data = await (0, getNodeData_1.getNodeData)(node, info, attributes, req.query['add-attributes-modification-date'], undefined, element);
             return res.status(200).json({ data });
         }
         catch (error) {

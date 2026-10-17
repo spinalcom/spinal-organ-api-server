@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -38,23 +38,23 @@ function selectPatchBranches(patch) {
         labels.add(label);
     }
     function selectPath(root, path) {
-        selected[root].add(path.split(".")[0]);
+        selected[root].add(path.split('.')[0]);
     }
     function selectReferences(value) {
-        if (typeof value !== "object")
+        if (typeof value !== 'object')
             return;
-        if (!Array.isArray(value) && "$modelRef" in value) {
-            if (value.$modelRef === "self" && typeof value.path === "string") {
-                const [root, key, label] = value.path.split(".");
-                if (root === "info")
+        if (!Array.isArray(value) && '$modelRef' in value) {
+            if (value.$modelRef === 'self' && typeof value.path === 'string') {
+                const [root, key, label] = value.path.split('.');
+                if (root === 'info')
                     selected.info.add(key);
-                else if (root === "element") {
+                else if (root === 'element') {
                     if (key === undefined)
                         fullElement = true;
                     else
                         selected.element.add(key);
                 }
-                else if (root === "attr")
+                else if (root === 'attr')
                     selectAttr(key, label);
             }
             return;
@@ -62,7 +62,7 @@ function selectPatchBranches(patch) {
         for (const child of Object.values(value))
             selectReferences(child);
     }
-    for (const root of ["info", "element"]) {
+    for (const root of ['info', 'element']) {
         const ops = patch[root];
         for (const path of ops?.remove ?? [])
             selectPath(root, path);

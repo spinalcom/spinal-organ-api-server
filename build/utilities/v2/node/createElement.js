@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -44,7 +44,7 @@ async function createElement(data, middleware, profileId, self, build) {
                 if (result instanceof spinal_core_connectorjs_1.Model)
                     return result;
                 const wrapper = new spinal_core_connectorjs_1.Model();
-                wrapper.add_attr("value", result);
+                wrapper.add_attr('value', result);
                 return wrapper.value;
             });
         }
@@ -57,17 +57,17 @@ async function createElement(data, middleware, profileId, self, build) {
                 result.push(await resolve(item, [...path, String(index)]));
             return result;
         }
-        if (typeof value !== "object")
+        if (typeof value !== 'object')
             return value;
-        if (Object.hasOwn(value, "$modelRef") &&
-            (typeof value.$modelRef === "number" || value.$modelRef === "self")) {
+        if (Object.hasOwn(value, '$modelRef') &&
+            (typeof value.$modelRef === 'number' || value.$modelRef === 'self')) {
             const id = value.$modelRef;
-            if (typeof value.path !== "string" || !(0, resolveModelReference_1.isModelReferencePath)(value.path)) {
-                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, "Invalid $modelRef path");
+            if (typeof value.path !== 'string' || !(0, resolveModelReference_1.isModelReferencePath)(value.path)) {
+                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, 'Invalid $modelRef path');
             }
-            if (id === "self") {
+            if (id === 'self') {
                 if (!self)
-                    throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, "Self reference is unavailable in this creation context");
+                    throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, 'Self reference is unavailable in this creation context');
                 return self(value.path);
             }
             const key = JSON.stringify([id, value.path]);

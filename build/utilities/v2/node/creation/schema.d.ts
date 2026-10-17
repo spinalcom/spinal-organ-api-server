@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 export declare const createNodeSchema: z.ZodObject<{
     info: z.ZodObject<{
         name: z.ZodString;

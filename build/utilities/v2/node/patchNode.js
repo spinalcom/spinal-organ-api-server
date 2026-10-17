@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -72,7 +72,7 @@ async function patchNode(node, patch, middleware, profileId) {
             continue;
         const list = await category.getElement(true);
         if (!(list instanceof spinal_core_connectorjs_1.Lst))
-            throw invalid("Invalid attribute category");
+            throw invalid('Invalid attribute category');
         for (const attr of list) {
             if (!labels.has(attr.label.get()))
                 continue;
@@ -92,27 +92,27 @@ async function patchNode(node, patch, middleware, profileId) {
             const length = Math.min(other.length, path.length);
             return other.slice(0, length).every((key, i) => key === path[i]);
         }))
-            throw invalid(`Conflicting patch operations at ${path.join(".")}`);
+            throw invalid(`Conflicting patch operations at ${path.join('.')}`);
         touched.push(path);
     }
     let count = 0;
     for (const item of patch.attributes?.rename ?? []) {
         count++;
-        claim(["attr", item.category, item.from]);
+        claim(['attr', item.category, item.from]);
         if (item.from !== item.to)
-            claim(["attr", item.category, item.to]);
+            claim(['attr', item.category, item.to]);
         const attr = attrs.find((a) => a.category === item.category && a.label === item.from);
         if (!attr)
-            throw invalid("Attribute to rename does not exist");
+            throw invalid('Attribute to rename does not exist');
         if (item.from !== item.to &&
             attrs.some((a) => a.category === item.category && a.label === item.to)) {
-            throw invalid("Destination attribute label already exists");
+            throw invalid('Destination attribute label already exists');
         }
         attr.label = item.to;
     }
     for (const item of patch.attributes?.remove ?? []) {
         count++;
-        claim(["attr", item.category, item.label]);
+        claim(['attr', item.category, item.label]);
         const index = attrs.findIndex((a) => a.category === item.category && a.label === item.label);
         if (index !== -1)
             attrs.splice(index, 1);
@@ -120,7 +120,7 @@ async function patchNode(node, patch, middleware, profileId) {
     for (const [category, values] of Object.entries(patch.attributes?.set ?? {})) {
         for (const [label, value] of Object.entries(values)) {
             count++;
-            claim(["attr", category, label]);
+            claim(['attr', category, label]);
             const attr = attrs.find((a) => a.category === category && a.label === label);
             if (attr)
                 attr.value.set(value);
@@ -129,18 +129,18 @@ async function patchNode(node, patch, middleware, profileId) {
         }
     }
     function pathKeys(root, path, action) {
-        const keys = path.split(".");
+        const keys = path.split('.');
         if (keys.length > 32 ||
-            keys.some((key) => !createElement_1.elementKey.safeParse(key).success || key === "prototype" || !key))
+            keys.some((key) => !createElement_1.elementKey.safeParse(key).success || key === 'prototype' || !key))
             throw invalid(`Invalid patch path: ${path}`);
-        if (root === "info") {
-            if (["id", "staticId", "dynamicId"].includes(keys[0]))
-                throw invalid("Node IDs cannot be patched");
-            if (keys[0] === "type" && (action !== "set" || keys.length !== 1)) {
-                throw invalid("info.type can only be set");
+        if (root === 'info') {
+            if (['id', 'staticId', 'dynamicId'].includes(keys[0]))
+                throw invalid('Node IDs cannot be patched');
+            if (keys[0] === 'type' && (action !== 'set' || keys.length !== 1)) {
+                throw invalid('info.type can only be set');
             }
-            if (keys[0] === "name" && (action !== "set" || keys.length !== 1)) {
-                throw invalid("info.name can only be set");
+            if (keys[0] === 'name' && (action !== 'set' || keys.length !== 1)) {
+                throw invalid('info.name can only be set');
             }
         }
         return keys;
@@ -151,10 +151,10 @@ async function patchNode(node, patch, middleware, profileId) {
             model instanceof spinal_core_connectorjs_1.Str ||
             model instanceof spinal_core_connectorjs_1.Bool ||
             model instanceof spinal_core_connectorjs_1.Val)
-            throw invalid("Cannot traverse a scalar or pointer");
+            throw invalid('Cannot traverse a scalar or pointer');
         if (model instanceof spinal_core_connectorjs_1.Lst) {
             if (!/^(0|[1-9]\d*)$/.test(key) || Number(key) >= model.length)
-                throw invalid("Array index must already exist");
+                throw invalid('Array index must already exist');
         }
         else if (!model._attribute_names.includes(key))
             return undefined;
@@ -182,59 +182,59 @@ async function patchNode(node, patch, middleware, profileId) {
             target.mod_attr(key, value);
     }
     const pending = new Map();
-    for (const root of ["info", "element"]) {
+    for (const root of ['info', 'element']) {
         const ops = patch[root];
         if (!ops)
             continue;
-        if (root === "element" && !element)
+        if (root === 'element' && !element)
             element = new spinal_core_connectorjs_1.Model();
-        const model = root === "info" ? info : element;
+        const model = root === 'info' ? info : element;
         for (const path of ops.remove ?? []) {
             count++;
-            const keys = pathKeys(root, path, "remove");
+            const keys = pathKeys(root, path, 'remove');
             claim([root, ...keys]);
             const target = parent(model, keys, false);
             if (target instanceof spinal_core_connectorjs_1.Lst)
-                throw invalid("Array entries cannot be removed");
+                throw invalid('Array entries cannot be removed');
             if (target && child(target, keys.at(-1)))
                 target.rem_attr(keys.at(-1));
         }
         for (const rename of ops.rename ?? []) {
             count++;
-            const from = pathKeys(root, rename.from, "rename");
-            const to = pathKeys(root, rename.to, "rename");
-            if (from.slice(0, -1).join(".") !== to.slice(0, -1).join("."))
-                throw invalid("Rename must stay in the same parent object");
+            const from = pathKeys(root, rename.from, 'rename');
+            const to = pathKeys(root, rename.to, 'rename');
+            if (from.slice(0, -1).join('.') !== to.slice(0, -1).join('.'))
+                throw invalid('Rename must stay in the same parent object');
             claim([root, ...from]);
             if (rename.from !== rename.to)
                 claim([root, ...to]);
             const target = parent(model, from, false);
             if (!target || target instanceof spinal_core_connectorjs_1.Lst)
-                throw invalid("Rename requires an existing object field");
+                throw invalid('Rename requires an existing object field');
             const source = child(target, from.at(-1));
             if (!source)
-                throw invalid("Rename source does not exist");
+                throw invalid('Rename source does not exist');
             if (rename.from !== rename.to) {
                 if (child(target, to.at(-1)))
-                    throw invalid("Rename destination already exists");
+                    throw invalid('Rename destination already exists');
                 target.add_attr(to.at(-1), source);
                 target.rem_attr(from.at(-1));
             }
         }
         for (const [path, value] of Object.entries(ops.set ?? {})) {
             count++;
-            const keys = pathKeys(root, path, "set");
-            if (root === "info" &&
-                ["name", "type"].includes(path) &&
-                (typeof value !== "string" || !value.length || value.length > 200))
+            const keys = pathKeys(root, path, 'set');
+            if (root === 'info' &&
+                ['name', 'type'].includes(path) &&
+                (typeof value !== 'string' || !value.length || value.length > 200))
                 throw invalid(`info.${path} must be a nonempty string of at most 200 characters`);
             claim([root, ...keys]);
             parent(model, keys, true);
-            pending.set([root, ...keys].join("."), { root, keys, value });
+            pending.set([root, ...keys].join('.'), { root, keys, value });
         }
     }
     if (!count)
-        throw invalid("Patch must contain at least one operation");
+        throw invalid('Patch must contain at least one operation');
     const active = new Set();
     const resolved = new Set();
     const builtValues = new Map();
@@ -246,17 +246,17 @@ async function patchNode(node, patch, middleware, profileId) {
             if (cached)
                 return cached;
             if (building.has(key))
-                throw invalid(`Circular self reference at ${base.join(".")}`);
+                throw invalid(`Circular self reference at ${base.join('.')}`);
             building.add(key);
             try {
                 let result = await build();
-                const operation = local.length === 1 ? pending.get(base.join(".")) : undefined;
+                const operation = local.length === 1 ? pending.get(base.join('.')) : undefined;
                 if (operation) {
-                    const target = parent(operation.root === "info" ? info : element, operation.keys, true);
+                    const target = parent(operation.root === 'info' ? info : element, operation.keys, true);
                     const old = child(target, operation.keys.at(-1));
-                    if ((typeof operation.value === "string" && old instanceof spinal_core_connectorjs_1.Str) ||
-                        (typeof operation.value === "number" && old instanceof spinal_core_connectorjs_1.Val) ||
-                        (typeof operation.value === "boolean" && old instanceof spinal_core_connectorjs_1.Bool)) {
+                    if ((typeof operation.value === 'string' && old instanceof spinal_core_connectorjs_1.Str) ||
+                        (typeof operation.value === 'number' && old instanceof spinal_core_connectorjs_1.Val) ||
+                        (typeof operation.value === 'boolean' && old instanceof spinal_core_connectorjs_1.Bool)) {
                         old.set(operation.value);
                         result = old;
                     }
@@ -271,20 +271,20 @@ async function patchNode(node, patch, middleware, profileId) {
         return wrapper.value;
     }
     async function self(path) {
-        if (path.startsWith("attr.")) {
-            const [, category, label] = path.split(".");
+        if (path.startsWith('attr.')) {
+            const [, category, label] = path.split('.');
             const attr = attrs.find((a) => a.category === category && a.label === label);
             if (!attr)
                 throw invalid(`Missing self path: ${path}`);
             return attr.value;
         }
         for (const [key, operation] of pending) {
-            if (key === path || path.startsWith(key + ".")) {
-                const suffix = path === key ? [] : path.slice(key.length + 1).split(".");
+            if (key === path || path.startsWith(key + '.')) {
+                const suffix = path === key ? [] : path.slice(key.length + 1).split('.');
                 let raw = operation.value;
                 let index = 0;
                 for (; index < suffix.length; index++) {
-                    if (typeof raw !== "object" || Object.hasOwn(raw, "$modelRef"))
+                    if (typeof raw !== 'object' || Object.hasOwn(raw, '$modelRef'))
                         break;
                     const part = suffix[index];
                     if (Array.isArray(raw)) {
@@ -312,11 +312,11 @@ async function patchNode(node, patch, middleware, profileId) {
                 }
                 return model;
             }
-            if (key.startsWith(path + "."))
+            if (key.startsWith(path + '.'))
                 await resolve(key);
         }
-        const [root, ...keys] = path.split(".");
-        let model = root === "info" ? info : element;
+        const [root, ...keys] = path.split('.');
+        let model = root === 'info' ? info : element;
         for (const key of keys)
             model = model ? child(model, key) : undefined;
         if (!model)
@@ -334,13 +334,13 @@ async function patchNode(node, patch, middleware, profileId) {
             operation.root,
             ...operation.keys,
         ]);
-        const target = parent(operation.root === "info" ? info : element, operation.keys, true);
+        const target = parent(operation.root === 'info' ? info : element, operation.keys, true);
         const field = operation.keys.at(-1);
         const old = child(target, field);
         const value = built;
-        if ((typeof operation.value === "string" && old instanceof spinal_core_connectorjs_1.Str) ||
-            (typeof operation.value === "number" && old instanceof spinal_core_connectorjs_1.Val) ||
-            (typeof operation.value === "boolean" && old instanceof spinal_core_connectorjs_1.Bool))
+        if ((typeof operation.value === 'string' && old instanceof spinal_core_connectorjs_1.Str) ||
+            (typeof operation.value === 'number' && old instanceof spinal_core_connectorjs_1.Val) ||
+            (typeof operation.value === 'boolean' && old instanceof spinal_core_connectorjs_1.Bool))
             old.set(operation.value);
         else
             assign(target, field, value);
@@ -368,7 +368,7 @@ async function patchNode(node, patch, middleware, profileId) {
         (hadElement || Object.keys(patch.element?.set ?? {}).length > 0)) {
         const result = commit(element);
         if (!node.element)
-            node.add_attr("element", new spinal_model_graph_1.SpinalNodePointer(result));
+            node.add_attr('element', new spinal_model_graph_1.SpinalNodePointer(result));
     }
     for (const attr of originalAttrs) {
         if (!attrs.includes(attr)) {
@@ -392,7 +392,7 @@ async function patchNode(node, patch, middleware, profileId) {
             const list = await category.getElement(true);
             for (const item of list)
                 if (item.label.get() === attr.label)
-                    item.mod_attr("value", commit(attr.value));
+                    item.mod_attr('value', commit(attr.value));
         }
     }
     node.setDirectModificationDate();

@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -32,7 +32,7 @@ exports.createNodeSchema = zod_1.z.strictObject({
     info: (0, addExtraInfoValidation_1.addExtraInfoValidation)(zod_1.z.object({
         name: zod_1.z.string().min(1).max(200),
         type: zod_1.z.string().min(1).max(200),
-    }), ["id", "staticId", "dynamicId"]),
+    }), ['id', 'staticId', 'dynamicId']),
     attributes: zod_1.z.record(zod_1.z.string(), zod_1.z.record(zod_1.z.string(), zod_1.z.string())).optional(),
     element: schema_1.elementObject.optional(),
     parents: zod_1.z

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 export declare const patchNodeSchema: z.ZodObject<{
     info: z.ZodOptional<z.ZodObject<{
         set: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodType<import("../createElement").ElementValue, unknown, z.core.$ZodTypeInternals<import("../createElement").ElementValue, unknown>>>>;

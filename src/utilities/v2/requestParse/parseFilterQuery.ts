@@ -25,7 +25,14 @@
 import { createErrorMsgItem } from '../errorHandler/createErrorMsgItem';
 import { EApiErrorType } from '../errorHandler/EApiErrorType';
 
-export type NodeFilterOperator = 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'exists';
+export type NodeFilterOperator =
+  | 'eq'
+  | 'ne'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte'
+  | 'exists';
 
 export interface IQueryFilterNode {
   field: string;
@@ -41,7 +48,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function parseFilterObject(value: unknown, label: string): Record<string, unknown> {
+function parseFilterObject(
+  value: unknown,
+  label: string
+): Record<string, unknown> {
   if (typeof value === 'string') {
     try {
       value = JSON.parse(value);
@@ -58,7 +68,10 @@ function isOperator(value: string): value is NodeFilterOperator {
   return ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'exists'].includes(value);
 }
 
-function parseConditions(value: unknown, field: string): Record<string, unknown> {
+function parseConditions(
+  value: unknown,
+  field: string
+): Record<string, unknown> {
   if (
     typeof value === 'number' ||
     typeof value === 'boolean' ||
@@ -170,10 +183,19 @@ export function parseFilterQuery(
         invalidQuery(`Filter ${field}.${operator} requires a finite value`);
       }
       if (operator === 'exists') {
-        if (value !== true && value !== false && value !== 'true' && value !== 'false') {
+        if (
+          value !== true &&
+          value !== false &&
+          value !== 'true' &&
+          value !== 'false'
+        ) {
           invalidQuery(`Filter ${field}.exists requires true or false`);
         }
-        filters.push({ field, operator, value: value === true || value === 'true' });
+        filters.push({
+          field,
+          operator,
+          value: value === true || value === 'true',
+        });
       } else if (operator !== 'eq' && operator !== 'ne') {
         const numericValue = parseFilterNumber(value);
         if (numericValue === undefined) {

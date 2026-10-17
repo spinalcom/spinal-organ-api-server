@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -49,7 +49,7 @@ async function attachChildren(middleware, profileId, parentId, children) {
             if (exists &&
                 context &&
                 !(relation.belongsToContext(context) && child.belongsToContext(context)))
-                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, "Child is already attached but not in the requested context");
+                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, 'Child is already attached but not in the requested context');
             if (!exists) {
                 if (context)
                     await parent.addChildInContext(child, entry.relationName, entry.relationType, context);
@@ -60,7 +60,7 @@ async function attachChildren(middleware, profileId, parentId, children) {
                 ...entry,
                 index,
                 parentDynamicId: parentId,
-                status: exists ? "alreadyAttached" : "attached",
+                status: exists ? 'alreadyAttached' : 'attached',
             });
         }
         catch (error) {
@@ -68,7 +68,7 @@ async function attachChildren(middleware, profileId, parentId, children) {
             errors.push({
                 ...((0, createErrorMsgItem_1.isErrorItem)(error)
                     ? error
-                    : (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, "Unexpected error while attaching child")),
+                    : (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, 'Unexpected error while attaching child')),
                 index,
                 child: entry,
             });

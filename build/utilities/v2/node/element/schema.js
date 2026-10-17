@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -29,10 +29,10 @@ const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
 const resolveModelReference_1 = require("../resolveModelReference");
 exports.elementKey = zod_1.z
     .string()
-    .refine((key) => !key.startsWith("_") &&
-    key !== "$modelRef" &&
-    key !== "model_id" &&
-    !(key in spinal_core_connectorjs_1.Model.prototype), "Element keys must not shadow Model members or start with an underscore");
+    .refine((key) => !key.startsWith('_') &&
+    key !== '$modelRef' &&
+    key !== 'model_id' &&
+    !(key in spinal_core_connectorjs_1.Model.prototype), 'Element keys must not shadow Model members or start with an underscore');
 exports.elementValue = zod_1.z.lazy(() => zod_1.z.union([
     zod_1.z.string(),
     zod_1.z.number().finite(),
@@ -42,11 +42,11 @@ exports.elementValue = zod_1.z.lazy(() => zod_1.z.union([
         zod_1.z.strictObject({
             $modelRef: zod_1.z.union([
                 zod_1.z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
-                zod_1.z.literal("self"),
+                zod_1.z.literal('self'),
             ]),
             path: zod_1.z
                 .string()
-                .refine(resolveModelReference_1.isModelReferencePath, "Invalid $modelRef path"),
+                .refine(resolveModelReference_1.isModelReferencePath, 'Invalid $modelRef path'),
         }),
         exports.elementObject,
     ])),
@@ -54,12 +54,12 @@ exports.elementValue = zod_1.z.lazy(() => zod_1.z.union([
 function rejectPrototypeKey(data, ctx) {
     // Zod records discard __proto__ before validating keys.
     if (data !== null &&
-        typeof data === "object" &&
-        Object.hasOwn(data, "__proto__")) {
+        typeof data === 'object' &&
+        Object.hasOwn(data, '__proto__')) {
         ctx.addIssue({
-            code: "custom",
-            message: "Element keys must not shadow Model members or start with an underscore",
-            path: ["__proto__"],
+            code: 'custom',
+            message: 'Element keys must not shadow Model members or start with an underscore',
+            path: ['__proto__'],
         });
         return zod_1.z.NEVER;
     }

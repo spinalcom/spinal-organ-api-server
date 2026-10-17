@@ -3161,7 +3161,6 @@
         "name": "add-attributes-modification-date",
         "required": false,
         "description": "Return selected attributes as objects containing value and lastModification instead of plain strings. lastModification is a Unix timestamp in milliseconds when available. Has no effect when attributes are not requested.",
-        "example": true,
         "schema": {
           "type": "boolean",
           "default": false
@@ -3176,6 +3175,10 @@
           "type": "string"
         },
         "examples": {
+          "missing": {
+            "summary": "--",
+            "value": ""
+          },
           "all": {
             "summary": "All attributes in all categories",
             "value": "true"
@@ -3203,7 +3206,7 @@
         "name": "filter",
         "style": "deepObject",
         "explode": true,
-        "description": "All conditions are combined using **AND**. Filtering runs before pagination,\nindependently of the requested `info` and `attributes`.\n\n#### Equivalent URL formats\n\n- Brackets: `filter[info.virtual][eq]=false`\n- JSON operators: `filter[info.virtual]={\"eq\":\"false\"}`\n- Full JSON: `filter={\"info.virtual\":{\"eq\":\"false\"}}`\n- Default equality: `filter[info.virtual]=false`\n\nURL-encode JSON values when constructing URLs manually.\n\n#### Fields and operators\n\n- Fields: `info.key`, `attributes.category.attribute`, `dynamicId`, `server_id`.\n- `info.staticId` maps to the model's `info.id`.\n- `dynamicId` and `server_id` both refer to the node's dynamic ID.\n- Operators: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `exists`.\n- Scalar values default to **`eq`**.\n- Numeric comparisons require finite numbers, including for numeric attribute strings.\n- Equality preserves strings such as `\"001\"` and uses the stored type for numeric/boolean info.\n\n#### Existence checks\n\n- `\"exists\": true`: the value is present, including `\"\"`, `false` and `0`.\n- `\"exists\": false`: the field is missing or undefined.\n- A missing category also makes its attributes absent.\n- Missing fields never match `eq`, `ne` or numeric comparisons.\n\n#### Value restrictions\n\n- Only scalar info fields are exposed.\n- Null and arrays are invalid filter values.\n- Strings starting with `{` or `[` are interpreted as JSON operator objects.\n  Use explicit `eq` to compare literal strings starting with those characters.\n\n#### Swagger UI input testing\n\nSwagger UI will render the filter parameter as a nested object editor. The explicit equality example is equivalent to:\n`?filter[info.virtual][eq]=false`",
+        "description": "All conditions are combined using **AND**. Filtering runs before pagination,\nindependently of the requested `info` and `attributes`.\n\n#### Equivalent URL formats\n\n- Brackets: `filter[info.virtual][eq]=false`\n- JSON operators: `filter[info.virtual]={\"eq\":\"false\"}`\n- Full JSON: `filter={\"info.virtual\":{\"eq\":\"false\"}}`\n- Default equality: `filter[info.virtual]=false`\n\nURL-encode JSON values when constructing URLs manually.\n\n#### Fields and operators\n\n- Fields: `info.key`, `attributes.category.attribute`, `dynamicId`, `server_id`.\n- `info.staticId` maps to the model's `info.id`.\n- `dynamicId` and `server_id` both refer to the node's dynamic ID.\n- Operators: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `exists`.\n- Scalar values default to **`eq`**.\n- Numeric comparisons require finite numbers, including for numeric attribute strings.\n- Equality preserves strings such as `\"001\"` and uses the stored type for numeric/boolean info.\n\n#### Existence checks\n\n- `\"exists\": true`: the value is present, including `\"\"`, `false` and `0`.\n- `\"exists\": false`: the field is missing or undefined.\n- A missing category also makes its attributes absent.\n- Missing fields never match `eq`, `ne` or numeric comparisons.\n\n#### Value restrictions\n\n- Only scalar info fields are exposed.\n- Null and arrays are invalid filter values.\n- Strings starting with `{` or `[` are interpreted as JSON operator objects.\n  Use explicit `eq` to compare literal strings starting with those characters.",
         "schema": {
           "type": "object",
           "additionalProperties": {
@@ -3239,6 +3242,7 @@
         "examples": {
           "equality": {
             "summary": "Explicit equality on a boolean info field",
+            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.virtual][eq]=false`",
             "value": {
               "info.virtual": {
                 "eq": false
@@ -3247,6 +3251,7 @@
           },
           "defaultEquality": {
             "summary": "Scalar values default to equality",
+            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.name][eq]='Room A'&filter[info.virtual][eq]=false`",
             "value": {
               "info.name": "Room A",
               "info.virtual": false
@@ -3254,6 +3259,7 @@
           },
           "range": {
             "summary": "Attribute numeric range (AND)",
+            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[attributes.Spatial.area][gte]=20&filter[attributes.Spatial.area][lt]=100`",
             "value": {
               "attributes.Spatial.area": {
                 "gte": 20,
@@ -3263,6 +3269,7 @@
           },
           "exists": {
             "summary": "Require one field and exclude nodes with another",
+            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.bimFileId][exists]=true&filter[attributes.Technical.Code][exists]=false`",
             "value": {
               "info.bimFileId": {
                 "exists": true
@@ -3274,6 +3281,7 @@
           },
           "notEqual": {
             "summary": "Exclude a name (missing names do not match)",
+            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.name][ne]='Unassigned'`",
             "value": {
               "info.name": {
                 "ne": "Unassigned"
@@ -3282,6 +3290,7 @@
           },
           "combined": {
             "summary": "Combine info, attribute and dynamic ID conditions",
+            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.virtual][eq]=false&filter[attributes.Technical.Code][eq]='001'&filter[dynamicId][gt]=1000`",
             "value": {
               "info.virtual": false,
               "attributes.Technical.Code": {
@@ -3505,6 +3514,101 @@
               }
             }
           }
+        }
+      }
+    },
+    "examples": {
+      "childRelationshipsGrouped": {
+        "summary": "Multiple relation types and names, with a shared child",
+        "description": "Example for `GET /api/v2/node/101/child-relationships?info=name,type`.\n\nSensor 501 appears in both `LstPtr / hasSensor` and `Ref / monitors`.\n`total` is **4 relationship occurrences**, not 3 distinct children.",
+        "value": {
+          "parentDynamicId": 101,
+          "data": {
+            "LstPtr": {
+              "hasSensor": [
+                {
+                  "dynamicId": 501,
+                  "parentDynamicId": 101,
+                  "info": {
+                    "name": "Temperature sensor",
+                    "type": "sensor"
+                  }
+                },
+                {
+                  "dynamicId": 502,
+                  "parentDynamicId": 101,
+                  "info": {
+                    "name": "Humidity sensor",
+                    "type": "sensor"
+                  }
+                }
+              ],
+              "hasDocument": [
+                {
+                  "dynamicId": 503,
+                  "parentDynamicId": 101,
+                  "info": {
+                    "name": "Maintenance guide",
+                    "type": "document"
+                  }
+                }
+              ]
+            },
+            "Ref": {
+              "monitors": [
+                {
+                  "dynamicId": 501,
+                  "parentDynamicId": 101,
+                  "info": {
+                    "name": "Temperature sensor",
+                    "type": "sensor"
+                  }
+                }
+              ]
+            }
+          },
+          "offset": 0,
+          "total": 4
+        }
+      },
+      "childRelationshipsProjected": {
+        "summary": "A later page with selected attributes and element fields",
+        "description": "Example for `GET /api/v2/node/101/child-relationships?relationType=LstPtr&relationName=hasSensor&info=false&attributes=Technical/Code&element=value,metadata.unit&offset=200`.\n\n`info` is omitted. Selected element paths retain their nested structure.\nThe offset skips 200 matching occurrences globally; `total` counts only this page.",
+        "value": {
+          "parentDynamicId": 101,
+          "data": {
+            "LstPtr": {
+              "hasSensor": [
+                {
+                  "dynamicId": 701,
+                  "parentDynamicId": 101,
+                  "attributes": {
+                    "Technical": {
+                      "Code": "TEMP-201"
+                    }
+                  },
+                  "element": {
+                    "value": 21.5,
+                    "metadata": {
+                      "unit": "Celsius"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "offset": 200,
+          "total": 1
+        }
+      },
+      "childRelationshipsEmpty": {
+        "summary": "No matching relationships or children",
+        "description": "Empty groups are omitted. An empty parent, unmatched selectors/filters, or an offset beyond all matches returns this shape.",
+        "value": {
+          "parentDynamicId": 101,
+          "data": {},
+          "offset": 0,
+          "total": 0
         }
       }
     }
@@ -29264,6 +29368,17 @@
                         }
                       }
                     }
+                  }
+                },
+                "examples": {
+                  "grouped": {
+                    "$ref": "#/components/examples/childRelationshipsGrouped"
+                  },
+                  "projected": {
+                    "$ref": "#/components/examples/childRelationshipsProjected"
+                  },
+                  "empty": {
+                    "$ref": "#/components/examples/childRelationshipsEmpty"
                   }
                 }
               }

@@ -1,19 +1,19 @@
 /*
  * Copyright 2026 SpinalCom - www.spinalcom.com
- * 
+ *
  * This file is part of SpinalCore.
- * 
+ *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
- * 
+ *
  * This Agreement is a legally binding contract between
  * the Licensee (as defined below) and SpinalCom that
  * sets forth the terms and conditions that govern your
  * use of the Program. By installing and/or using the
  * Program, you agree to abide by all the terms and
  * conditions stated or referenced herein.
- * 
+ *
  * If you do not agree to abide by these terms and
  * conditions, do not demonstrate your acceptance and do
  * not install or use the Program.
@@ -22,10 +22,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { Bool, Lst, Model, Ptr, Str, Val } from "spinal-core-connectorjs";
-import { SpinalNodePointer } from "spinal-model-graph";
-import { createErrorMsgItem } from "../../errorHandler/createErrorMsgItem";
-import { EApiErrorType } from "../../errorHandler/EApiErrorType";
+import { Bool, Lst, Model, Ptr, Str, Val } from 'spinal-core-connectorjs';
+import { SpinalNodePointer } from 'spinal-model-graph';
+import { createErrorMsgItem } from '../../errorHandler/createErrorMsgItem';
+import { EApiErrorType } from '../../errorHandler/EApiErrorType';
 
 export function createModelStaging() {
   const originals = new Map<Model, Model>();
@@ -38,7 +38,7 @@ export function createModelStaging() {
     if (++visits > 10000 || depth > 32)
       throw createErrorMsgItem(
         EApiErrorType.INVALID_REQUEST,
-        "Patch staging exceeds maximum depth (32) or model count (10000)"
+        'Patch staging exceeds maximum depth (32) or model count (10000)'
       );
     const cached = clones.get(model);
     if (cached) return cached;
@@ -48,12 +48,12 @@ export function createModelStaging() {
       model instanceof Str
         ? new Str(model.get())
         : model instanceof Bool
-          ? new Bool(model.get())
-          : model instanceof Val
-            ? new Val(model.get())
-            : model instanceof Lst
-              ? new Lst()
-              : new Model();
+        ? new Bool(model.get())
+        : model instanceof Val
+        ? new Val(model.get())
+        : model instanceof Lst
+        ? new Lst()
+        : new Model();
     clones.set(model, result);
     originals.set(result, model);
     if (model instanceof Lst && result instanceof Lst) {

@@ -1,4 +1,27 @@
 "use strict";
+/*
+ * Copyright 2026 SpinalCom - www.spinalcom.com
+ *
+ * This file is part of SpinalCore.
+ *
+ * Please read all of the following terms and conditions
+ * of the Software license Agreement ("Agreement")
+ * carefully.
+ *
+ * This Agreement is a legally binding contract between
+ * the Licensee (as defined below) and SpinalCom that
+ * sets forth the terms and conditions that govern your
+ * use of the Program. By installing and/or using the
+ * Program, you agree to abide by all the terms and
+ * conditions stated or referenced herein.
+ *
+ * If you do not agree to abide by these terms and
+ * conditions, do not demonstrate your acceptance and do
+ * not install or use the Program.
+ * You should have received a copy of the license along
+ * with this file. If not, see
+ * <http://resources.spinalcom.com/licenses.pdf>.
+ */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.prepareNodeCreation = prepareNodeCreation;
 exports.applyPreparedNode = applyPreparedNode;
@@ -31,7 +54,7 @@ async function prepareNodeCreation(name, type, info, element, attributes, defaul
         if (cached)
             return cached;
         if (active.has(key))
-            throw invalid(`Circular self reference at ${path.join(".")}`);
+            throw invalid(`Circular self reference at ${path.join('.')}`);
         active.add(key);
         try {
             const result = await resolve();
@@ -43,15 +66,15 @@ async function prepareNodeCreation(name, type, info, element, attributes, defaul
         }
     }
     async function self(path) {
-        if (path.startsWith("attr."))
+        if (path.startsWith('attr.'))
             return (0, resolveModelReference_1.resolveModelReference)(node, path);
-        const parts = path.split(".");
+        const parts = path.split('.');
         let value = raw;
         let index = 0;
         for (; index < parts.length; index++) {
-            if (typeof value !== "object" ||
+            if (typeof value !== 'object' ||
                 value === null ||
-                Object.hasOwn(value, "$modelRef"))
+                Object.hasOwn(value, '$modelRef'))
                 break;
             const key = parts[index];
             if (Array.isArray(value)) {
@@ -87,14 +110,14 @@ async function prepareNodeCreation(name, type, info, element, attributes, defaul
     if (element !== undefined) {
         // Use the constructor to preserve the normal element-pointer representation.
         const holder = new spinal_model_graph_1.SpinalNode(name, type, result.element);
-        node.add_attr("element", holder.element);
+        node.add_attr('element', holder.element);
     }
     return node;
 }
 async function applyPreparedNode(target, prepared) {
     const info = new spinal_core_connectorjs_1.Model();
     for (const key of prepared.info._attribute_names) {
-        if (key !== "id")
+        if (key !== 'id')
             info.add_attr(key, prepared.info[key]);
     }
     await (0, handleSetInfo_1.handleSetInfo)(target, info);

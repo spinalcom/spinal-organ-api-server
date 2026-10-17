@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -84,12 +84,19 @@ module.exports = function (logger, app, middleware) {
      *                       type: array
      *                       items:
      *                         $ref: '#/components/schemas/INodeItem'
+     *             examples:
+     *               grouped:
+     *                 $ref: '#/components/examples/childRelationshipsGrouped'
+     *               projected:
+     *                 $ref: '#/components/examples/childRelationshipsProjected'
+     *               empty:
+     *                 $ref: '#/components/examples/childRelationshipsEmpty'
      *       400:
      *         $ref: '#/components/responses/IErrorItemRes400'
      *       500:
      *         $ref: '#/components/responses/IErrorItemRes500'
      */
-    app.get("/api/v2/node/:parentId/child-relationships", (0, express_zod_safe_1.default)({
+    app.get('/api/v2/node/:parentId/child-relationships', (0, express_zod_safe_1.default)({
         params: zod_1.z.strictObject({
             parentId: zod_1.z.coerce.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
         }),
@@ -98,7 +105,7 @@ module.exports = function (logger, app, middleware) {
         try {
             return res
                 .status(200)
-                .json(await (0, listNodeRelations_1.listNodeRelations)(middleware, (0, requestUtilities_1.getProfileId)(req), req.params.parentId, req.query, true, "children"));
+                .json(await (0, listNodeRelations_1.listNodeRelations)(middleware, (0, requestUtilities_1.getProfileId)(req), req.params.parentId, req.query, true, 'children'));
         }
         catch (error) {
             (0, sendResponseError_1.sendResponseError)(res, error);

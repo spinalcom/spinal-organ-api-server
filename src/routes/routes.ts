@@ -1495,9 +1495,17 @@ function routes(
   require('./v2/node/deleteNodeChild')(logger, app, spinalAPIMiddleware);
   require('./v2/node/moveNode')(logger, app, spinalAPIMiddleware);
   require('./v2/node/getNodeChildren')(logger, app, spinalAPIMiddleware);
-  require('./v2/node/getNodeChildRelationships')(logger, app, spinalAPIMiddleware);
+  require('./v2/node/getNodeChildRelationships')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./v2/node/getNodeParents')(logger, app, spinalAPIMiddleware);
-  require('./v2/node/getNodeParentRelationships')(logger, app, spinalAPIMiddleware);
+  require('./v2/node/getNodeParentRelationships')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./v2/geographicContext/building/getBuilding')(
     logger,
     app,

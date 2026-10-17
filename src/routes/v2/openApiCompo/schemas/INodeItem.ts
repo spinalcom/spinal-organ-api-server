@@ -25,8 +25,13 @@
 import type { INodeItemAttr } from './INodeItemAttr';
 import type { INodeItemInfo } from './INodeItemInfo';
 
-export type ElementJson = null | string | number | boolean | ElementJson[] |
-  { [key: string]: ElementJson };
+export type ElementJson =
+  | null
+  | string
+  | number
+  | boolean
+  | ElementJson[]
+  | { [key: string]: ElementJson };
 
 /**
  * @swagger

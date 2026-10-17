@@ -1,19 +1,19 @@
 /*
  * Copyright 2026 SpinalCom - www.spinalcom.com
- * 
+ *
  * This file is part of SpinalCore.
- * 
+ *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
- * 
+ *
  * This Agreement is a legally binding contract between
  * the Licensee (as defined below) and SpinalCom that
  * sets forth the terms and conditions that govern your
  * use of the Program. By installing and/or using the
  * Program, you agree to abide by all the terms and
  * conditions stated or referenced herein.
- * 
+ *
  * If you do not agree to abide by these terms and
  * conditions, do not demonstrate your acceptance and do
  * not install or use the Program.
@@ -22,17 +22,17 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import type { z } from "zod";
-import { SpinalContext } from "spinal-model-graph";
-import type { ISpinalAPIMiddleware } from "../../../../interfaces";
-import type { IErrorItem } from "../../../../routes/v2/openApiCompo/schemas/IErrorItem";
-import { loadAndValidateNode } from "../../../loadAndValidateNode";
+import type { z } from 'zod';
+import { SpinalContext } from 'spinal-model-graph';
+import type { ISpinalAPIMiddleware } from '../../../../interfaces';
+import type { IErrorItem } from '../../../../routes/v2/openApiCompo/schemas/IErrorItem';
+import { loadAndValidateNode } from '../../../loadAndValidateNode';
 import {
   createErrorMsgItem,
   isErrorItem,
-} from "../../errorHandler/createErrorMsgItem";
-import { EApiErrorType } from "../../errorHandler/EApiErrorType";
-import type { childAttachmentSchema } from "./schemas";
+} from '../../errorHandler/createErrorMsgItem';
+import { EApiErrorType } from '../../errorHandler/EApiErrorType';
+import type { childAttachmentSchema } from './schemas';
 
 type ChildAttachment = z.infer<typeof childAttachmentSchema>;
 
@@ -46,7 +46,7 @@ export async function attachChildren(
   const data: (ChildAttachment & {
     index: number;
     parentDynamicId: number;
-    status: "attached" | "alreadyAttached";
+    status: 'attached' | 'alreadyAttached';
   })[] = [];
   const errors: (IErrorItem & { index: number; child: ChildAttachment })[] = [];
   for (const [index, entry] of children.entries()) {
@@ -84,7 +84,7 @@ export async function attachChildren(
       )
         throw createErrorMsgItem(
           EApiErrorType.INVALID_REQUEST,
-          "Child is already attached but not in the requested context"
+          'Child is already attached but not in the requested context'
         );
       if (!exists) {
         if (context)
@@ -101,7 +101,7 @@ export async function attachChildren(
         ...entry,
         index,
         parentDynamicId: parentId,
-        status: exists ? "alreadyAttached" : "attached",
+        status: exists ? 'alreadyAttached' : 'attached',
       });
     } catch (error) {
       console.error(error);
@@ -109,9 +109,9 @@ export async function attachChildren(
         ...(isErrorItem(error)
           ? error
           : createErrorMsgItem(
-            EApiErrorType.INTERNAL_ERROR,
-            "Unexpected error while attaching child"
-          )),
+              EApiErrorType.INTERNAL_ERROR,
+              'Unexpected error while attaching child'
+            )),
         index,
         child: entry,
       });

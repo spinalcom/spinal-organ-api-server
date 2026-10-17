@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -48,7 +48,7 @@ function serializeModel(element, query) {
     let visits = 0;
     function serialize(model, fields, depth) {
         if (++visits > 10000 || depth > 32) {
-            throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, "Element serialization exceeds maximum depth (32) or model count (10000)");
+            throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, 'Element serialization exceeds maximum depth (32) or model count (10000)');
         }
         const pointer = model instanceof spinal_core_connectorjs_1.Ptr
             ? model
@@ -61,8 +61,8 @@ function serializeModel(element, query) {
             const id = pointer.data.model?._server_id ?? pointer.data.value;
             if (id === undefined || id === 0)
                 return { $ptr: null };
-            if (typeof id !== "number" || !Number.isSafeInteger(id) || id < 1) {
-                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, "Element pointer has an invalid dynamic ID");
+            if (typeof id !== 'number' || !Number.isSafeInteger(id) || id < 1) {
+                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, 'Element pointer has an invalid dynamic ID');
             }
             return { $ptr: id };
         }
@@ -70,13 +70,13 @@ function serializeModel(element, query) {
             if (!fields.all)
                 return undefined;
             const value = model.get();
-            if (typeof value === "number" && !Number.isFinite(value)) {
-                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, "Element contains a non-finite number");
+            if (typeof value === 'number' && !Number.isFinite(value)) {
+                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, 'Element contains a non-finite number');
             }
             return value;
         }
         if (ancestors.has(model)) {
-            throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, "Element contains a cyclic Model reference");
+            throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, 'Element contains a cyclic Model reference');
         }
         ancestors.add(model);
         try {
@@ -84,7 +84,7 @@ function serializeModel(element, query) {
             const array = [];
             const isList = model instanceof spinal_core_connectorjs_1.Lst;
             if (isList && model.length > 10000) {
-                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, "Element array exceeds maximum length (10000)");
+                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, 'Element array exceeds maximum length (10000)');
             }
             const keys = fields.all
                 ? isList
@@ -98,7 +98,7 @@ function serializeModel(element, query) {
                     continue;
                 const child = model[key];
                 if (!(child instanceof spinal_core_connectorjs_1.Model)) {
-                    throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, "Element contains an invalid Model attribute");
+                    throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, 'Element contains an invalid Model attribute');
                 }
                 const value = serialize(child, fields.all ? fields : fields.children.get(key), depth + 1);
                 if (value === undefined)

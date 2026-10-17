@@ -5,7 +5,7 @@
  * This file is part of SpinalCore.
  *
  * Please read all of the following terms and conditions
- * of the Free Software license Agreement ("Agreement")
+ * of the Software license Agreement ("Agreement")
  * carefully.
  *
  * This Agreement is a legally binding contract between
@@ -176,7 +176,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *             schema:
      *               $ref: '#/components/schemas/INodeAttachmentFailure'
      */
-    app.post("/api/v2/node", (0, express_zod_safe_1.default)({
+    app.post('/api/v2/node', (0, express_zod_safe_1.default)({
         body: schema_1.createNodeSchema,
     }), async (req, res) => {
         try {
@@ -204,7 +204,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     console.error(error);
                     const item = (0, createErrorMsgItem_1.isErrorItem)(error)
                         ? error
-                        : (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, "Unexpected error while attaching node to parent");
+                        : (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, 'Unexpected error while attaching node to parent');
                     errors.push({ ...item, index, parent });
                 }
             }
@@ -213,7 +213,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 return res.status(internal ? 500 : 400).json({
                     ...(0, createErrorMsgItem_1.createErrorMsgItem)(internal
                         ? EApiErrorType_1.EApiErrorType.INTERNAL_ERROR
-                        : EApiErrorType_1.EApiErrorType.INVALID_REQUEST, "No parent attachment succeeded"),
+                        : EApiErrorType_1.EApiErrorType.INVALID_REQUEST, 'No parent attachment succeeded'),
                     errors,
                 });
             }
