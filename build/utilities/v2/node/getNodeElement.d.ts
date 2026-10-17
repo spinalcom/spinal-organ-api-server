@@ -1,8 +1,7 @@
-import { Model } from 'spinal-core-connectorjs';
-import { SpinalNode } from 'spinal-model-graph';
-import type { ElementJson } from '../../../routes/v2/openApiCompo/schemas/INodeItem';
-export type { ElementJson } from '../../../routes/v2/openApiCompo/schemas/INodeItem';
-export type ElementQuery = false | true | string[][];
-export declare function parseElementQuery(query?: string): ElementQuery;
+import type { SpinalNode } from "spinal-model-graph";
+import type { ElementJson } from "../../../routes/v2/openApiCompo/schemas/INodeItem";
+import type { ElementQuery } from "../requestParse/parseElementQuery";
+export type { ElementJson } from "../../../routes/v2/openApiCompo/schemas/INodeItem";
+export { parseElementQuery, type ElementQuery, } from "../requestParse/parseElementQuery";
+export { serializeModel } from "./element/serializeModel";
 export declare function getNodeElement(node: SpinalNode, query: ElementQuery): Promise<ElementJson | undefined>;
-export declare function serializeModel(element: Model, query: true | string[][]): ElementJson | undefined;

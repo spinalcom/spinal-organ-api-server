@@ -26,17 +26,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const zod_1 = require("zod");
 const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
 const spinal_model_graph_1 = require("spinal-model-graph");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
-const addExtraInfoValidation_1 = require("../../../utilities/v2/requestParse/addExtraInfoValidation");
 const getNodeData_1 = require("../../../utilities/v2/node/getNodeData");
 const createErrorMsgItem_1 = require("../../../utilities/v2/errorHandler/createErrorMsgItem");
 const EApiErrorType_1 = require("../../../utilities/v2/errorHandler/EApiErrorType");
 const sendResponseError_1 = require("../../../utilities/v2/errorHandler/sendResponseError");
-const createElement_1 = require("../../../utilities/v2/node/createElement");
+const schema_1 = require("../../../utilities/v2/node/creation/schema");
 const prepareNodeCreation_1 = require("../../../utilities/v2/node/prepareNodeCreation");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
@@ -51,6 +49,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       Create one `SpinalNode` with a caller-supplied name and type.
      *
      *       ### Parents and relations
+     *
      *       - Supply at least one entry in `parents`. All entries attach the **same node**.
      *       - Each entry requires `parentDynamicId` and `relationName`.
      *       - `relationType` defaults to `PtrLst`; `LstPtr` and `Ref` are also supported.
@@ -59,6 +58,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - Parents and contexts are loaded using the current profile.
      *
      *       ### Element (optional)
+     *
      *       - Supply an object directly in `element` to create a generic SpinalCore `Model`.
      *       - Values may be strings, finite numbers, booleans, nested objects or arrays. `null` is not supported.
      *       - Object keys must not start with `_` or shadow Model members (for example `get`, `set`, `constructor`, `model_id`).
@@ -75,6 +75,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - The response remains `INodeItem`; element contents are not included.
      *
      *       ### Results
+     *
      *       - **201:** at least one attachment succeeded. Returns the node with all info and attributes.
      *       - Extra info supports nested objects, arrays and `$modelRef` values with the same rules as element data. The current profile must have access to the target SpinalNode specified by `$modelRef`.
      *       - Info keys starting with `_` are forbidden at every nesting level, including objects inside arrays. Invalid keys return HTTP 400.
@@ -176,40 +177,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *               $ref: '#/components/schemas/INodeAttachmentFailure'
      */
     app.post("/api/v2/node", (0, express_zod_safe_1.default)({
-        body: zod_1.z.strictObject({
-            info: (0, addExtraInfoValidation_1.addExtraInfoValidation)(zod_1.z.object({
-                name: zod_1.z.string().min(1).max(200),
-                type: zod_1.z.string().min(1).max(200),
-            }), ["id", "staticId", "dynamicId"]),
-            attributes: zod_1.z
-                .record(zod_1.z.string(), zod_1.z.record(zod_1.z.string(), zod_1.z.string()))
-                .optional(),
-            element: createElement_1.elementObject.optional(),
-            parents: zod_1.z
-                .array(zod_1.z.strictObject({
-                parentDynamicId: zod_1.z
-                    .number()
-                    .int()
-                    .min(1)
-                    .max(Number.MAX_SAFE_INTEGER),
-                relationName: zod_1.z.string().trim().min(1),
-                relationType: zod_1.z
-                    .enum([
-                    spinal_model_graph_1.SPINAL_RELATION_PTR_LST_TYPE,
-                    spinal_model_graph_1.SPINAL_RELATION_LST_PTR_TYPE,
-                    spinal_model_graph_1.SPINAL_RELATION_TYPE,
-                ])
-                    .optional()
-                    .default(spinal_model_graph_1.SPINAL_RELATION_PTR_LST_TYPE),
-                contextDynamicId: zod_1.z
-                    .number()
-                    .int()
-                    .min(1)
-                    .max(Number.MAX_SAFE_INTEGER)
-                    .optional(),
-            }))
-                .min(1),
-        }),
+        body: schema_1.createNodeSchema,
     }), async (req, res) => {
         try {
             const { info, attributes, parents, element: elementRequest } = req.body;

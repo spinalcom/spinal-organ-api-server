@@ -22,9 +22,11 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { z } from 'zod';
 import { ROOM_TYPE } from 'spinal-env-viewer-context-geographic-service';
-import { prepareNodeCreation, applyPreparedNode } from '../../../../utilities/v2/node/prepareNodeCreation';
+import {
+  prepareNodeCreation,
+  applyPreparedNode,
+} from '../../../../utilities/v2/node/prepareNodeCreation';
 import validate from 'express-zod-safe';
 import type { Express } from 'express';
 import { getProfileId } from '../../../../utilities/requestUtilities';
@@ -35,14 +37,10 @@ import {
 } from 'spinal-env-viewer-context-geographic-service';
 import { loadAndValidateNode } from '../../../../utilities/loadAndValidateNode';
 import type { ISpinalAPIMiddleware } from '../../../../interfaces';
-import {
-  addExtraAttrValidation,
-  addExtraCatAttrValidation,
-} from '../../../../utilities/v2/requestParse/addExtraAttrValidation';
+import { createRoomSchema } from '../../../../utilities/v2/geographicContext/createSchemas';
 import { linkNodeToGroups } from '../../../../utilities/v2/node/linkNodeToGroups';
 import { getNodeData } from '../../../../utilities/v2/node/getNodeData';
 import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
-import { addExtraInfoValidation } from '../../../../utilities/v2/requestParse/addExtraInfoValidation';
 import { createErrorMsgItem } from '../../../../utilities/v2/errorHandler/createErrorMsgItem';
 import { EApiErrorType } from '../../../../utilities/v2/errorHandler/EApiErrorType';
 import { sendResponseError } from '../../../../utilities/v2/errorHandler/sendResponseError';
@@ -64,16 +62,19 @@ module.exports = function (
    *       Create a room under the floor identified by `dynamicFloorId`, using the profile's spatial context.
    *
    *       ### Requirements
+   *
    *       - A building must exist.
    *       - The room name must be unique within the floor.
    *
    *       ### Defaults
+   *
    *       - `virtual`: `false`.
    *       - `Spatial.area`: `"0"`.
    *       - `Spatial.category`: `"Revit Pièces"`.
    *       - Supplied values override these defaults.
    *
    *       ### Response
+   *
    *       - Returns all info (including nested objects and arrays) and attributes.
    *       - Optional group linking happens after creation. Failures **do not roll back** the room.
    *     tags:
@@ -122,38 +123,7 @@ module.exports = function (
   app.post(
     '/api/v2/room',
     validate({
-      body: z.object({
-        dynamicFloorId: z.number().min(1),
-        info: addExtraInfoValidation(
-          z.object({
-            name: z.string().min(1).max(200),
-            color: z
-              .string()
-              .regex(/^#([A-Fa-f0-9]{6})$/)
-              .optional(),
-            icon: z.string().min(1).max(200).optional(),
-            virtual: z.boolean().optional().default(false),
-          }),
-          ['id', 'staticId', 'dynamicId', 'type']
-        ),
-        linkToGroups: z
-          .array(
-            z.strictObject({
-              contextDynamicId: z.number().min(1),
-              groupDynamicId: z.number().min(1),
-            })
-          )
-          .optional(),
-        attributes: addExtraCatAttrValidation(
-          z.object({
-            Spatial: addExtraAttrValidation(
-              z.object({
-                area: z.string().optional(),
-              })
-            ).optional(),
-          })
-        ).optional(),
-      }),
+      body: createRoomSchema,
     }),
     async (req, res) => {
       try {
@@ -190,8 +160,16 @@ module.exports = function (
           }
         }
 
-        const prepared = await prepareNodeCreation(info.name, ROOM_TYPE, info, undefined, attributes,
-          { Spatial: { area: '0', category: 'Revit Pièces' } }, spinalAPIMiddleware, profileId);
+        const prepared = await prepareNodeCreation(
+          info.name,
+          ROOM_TYPE,
+          info,
+          undefined,
+          attributes,
+          { Spatial: { area: '0', category: 'Revit Pièces' } },
+          spinalAPIMiddleware,
+          profileId
+        );
         const newRoom = await addRoom(geographicContext, floorNode, info.name);
         await applyPreparedNode(newRoom, prepared);
 
@@ -204,12 +182,10 @@ module.exports = function (
             newRoom,
             linkToGroups
           );
-          return res
-            .status(201)
-            .json({
-              data: resObj,
-              error: linkResult.errors.length > 0 ? linkResult.errors : undefined,
-            });
+          return res.status(201).json({
+            data: resObj,
+            error: linkResult.errors.length > 0 ? linkResult.errors : undefined,
+          });
         }
         return res.status(201).json({ data: resObj });
       } catch (error: any) {

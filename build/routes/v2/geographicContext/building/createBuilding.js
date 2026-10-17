@@ -26,15 +26,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const zod_1 = require("zod");
 const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
 const requestUtilities_1 = require("../../../../utilities/requestUtilities");
 const spinal_env_viewer_context_geographic_service_1 = require("spinal-env-viewer-context-geographic-service");
 const prepareNodeCreation_1 = require("../../../../utilities/v2/node/prepareNodeCreation");
 const getNodeData_1 = require("../../../../utilities/v2/node/getNodeData");
 const getBuilding_1 = require("../../../../utilities/v2/geographicContext/getBuilding");
-const addExtraInfoValidation_1 = require("../../../../utilities/v2/requestParse/addExtraInfoValidation");
-const addExtraAttrValidation_1 = require("../../../../utilities/v2/requestParse/addExtraAttrValidation");
+const createSchemas_1 = require("../../../../utilities/v2/geographicContext/createSchemas");
 const EApiErrorType_1 = require("../../../../utilities/v2/errorHandler/EApiErrorType");
 const createErrorMsgItem_1 = require("../../../../utilities/v2/errorHandler/createErrorMsgItem");
 const sendResponseError_1 = require("../../../../utilities/v2/errorHandler/sendResponseError");
@@ -51,9 +49,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       Create the building in the profile's spatial context, creating that context if needed.
      *
      *       ### Requirements
+     *
      *       - No building may already exist; otherwise returns **HTTP 400**.
      *
      *       ### Defaults
+     *
      *       - `Spatial.area`: `"0"`.
      *       - `Spinal Building Information.Adresse`: `"To configure"`.
      *       - Supplied values override these defaults.
@@ -104,24 +104,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         $ref: '#/components/responses/IErrorItemRes500'
      */
     app.post('/api/v2/building', (0, express_zod_safe_1.default)({
-        body: zod_1.z.object({
-            info: (0, addExtraInfoValidation_1.addExtraInfoValidation)(zod_1.z.object({
-                name: zod_1.z.string().min(1).max(200),
-                color: zod_1.z
-                    .string()
-                    .regex(/^#([A-Fa-f0-9]{6})$/)
-                    .optional(),
-                icon: zod_1.z.string().min(1).max(200).optional(),
-            }), ['id', 'staticId', 'type', 'dynamicId']),
-            attributes: (0, addExtraAttrValidation_1.addExtraCatAttrValidation)(zod_1.z.object({
-                'Spinal Building Information': (0, addExtraAttrValidation_1.addExtraAttrValidation)(zod_1.z.object({
-                    Adresse: zod_1.z.string().optional(),
-                })).optional(),
-                Spatial: (0, addExtraAttrValidation_1.addExtraAttrValidation)(zod_1.z.object({
-                    area: zod_1.z.string().optional(),
-                })).optional(),
-            })).optional(),
-        }),
+        body: createSchemas_1.createBuildingSchema,
     }), async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

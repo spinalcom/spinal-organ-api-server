@@ -49,6 +49,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       No geographic type or parent relation is required.
      *
      *       ### Output
+     *
      *       - Returns `{ data: INodeItem }`, without traversing children.
      *       - Select fields using `info` and `attributes`.
      *       - Omitting `info` returns the default info projection; `info=false` omits info and `info=true` returns all info, including nested objects and arrays. Use dot paths such as `info=metadata.unit,samples.0` to select nested values.
@@ -56,6 +57,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - Element contents are omitted unless requested with `element`.
      *
      *       ### Element selection
+     *
      *       - `element=true` returns the whole element; omitted or `false` does not load it.
      *       - Select comma-separated dot paths, for example `element=value,metadata.unit,samples.0`.
      *       - Selected paths preserve their structure. Array indexes are zero-based; unselected earlier entries appear as `null`.
@@ -65,6 +67,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - Cycles, non-finite numbers, serialization exceeding depth 32 or 10000 visited Models, or arrays longer than 10000 return HTTP 500. Select narrower paths to avoid unrelated branches.
      *
      *       ### Errors
+     *
      *       - **400:** invalid request, loading failure, or the loaded model is not a `SpinalNode`.
      *       - **500:** unexpected internal error.
      *     tags:

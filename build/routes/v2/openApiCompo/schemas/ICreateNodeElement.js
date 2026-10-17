@@ -29,13 +29,16 @@
  *       type: object
  *       description: |-
  *         Create a generic Model from this object. The node retains its element pointer.
- *         Nested values can reference a Model on an existing SpinalNode with `{ "$modelRef": 789012, "path": "info.name" }`.
- *         Use `{ "$modelRef": "self", "path": "info.unit" }` to share a Model from the node being created. Forward references work across info and element regardless of field order; self attribute paths can target supplied or default categorized values.
- *         Missing self paths, circular dependencies and ancestor embedding return HTTP 400 before attachment. Self does not load a node by dynamic ID.
+ *
+ *         - Nested values can reference a Model on an existing SpinalNode with `{ "$modelRef": 789012, "path": "info.name" }`.
+ *         - Use `{ "$modelRef": "self", "path": "info.unit" }` to share a Model from the node being created. Forward references work across info and element regardless of field order; self attribute paths can target supplied or default categorized values.
+ *         - Missing self paths, circular dependencies and ancestor embedding return HTTP 400 before attachment. Self does not load a node by dynamic ID.
+ *
  *         **The current profile must have access to the target SpinalNode specified by `$modelRef`.**
- *         References are loaded using the current profile and assigned directly as Model attributes, not copied or wrapped in additional pointers.
- *         Keys must not start with an underscore, shadow Model members, or equal `$modelRef` on an ordinary object.
- *         The root element must be an ordinary object, not a reference.
+ *
+ *         - References are loaded using the current profile and assigned directly as Model attributes, not copied or wrapped in additional pointers.
+ *         - Keys must not start with an underscore, shadow Model members, or equal `$modelRef` on an ordinary object.
+ *         - The root element must be an ordinary object, not a reference.
  *       additionalProperties:
  *         $ref: '#/components/schemas/INodeElementValue'
  *       not:
@@ -66,10 +69,11 @@
  *           type: string
  *           description: |-
  *             Model to share from the target node. Supports `info.name`, nested paths like `info.metadata.unit`, `element` or `element.samples.0`, and `attr.Category.Label` for the categorized attribute's value Model.
- *             `info.id`, its alias `info.staticId`, and their descendant paths are forbidden. Referencing the whole `info` Model is also forbidden because it contains the node ID. Invalid paths return HTTP 400.
- *             Paths are case-sensitive, limited to 32 segments, and cannot traverse internal members or nested pointers.
- *             Category and label names containing dots cannot be addressed. Missing elements, categories, attributes or paths return HTTP 400. Resolving a missing element never creates it.
- *             References share the selected Model, not a copy. Repeated node/path pairs share the same resolved instance; each target node is loaded once per object creation.
+ *
+ *             - `info.id`, its alias `info.staticId`, and their descendant paths are forbidden. Referencing the whole `info` Model is also forbidden because it contains the node ID. Invalid paths return HTTP 400.
+ *             - Paths are case-sensitive, limited to 32 segments, and cannot traverse internal members or nested pointers.
+ *             - Category and label names containing dots cannot be addressed. Missing elements, categories, attributes or paths return HTTP 400. Resolving a missing element never creates it.
+ *             - References share the selected Model, not a copy. Repeated node/path pairs share the same resolved instance; each target node is loaded once per object creation.
  *           example: info.name
  *       example:
  *         $modelRef: 789012

@@ -25,46 +25,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.elementObject = exports.elementValue = exports.elementKey = void 0;
 exports.createElement = createElement;
-const zod_1 = require("zod");
 const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
 const createErrorMsgItem_1 = require("../errorHandler/createErrorMsgItem");
 const EApiErrorType_1 = require("../errorHandler/EApiErrorType");
 const spinal_model_graph_1 = require("spinal-model-graph");
 const resolveModelReference_1 = require("./resolveModelReference");
-exports.elementKey = zod_1.z
-    .string()
-    .refine((key) => !key.startsWith("_") &&
-    key !== "$modelRef" &&
-    key !== "model_id" &&
-    !(key in spinal_core_connectorjs_1.Model.prototype), "Element keys must not shadow Model members or start with an underscore");
-exports.elementValue = zod_1.z.lazy(() => zod_1.z.union([
-    zod_1.z.string(),
-    zod_1.z.number().finite(),
-    zod_1.z.boolean(),
-    zod_1.z.array(exports.elementValue),
-    zod_1.z.preprocess(rejectPrototypeKey, zod_1.z.union([
-        zod_1.z.strictObject({
-            $modelRef: zod_1.z.union([zod_1.z.number().int().min(1).max(Number.MAX_SAFE_INTEGER), zod_1.z.literal("self")]),
-            path: zod_1.z.string().refine(resolveModelReference_1.isModelReferencePath, "Invalid $modelRef path"),
-        }),
-        exports.elementObject,
-    ])),
-]));
-function rejectPrototypeKey(data, ctx) {
-    // Zod records discard __proto__ before validating keys.
-    if (data !== null &&
-        typeof data === "object" &&
-        Object.hasOwn(data, "__proto__")) {
-        ctx.addIssue({
-            code: "custom",
-            message: "Element keys must not shadow Model members or start with an underscore",
-            path: ["__proto__"],
-        });
-        return zod_1.z.NEVER;
-    }
-    return data;
-}
-exports.elementObject = zod_1.z.preprocess(rejectPrototypeKey, zod_1.z.record(exports.elementKey, exports.elementValue));
+var schema_1 = require("./element/schema");
+Object.defineProperty(exports, "elementKey", { enumerable: true, get: function () { return schema_1.elementKey; } });
+Object.defineProperty(exports, "elementValue", { enumerable: true, get: function () { return schema_1.elementValue; } });
+Object.defineProperty(exports, "elementObject", { enumerable: true, get: function () { return schema_1.elementObject; } });
 async function createElement(data, middleware, profileId, self, build) {
     const nodes = new Map();
     const references = new Map();

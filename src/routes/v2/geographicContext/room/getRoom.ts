@@ -67,21 +67,25 @@ module.exports = function (
    *       > do not guarantee a small traversal.
    *
    *       ### Scope
+   *
    *       - Without `parent-dynamic-id`: traverse the building's floors.
    *       - With `parent-dynamic-id`: retrieve direct children of a `geographicFloor` or `geographicRoomGroup`.
    *       - `groupHasgeographicRoom` is a relation name, not a node type.
    *
    *       ### Filtering and pagination
+   *
    *       - All filter conditions use **AND**.
    *       - Filtering runs **before** `offset` and output projection.
    *       - Returns at most **200 matching rooms**. Use `offset=200` for the second page.
    *
    *       ### Response
+   *
    *       - Each item includes `parentDynamicId`, even without a parent parameter.
    *       - With a parent parameter, `total` counts eligible children **before filtering**.
    *       - `total` is omitted for building-wide traversal.
    *
    *       ### Example
+   *
    *       ```http
    *       GET /api/v2/room?parent-dynamic-id=132456&filter[attributes.Spatial.area][exists]=true&offset=0
    *       ```

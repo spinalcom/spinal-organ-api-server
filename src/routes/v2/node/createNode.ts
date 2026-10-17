@@ -22,19 +22,12 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { z } from "zod";
 import validate from "express-zod-safe";
 import type { Express } from "express";
-import {
-  SpinalContext,
-  SPINAL_RELATION_TYPE,
-  SPINAL_RELATION_LST_PTR_TYPE,
-  SPINAL_RELATION_PTR_LST_TYPE,
-} from "spinal-model-graph";
+import { SpinalContext } from "spinal-model-graph";
 import type { ISpinalAPIMiddleware } from "../../../interfaces";
 import { getProfileId } from "../../../utilities/requestUtilities";
 import { loadAndValidateNode } from "../../../utilities/loadAndValidateNode";
-import { addExtraInfoValidation } from "../../../utilities/v2/requestParse/addExtraInfoValidation";
 import { getNodeData } from "../../../utilities/v2/node/getNodeData";
 import {
   createErrorMsgItem,
@@ -43,9 +36,7 @@ import {
 import { EApiErrorType } from "../../../utilities/v2/errorHandler/EApiErrorType";
 import { sendResponseError } from "../../../utilities/v2/errorHandler/sendResponseError";
 import type { IErrorItem } from "../openApiCompo/schemas/IErrorItem";
-import {
-  elementObject,
-} from "../../../utilities/v2/node/createElement";
+import { createNodeSchema } from "../../../utilities/v2/node/creation/schema";
 import { prepareNodeCreation } from "../../../utilities/v2/node/prepareNodeCreation";
 
 module.exports = function (
@@ -65,6 +56,7 @@ module.exports = function (
    *       Create one `SpinalNode` with a caller-supplied name and type.
    *
    *       ### Parents and relations
+   *
    *       - Supply at least one entry in `parents`. All entries attach the **same node**.
    *       - Each entry requires `parentDynamicId` and `relationName`.
    *       - `relationType` defaults to `PtrLst`; `LstPtr` and `Ref` are also supported.
@@ -73,6 +65,7 @@ module.exports = function (
    *       - Parents and contexts are loaded using the current profile.
    *
    *       ### Element (optional)
+   *
    *       - Supply an object directly in `element` to create a generic SpinalCore `Model`.
    *       - Values may be strings, finite numbers, booleans, nested objects or arrays. `null` is not supported.
    *       - Object keys must not start with `_` or shadow Model members (for example `get`, `set`, `constructor`, `model_id`).
@@ -89,6 +82,7 @@ module.exports = function (
    *       - The response remains `INodeItem`; element contents are not included.
    *
    *       ### Results
+   *
    *       - **201:** at least one attachment succeeded. Returns the node with all info and attributes.
    *       - Extra info supports nested objects, arrays and `$modelRef` values with the same rules as element data. The current profile must have access to the target SpinalNode specified by `$modelRef`.
    *       - Info keys starting with `_` are forbidden at every nesting level, including objects inside arrays. Invalid keys return HTTP 400.
@@ -192,53 +186,21 @@ module.exports = function (
   app.post(
     "/api/v2/node",
     validate({
-      body: z.strictObject({
-        info: addExtraInfoValidation(
-          z.object({
-            name: z.string().min(1).max(200),
-            type: z.string().min(1).max(200),
-          }),
-          ["id", "staticId", "dynamicId"]
-        ),
-        attributes: z
-          .record(z.string(), z.record(z.string(), z.string()))
-          .optional(),
-        element: elementObject.optional(),
-        parents: z
-          .array(
-            z.strictObject({
-              parentDynamicId: z
-                .number()
-                .int()
-                .min(1)
-                .max(Number.MAX_SAFE_INTEGER),
-              relationName: z.string().trim().min(1),
-              relationType: z
-                .enum([
-                  SPINAL_RELATION_PTR_LST_TYPE,
-                  SPINAL_RELATION_LST_PTR_TYPE,
-                  SPINAL_RELATION_TYPE,
-                ])
-                .optional()
-                .default(SPINAL_RELATION_PTR_LST_TYPE),
-              contextDynamicId: z
-                .number()
-                .int()
-                .min(1)
-                .max(Number.MAX_SAFE_INTEGER)
-                .optional(),
-            })
-          )
-          .min(1),
-      }),
+      body: createNodeSchema,
     }),
     async (req, res) => {
       try {
         const { info, attributes, parents, element: elementRequest } = req.body;
         const profileId = getProfileId(req);
         const node = await prepareNodeCreation(
-          info.name, info.type, info, elementRequest, attributes, undefined,
-          spinalAPIMiddleware, profileId
+          info.name,
+          info.type,
+          info,
+          elementRequest,
+          attributes,
+          undefined,
+          spinalAPIMiddleware,
+          profileId
         );
         const errors: (IErrorItem & {
           index: number;
@@ -283,9 +245,9 @@ module.exports = function (
             const item = isErrorItem(error)
               ? error
               : createErrorMsgItem(
-                  EApiErrorType.INTERNAL_ERROR,
-                  "Unexpected error while attaching node to parent"
-                );
+                EApiErrorType.INTERNAL_ERROR,
+                "Unexpected error while attaching node to parent"
+              );
             errors.push({ ...item, index, parent });
           }
         }

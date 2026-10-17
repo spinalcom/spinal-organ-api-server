@@ -22,9 +22,11 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { z } from 'zod';
 import { FLOOR_TYPE } from 'spinal-env-viewer-context-geographic-service';
-import { prepareNodeCreation, applyPreparedNode } from '../../../../utilities/v2/node/prepareNodeCreation';
+import {
+  prepareNodeCreation,
+  applyPreparedNode,
+} from '../../../../utilities/v2/node/prepareNodeCreation';
 import validate from 'express-zod-safe';
 import type { ISpinalAPIMiddleware } from '../../../../interfaces';
 import type { Express } from 'express';
@@ -32,15 +34,11 @@ import {
   addFloor,
   FLOOR_RELATION,
 } from 'spinal-env-viewer-context-geographic-service';
-import {
-  addExtraAttrValidation,
-  addExtraCatAttrValidation,
-} from '../../../../utilities/v2/requestParse/addExtraAttrValidation';
+import { createFloorSchema } from '../../../../utilities/v2/geographicContext/createSchemas';
 import { linkNodeToGroups } from '../../../../utilities/v2/node/linkNodeToGroups';
 import { getProfileId } from '../../../../utilities/requestUtilities';
 import { getNodeData } from '../../../../utilities/v2/node/getNodeData';
 import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
-import { addExtraInfoValidation } from '../../../../utilities/v2/requestParse/addExtraInfoValidation';
 import { sendResponseError } from '../../../../utilities/v2/errorHandler/sendResponseError';
 import { createErrorMsgItem } from '../../../../utilities/v2/errorHandler/createErrorMsgItem';
 import { EApiErrorType } from '../../../../utilities/v2/errorHandler/EApiErrorType';
@@ -62,16 +60,19 @@ module.exports = function (
    *       Create a floor under the building in the profile's spatial context.
    *
    *       ### Requirements
+   *
    *       - A building must exist.
    *       - The floor name must be unique within that building.
    *
    *       ### Defaults
+   *
    *       - `virtual`: `false`.
    *       - `Spatial.area`: `"0"`.
    *       - `Spatial.category`: `"Revit Level"`.
    *       - Supplied values override these defaults.
    *
    *       ### Response
+   *
    *       - Returns all info (including nested objects and arrays) and attributes.
    *       - Optional group linking happens after creation. Failures **do not roll back** the floor.
    *     tags:
@@ -114,37 +115,7 @@ module.exports = function (
   app.post(
     '/api/v2/floor',
     validate({
-      body: z.object({
-        info: addExtraInfoValidation(
-          z.object({
-            name: z.string().min(1).max(200),
-            color: z
-              .string()
-              .regex(/^#([A-Fa-f0-9]{6})$/)
-              .optional(),
-            icon: z.string().min(1).max(200).optional(),
-            virtual: z.boolean().optional().default(false),
-          }),
-          ['id', 'staticId', 'type', 'dynamicId']
-        ),
-        linkToGroups: z
-          .array(
-            z.strictObject({
-              contextDynamicId: z.number().min(1),
-              groupDynamicId: z.number().min(1),
-            })
-          )
-          .optional(),
-        attributes: addExtraCatAttrValidation(
-          z.object({
-            Spatial: addExtraAttrValidation(
-              z.object({
-                area: z.string().optional(),
-              })
-            ).optional(),
-          })
-        ).optional(),
-      }),
+      body: createFloorSchema,
     }),
     async (req, res) => {
       try {
@@ -175,8 +146,16 @@ module.exports = function (
           }
         }
 
-        const prepared = await prepareNodeCreation(info.name, FLOOR_TYPE, info, undefined, attributes,
-          { Spatial: { category: 'Revit Level', area: '0' } }, spinalAPIMiddleware, profileId);
+        const prepared = await prepareNodeCreation(
+          info.name,
+          FLOOR_TYPE,
+          info,
+          undefined,
+          attributes,
+          { Spatial: { category: 'Revit Level', area: '0' } },
+          spinalAPIMiddleware,
+          profileId
+        );
         const newFloor = await addFloor(geographicContext, building, info.name);
         await applyPreparedNode(newFloor, prepared);
 

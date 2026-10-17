@@ -26,15 +26,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const zod_1 = require("zod");
 const prepareNodeCreation_1 = require("../../../../utilities/v2/node/prepareNodeCreation");
 const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
 const requestUtilities_1 = require("../../../../utilities/requestUtilities");
 const spinal_env_viewer_context_geographic_service_1 = require("spinal-env-viewer-context-geographic-service");
 const getNodeData_1 = require("../../../../utilities/v2/node/getNodeData");
 const getBuilding_1 = require("../../../../utilities/v2/geographicContext/getBuilding");
-const addExtraInfoValidation_1 = require("../../../../utilities/v2/requestParse/addExtraInfoValidation");
-const addExtraAttrValidation_1 = require("../../../../utilities/v2/requestParse/addExtraAttrValidation");
+const createSchemas_1 = require("../../../../utilities/v2/geographicContext/createSchemas");
 const linkNodeToGroups_1 = require("../../../../utilities/v2/node/linkNodeToGroups");
 const loadAndValidateNode_1 = require("../../../../utilities/loadAndValidateNode");
 const spinal_model_graph_1 = require("spinal-model-graph");
@@ -54,16 +52,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       Create a BIMObject under a room, or a reference object under a room or floor.
      *
      *       ### Requirements
+     *
      *       - A building must exist in the profile's spatial context.
      *       - Names must be unique among children of the selected equipment/reference relation.
      *       - Regular equipment requires a room parent.
      *       - With `isRefObject=true`, the parent may be a room or a floor.
      *
      *       ### Defaults
+     *
      *       - `virtual`: `false`.
      *       - No default attributes are added.
      *
      *       ### Response
+     *
      *       - Returns all info (including nested objects and arrays) and attributes.
      *       - Optional group linking happens after creation. Failures **do not roll back** the equipment.
      *     tags:
@@ -123,33 +124,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         $ref: '#/components/responses/IErrorItemRes500'
      */
     app.post('/api/v2/equipment', (0, express_zod_safe_1.default)({
-        body: zod_1.z.object({
-            parentDynamicId: zod_1.z.number().min(1),
-            isRefObject: zod_1.z.boolean().optional().default(false),
-            info: (0, addExtraInfoValidation_1.addExtraInfoValidation)(zod_1.z.object({
-                name: zod_1.z.string().min(1).max(200),
-                color: zod_1.z
-                    .string()
-                    .regex(/^#([A-Fa-f0-9]{6})$/)
-                    .optional(),
-                icon: zod_1.z.string().min(1).max(200).optional(),
-                virtual: zod_1.z.boolean().optional().default(false),
-                dbid: zod_1.z.coerce.number().optional(),
-                externalId: zod_1.z.string().min(1).max(200).optional(),
-                bimFileId: zod_1.z.string().min(1).max(200).optional(),
-            }), ['id', 'staticId', 'dynamicId', 'type']),
-            linkToGroups: zod_1.z
-                .array(zod_1.z.strictObject({
-                contextDynamicId: zod_1.z.number().min(1),
-                groupDynamicId: zod_1.z.number().min(1),
-            }))
-                .optional(),
-            attributes: (0, addExtraAttrValidation_1.addExtraCatAttrValidation)(zod_1.z.object({
-                Spatial: (0, addExtraAttrValidation_1.addExtraAttrValidation)(zod_1.z.object({
-                    area: zod_1.z.string().optional(),
-                })).optional(),
-            })).optional(),
-        }),
+        body: createSchemas_1.createEquipmentSchema,
     }), async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);

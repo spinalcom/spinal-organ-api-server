@@ -26,18 +26,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const zod_1 = require("zod");
 const spinal_env_viewer_context_geographic_service_1 = require("spinal-env-viewer-context-geographic-service");
 const prepareNodeCreation_1 = require("../../../../utilities/v2/node/prepareNodeCreation");
 const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
 const requestUtilities_1 = require("../../../../utilities/requestUtilities");
 const spinal_env_viewer_context_geographic_service_2 = require("spinal-env-viewer-context-geographic-service");
 const loadAndValidateNode_1 = require("../../../../utilities/loadAndValidateNode");
-const addExtraAttrValidation_1 = require("../../../../utilities/v2/requestParse/addExtraAttrValidation");
+const createSchemas_1 = require("../../../../utilities/v2/geographicContext/createSchemas");
 const linkNodeToGroups_1 = require("../../../../utilities/v2/node/linkNodeToGroups");
 const getNodeData_1 = require("../../../../utilities/v2/node/getNodeData");
 const getBuilding_1 = require("../../../../utilities/v2/geographicContext/getBuilding");
-const addExtraInfoValidation_1 = require("../../../../utilities/v2/requestParse/addExtraInfoValidation");
 const createErrorMsgItem_1 = require("../../../../utilities/v2/errorHandler/createErrorMsgItem");
 const EApiErrorType_1 = require("../../../../utilities/v2/errorHandler/EApiErrorType");
 const sendResponseError_1 = require("../../../../utilities/v2/errorHandler/sendResponseError");
@@ -54,16 +52,19 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       Create a room under the floor identified by `dynamicFloorId`, using the profile's spatial context.
      *
      *       ### Requirements
+     *
      *       - A building must exist.
      *       - The room name must be unique within the floor.
      *
      *       ### Defaults
+     *
      *       - `virtual`: `false`.
      *       - `Spatial.area`: `"0"`.
      *       - `Spatial.category`: `"Revit Pièces"`.
      *       - Supplied values override these defaults.
      *
      *       ### Response
+     *
      *       - Returns all info (including nested objects and arrays) and attributes.
      *       - Optional group linking happens after creation. Failures **do not roll back** the room.
      *     tags:
@@ -110,29 +111,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         $ref: '#/components/responses/IErrorItemRes500'
      */
     app.post('/api/v2/room', (0, express_zod_safe_1.default)({
-        body: zod_1.z.object({
-            dynamicFloorId: zod_1.z.number().min(1),
-            info: (0, addExtraInfoValidation_1.addExtraInfoValidation)(zod_1.z.object({
-                name: zod_1.z.string().min(1).max(200),
-                color: zod_1.z
-                    .string()
-                    .regex(/^#([A-Fa-f0-9]{6})$/)
-                    .optional(),
-                icon: zod_1.z.string().min(1).max(200).optional(),
-                virtual: zod_1.z.boolean().optional().default(false),
-            }), ['id', 'staticId', 'dynamicId', 'type']),
-            linkToGroups: zod_1.z
-                .array(zod_1.z.strictObject({
-                contextDynamicId: zod_1.z.number().min(1),
-                groupDynamicId: zod_1.z.number().min(1),
-            }))
-                .optional(),
-            attributes: (0, addExtraAttrValidation_1.addExtraCatAttrValidation)(zod_1.z.object({
-                Spatial: (0, addExtraAttrValidation_1.addExtraAttrValidation)(zod_1.z.object({
-                    area: zod_1.z.string().optional(),
-                })).optional(),
-            })).optional(),
-        }),
+        body: createSchemas_1.createRoomSchema,
     }), async (req, res) => {
         try {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
@@ -153,9 +132,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const resObj = await (0, getNodeData_1.getNodeData)(newRoom, true, true);
             if (Array.isArray(linkToGroups) && linkToGroups.length > 0) {
                 const linkResult = await (0, linkNodeToGroups_1.linkNodeToGroups)(spinalAPIMiddleware, profileId, newRoom, linkToGroups);
-                return res
-                    .status(201)
-                    .json({
+                return res.status(201).json({
                     data: resObj,
                     error: linkResult.errors.length > 0 ? linkResult.errors : undefined,
                 });

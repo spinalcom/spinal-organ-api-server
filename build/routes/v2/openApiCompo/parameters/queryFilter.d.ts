@@ -10,9 +10,9 @@
  *       description: |-
  *         All conditions are combined using **AND**. Filtering runs before pagination,
  *         independently of the requested `info` and `attributes`.
-
  *
  *         #### Equivalent URL formats
+ *
  *         - Brackets: `filter[info.virtual][eq]=false`
  *         - JSON operators: `filter[info.virtual]={"eq":"false"}`
  *         - Full JSON: `filter={"info.virtual":{"eq":"false"}}`
@@ -21,6 +21,7 @@
  *         URL-encode JSON values when constructing URLs manually.
  *
  *         #### Fields and operators
+ *
  *         - Fields: `info.key`, `attributes.category.attribute`, `dynamicId`, `server_id`.
  *         - `info.staticId` maps to the model's `info.id`.
  *         - `dynamicId` and `server_id` both refer to the node's dynamic ID.
@@ -30,18 +31,21 @@
  *         - Equality preserves strings such as `"001"` and uses the stored type for numeric/boolean info.
  *
  *         #### Existence checks
+ *
  *         - `"exists": true`: the value is present, including `""`, `false` and `0`.
  *         - `"exists": false`: the field is missing or undefined.
  *         - A missing category also makes its attributes absent.
  *         - Missing fields never match `eq`, `ne` or numeric comparisons.
  *
  *         #### Value restrictions
+ *
  *         - Only scalar info fields are exposed.
  *         - Null and arrays are invalid filter values.
  *         - Strings starting with `{` or `[` are interpreted as JSON operator objects.
  *           Use explicit `eq` to compare literal strings starting with those characters.
  *
  *         #### Swagger UI input testing
+ *
  *         Swagger UI will render the filter parameter as a nested object editor. The explicit equality example is equivalent to:
  *         `?filter[info.virtual][eq]=false`
  *       schema:

@@ -449,5 +449,17 @@ module.exports = [
   "../src/routes/v2/openApiCompo/schemas/INodeParentAttachment.ts",
   "../src/routes/v2/openApiCompo/schemas/ICreateNodeElement.ts",
   "../src/routes/v2/node/createNode.ts",
-  "../src/routes/v2/node/getNodeById.ts"
+  "../src/routes/v2/node/getNodeById.ts",
+  "../src/routes/v2/node/addNodeChildren.ts",
+  "../src/routes/v2/node/getNodeChildRelationships.ts",
+  "../src/routes/v2/node/getNodeChildren.ts",
+  "../src/routes/v2/node/getNodeParentRelationships.ts",
+  "../src/routes/v2/node/getNodeParents.ts",
+  "../src/routes/v2/node/patchNodeById.ts",
+  "../src/routes/v2/openApiCompo/parameters/nodeChildren.ts",
+  "../src/routes/v2/openApiCompo/schemas/INodeChildAttachment.ts",
+  "../src/routes/v2/openApiCompo/schemas/IPatchNode.ts",
+  "../src/routes/v2/node/deleteNodeChild.ts",
+  "../src/routes/v2/node/moveNode.ts",
+  "../src/routes/v2/openApiCompo/schemas/IMoveNode.ts"
 ]

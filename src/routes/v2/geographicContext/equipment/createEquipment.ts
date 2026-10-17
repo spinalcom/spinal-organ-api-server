@@ -22,7 +22,6 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { z } from 'zod';
 import { prepareNodeCreation } from '../../../../utilities/v2/node/prepareNodeCreation';
 import validate from 'express-zod-safe';
 import type { ISpinalAPIMiddleware } from '../../../../interfaces';
@@ -38,11 +37,7 @@ import {
 } from 'spinal-env-viewer-context-geographic-service';
 import { getNodeData } from '../../../../utilities/v2/node/getNodeData';
 import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
-import { addExtraInfoValidation } from '../../../../utilities/v2/requestParse/addExtraInfoValidation';
-import {
-  addExtraAttrValidation,
-  addExtraCatAttrValidation,
-} from '../../../../utilities/v2/requestParse/addExtraAttrValidation';
+import { createEquipmentSchema } from '../../../../utilities/v2/geographicContext/createSchemas';
 import { linkNodeToGroups } from '../../../../utilities/v2/node/linkNodeToGroups';
 import { loadAndValidateNode } from '../../../../utilities/loadAndValidateNode';
 import { SPINAL_RELATION_LST_PTR_TYPE } from 'spinal-model-graph';
@@ -67,16 +62,19 @@ module.exports = function (
    *       Create a BIMObject under a room, or a reference object under a room or floor.
    *
    *       ### Requirements
+   *
    *       - A building must exist in the profile's spatial context.
    *       - Names must be unique among children of the selected equipment/reference relation.
    *       - Regular equipment requires a room parent.
    *       - With `isRefObject=true`, the parent may be a room or a floor.
    *
    *       ### Defaults
+   *
    *       - `virtual`: `false`.
    *       - No default attributes are added.
    *
    *       ### Response
+   *
    *       - Returns all info (including nested objects and arrays) and attributes.
    *       - Optional group linking happens after creation. Failures **do not roll back** the equipment.
    *     tags:
@@ -138,42 +136,7 @@ module.exports = function (
   app.post(
     '/api/v2/equipment',
     validate({
-      body: z.object({
-        parentDynamicId: z.number().min(1),
-        isRefObject: z.boolean().optional().default(false),
-        info: addExtraInfoValidation(
-          z.object({
-            name: z.string().min(1).max(200),
-            color: z
-              .string()
-              .regex(/^#([A-Fa-f0-9]{6})$/)
-              .optional(),
-            icon: z.string().min(1).max(200).optional(),
-            virtual: z.boolean().optional().default(false),
-            dbid: z.coerce.number().optional(),
-            externalId: z.string().min(1).max(200).optional(),
-            bimFileId: z.string().min(1).max(200).optional(),
-          }),
-          ['id', 'staticId', 'dynamicId', 'type']
-        ),
-        linkToGroups: z
-          .array(
-            z.strictObject({
-              contextDynamicId: z.number().min(1),
-              groupDynamicId: z.number().min(1),
-            })
-          )
-          .optional(),
-        attributes: addExtraCatAttrValidation(
-          z.object({
-            Spatial: addExtraAttrValidation(
-              z.object({
-                area: z.string().optional(),
-              })
-            ).optional(),
-          })
-        ).optional(),
-      }),
+      body: createEquipmentSchema,
     }),
     async (req, res) => {
       try {
@@ -231,8 +194,16 @@ module.exports = function (
           }
         }
 
-        const newEquipment = await prepareNodeCreation(info.name, EQUIPMENT_TYPE, info,
-          undefined, attributes, undefined, spinalAPIMiddleware, profileId);
+        const newEquipment = await prepareNodeCreation(
+          info.name,
+          EQUIPMENT_TYPE,
+          info,
+          undefined,
+          attributes,
+          undefined,
+          spinalAPIMiddleware,
+          profileId
+        );
         if (isRefObject) {
           await parentNode.addChild(
             newEquipment,

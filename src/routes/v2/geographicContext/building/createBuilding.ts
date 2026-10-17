@@ -22,20 +22,21 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { z } from 'zod';
 import validate from 'express-zod-safe';
 import type { ISpinalAPIMiddleware } from '../../../../interfaces';
 import type { Express } from 'express';
 import { getProfileId } from '../../../../utilities/requestUtilities';
-import { addBuilding, BUILDING_TYPE } from 'spinal-env-viewer-context-geographic-service';
-import { prepareNodeCreation, applyPreparedNode } from '../../../../utilities/v2/node/prepareNodeCreation';
+import {
+  addBuilding,
+  BUILDING_TYPE,
+} from 'spinal-env-viewer-context-geographic-service';
+import {
+  prepareNodeCreation,
+  applyPreparedNode,
+} from '../../../../utilities/v2/node/prepareNodeCreation';
 import { getNodeData } from '../../../../utilities/v2/node/getNodeData';
 import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
-import { addExtraInfoValidation } from '../../../../utilities/v2/requestParse/addExtraInfoValidation';
-import {
-  addExtraAttrValidation,
-  addExtraCatAttrValidation,
-} from '../../../../utilities/v2/requestParse/addExtraAttrValidation';
+import { createBuildingSchema } from '../../../../utilities/v2/geographicContext/createSchemas';
 import { EApiErrorType } from '../../../../utilities/v2/errorHandler/EApiErrorType';
 import { createErrorMsgItem } from '../../../../utilities/v2/errorHandler/createErrorMsgItem';
 import { sendResponseError } from '../../../../utilities/v2/errorHandler/sendResponseError';
@@ -57,9 +58,11 @@ module.exports = function (
    *       Create the building in the profile's spatial context, creating that context if needed.
    *
    *       ### Requirements
+   *
    *       - No building may already exist; otherwise returns **HTTP 400**.
    *
    *       ### Defaults
+   *
    *       - `Spatial.area`: `"0"`.
    *       - `Spinal Building Information.Adresse`: `"To configure"`.
    *       - Supplied values override these defaults.
@@ -112,33 +115,7 @@ module.exports = function (
   app.post(
     '/api/v2/building',
     validate({
-      body: z.object({
-        info: addExtraInfoValidation(
-          z.object({
-            name: z.string().min(1).max(200),
-            color: z
-              .string()
-              .regex(/^#([A-Fa-f0-9]{6})$/)
-              .optional(),
-            icon: z.string().min(1).max(200).optional(),
-          }),
-          ['id', 'staticId', 'type', 'dynamicId']
-        ),
-        attributes: addExtraCatAttrValidation(
-          z.object({
-            'Spinal Building Information': addExtraAttrValidation(
-              z.object({
-                Adresse: z.string().optional(),
-              })
-            ).optional(),
-            Spatial: addExtraAttrValidation(
-              z.object({
-                area: z.string().optional(),
-              })
-            ).optional(),
-          })
-        ).optional(),
-      }),
+      body: createBuildingSchema,
     }),
     async (req, res) => {
       try {
@@ -151,10 +128,19 @@ module.exports = function (
             'A building already exists'
           );
         const { info, attributes } = req.body;
-        const prepared = await prepareNodeCreation(info.name, BUILDING_TYPE, info, undefined, attributes, {
-          'Spinal Building Information': { Adresse: 'To configure' },
-          Spatial: { area: '0' },
-        }, spinalAPIMiddleware, profileId);
+        const prepared = await prepareNodeCreation(
+          info.name,
+          BUILDING_TYPE,
+          info,
+          undefined,
+          attributes,
+          {
+            'Spinal Building Information': { Adresse: 'To configure' },
+            Spatial: { area: '0' },
+          },
+          spinalAPIMiddleware,
+          profileId
+        );
         const newBuilding = await addBuilding(
           geographicContext,
           geographicContext,

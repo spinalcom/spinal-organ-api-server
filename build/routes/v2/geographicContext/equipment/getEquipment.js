@@ -59,23 +59,27 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       > 200-item page limit do not guarantee a small traversal.
      *
      *       ### Scope
+     *
      *       - `bimobject`: regular equipment under a `geographicRoom`.
      *       - `referenceRoom`: reference objects under a `geographicRoom`.
      *       - `referenceFloor`: reference objects under a `geographicFloor`.
      *       - A `BIMObjectGroup` parent supports every `bimObjectType`.
      *
      *       ### Filtering and pagination
+     *
      *       - All filter conditions use **AND**.
      *       - Filtering runs **before** `offset` and output projection.
      *       - Returns at most **200 matching items**. Use `offset=200` for the second page.
      *
      *       ### Response
+     *
      *       - Each item includes `parentDynamicId`.
      *       - Equipment linked to multiple rooms may appear once per room.
      *       - With a parent parameter, `total` counts eligible children **before filtering**.
      *       - `total` is omitted for building-wide traversal.
      *
      *       ### Example
+     *
      *       ```http
      *       GET /api/v2/equipment?parent-dynamic-id=132456&filter[attributes.Geometry.Surface][exists]=true&offset=0
      *       ```
