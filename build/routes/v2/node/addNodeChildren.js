@@ -80,10 +80,10 @@ module.exports = function (logger, app, middleware) {
      *                   $ref: '#/components/schemas/INodeChildAttachment'
      *           example:
      *             children:
-     *               - childDynamicId: 123456
+     *               - childDynamicId: 1234567
      *                 relationName: hasSensor
-     *                 contextDynamicId: 654321
-     *               - childDynamicId: 123457
+     *                 contextDynamicId: 6543210
+     *               - childDynamicId: 1234568
      *                 relationName: hasSensor
      *                 relationType: PtrLst
      *     responses:

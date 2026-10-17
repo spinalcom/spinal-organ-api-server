@@ -34,8 +34,8 @@ export type ElementJson = null | string | number | boolean | ElementJson[] | {
  *             - type: object
  *               additionalProperties: true
  *       example:
- *         dynamicId: 123
- *         parentDynamicId: 456
+ *         dynamicId: 1000123
+ *         parentDynamicId: 1000456
  *         info:
  *           staticId: "abc123"
  *           name: "Node Name"

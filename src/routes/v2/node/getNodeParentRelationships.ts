@@ -91,6 +91,13 @@ module.exports = function (
    *                       type: array
    *                       items:
    *                         $ref: '#/components/schemas/INodeItem'
+   *             examples:
+   *               grouped:
+   *                 $ref: '#/components/examples/parentRelationshipsGrouped'
+   *               projected:
+   *                 $ref: '#/components/examples/parentRelationshipsProjected'
+   *               empty:
+   *                 $ref: '#/components/examples/parentRelationshipsEmpty'
    *       400:
    *         $ref: '#/components/responses/IErrorItemRes400'
    *       500:

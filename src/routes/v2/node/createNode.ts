@@ -69,7 +69,7 @@ module.exports = function (
    *       - Supply an object directly in `element` to create a generic SpinalCore `Model`.
    *       - Values may be strings, finite numbers, booleans, nested objects or arrays. `null` is not supported.
    *       - Object keys must not start with `_` or shadow Model members (for example `get`, `set`, `constructor`, `model_id`).
-   *       - Use `{ "$modelRef": 789012, "path": "info.name" }` to share a Model from an existing SpinalNode. References work in nested objects and arrays.
+   *       - Use `{ "$modelRef": 7890123, "path": "info.name" }` to share a Model from an existing SpinalNode. References work in nested objects and arrays.
    *       - Use `{ "$modelRef": "self", "path": "info.unit" }` to share a Model from the node being created. Forward references work regardless of field order, including across info and element. `attr.Category.Label` can target supplied or default attribute values.
    *       - Self references do not load a node by dynamic ID. Missing self paths, circular dependencies and embedding an ancestor into itself return HTTP 400 before parent attachment.
    *       - A reference object must contain exactly `$modelRef` (a positive safe integer node ID or `"self"`) and `path`. `$modelRef` is reserved, and cannot be a field on the root element.
@@ -144,13 +144,13 @@ module.exports = function (
    *                 $modelRef: "self"
    *                 path: attr.Technical.Code
    *               device:
-   *                 $modelRef: 789012
+   *                 $modelRef: 7890123
    *                 path: info.name
    *             parents:
-   *               - parentDynamicId: 123456
+   *               - parentDynamicId: 1234567
    *                 relationName: hasSensor
-   *                 contextDynamicId: 654321
-   *               - parentDynamicId: 123457
+   *                 contextDynamicId: 6543210
+   *               - parentDynamicId: 1234568
    *                 relationName: hasSensor
    *                 relationType: PtrLst
    *     responses:

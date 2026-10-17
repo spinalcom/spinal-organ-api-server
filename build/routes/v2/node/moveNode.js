@@ -78,14 +78,14 @@ module.exports = function (logger, app, middleware) {
      *             $ref: '#/components/schemas/IMoveNode'
      *           example:
      *             from:
-     *               parentDynamicId: 101
+     *               parentDynamicId: 1000101
      *               relationType: PtrLst
      *               relationName: hasSensor
      *             to:
-     *               parentDynamicId: 102
+     *               parentDynamicId: 1000102
      *               relationType: PtrLst
      *               relationName: hasSensor
-     *               contextDynamicId: 456
+     *               contextDynamicId: 1000456
      *     responses:
      *       200:
      *         description: Move completed or requested final state already observed.

@@ -128,11 +128,11 @@
  *           summary: Combine info, attribute and dynamic ID conditions
  *           description: |-
  *             Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:
- *             `?filter[info.virtual][eq]=false&filter[attributes.Technical.Code][eq]='001'&filter[dynamicId][gt]=1000`
+ *             `?filter[info.virtual][eq]=false&filter[attributes.Technical.Code][eq]='001'&filter[dynamicId][gt]=1000000`
  *           value:
  *             info.virtual: false
  *             attributes.Technical.Code:
  *               eq: '001'
  *             dynamicId:
- *               gt: 1000
+ *               gt: 1000000
  */

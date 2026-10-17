@@ -2463,8 +2463,8 @@
           }
         },
         "example": {
-          "dynamicId": 123,
-          "parentDynamicId": 456,
+          "dynamicId": 1000123,
+          "parentDynamicId": 1000456,
           "info": {
             "staticId": "abc123",
             "name": "Node Name",
@@ -2665,7 +2665,7 @@
       },
       "ICreateNodeElement": {
         "type": "object",
-        "description": "Create a generic Model from this object. The node retains its element pointer.\n\n- Nested values can reference a Model on an existing SpinalNode with `{ \"$modelRef\": 789012, \"path\": \"info.name\" }`.\n- Use `{ \"$modelRef\": \"self\", \"path\": \"info.unit\" }` to share a Model from the node being created. Forward references work across info and element regardless of field order; self attribute paths can target supplied or default categorized values.\n- Missing self paths, circular dependencies and ancestor embedding return HTTP 400 before attachment. Self does not load a node by dynamic ID.\n\n**The current profile must have access to the target SpinalNode specified by `$modelRef`.**\n\n- References are loaded using the current profile and assigned directly as Model attributes, not copied or wrapped in additional pointers.\n- Keys must not start with an underscore, shadow Model members, or equal `$modelRef` on an ordinary object.\n- The root element must be an ordinary object, not a reference.",
+        "description": "Create a generic Model from this object. The node retains its element pointer.\n\n- Nested values can reference a Model on an existing SpinalNode with `{ \"$modelRef\": 7890123, \"path\": \"info.name\" }`.\n- Use `{ \"$modelRef\": \"self\", \"path\": \"info.unit\" }` to share a Model from the node being created. Forward references work across info and element regardless of field order; self attribute paths can target supplied or default categorized values.\n- Missing self paths, circular dependencies and ancestor embedding return HTTP 400 before attachment. Self does not load a node by dynamic ID.\n\n**The current profile must have access to the target SpinalNode specified by `$modelRef`.**\n\n- References are loaded using the current profile and assigned directly as Model attributes, not copied or wrapped in additional pointers.\n- Keys must not start with an underscore, shadow Model members, or equal `$modelRef` on an ordinary object.\n- The root element must be an ordinary object, not a reference.",
         "additionalProperties": {
           "$ref": "#/components/schemas/INodeElementValue"
         },
@@ -2678,7 +2678,7 @@
           "value": 21.5,
           "enabled": true,
           "device": {
-            "$modelRef": 789012,
+            "$modelRef": 7890123,
             "path": "info.name"
           },
           "metadata": {
@@ -2721,7 +2721,7 @@
           }
         },
         "example": {
-          "$modelRef": 789012,
+          "$modelRef": 7890123,
           "path": "info.name"
         }
       },
@@ -3290,14 +3290,14 @@
           },
           "combined": {
             "summary": "Combine info, attribute and dynamic ID conditions",
-            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.virtual][eq]=false&filter[attributes.Technical.Code][eq]='001'&filter[dynamicId][gt]=1000`",
+            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.virtual][eq]=false&filter[attributes.Technical.Code][eq]='001'&filter[dynamicId][gt]=1000000`",
             "value": {
               "info.virtual": false,
               "attributes.Technical.Code": {
                 "eq": "001"
               },
               "dynamicId": {
-                "gt": 1000
+                "gt": 1000000
               }
             }
           }
@@ -3520,23 +3520,23 @@
     "examples": {
       "childRelationshipsGrouped": {
         "summary": "Multiple relation types and names, with a shared child",
-        "description": "Example for `GET /api/v2/node/101/child-relationships?info=name,type`.\n\nSensor 501 appears in both `LstPtr / hasSensor` and `Ref / monitors`.\n`total` is **4 relationship occurrences**, not 3 distinct children.",
+        "description": "Example for `GET /api/v2/node/1000101/child-relationships?info=name,type`.\n\nSensor 1000501 appears in both `LstPtr / hasSensor` and `Ref / monitors`.\n`total` is **4 relationship occurrences**, not 3 distinct children.",
         "value": {
-          "parentDynamicId": 101,
+          "parentDynamicId": 1000101,
           "data": {
             "LstPtr": {
               "hasSensor": [
                 {
-                  "dynamicId": 501,
-                  "parentDynamicId": 101,
+                  "dynamicId": 1000501,
+                  "parentDynamicId": 1000101,
                   "info": {
                     "name": "Temperature sensor",
                     "type": "sensor"
                   }
                 },
                 {
-                  "dynamicId": 502,
-                  "parentDynamicId": 101,
+                  "dynamicId": 1000502,
+                  "parentDynamicId": 1000101,
                   "info": {
                     "name": "Humidity sensor",
                     "type": "sensor"
@@ -3545,8 +3545,8 @@
               ],
               "hasDocument": [
                 {
-                  "dynamicId": 503,
-                  "parentDynamicId": 101,
+                  "dynamicId": 1000503,
+                  "parentDynamicId": 1000101,
                   "info": {
                     "name": "Maintenance guide",
                     "type": "document"
@@ -3557,8 +3557,8 @@
             "Ref": {
               "monitors": [
                 {
-                  "dynamicId": 501,
-                  "parentDynamicId": 101,
+                  "dynamicId": 1000501,
+                  "parentDynamicId": 1000101,
                   "info": {
                     "name": "Temperature sensor",
                     "type": "sensor"
@@ -3573,15 +3573,15 @@
       },
       "childRelationshipsProjected": {
         "summary": "A later page with selected attributes and element fields",
-        "description": "Example for `GET /api/v2/node/101/child-relationships?relationType=LstPtr&relationName=hasSensor&info=false&attributes=Technical/Code&element=value,metadata.unit&offset=200`.\n\n`info` is omitted. Selected element paths retain their nested structure.\nThe offset skips 200 matching occurrences globally; `total` counts only this page.",
+        "description": "Example for `GET /api/v2/node/1000101/child-relationships?relationType=LstPtr&relationName=hasSensor&info=false&attributes=Technical/Code&element=value,metadata.unit&offset=200`.\n\n`info` is omitted. Selected element paths retain their nested structure.\nThe offset skips 200 matching occurrences globally; `total` counts only this page.",
         "value": {
-          "parentDynamicId": 101,
+          "parentDynamicId": 1000101,
           "data": {
             "LstPtr": {
               "hasSensor": [
                 {
-                  "dynamicId": 701,
-                  "parentDynamicId": 101,
+                  "dynamicId": 1000701,
+                  "parentDynamicId": 1000101,
                   "attributes": {
                     "Technical": {
                       "Code": "TEMP-201"
@@ -3605,7 +3605,89 @@
         "summary": "No matching relationships or children",
         "description": "Empty groups are omitted. An empty parent, unmatched selectors/filters, or an offset beyond all matches returns this shape.",
         "value": {
-          "parentDynamicId": 101,
+          "parentDynamicId": 1000101,
+          "data": {},
+          "offset": 0,
+          "total": 0
+        }
+      },
+      "parentRelationshipsGrouped": {
+        "summary": "Multiple incoming relations, with a shared parent",
+        "description": "Example for `GET /api/v2/node/1000501/parent-relationships?info=name,type`.\n\nRoom A appears in both `LstPtr / hasSensor` and `Ref / monitors`.\nRelation names describe the original parent-to-child direction.\n`total` is **3 relationship occurrences**, not 2 distinct parents.\n\n`nodeDynamicId` identifies the queried sensor. Returned parent items omit `parentDynamicId`.",
+        "value": {
+          "nodeDynamicId": 1000501,
+          "data": {
+            "LstPtr": {
+              "hasSensor": [
+                {
+                  "dynamicId": 1000101,
+                  "info": {
+                    "name": "Room A",
+                    "type": "geographicRoom"
+                  }
+                }
+              ]
+            },
+            "PtrLst": {
+              "hasSensor": [
+                {
+                  "dynamicId": 1000102,
+                  "info": {
+                    "name": "Room B",
+                    "type": "geographicRoom"
+                  }
+                }
+              ]
+            },
+            "Ref": {
+              "monitors": [
+                {
+                  "dynamicId": 1000101,
+                  "info": {
+                    "name": "Room A",
+                    "type": "geographicRoom"
+                  }
+                }
+              ]
+            }
+          },
+          "offset": 0,
+          "total": 3
+        }
+      },
+      "parentRelationshipsProjected": {
+        "summary": "A later page with selected parent attributes and element fields",
+        "description": "Example for `GET /api/v2/node/1000501/parent-relationships?relationType=PtrLst&relationName=hasSensor&info=false&attributes=Technical/Code&element=metadata.zone&offset=200`.\n\nProjections apply to the returned parents, not the queried sensor.\n`info` is omitted and selected element paths retain their nested structure.\nThe offset skips 200 matching occurrences globally; `total` counts only this page.",
+        "value": {
+          "nodeDynamicId": 1000501,
+          "data": {
+            "PtrLst": {
+              "hasSensor": [
+                {
+                  "dynamicId": 1000301,
+                  "attributes": {
+                    "Technical": {
+                      "Code": "ROOM-201"
+                    }
+                  },
+                  "element": {
+                    "metadata": {
+                      "zone": "North"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "offset": 200,
+          "total": 1
+        }
+      },
+      "parentRelationshipsEmpty": {
+        "summary": "No matching incoming relationships or parents",
+        "description": "Empty groups are omitted. A node without parents, unmatched selectors/filters, or an offset beyond all matches returns this shape.",
+        "value": {
+          "nodeDynamicId": 1000501,
           "data": {},
           "offset": 0,
           "total": 0
@@ -28778,7 +28860,7 @@
           }
         ],
         "summary": "Create a node and attach it to parents",
-        "description": "Create one `SpinalNode` with a caller-supplied name and type.\n\n### Parents and relations\n\n- Supply at least one entry in `parents`. All entries attach the **same node**.\n- Each entry requires `parentDynamicId` and `relationName`.\n- `relationType` defaults to `PtrLst`; `LstPtr` and `Ref` are also supported.\n- With `contextDynamicId`, load a `SpinalContext` and use `addChildInContext`.\n- Without a context, use `addChild`.\n- Parents and contexts are loaded using the current profile.\n\n### Element (optional)\n\n- Supply an object directly in `element` to create a generic SpinalCore `Model`.\n- Values may be strings, finite numbers, booleans, nested objects or arrays. `null` is not supported.\n- Object keys must not start with `_` or shadow Model members (for example `get`, `set`, `constructor`, `model_id`).\n- Use `{ \"$modelRef\": 789012, \"path\": \"info.name\" }` to share a Model from an existing SpinalNode. References work in nested objects and arrays.\n- Use `{ \"$modelRef\": \"self\", \"path\": \"info.unit\" }` to share a Model from the node being created. Forward references work regardless of field order, including across info and element. `attr.Category.Label` can target supplied or default attribute values.\n- Self references do not load a node by dynamic ID. Missing self paths, circular dependencies and embedding an ancestor into itself return HTTP 400 before parent attachment.\n- A reference object must contain exactly `$modelRef` (a positive safe integer node ID or `\"self\"`) and `path`. `$modelRef` is reserved, and cannot be a field on the root element.\n- **The current profile must have access to the target SpinalNode specified by `$modelRef`.**\n- Paths support `info.name`, `info.metadata.unit`, `element.samples.0`, and `attr.Category.Label` (the attribute value Model). `element` selects the whole element Model. `info`, `info.id`, `info.staticId` and descendants of these ID fields are forbidden to prevent sharing the node ID. Missing or invalid paths return HTTP 400; nested pointers are not traversed.\n- Referenced Models are assigned directly as attributes, not copied or wrapped in additional pointers. Each target node is loaded once per object creation; repeated node/path pairs share the same Model.\n- The newly created element Model is passed to the SpinalNode constructor, which keeps it behind the node's element pointer.\n- All references are validated and loaded before any parent attachment. Invalid or inaccessible references reject the request.\n- If omitted, no element is created by this endpoint.\n- The response remains `INodeItem`; element contents are not included.\n\n### Results\n\n- **201:** at least one attachment succeeded. Returns the node with all info and attributes.\n- Extra info supports nested objects, arrays and `$modelRef` values with the same rules as element data. The current profile must have access to the target SpinalNode specified by `$modelRef`.\n- Info keys starting with `_` are forbidden at every nesting level, including objects inside arrays. Invalid keys return HTTP 400.\n- Successful attachments are retained when others fail.\n- Failed entries are reported in `error`, including their zero-based index and requested parent/relation.\n- **400:** invalid input, or all attachments failed due to invalid parents or contexts.\n- **500:** unexpected failure; also used when all attachments fail and an internal error occurred.\n- No uniqueness constraint is imposed on the name. No default attributes are added.",
+        "description": "Create one `SpinalNode` with a caller-supplied name and type.\n\n### Parents and relations\n\n- Supply at least one entry in `parents`. All entries attach the **same node**.\n- Each entry requires `parentDynamicId` and `relationName`.\n- `relationType` defaults to `PtrLst`; `LstPtr` and `Ref` are also supported.\n- With `contextDynamicId`, load a `SpinalContext` and use `addChildInContext`.\n- Without a context, use `addChild`.\n- Parents and contexts are loaded using the current profile.\n\n### Element (optional)\n\n- Supply an object directly in `element` to create a generic SpinalCore `Model`.\n- Values may be strings, finite numbers, booleans, nested objects or arrays. `null` is not supported.\n- Object keys must not start with `_` or shadow Model members (for example `get`, `set`, `constructor`, `model_id`).\n- Use `{ \"$modelRef\": 7890123, \"path\": \"info.name\" }` to share a Model from an existing SpinalNode. References work in nested objects and arrays.\n- Use `{ \"$modelRef\": \"self\", \"path\": \"info.unit\" }` to share a Model from the node being created. Forward references work regardless of field order, including across info and element. `attr.Category.Label` can target supplied or default attribute values.\n- Self references do not load a node by dynamic ID. Missing self paths, circular dependencies and embedding an ancestor into itself return HTTP 400 before parent attachment.\n- A reference object must contain exactly `$modelRef` (a positive safe integer node ID or `\"self\"`) and `path`. `$modelRef` is reserved, and cannot be a field on the root element.\n- **The current profile must have access to the target SpinalNode specified by `$modelRef`.**\n- Paths support `info.name`, `info.metadata.unit`, `element.samples.0`, and `attr.Category.Label` (the attribute value Model). `element` selects the whole element Model. `info`, `info.id`, `info.staticId` and descendants of these ID fields are forbidden to prevent sharing the node ID. Missing or invalid paths return HTTP 400; nested pointers are not traversed.\n- Referenced Models are assigned directly as attributes, not copied or wrapped in additional pointers. Each target node is loaded once per object creation; repeated node/path pairs share the same Model.\n- The newly created element Model is passed to the SpinalNode constructor, which keeps it behind the node's element pointer.\n- All references are validated and loaded before any parent attachment. Invalid or inaccessible references reject the request.\n- If omitted, no element is created by this endpoint.\n- The response remains `INodeItem`; element contents are not included.\n\n### Results\n\n- **201:** at least one attachment succeeded. Returns the node with all info and attributes.\n- Extra info supports nested objects, arrays and `$modelRef` values with the same rules as element data. The current profile must have access to the target SpinalNode specified by `$modelRef`.\n- Info keys starting with `_` are forbidden at every nesting level, including objects inside arrays. Invalid keys return HTTP 400.\n- Successful attachments are retained when others fail.\n- Failed entries are reported in `error`, including their zero-based index and requested parent/relation.\n- **400:** invalid input, or all attachments failed due to invalid parents or contexts.\n- **500:** unexpected failure; also used when all attachments fail and an internal error occurred.\n- No uniqueness constraint is imposed on the name. No default attributes are added.",
         "tags": [
           "node"
         ],
@@ -28850,18 +28932,18 @@
                     "path": "attr.Technical.Code"
                   },
                   "device": {
-                    "$modelRef": 789012,
+                    "$modelRef": 7890123,
                     "path": "info.name"
                   }
                 },
                 "parents": [
                   {
-                    "parentDynamicId": 123456,
+                    "parentDynamicId": 1234567,
                     "relationName": "hasSensor",
-                    "contextDynamicId": 654321
+                    "contextDynamicId": 6543210
                   },
                   {
-                    "parentDynamicId": 123457,
+                    "parentDynamicId": 1234568,
                     "relationName": "hasSensor",
                     "relationType": "PtrLst"
                   }
@@ -29139,12 +29221,12 @@
               "example": {
                 "children": [
                   {
-                    "childDynamicId": 123456,
+                    "childDynamicId": 1234567,
                     "relationName": "hasSensor",
-                    "contextDynamicId": 654321
+                    "contextDynamicId": 6543210
                   },
                   {
-                    "childDynamicId": 123457,
+                    "childDynamicId": 1234568,
                     "relationName": "hasSensor",
                     "relationType": "PtrLst"
                   }
@@ -29475,6 +29557,17 @@
                       }
                     }
                   }
+                },
+                "examples": {
+                  "grouped": {
+                    "$ref": "#/components/examples/parentRelationshipsGrouped"
+                  },
+                  "projected": {
+                    "$ref": "#/components/examples/parentRelationshipsProjected"
+                  },
+                  "empty": {
+                    "$ref": "#/components/examples/parentRelationshipsEmpty"
+                  }
                 }
               }
             }
@@ -29714,15 +29807,15 @@
               },
               "example": {
                 "from": {
-                  "parentDynamicId": 101,
+                  "parentDynamicId": 1000101,
                   "relationType": "PtrLst",
                   "relationName": "hasSensor"
                 },
                 "to": {
-                  "parentDynamicId": 102,
+                  "parentDynamicId": 1000102,
                   "relationType": "PtrLst",
                   "relationName": "hasSensor",
-                  "contextDynamicId": 456
+                  "contextDynamicId": 1000456
                 }
               }
             }

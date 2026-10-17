@@ -31,7 +31,7 @@
  *       description: |-
  *         Create a generic Model from this object. The node retains its element pointer.
  *
- *         - Nested values can reference a Model on an existing SpinalNode with `{ "$modelRef": 789012, "path": "info.name" }`.
+ *         - Nested values can reference a Model on an existing SpinalNode with `{ "$modelRef": 7890123, "path": "info.name" }`.
  *         - Use `{ "$modelRef": "self", "path": "info.unit" }` to share a Model from the node being created. Forward references work across info and element regardless of field order; self attribute paths can target supplied or default categorized values.
  *         - Missing self paths, circular dependencies and ancestor embedding return HTTP 400 before attachment. Self does not load a node by dynamic ID.
  *
@@ -48,7 +48,7 @@
  *         value: 21.5
  *         enabled: true
  *         device:
- *           $modelRef: 789012
+ *           $modelRef: 7890123
  *           path: info.name
  *         metadata:
  *           unit: Celsius
@@ -77,7 +77,7 @@
  *             - References share the selected Model, not a copy. Repeated node/path pairs share the same resolved instance; each target node is loaded once per object creation.
  *           example: info.name
  *       example:
- *         $modelRef: 789012
+ *         $modelRef: 7890123
  *         path: info.name
  *     INodeElementValue:
  *       description: Recursive non-null JSON value. Numbers must be finite; object keys must follow the Model attribute naming restrictions.
