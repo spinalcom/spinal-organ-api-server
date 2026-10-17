@@ -40,7 +40,16 @@ import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getB
 import { createEquipmentSchema } from '../../../../utilities/v2/geographicContext/createSchemas';
 import { linkNodeToGroups } from '../../../../utilities/v2/node/linkNodeToGroups';
 import { loadAndValidateNode } from '../../../../utilities/loadAndValidateNode';
-import { SPINAL_RELATION_LST_PTR_TYPE } from 'spinal-model-graph';
+import {
+  SpinalNode,
+  SPINAL_RELATION_LST_PTR_TYPE,
+  SPINAL_RELATION_PTR_LST_TYPE,
+} from 'spinal-model-graph';
+import { findBimEquipment } from '../../../../utilities/v2/geographicContext/findBimEquipment';
+import {
+  patchNode,
+  patchNodeSchema,
+} from '../../../../utilities/v2/node/patchNode';
 import { createErrorMsgItem } from '../../../../utilities/v2/errorHandler/createErrorMsgItem';
 import { EApiErrorType } from '../../../../utilities/v2/errorHandler/EApiErrorType';
 import { sendResponseError } from '../../../../utilities/v2/errorHandler/sendResponseError';
@@ -67,11 +76,21 @@ module.exports = function (
    *       - Names must be unique among children of the selected equipment/reference relation.
    *       - Regular equipment requires a room parent.
    *       - With `isRefObject=true`, the parent may be a room or a floor.
+   *       - New equipment/reference attachments use `PtrLst`. Existing `PtrLst` or `LstPtr` links to a reused BIM object are retained without migration or duplicate attachment.
    *
    *       ### Defaults
    *
    *       - `virtual`: `false`.
    *       - No default attributes are added.
+   *
+   *       ### BIM object reuse
+   *
+   *       - When both `info.bimFileId` and `info.dbid` are supplied, search `BimFileContext` for the BIM file by static ID, then its `hasBimContext` children for an equipment with that dbid.
+   *       - A missing BIM file returns HTTP 400 with `bimFileId given but NotFound`.
+   *       - A matching object is reused and patched with supplied info and attributes only. Unspecified fields, including `virtual`, are preserved.
+   *       - Otherwise create equipment with the usual defaults and attach it to the BIMContext via `hasBimObject` / `PtrLst`. Create `BIMContext` / `SpinalNode` under `hasBimContext` / `PtrLst` if absent.
+   *       - The resulting object is also attached to the requested geographic/reference parent. An existing exact attachment is retained.
+   *       - BIM search can load many objects. Writes are not transactional or locked; later failures do not roll back earlier changes.
    *
    *       ### Response
    *
@@ -184,9 +203,21 @@ module.exports = function (
         const oldEquipments = await parentNode.getChildren(
           relationParentToChild
         );
+        const bim =
+          info.bimFileId !== undefined && info.dbid !== undefined
+            ? await findBimEquipment(
+                spinalAPIMiddleware,
+                profileId,
+                info.bimFileId,
+                info.dbid
+              )
+            : undefined;
 
         for (const oldEquip of oldEquipments) {
-          if (oldEquip.info.name.get() === info.name) {
+          if (
+            oldEquip.info.name.get() === info.name &&
+            oldEquip.getId().get() !== bim?.equipment?.getId().get()
+          ) {
             throw createErrorMsgItem(
               EApiErrorType.ERROR_DATABASE,
               'An equipment with the same name already exists'
@@ -194,27 +225,84 @@ module.exports = function (
           }
         }
 
-        const newEquipment = await prepareNodeCreation(
-          info.name,
-          EQUIPMENT_TYPE,
-          info,
-          undefined,
-          attributes,
-          undefined,
-          spinalAPIMiddleware,
-          profileId
-        );
-        if (isRefObject) {
+        const existingRelations = [
+          SPINAL_RELATION_PTR_LST_TYPE,
+          SPINAL_RELATION_LST_PTR_TYPE,
+        ].flatMap((type) => {
+          const relation = parentNode.children
+            .getElement(type)
+            ?.getElement(relationParentToChild);
+          return relation &&
+            bim?.equipment &&
+            relation.getChildrenIds().includes(bim.equipment.getId().get())
+            ? [relation]
+            : [];
+        });
+        const alreadyAttached = existingRelations.length > 0;
+        if (
+          alreadyAttached &&
+          !isRefObject &&
+          !(
+            existingRelations.some((relation) =>
+              relation.belongsToContext(geographicContext)
+            ) && bim!.equipment!.belongsToContext(geographicContext)
+          )
+        )
+          throw createErrorMsgItem(
+            EApiErrorType.INVALID_REQUEST,
+            'Equipment is already attached but not in the geographic context'
+          );
+        let newEquipment: SpinalNode;
+        if (bim?.equipment) {
+          newEquipment = bim.equipment;
+          await patchNode(
+            newEquipment,
+            patchNodeSchema.parse({
+              info: { set: info },
+              ...(attributes ? { attributes: { set: attributes } } : {}),
+            }),
+            spinalAPIMiddleware,
+            profileId
+          );
+        } else {
+          newEquipment = await prepareNodeCreation(
+            info.name,
+            EQUIPMENT_TYPE,
+            { ...info, virtual: info.virtual ?? false },
+            undefined,
+            attributes,
+            undefined,
+            spinalAPIMiddleware,
+            profileId
+          );
+          if (bim) {
+            let bimContextNode = bim.bimContext;
+            if (!bimContextNode) {
+              bimContextNode = new SpinalNode('BIMContext', 'SpinalNode');
+              await bim.bimFile.addChild(
+                bimContextNode,
+                'hasBimContext',
+                SPINAL_RELATION_PTR_LST_TYPE
+              );
+            }
+            await bimContextNode.addChild(
+              newEquipment,
+              EQUIPMENT_RELATION,
+              SPINAL_RELATION_PTR_LST_TYPE
+            );
+          }
+        }
+        if (!alreadyAttached && isRefObject) {
           await parentNode.addChild(
             newEquipment,
             relationParentToChild,
-            SPINAL_RELATION_LST_PTR_TYPE
+            SPINAL_RELATION_PTR_LST_TYPE
           );
-        } else {
+        } else if (!alreadyAttached) {
           await parentNode.addChildInContext(
             newEquipment,
             relationParentToChild,
-            SPINAL_RELATION_LST_PTR_TYPE,
+            SPINAL_RELATION_PTR_LST_TYPE,
             geographicContext
           );
         }

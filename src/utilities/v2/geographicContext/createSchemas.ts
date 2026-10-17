@@ -94,7 +94,7 @@ export const createEquipmentSchema = z.object({
   info: addExtraInfoValidation(
     z.object({
       ...infoFields,
-      virtual: z.boolean().optional().default(false),
+      virtual: z.boolean().optional(),
       dbid: z.coerce.number().optional(),
       externalId: z.string().min(1).max(200).optional(),
       bimFileId: z.string().min(1).max(200).optional(),

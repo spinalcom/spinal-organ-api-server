@@ -248,9 +248,9 @@ describe('v2 geographic node POST routes', () => {
       const response = await request(fixture.app).post('/api/v2/equipment').send({
         parentDynamicId: fixture[parent]._server_id,
         isRefObject: true,
-        info: { name: 'Reference', dbid: '123', externalId: 'ext-1', bimFileId: 'bim-1' },
+        info: { name: 'Reference', dbid: '123', externalId: 'ext-1' },
       }).expect(201);
-      expect(response.body.data.info).to.include({ dbid: 123, externalId: 'ext-1', bimFileId: 'bim-1' });
+      expect(response.body.data.info).to.include({ dbid: 123, externalId: 'ext-1' });
       const nodes = await fixture[parent].getChildren(relation);
       expect(nodes.map((node) => node.getName().get())).to.include('Reference');
     });

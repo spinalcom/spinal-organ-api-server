@@ -71,7 +71,7 @@ exports.createEquipmentSchema = zod_1.z.object({
     isRefObject: zod_1.z.boolean().optional().default(false),
     info: (0, addExtraInfoValidation_1.addExtraInfoValidation)(zod_1.z.object({
         ...infoFields,
-        virtual: zod_1.z.boolean().optional().default(false),
+        virtual: zod_1.z.boolean().optional(),
         dbid: zod_1.z.coerce.number().optional(),
         externalId: zod_1.z.string().min(1).max(200).optional(),
         bimFileId: zod_1.z.string().min(1).max(200).optional(),

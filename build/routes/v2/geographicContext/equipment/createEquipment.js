@@ -36,6 +36,8 @@ const createSchemas_1 = require("../../../../utilities/v2/geographicContext/crea
 const linkNodeToGroups_1 = require("../../../../utilities/v2/node/linkNodeToGroups");
 const loadAndValidateNode_1 = require("../../../../utilities/loadAndValidateNode");
 const spinal_model_graph_1 = require("spinal-model-graph");
+const findBimEquipment_1 = require("../../../../utilities/v2/geographicContext/findBimEquipment");
+const patchNode_1 = require("../../../../utilities/v2/node/patchNode");
 const createErrorMsgItem_1 = require("../../../../utilities/v2/errorHandler/createErrorMsgItem");
 const EApiErrorType_1 = require("../../../../utilities/v2/errorHandler/EApiErrorType");
 const sendResponseError_1 = require("../../../../utilities/v2/errorHandler/sendResponseError");
@@ -57,11 +59,21 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - Names must be unique among children of the selected equipment/reference relation.
      *       - Regular equipment requires a room parent.
      *       - With `isRefObject=true`, the parent may be a room or a floor.
+     *       - New equipment/reference attachments use `PtrLst`. Existing `PtrLst` or `LstPtr` links to a reused BIM object are retained without migration or duplicate attachment.
      *
      *       ### Defaults
      *
      *       - `virtual`: `false`.
      *       - No default attributes are added.
+     *
+     *       ### BIM object reuse
+     *
+     *       - When both `info.bimFileId` and `info.dbid` are supplied, search `BimFileContext` for the BIM file by static ID, then its `hasBimContext` children for an equipment with that dbid.
+     *       - A missing BIM file returns HTTP 400 with `bimFileId given but NotFound`.
+     *       - A matching object is reused and patched with supplied info and attributes only. Unspecified fields, including `virtual`, are preserved.
+     *       - Otherwise create equipment with the usual defaults and attach it to the BIMContext via `hasBimObject` / `PtrLst`. Create `BIMContext` / `SpinalNode` under `hasBimContext` / `PtrLst` if absent.
+     *       - The resulting object is also attached to the requested geographic/reference parent. An existing exact attachment is retained.
+     *       - BIM search can load many objects. Writes are not transactional or locked; later failures do not roll back earlier changes.
      *
      *       ### Response
      *
@@ -150,17 +162,57 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_LOAD_NODE_TYPE, 'Invalid parent type for an equipment');
             }
             const oldEquipments = await parentNode.getChildren(relationParentToChild);
+            const bim = info.bimFileId !== undefined && info.dbid !== undefined
+                ? await (0, findBimEquipment_1.findBimEquipment)(spinalAPIMiddleware, profileId, info.bimFileId, info.dbid)
+                : undefined;
             for (const oldEquip of oldEquipments) {
-                if (oldEquip.info.name.get() === info.name) {
+                if (oldEquip.info.name.get() === info.name &&
+                    oldEquip.getId().get() !== bim?.equipment?.getId().get()) {
                     throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'An equipment with the same name already exists');
                 }
             }
-            const newEquipment = await (0, prepareNodeCreation_1.prepareNodeCreation)(info.name, spinal_env_viewer_context_geographic_service_1.EQUIPMENT_TYPE, info, undefined, attributes, undefined, spinalAPIMiddleware, profileId);
-            if (isRefObject) {
-                await parentNode.addChild(newEquipment, relationParentToChild, spinal_model_graph_1.SPINAL_RELATION_LST_PTR_TYPE);
+            const existingRelations = [
+                spinal_model_graph_1.SPINAL_RELATION_PTR_LST_TYPE,
+                spinal_model_graph_1.SPINAL_RELATION_LST_PTR_TYPE,
+            ].flatMap((type) => {
+                const relation = parentNode.children
+                    .getElement(type)
+                    ?.getElement(relationParentToChild);
+                return relation &&
+                    bim?.equipment &&
+                    relation.getChildrenIds().includes(bim.equipment.getId().get())
+                    ? [relation]
+                    : [];
+            });
+            const alreadyAttached = existingRelations.length > 0;
+            if (alreadyAttached &&
+                !isRefObject &&
+                !(existingRelations.some((relation) => relation.belongsToContext(geographicContext)) && bim.equipment.belongsToContext(geographicContext)))
+                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, 'Equipment is already attached but not in the geographic context');
+            let newEquipment;
+            if (bim?.equipment) {
+                newEquipment = bim.equipment;
+                await (0, patchNode_1.patchNode)(newEquipment, patchNode_1.patchNodeSchema.parse({
+                    info: { set: info },
+                    ...(attributes ? { attributes: { set: attributes } } : {}),
+                }), spinalAPIMiddleware, profileId);
             }
             else {
-                await parentNode.addChildInContext(newEquipment, relationParentToChild, spinal_model_graph_1.SPINAL_RELATION_LST_PTR_TYPE, geographicContext);
+                newEquipment = await (0, prepareNodeCreation_1.prepareNodeCreation)(info.name, spinal_env_viewer_context_geographic_service_1.EQUIPMENT_TYPE, { ...info, virtual: info.virtual ?? false }, undefined, attributes, undefined, spinalAPIMiddleware, profileId);
+                if (bim) {
+                    let bimContextNode = bim.bimContext;
+                    if (!bimContextNode) {
+                        bimContextNode = new spinal_model_graph_1.SpinalNode('BIMContext', 'SpinalNode');
+                        await bim.bimFile.addChild(bimContextNode, 'hasBimContext', spinal_model_graph_1.SPINAL_RELATION_PTR_LST_TYPE);
+                    }
+                    await bimContextNode.addChild(newEquipment, spinal_env_viewer_context_geographic_service_1.EQUIPMENT_RELATION, spinal_model_graph_1.SPINAL_RELATION_PTR_LST_TYPE);
+                }
+            }
+            if (!alreadyAttached && isRefObject) {
+                await parentNode.addChild(newEquipment, relationParentToChild, spinal_model_graph_1.SPINAL_RELATION_PTR_LST_TYPE);
+            }
+            else if (!alreadyAttached) {
+                await parentNode.addChildInContext(newEquipment, relationParentToChild, spinal_model_graph_1.SPINAL_RELATION_PTR_LST_TYPE, geographicContext);
             }
             const resObj = await (0, getNodeData_1.getNodeData)(newEquipment, true, true);
             if (Array.isArray(linkToGroups) && linkToGroups.length > 0) {

@@ -53,7 +53,7 @@ export declare const createEquipmentSchema: z.ZodObject<{
     parentDynamicId: z.ZodNumber;
     isRefObject: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
     info: z.ZodObject<{
-        virtual: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+        virtual: z.ZodOptional<z.ZodBoolean>;
         dbid: z.ZodOptional<z.ZodCoercedNumber<unknown>>;
         externalId: z.ZodOptional<z.ZodString>;
         bimFileId: z.ZodOptional<z.ZodString>;
