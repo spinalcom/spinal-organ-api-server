@@ -431,6 +431,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./organization/roomGroup/addRoomGroupFromOrganization')(logger, app, spinalAPIMiddleware);
     require('./organization/roomGroup/deleteRoomGroupFromOrganization')(logger, app, spinalAPIMiddleware);
     require('./organization/roomGroup/getRoomGroupsFromOrganization')(logger, app, spinalAPIMiddleware);
+    require('./v2/context/createContext')(logger, app, spinalAPIMiddleware);
     require('./v2/node/createNode')(logger, app, spinalAPIMiddleware);
     require('./v2/node/getNodeById')(logger, app, spinalAPIMiddleware);
     require('./v2/node/patchNodeById')(logger, app, spinalAPIMiddleware);

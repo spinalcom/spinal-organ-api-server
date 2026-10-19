@@ -28200,7 +28200,7 @@
           }
         ],
         "summary": "Create the building",
-        "description": "Create the building in the profile's spatial context, creating that context if needed.\n\n### Requirements\n\n- No building may already exist; otherwise returns **HTTP 400**.\n\n### Defaults\n\n- `Spatial.area`: `\"0\"`.\n- `Spinal Building Information.Adresse`: `\"To configure\"`.\n- Supplied values override these defaults.\n\n**Response:** all info fields (including nested objects and arrays) and categorized attributes.",
+        "description": "Create the building in the profile's spatial context, creating that context if needed.\n\n### Requirements\n\n- No building may already exist; otherwise returns **HTTP 409**.\n\n### Defaults\n\n- `Spatial.area`: `\"0\"`.\n- `Spinal Building Information.Adresse`: `\"To configure\"`.\n- Supplied values override these defaults.\n\n**Response:** all info fields (including nested objects and arrays) and categorized attributes.",
         "tags": [
           "geographicContext"
         ],
@@ -28268,6 +28268,16 @@
           },
           "400": {
             "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "409": {
+            "description": "A building already exists in the spatial context.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IErrorItem"
+                }
+              }
+            }
           },
           "500": {
             "$ref": "#/components/responses/IErrorItemRes500"
@@ -28381,6 +28391,16 @@
           },
           "400": {
             "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "409": {
+            "description": "A floor with the same name already exists within the building.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IErrorItem"
+                }
+              }
+            }
           },
           "500": {
             "$ref": "#/components/responses/IErrorItemRes500"
@@ -28548,6 +28568,16 @@
           },
           "400": {
             "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "409": {
+            "description": "A room with the same name already exists within the floor.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IErrorItem"
+                }
+              }
+            }
           },
           "500": {
             "$ref": "#/components/responses/IErrorItemRes500"
@@ -28737,6 +28767,16 @@
           },
           "400": {
             "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "409": {
+            "description": "An equipment with the same name already exists for the selected parent and relation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IErrorItem"
+                }
+              }
+            }
           },
           "500": {
             "$ref": "#/components/responses/IErrorItemRes500"
@@ -29959,6 +29999,116 @@
           },
           "400": {
             "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      }
+    },
+    "/api/v2/context": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "tags": [
+          "context"
+        ],
+        "summary": "Create a context in the root and profile graphs",
+        "description": "Creates a `SpinalContext` from the supplied info and adds it to both the root graph and the current profile graph.\n\n- The request body uses the same info, attributes and optional element fields as `POST /api/v2/node`; `parents` is not accepted.\n- The exact context name must not already exist in either graph. Name matching is case-sensitive.\n- If the profile graph is the root graph, the context is added only once.\n- Writes to the two graphs are not transactional. An error during the second graph write can leave the first write in place.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "info"
+                ],
+                "properties": {
+                  "info": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "type": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      }
+                    },
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/INodeElementValue"
+                    }
+                  },
+                  "attributes": {
+                    "$ref": "#/components/schemas/ICreateNodeItemAttr"
+                  },
+                  "element": {
+                    "$ref": "#/components/schemas/ICreateNodeElement"
+                  }
+                }
+              },
+              "example": {
+                "info": {
+                  "name": "Energy Analysis",
+                  "type": "Analysis"
+                },
+                "attributes": {
+                  "Settings": {
+                    "enabled": "true"
+                  }
+                },
+                "element": {
+                  "unit": "kWh"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Context created and added to both graphs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/INodeItem"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "409": {
+            "description": "A context with the exact name already exists in the root or profile graph.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IErrorItem"
+                }
+              }
+            }
           },
           "500": {
             "$ref": "#/components/responses/IErrorItemRes500"

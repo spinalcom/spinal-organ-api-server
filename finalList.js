@@ -464,5 +464,6 @@ module.exports = [
   "../src/routes/v2/openApiCompo/schemas/IMoveNode.ts",
   "../src/routes/v2/openApiCompo/examples/childRelationships.ts",
   "../src/routes/v2/openApiCompo/examples/parentRelationships.ts",
-  "../src/routes/v2/node/deleteNodeChildByName.ts"
+  "../src/routes/v2/node/deleteNodeChildByName.ts",
+  "../src/routes/v2/context/createContext.ts"
 ]

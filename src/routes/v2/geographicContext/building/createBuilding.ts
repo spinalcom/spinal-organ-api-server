@@ -59,7 +59,7 @@ module.exports = function (
    *
    *       ### Requirements
    *
-   *       - No building may already exist; otherwise returns **HTTP 400**.
+   *       - No building may already exist; otherwise returns **HTTP 409**.
    *
    *       ### Defaults
    *
@@ -109,6 +109,12 @@ module.exports = function (
    *         $ref: '#/components/responses/INodeItemAttrRes'
    *       400:
    *         $ref: '#/components/responses/IErrorItemRes400'
+   *       409:
+   *         description: A building already exists in the spatial context.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/IErrorItem'
    *       500:
    *         $ref: '#/components/responses/IErrorItemRes500'
    */
@@ -124,7 +130,7 @@ module.exports = function (
           await getBuildingNode(spinalAPIMiddleware, profileId, true);
         if (buildingOld)
           throw createErrorMsgItem(
-            EApiErrorType.ERROR_DATABASE,
+            EApiErrorType.CONFLICT,
             'A building already exists'
           );
         const { info, attributes } = req.body;

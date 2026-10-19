@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createNodeSchema = void 0;
+exports.createContextSchema = exports.createNodeSchema = void 0;
 const zod_1 = require("zod");
 const spinal_model_graph_1 = require("spinal-model-graph");
 const addExtraInfoValidation_1 = require("../../requestParse/addExtraInfoValidation");
@@ -56,4 +56,5 @@ exports.createNodeSchema = zod_1.z.strictObject({
     }))
         .min(1),
 });
+exports.createContextSchema = exports.createNodeSchema.omit({ parents: true });
 //# sourceMappingURL=schema.js.map

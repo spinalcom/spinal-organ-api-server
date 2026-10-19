@@ -117,6 +117,12 @@ module.exports = function (
    *         $ref: '#/components/responses/INodeItemAttrRes'
    *       400:
    *         $ref: '#/components/responses/IErrorItemRes400'
+   *       409:
+   *         description: A room with the same name already exists within the floor.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/IErrorItem'
    *       500:
    *         $ref: '#/components/responses/IErrorItemRes500'
    */
@@ -154,7 +160,7 @@ module.exports = function (
         for (const oldRoom of oldRooms) {
           if (oldRoom.info.name.get() === info.name) {
             throw createErrorMsgItem(
-              EApiErrorType.ERROR_DATABASE,
+              EApiErrorType.CONFLICT,
               'A room with the same name already exists'
             );
           }

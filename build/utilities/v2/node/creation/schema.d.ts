@@ -17,3 +17,11 @@ export declare const createNodeSchema: z.ZodObject<{
         contextDynamicId: z.ZodOptional<z.ZodNumber>;
     }, z.core.$strict>>;
 }, z.core.$strict>;
+export declare const createContextSchema: z.ZodObject<{
+    info: z.ZodObject<{
+        name: z.ZodString;
+        type: z.ZodString;
+    }, z.core.$catchall<z.ZodOptional<z.ZodType<import("../element/schema").ElementValue, unknown, z.core.$ZodTypeInternals<import("../element/schema").ElementValue, unknown>>>>>;
+    element: z.ZodOptional<z.ZodPreprocess<z.ZodRecord<z.ZodString, z.ZodType<import("../element/schema").ElementValue, unknown, z.core.$ZodTypeInternals<import("../element/schema").ElementValue, unknown>>>, unknown>>;
+    attributes: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodRecord<z.ZodString, z.ZodString>>>;
+}, z.core.$strict>;

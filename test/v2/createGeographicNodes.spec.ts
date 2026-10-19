@@ -141,8 +141,8 @@ describe('v2 geographic node POST routes', () => {
       it('rejects duplicate names without adding another child', async () => {
         const existing = fixture[kind];
         const response = await request(fixture.app).post(`/api/v2/${kind}`)
-          .send(body(kind, existing.getName().get())).expect(400);
-        expect(response.body.errorType).to.equal('ERROR_DATABASE');
+          .send(body(kind, existing.getName().get())).expect(409);
+        expect(response.body.errorType).to.equal('CONFLICT');
         if (kind === 'room') {
           expect(response.body.message).to.equal('A room with the same name already exists');
         }

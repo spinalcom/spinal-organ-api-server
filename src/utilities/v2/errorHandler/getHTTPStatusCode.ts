@@ -35,6 +35,8 @@ export function getHTTPStatusCode(error: IErrorItem) {
         return 404;
       case EApiErrorType.UNAUTHORIZED:
         return 401;
+      case EApiErrorType.CONFLICT:
+        return 409;
       case EApiErrorType.INVALID_REQUEST:
         return 400;
       case EApiErrorType.ERROR_DATABASE:

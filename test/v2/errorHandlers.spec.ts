@@ -19,7 +19,8 @@ describe('v2 error handlers', () => {
   for (const errorType of Object.values(EApiErrorType)) {
     const expected = errorType === EApiErrorType.INTERNAL_ERROR ? 500 :
       errorType === EApiErrorType.NOT_FOUND ? 404 :
-      errorType === EApiErrorType.UNAUTHORIZED ? 401 : 400;
+      errorType === EApiErrorType.UNAUTHORIZED ? 401 :
+      errorType === EApiErrorType.CONFLICT ? 409 : 400;
     it(`maps ${errorType} to HTTP ${expected} and preserves its response body`, async () => {
       const error = createErrorMsgItem(errorType, 'Test error');
       expect(getHTTPStatusCode(error)).to.equal(expected);

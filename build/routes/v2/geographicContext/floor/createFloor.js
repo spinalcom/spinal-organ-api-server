@@ -100,6 +100,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         $ref: '#/components/responses/INodeItemAttrRes'
      *       400:
      *         $ref: '#/components/responses/IErrorItemRes400'
+     *       409:
+     *         description: A floor with the same name already exists within the building.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/IErrorItem'
      *       500:
      *         $ref: '#/components/responses/IErrorItemRes500'
      */
@@ -115,7 +121,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const oldFloors = await building.getChildrenInContext(geographicContext, spinal_env_viewer_context_geographic_service_2.FLOOR_RELATION);
             for (const oldFloor of oldFloors) {
                 if (oldFloor.info.name.get() === info.name) {
-                    throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'A floor with the same name already exists');
+                    throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.CONFLICT, 'A floor with the same name already exists');
                 }
             }
             const prepared = await (0, prepareNodeCreation_1.prepareNodeCreation)(info.name, spinal_env_viewer_context_geographic_service_1.FLOOR_TYPE, info, undefined, attributes, { Spatial: { category: 'Revit Level', area: '0' } }, spinalAPIMiddleware, profileId);

@@ -64,3 +64,5 @@ export const createNodeSchema = z.strictObject({
     )
     .min(1),
 });
+
+export const createContextSchema = createNodeSchema.omit({ parents: true });

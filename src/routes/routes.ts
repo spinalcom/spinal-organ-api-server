@@ -1488,6 +1488,7 @@ function routes(
     spinalAPIMiddleware
   );
 
+  require('./v2/context/createContext')(logger, app, spinalAPIMiddleware);
   require('./v2/node/createNode')(logger, app, spinalAPIMiddleware);
   require('./v2/node/getNodeById')(logger, app, spinalAPIMiddleware);
   require('./v2/node/patchNodeById')(logger, app, spinalAPIMiddleware);

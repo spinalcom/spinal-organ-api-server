@@ -31,6 +31,7 @@ var EApiErrorType;
     EApiErrorType["UNAUTHORIZED"] = "UNAUTHORIZED";
     EApiErrorType["INVALID_REQUEST"] = "INVALID_REQUEST";
     EApiErrorType["ERROR_DATABASE"] = "ERROR_DATABASE";
+    EApiErrorType["CONFLICT"] = "CONFLICT";
     EApiErrorType["INVALID_LOAD_NODE"] = "INVALID_LOAD_NODE";
     EApiErrorType["INVALID_LOAD_NODE_TYPE"] = "INVALID_LOAD_NODE_TYPE";
     // if you add more error types,

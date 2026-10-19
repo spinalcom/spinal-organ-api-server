@@ -35,6 +35,8 @@ function getHTTPStatusCode(error) {
                 return 404;
             case EApiErrorType_1.EApiErrorType.UNAUTHORIZED:
                 return 401;
+            case EApiErrorType_1.EApiErrorType.CONFLICT:
+                return 409;
             case EApiErrorType_1.EApiErrorType.INVALID_REQUEST:
                 return 400;
             case EApiErrorType_1.EApiErrorType.ERROR_DATABASE:

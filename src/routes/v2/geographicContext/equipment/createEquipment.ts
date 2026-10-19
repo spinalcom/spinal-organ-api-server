@@ -149,6 +149,12 @@ module.exports = function (
    *         $ref: '#/components/responses/INodeItemAttrRes'
    *       400:
    *         $ref: '#/components/responses/IErrorItemRes400'
+   *       409:
+   *         description: An equipment with the same name already exists for the selected parent and relation.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/IErrorItem'
    *       500:
    *         $ref: '#/components/responses/IErrorItemRes500'
    */
@@ -219,7 +225,7 @@ module.exports = function (
             oldEquip.getId().get() !== bim?.equipment?.getId().get()
           ) {
             throw createErrorMsgItem(
-              EApiErrorType.ERROR_DATABASE,
+              EApiErrorType.CONFLICT,
               'An equipment with the same name already exists'
             );
           }

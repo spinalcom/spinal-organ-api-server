@@ -50,7 +50,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *
      *       ### Requirements
      *
-     *       - No building may already exist; otherwise returns **HTTP 400**.
+     *       - No building may already exist; otherwise returns **HTTP 409**.
      *
      *       ### Defaults
      *
@@ -100,6 +100,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         $ref: '#/components/responses/INodeItemAttrRes'
      *       400:
      *         $ref: '#/components/responses/IErrorItemRes400'
+     *       409:
+     *         description: A building already exists in the spatial context.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/IErrorItem'
      *       500:
      *         $ref: '#/components/responses/IErrorItemRes500'
      */
@@ -110,7 +116,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const { geographicContext, building: buildingOld } = await (0, getBuilding_1.getBuildingNode)(spinalAPIMiddleware, profileId, true);
             if (buildingOld)
-                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'A building already exists');
+                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.CONFLICT, 'A building already exists');
             const { info, attributes } = req.body;
             const prepared = await (0, prepareNodeCreation_1.prepareNodeCreation)(info.name, spinal_env_viewer_context_geographic_service_1.BUILDING_TYPE, info, undefined, attributes, {
                 'Spinal Building Information': { Adresse: 'To configure' },
