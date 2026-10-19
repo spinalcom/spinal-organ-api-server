@@ -57,33 +57,50 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - Without a context, use `addChild`.
      *       - Parents and contexts are loaded using the current profile.
      *
+     *       ### Info (required)
+     *
+     *       - Supply `info.name` and `info.type` as nonempty strings of at most 200 characters. This endpoint does not impose name uniqueness.
+     *       - Additional fields accept strings, finite numbers, booleans, nested objects and arrays. `null` is not supported.
+     *       - Additional field values, including values nested in objects or arrays, may use `$modelRef` syntax. See **Model references (`$modelRef`)** below.
+     *       - `name` and `type` must remain strings, not reference objects. IDs (`id`, `staticId`, `dynamicId`) are assigned by the server and cannot be supplied.
+     *       - Keys must not start with `_` or shadow Model members at any nesting level, including objects inside arrays.
+     *
+     *       ### Attributes (optional)
+     *
+     *       - Group values by category and label: `"attributes": { "Spatial": { "area": "20" } }`. Plain values must be strings, not numbers or booleans.
+     *       - A value under a category and label may use `$modelRef` syntax instead of a string. See **Model references (`$modelRef`)** below for the target-type constraint and sharing behavior.
+     *       - If omitted, no default attributes are added.
+     *
      *       ### Element (optional)
      *
      *       - Supply an object directly in `element` to create a generic SpinalCore `Model`.
      *       - Values may be strings, finite numbers, booleans, nested objects or arrays. `null` is not supported.
      *       - Object keys must not start with `_` or shadow Model members (for example `get`, `set`, `constructor`, `model_id`).
-     *       - Use `{ "$modelRef": 7890123, "path": "info.name" }` to share a Model from an existing SpinalNode. References work in nested objects and arrays.
-     *       - Use `{ "$modelRef": "self", "path": "info.unit" }` to share a Model from the node being created. Forward references work regardless of field order, including across info and element. `attr.Category.Label` can target supplied or default attribute values.
-     *       - Self references do not load a node by dynamic ID. Missing self paths, circular dependencies and embedding an ancestor into itself return HTTP 400 before parent attachment.
-     *       - A reference object must contain exactly `$modelRef` (a positive safe integer node ID or `"self"`) and `path`. `$modelRef` is reserved, and cannot be a field on the root element.
-     *       - **The current profile must have access to the target SpinalNode specified by `$modelRef`.**
-     *       - Paths support `info.name`, `info.metadata.unit`, `element.samples.0`, and `attr.Category.Label` (the attribute value Model). `element` selects the whole element Model. `info`, `info.id`, `info.staticId` and descendants of these ID fields are forbidden to prevent sharing the node ID. Missing or invalid paths return HTTP 400; nested pointers are not traversed.
-     *       - Referenced Models are assigned directly as attributes, not copied or wrapped in additional pointers. Each target node is loaded once per object creation; repeated node/path pairs share the same Model.
+     *       - Values nested in the element's objects or arrays may use `$modelRef` syntax. See **Model references (`$modelRef`)** below. The root element must remain an ordinary object.
      *       - The newly created element Model is passed to the SpinalNode constructor, which keeps it behind the node's element pointer.
-     *       - All references are validated and loaded before any parent attachment. Invalid or inaccessible references reject the request.
      *       - If omitted, no element is created by this endpoint.
      *       - The response remains `INodeItem`; element contents are not included.
+     *
+     *       ### Model references (`$modelRef`)
+     *
+     *       Share a Model rather than copy its value in info, element or attribute values:
+     *
+     *       - Existing node: `{ "$modelRef": 7890123, "path": "info.name" }`. The current profile must have access to the target node.
+     *       - Node being created: `{ "$modelRef": "self", "path": "info.name" }`. Forward references are supported.
+     *       - Attribute value: `{ "$modelRef": 7890123, "path": "attr.Technical.Code" }`.
+     *       - Attribute modification date (in info or element): `{ "$modelRef": 7890123, "path": "attr.Technical.Code.lastModificationDate" }`.
+     *
+     *       Attribute destinations require a `Str` target. References are resolved before parent attachment; invalid paths, incompatible targets and circular dependencies return HTTP 400.
+     *
+     *       See **`INodeElementModelReference`** in the schemas for the full syntax, supported paths, modification-date references and sharing behavior.
      *
      *       ### Results
      *
      *       - **201:** at least one attachment succeeded. Returns the node with all info and attributes.
-     *       - Extra info supports nested objects, arrays and `$modelRef` values with the same rules as element data. The current profile must have access to the target SpinalNode specified by `$modelRef`.
-     *       - Info keys starting with `_` are forbidden at every nesting level, including objects inside arrays. Invalid keys return HTTP 400.
      *       - Successful attachments are retained when others fail.
      *       - Failed entries are reported in `error`, including their zero-based index and requested parent/relation.
      *       - **400:** invalid input, or all attachments failed due to invalid parents or contexts.
      *       - **500:** unexpected failure; also used when all attachments fail and an internal error occurred.
-     *       - No uniqueness constraint is imposed on the name. No default attributes are added.
      *     tags:
      *       - node
      *     requestBody:

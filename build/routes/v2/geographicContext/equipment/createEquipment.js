@@ -53,6 +53,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     description: |-
      *       Create a BIMObject under a room, or a reference object under a room or floor.
      *
+     *       ### Info, attributes and model references
+     *
+     *       See `POST /api/v2/node` for more about info, categorized attributes and `$modelRef` usage. Additional info and attribute values may reference Models. See **`INodeElementModelReference`** for full reference rules. This endpoint assigns the node type and uses `parentDynamicId` to select the parent; it does not accept `element` or `parents`.
+     *
      *       ### Requirements
      *
      *       - A building must exist in the profile's spatial context.
@@ -68,12 +72,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *
      *       ### BIM object reuse
      *
-     *       - When both `info.bimFileId` and `info.dbid` are supplied, search `BimFileContext` for the BIM file by static ID, then its `hasBimContext` children for an equipment with that dbid.
-     *       - A missing BIM file returns HTTP 400 with `bimFileId given but NotFound`.
-     *       - A matching object is reused and patched with supplied info and attributes only. Unspecified fields, including `virtual`, are preserved.
-     *       - Otherwise create equipment with the usual defaults and attach it to the BIMContext via `hasBimObject` / `PtrLst`. Create `BIMContext` / `SpinalNode` under `hasBimContext` / `PtrLst` if absent.
-     *       - The resulting object is also attached to the requested geographic/reference parent. An existing exact attachment is retained.
-     *       - BIM search can load many objects. Writes are not transactional or locked; later failures do not roll back earlier changes.
+     *       When both `info.dbid` and `info.bimFileId` are supplied, reuse an existing equipment in that BIM file with the matching dbid. If none matches, create a new equipment. A missing BIM file returns HTTP 400.
      *
      *       ### Response
      *

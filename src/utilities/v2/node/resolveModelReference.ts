@@ -47,7 +47,10 @@ export function isModelReferencePath(path: string): boolean {
     ) &&
     (parts[0] === 'info' ||
       parts[0] === 'element' ||
-      (parts[0] === 'attr' && parts.length === 3))
+      (parts[0] === 'attr' &&
+        (parts.length === 3 ||
+          (parts.length === 4 && parts[3] === 'lastModificationDate')))
+    )
   );
 }
 
@@ -63,7 +66,7 @@ export async function resolveModelReference(
   if (!isModelReferencePath(path)) throw invalid();
   const [root, ...parts] = path.split('.');
   if (root === 'attr') {
-    const [categoryName, label] = parts;
+    const [categoryName, label, attributeProperty] = parts;
     const categories = await node.getChildren(NODE_TO_CATEGORY_RELATION);
     const category = categories.find(
       (item) => item.getName().get() === categoryName
@@ -73,9 +76,12 @@ export async function resolveModelReference(
       await category.getElement(true);
     if (!(attributes instanceof Lst)) throw invalid();
     for (const attribute of attributes) {
-      if (attribute.label.get() === label && attribute.value instanceof Model) {
-        return attribute.value;
-      }
+      if (attribute.label.get() !== label) continue;
+      const target =
+        attributeProperty === 'lastModificationDate'
+          ? attribute.lastModificationDate
+          : attribute.value;
+      if (target instanceof Model) return target;
     }
     throw invalid();
   }

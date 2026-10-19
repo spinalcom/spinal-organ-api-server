@@ -27,6 +27,7 @@ exports.createEquipmentSchema = exports.createRoomSchema = exports.createFloorSc
 const zod_1 = require("zod");
 const addExtraInfoValidation_1 = require("../requestParse/addExtraInfoValidation");
 const addExtraAttrValidation_1 = require("../requestParse/addExtraAttrValidation");
+const schema_1 = require("../node/element/schema");
 const infoFields = {
     name: zod_1.z.string().min(1).max(200),
     color: zod_1.z
@@ -35,7 +36,7 @@ const infoFields = {
         .optional(),
     icon: zod_1.z.string().min(1).max(200).optional(),
 };
-const spatialCategory = (0, addExtraAttrValidation_1.addExtraAttrValidation)(zod_1.z.object({ area: zod_1.z.string().optional() })).optional();
+const spatialCategory = (0, addExtraAttrValidation_1.addExtraAttrValidation)(zod_1.z.object({ area: schema_1.attributeValueSchema.optional() })).optional();
 const spatialAttributes = (0, addExtraAttrValidation_1.addExtraCatAttrValidation)(zod_1.z.object({ Spatial: spatialCategory })).optional();
 const linkToGroups = zod_1.z
     .array(zod_1.z.strictObject({
@@ -51,7 +52,7 @@ exports.createBuildingSchema = zod_1.z.object({
         'dynamicId',
     ]),
     attributes: (0, addExtraAttrValidation_1.addExtraCatAttrValidation)(zod_1.z.object({
-        'Spinal Building Information': (0, addExtraAttrValidation_1.addExtraAttrValidation)(zod_1.z.object({ Adresse: zod_1.z.string().optional() })).optional(),
+        'Spinal Building Information': (0, addExtraAttrValidation_1.addExtraAttrValidation)(zod_1.z.object({ Adresse: schema_1.attributeValueSchema.optional() })).optional(),
         Spatial: spatialCategory,
     })).optional(),
 });

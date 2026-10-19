@@ -5,6 +5,7 @@ import {
   BUILDING_RELATION, FLOOR_RELATION, ROOM_RELATION,
   EQUIPMENT_RELATION, REFERENCE_RELATION, REFERENCE_ROOM_RELATION,
 } from 'spinal-env-viewer-context-geographic-service';
+import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 import { createSpatialFixture, type SpatialFixture } from './helpers/spatialFixture';
 
 describe('v2 geographic node POST routes', () => {
@@ -124,6 +125,48 @@ describe('v2 geographic node POST routes', () => {
           building: fixture.building, floor: fixture.floor, room: fixture.room, equipment: fixture.equipment,
         }[kind].getType().get());
       });
+
+      if (kind === 'floor') {
+        it('keeps an attribute linked to info.name when the name is patched', async () => {
+          const response = await request(fixture.app)
+            .post('/api/v2/floor')
+            .send({
+              info: { name: 'Floor Name 3', color: '#FF0000', icon: 'floor-icon' },
+              attributes: {
+                Spatial: {
+                  area: '20',
+                  name: { $modelRef: 'self', path: 'info.name' },
+                },
+              },
+            })
+            .expect(201);
+
+          const created = await fixture.middleware.load<
+            import('spinal-model-graph').SpinalNode
+          >(response.body.data.dynamicId, fixture.profileId);
+          const [spatialCategory] = await created.getChildren(
+            NODE_TO_CATEGORY_RELATION
+          );
+          const attributes = await spatialCategory.getElement(true);
+          const linkedName = [...attributes].find(
+            (attribute) => attribute.label.get() === 'name'
+          );
+          expect(linkedName.value).to.equal(created.info.name);
+
+          require('../../src/routes/v2/node/patchNodeById')(
+            null,
+            fixture.app,
+            fixture.middleware
+          );
+          await request(fixture.app)
+            .patch(`/api/v2/node/${created._server_id}`)
+            .send({ info: { set: { name: 'Floor 3' } } })
+            .expect(200);
+
+          expect(created.info.name.get()).to.equal('Floor 3');
+          expect(linkedName.value.get()).to.equal('Floor 3');
+        });
+      }
 
       it('applies default attributes when omitted', async () => {
         if (kind === 'building') await fixture.removeBuilding();

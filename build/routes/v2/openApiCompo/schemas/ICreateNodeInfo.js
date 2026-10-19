@@ -31,9 +31,9 @@
  *         Information about the node to create. Additional scalar, object and array
  *         fields are accepted, including nested { "$modelRef": nodeDynamicId, "path": "info.name" } references.
  *         The current profile must have access to the target SpinalNode specified by $modelRef.
- *         Use { "$modelRef": "self", "path": "info.unit" } to share a Model from the node being created, including forward references. Supplied and default categorized values can be targeted with attr.Category.Label. Self does not require a dynamic ID.
+ *         Use { "$modelRef": "self", "path": "info.unit" } to share a Model from the node being created, including forward references. Supplied and default categorized values can be targeted with attr.Category.Label. Use attr.Category.Label.lastModificationDate to target an attribute's modification-date Model. Self does not require a dynamic ID.
  *         Missing self paths, circular dependencies and ancestor embedding return HTTP 400 before attachment.
- *         Paths support info fields, element and attr.Category.Label (the attribute value Model); references share the selected Model. The whole info Model, info.id, info.staticId and descendants of those ID fields are forbidden. Missing or invalid paths return HTTP 400.
+ *         Paths support info fields, element and attr.Category.Label (the attribute value Model) or attr.Category.Label.lastModificationDate; references share the selected Model. The whole info Model, info.id, info.staticId and descendants of those ID fields are forbidden. Missing or invalid paths return HTTP 400.
  *         Null and reserved Model member names are not supported.
  *         Info keys starting with `_` are forbidden at every nesting level, including objects inside arrays; invalid keys return HTTP 400.
  *         IDs and node type are assigned by the server;
@@ -57,5 +57,13 @@
  *           maxLength: 200
  *       additionalProperties:
  *         $ref: '#/components/schemas/INodeElementValue'
+ *       example:
+ *         name: Floor 3
+ *         sourceCode:
+ *           $modelRef: 7890123
+ *           path: attr.Technical.Code
+ *         sourceCodeModificationDate:
+ *           $modelRef: 7890123
+ *           path: attr.Technical.Code.lastModificationDate
  */
 //# sourceMappingURL=ICreateNodeInfo.js.map

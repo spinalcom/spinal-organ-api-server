@@ -28,11 +28,38 @@
  *   schemas:
  *     ICreateNodeItemAttr:
  *       type: object
- *       description: Attributes to add to the node item.
+ *       description: |-
+ *         Attributes to add to the node item. Values may be strings or `$modelRef` references to a `Str` Model.
+ *
+ *         Referenced models are shared, not copied. The target must be accessible to the current profile and resolve to a `Str`; other Model types are rejected with HTTP 400.
+ *
+ *         ### Examples
+ *
+ *         - Keep an attribute synchronized with this node's name: `"Name": { "$modelRef": "self", "path": "info.name" }`.
+ *         - Share an existing node's string field: `"Name": { "$modelRef": 7890123, "path": "info.name" }`.
+ *         - Share a categorized value: `"Code": { "$modelRef": 7890123, "path": "attr.Technical.Code" }`.
+ *         - Plain values such as `"Area": "20"` remain independent strings. A numeric value such as `20` is not accepted.
+ *
+ *         `$modelRef` must be a numeric dynamic ID or the exact string `"self"`; `path` is case-sensitive.
+ *         The target is the attribute's value only: its label, category and modification date remain separate.
+ *         To share a source attribute's date, reference `attr.Technical.Code.lastModificationDate` from an info or element field, not from an attribute value.
+ *         See `INodeElementModelReference` for supported paths and shared-Model behavior.
  *       additionalProperties:
  *         description: category of the node
  *         type: object
  *         additionalProperties:
- *           description: Attribute of the category
- *           type: string
+ *           description: String value or reference to a `Str` Model.
+ *           oneOf:
+ *             - type: string
+ *             - $ref: '#/components/schemas/INodeElementModelReference'
+ *       example:
+ *         Spatial:
+ *           area: "20"
+ *           name:
+ *             $modelRef: self
+ *             path: info.name
+ *         Technical:
+ *           Code:
+ *             $modelRef: 7890123
+ *             path: attr.Technical.Code
  */

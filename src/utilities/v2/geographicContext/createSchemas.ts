@@ -28,6 +28,7 @@ import {
   addExtraAttrValidation,
   addExtraCatAttrValidation,
 } from '../requestParse/addExtraAttrValidation';
+import { attributeValueSchema } from '../node/element/schema';
 
 const infoFields = {
   name: z.string().min(1).max(200),
@@ -38,7 +39,7 @@ const infoFields = {
   icon: z.string().min(1).max(200).optional(),
 };
 const spatialCategory = addExtraAttrValidation(
-  z.object({ area: z.string().optional() })
+  z.object({ area: attributeValueSchema.optional() })
 ).optional();
 const spatialAttributes = addExtraCatAttrValidation(
   z.object({ Spatial: spatialCategory })
@@ -62,7 +63,7 @@ export const createBuildingSchema = z.object({
   attributes: addExtraCatAttrValidation(
     z.object({
       'Spinal Building Information': addExtraAttrValidation(
-        z.object({ Adresse: z.string().optional() })
+        z.object({ Adresse: attributeValueSchema.optional() })
       ).optional(),
       Spatial: spatialCategory,
     })

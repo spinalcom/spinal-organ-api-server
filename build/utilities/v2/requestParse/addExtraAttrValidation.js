@@ -26,18 +26,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.addExtraCatAttrValidation = addExtraCatAttrValidation;
 exports.addExtraAttrValidation = addExtraAttrValidation;
 const zod_1 = require("zod");
+const schema_1 = require("../node/element/schema");
 /**
  * Adds extra validation to a Zod object schema to catch all additional fields.
  * @param {z.ZodObject<T>} schema
  */
 function addExtraCatAttrValidation(schema) {
-    return schema.catchall(zod_1.z.record(zod_1.z.string(), zod_1.z.string()));
+    return schema.catchall(zod_1.z.record(zod_1.z.string(), schema_1.attributeValueSchema));
 }
 /**
  * Adds extra validation to a Zod object schema to catch all additional fields.
  * @param {z.ZodObject<T>} schema
  */
 function addExtraAttrValidation(schema) {
-    return schema.catchall(zod_1.z.string());
+    return schema.catchall(schema_1.attributeValueSchema);
 }
 //# sourceMappingURL=addExtraAttrValidation.js.map

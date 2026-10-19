@@ -57,6 +57,10 @@ module.exports = function (
    *     description: |-
    *       Create the building in the profile's spatial context, creating that context if needed.
    *
+   *       ### Info, attributes and model references
+   *
+   *       See `POST /api/v2/node` for more about info, categorized attributes and `$modelRef` usage. Additional info and attribute values may reference Models, including `"self"` for the building being created. See **`INodeElementModelReference`** for full reference rules. This endpoint assigns the node type and parent automatically and does not accept `element` or `parents`.
+   *
    *       ### Requirements
    *
    *       - No building may already exist; otherwise returns **HTTP 409**.

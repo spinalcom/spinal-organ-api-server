@@ -22,7 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { Model, Ptr, Lst } from 'spinal-core-connectorjs';
+import { Model, Ptr, Lst, Str } from 'spinal-core-connectorjs';
 import {
   SpinalNode,
   SpinalNodePointer,
@@ -31,26 +31,120 @@ import {
   SPINAL_RELATION_TYPE,
 } from 'spinal-model-graph';
 import type { ISpinalAPIMiddleware } from '../../../interfaces';
-import { createElement, type ElementValue } from './createElement';
+import {
+  createElement,
+  type AttributeValue,
+  type ElementValue,
+  type ModelReference,
+} from './createElement';
 import { handleSetAttribute } from './handleSetAttribute';
 import { handleSetInfo } from './handleSetInfo';
 import { resolveModelReference } from './resolveModelReference';
 import { createErrorMsgItem } from '../errorHandler/createErrorMsgItem';
 import { EApiErrorType } from '../errorHandler/EApiErrorType';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
+import { SpinalAttribute } from 'spinal-models-documentation';
 
 export async function prepareNodeCreation(
   name: string,
   type: string,
   info: Record<string, ElementValue | undefined>,
   element: Record<string, ElementValue> | undefined,
-  attributes: Record<string, Record<string, string>> | undefined,
+  attributes: Record<string, Record<string, AttributeValue>> | undefined,
   defaults: Record<string, Record<string, string>> | undefined,
   middleware: ISpinalAPIMiddleware,
   profileId: string
 ): Promise<SpinalNode> {
   const node = new SpinalNode(name, type);
-  await handleSetAttribute(node, attributes, defaults);
+  const attributeReferences = new Map<string, ModelReference>();
+  const stringAttributes: Record<string, Record<string, string>> = {};
+  for (const [category, values] of Object.entries(attributes ?? {})) {
+    stringAttributes[category] = {};
+    for (const [label, value] of Object.entries(values)) {
+      if (typeof value === 'string') {
+        stringAttributes[category][label] = value;
+      } else {
+        stringAttributes[category][label] = '';
+        attributeReferences.set(JSON.stringify([category, label]), value);
+      }
+    }
+  }
+  await handleSetAttribute(node, stringAttributes, defaults);
+
+  const resolvedReferences = new Map<string, Str>();
+  const activeReferences = new Set<string>();
+  async function resolveAttributeReference(
+    category: string,
+    label: string
+  ): Promise<Str> {
+    const key = JSON.stringify([category, label]);
+    const resolved = resolvedReferences.get(key);
+    if (resolved) return resolved;
+    const reference = attributeReferences.get(key);
+    if (!reference) {
+      const target = await resolveModelReference(
+        node,
+        `attr.${category}.${label}`
+      );
+      if (!(target instanceof Str)) {
+        throw createErrorMsgItem(
+          EApiErrorType.INVALID_REQUEST,
+          `Attribute ${category}.${label} must reference a string Model`
+        );
+      }
+      return target;
+    }
+    if (activeReferences.has(key)) {
+      throw createErrorMsgItem(
+        EApiErrorType.INVALID_REQUEST,
+        `Circular attribute reference at ${category}.${label}`
+      );
+    }
+    activeReferences.add(key);
+    try {
+      let target: unknown;
+      if (
+        reference.$modelRef === 'self' &&
+        reference.path.startsWith('attr.')
+      ) {
+        const [, targetCategory, targetLabel, targetProperty] =
+          reference.path.split('.');
+        if (
+          attributeReferences.has(
+            JSON.stringify([targetCategory, targetLabel])
+          )
+        ) {
+          target = await resolveAttributeReference(targetCategory, targetLabel);
+          if (targetProperty === 'lastModificationDate') {
+            target = await resolveModelReference(node, reference.path);
+          }
+        } else {
+          target = await resolveModelReference(node, reference.path);
+        }
+      } else if (reference.$modelRef === 'self') {
+        target = await resolveModelReference(node, reference.path);
+      } else {
+        const resolvedNode = await createElement(
+          { value: reference },
+          middleware,
+          profileId
+        );
+        target = resolvedNode.value;
+      }
+      if (!(target instanceof Str)) {
+        throw createErrorMsgItem(
+          EApiErrorType.INVALID_REQUEST,
+          `$modelRef for attribute ${category}.${label} must target a Str`
+        );
+      }
+      const attribute = await findAttribute(node, category, label);
+      attribute.mod_attr('value', target);
+      resolvedReferences.set(key, target);
+      return target;
+    } finally {
+      activeReferences.delete(key);
+    }
+  }
   const rawInfo: Record<string, ElementValue> = { name, type };
   for (const [key, value] of Object.entries(info)) {
     if (value !== undefined) rawInfo[key] = value;
@@ -82,7 +176,14 @@ export async function prepareNodeCreation(
   }
 
   async function self(path: string): Promise<Model> {
-    if (path.startsWith('attr.')) return resolveModelReference(node, path);
+    if (path.startsWith('attr.')) {
+      const [, category, label] = path.split('.');
+      const key = JSON.stringify([category, label]);
+      if (attributeReferences.has(key)) {
+        await resolveAttributeReference(category, label);
+      }
+      return resolveModelReference(node, path);
+    }
     const parts = path.split('.');
     let value: ElementValue = raw;
     let index = 0;
@@ -137,12 +238,42 @@ export async function prepareNodeCreation(
     (_value, path, resolve) => memo(path, resolve)
   );
   await handleSetInfo(node, result.info);
+  for (const key of attributeReferences.keys()) {
+    const [category, label] = JSON.parse(key) as [string, string];
+    await resolveAttributeReference(category, label);
+  }
   if (element !== undefined) {
     // Use the constructor to preserve the normal element-pointer representation.
     const holder = new SpinalNode(name, type, result.element);
     node.add_attr('element', holder.element);
   }
   return node;
+}
+
+async function findAttribute(
+  node: SpinalNode,
+  categoryName: string,
+  label: string
+): Promise<SpinalAttribute> {
+  const categories = await node.getChildren(NODE_TO_CATEGORY_RELATION);
+  const category = categories.find(
+    (item) => item.getName().get() === categoryName
+  );
+  const attributes = category ? await category.getElement(true) : undefined;
+  if (attributes instanceof Lst) {
+    for (const attribute of attributes) {
+      if (
+        attribute instanceof SpinalAttribute &&
+        attribute.label.get() === label
+      ) {
+        return attribute;
+      }
+    }
+  }
+  throw createErrorMsgItem(
+    EApiErrorType.INTERNAL_ERROR,
+    `Created attribute ${categoryName}.${label} could not be found`
+  );
 }
 
 export async function applyPreparedNode(

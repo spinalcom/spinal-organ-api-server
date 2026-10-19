@@ -187,7 +187,7 @@ describe('v2 equipment BIM reuse', () => {
     await context.addChild(existing, EQUIPMENT_RELATION, 'PtrLst');
     const body = payload(file.getId().get());
     body.info.name = fixture.equipment.getName().get();
-    await request(fixture.app).post('/api/v2/equipment').send(body).expect(400);
+    await request(fixture.app).post('/api/v2/equipment').send(body).expect(409);
     expect(existing.getName().get()).to.equal('Original');
     const original = fixture.middleware.load.bind(fixture.middleware);
     fixture.middleware.load = async (id, profile) => {

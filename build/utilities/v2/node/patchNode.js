@@ -38,6 +38,34 @@ var schema_1 = require("./patch/schema");
 Object.defineProperty(exports, "patchNodeSchema", { enumerable: true, get: function () { return schema_1.patchNodeSchema; } });
 const invalid = (message) => (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, message);
 async function patchNode(node, patch, middleware, profileId) {
+    function normalizeSelfReferences(value) {
+        if (typeof value !== 'object')
+            return value;
+        if (Array.isArray(value))
+            return value.map(normalizeSelfReferences);
+        if (Object.hasOwn(value, '$modelRef')) {
+            return value.$modelRef === node._server_id
+                ? { ...value, $modelRef: 'self' }
+                : value;
+        }
+        return Object.fromEntries(Object.entries(value).map(([key, child]) => [
+            key,
+            normalizeSelfReferences(child),
+        ]));
+    }
+    patch = { ...patch };
+    for (const root of ['info', 'element']) {
+        const operations = patch[root];
+        if (operations?.set) {
+            patch[root] = {
+                ...operations,
+                set: Object.fromEntries(Object.entries(operations.set).map(([path, value]) => [
+                    path,
+                    normalizeSelfReferences(value),
+                ])),
+            };
+        }
+    }
     const { selected, fullElement, selectedAttrs } = (0, selectBranches_1.selectPatchBranches)(patch);
     const { clone, stageRoot, populateRoots, commit } = (0, modelStaging_1.createModelStaging)();
     const info = stageRoot(node.info, selected.info);

@@ -63,8 +63,14 @@ module.exports = function (logger, app, middleware) {
      *       - IDs (`info.id`, `info.staticId`, `info.dynamicId` and the top-level `dynamicId`) are immutable.
      *       - `info.type` and `info.name` can be set to nonempty strings, but cannot be removed or renamed.
      *       - Underscore-prefixed and reserved Model keys are forbidden.
-     *       - `$modelRef` supports profile-accessible node IDs and `"self"`, resolved against the final patch state. Forward references are supported; cycles are rejected.
      *       - Compatible scalar Models are updated in place, which affects other nodes sharing those Models.
+     *
+     *       ### Model references (`$modelRef`)
+     *
+     *       - Values in `info.set` and `element.set`, including nested objects and arrays, may use `$modelRef` syntax. See `POST /api/v2/node` for examples and **`INodeElementModelReference`** for reference syntax and path restrictions.
+     *       - `"self"` and a numeric `$modelRef` equal to this node's dynamic ID resolve against the final staged patch state, without an additional node load. Forward references are supported; cycles are rejected.
+     *       - Other node IDs select existing persisted Models and require access through the current profile.
+     *       - `attributes.set` accepts strings only; it does not accept `$modelRef` objects.
      *
      *       ### Staging and response
      *

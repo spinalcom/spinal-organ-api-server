@@ -37,7 +37,11 @@ export {
   elementKey,
   elementValue,
   elementObject,
+  attributeValueSchema,
+  modelReferenceSchema,
+  type AttributeValue,
   type ElementValue,
+  type ModelReference,
 } from './element/schema';
 
 export async function createElement(

@@ -61,6 +61,150 @@ describe("POST /api/v2/node", () => {
     expect(fixture.loads).to.deep.equal([fixture.room._server_id]);
   });
 
+  it("shares Str models when attribute values use $modelRef", async () => {
+    const source = fixture.node("Source", "sensor");
+    await attributeService.createOrUpdateAttrsAndCategories(
+      source,
+      "Technical",
+      { Code: "001" }
+    );
+    const [sourceCategory] = await source.getChildren(NODE_TO_CATEGORY_RELATION);
+    const sourceAttributes = await sourceCategory.getElement(true);
+    const sourceCode = [...sourceAttributes].find(
+      (attribute) => attribute.label.get() === "Code"
+    );
+
+    const response = await request(fixture.app)
+      .post("/api/v2/node")
+      .send({
+        ...body(),
+        attributes: {
+          Linked: {
+            Code: {
+              $modelRef: source._server_id,
+              path: "attr.Technical.Code",
+            },
+          },
+        },
+        info: {
+          ...body().info,
+          linkedCode: { $modelRef: "self", path: "attr.Linked.Code" },
+        },
+      })
+      .expect(201);
+
+    const [created] = await fixture.room.getChildren("hasSensor");
+    const [category] = await created.getChildren(NODE_TO_CATEGORY_RELATION);
+    const attributes = await category.getElement(true);
+    const linkedCode = [...attributes].find(
+      (attribute) => attribute.label.get() === "Code"
+    );
+    expect(linkedCode.value).to.equal(sourceCode.value);
+    expect(created.info.linkedCode).to.equal(sourceCode.value);
+    expect(response.body.data.info.linkedCode).to.equal("001");
+
+    sourceCode.value.set("002");
+    expect(linkedCode.value.get()).to.equal("002");
+  });
+
+  it("shares an attribute modification date through the explicit reference path", async () => {
+    const source = fixture.node("Source", "sensor");
+    await attributeService.createOrUpdateAttrsAndCategories(
+      source,
+      "Technical",
+      { Code: "001" }
+    );
+    const [sourceCategory] = await source.getChildren(NODE_TO_CATEGORY_RELATION);
+    const sourceAttributes = await sourceCategory.getElement(true);
+    const sourceCode = [...sourceAttributes].find(
+      (attribute) => attribute.label.get() === "Code"
+    )!;
+
+    await request(fixture.app)
+      .post("/api/v2/node")
+      .send({
+        ...body(),
+        attributes: { Technical: { Code: "001" } },
+        info: {
+          ...body().info,
+          sourceDate: {
+            $modelRef: source._server_id,
+            path: "attr.Technical.Code.lastModificationDate",
+          },
+          selfDate: {
+            $modelRef: "self",
+            path: "attr.Technical.Code.lastModificationDate",
+          },
+        },
+        element: {
+          sourceDate: {
+            $modelRef: source._server_id,
+            path: "attr.Technical.Code.lastModificationDate",
+          },
+        },
+      })
+      .expect(201);
+
+    const [created] = await fixture.room.getChildren("hasSensor");
+    const [createdCategory] = await created.getChildren(
+      NODE_TO_CATEGORY_RELATION
+    );
+    const createdAttributes = await createdCategory.getElement(true);
+    const createdCode = [...createdAttributes].find(
+      (attribute) => attribute.label.get() === "Code"
+    )!;
+    const element = await created.getElement(true);
+
+    expect(created.info.sourceDate).to.equal(sourceCode.lastModificationDate);
+    expect(created.info.selfDate).to.equal(
+      createdCode.lastModificationDate
+    );
+    expect(element.sourceDate).to.equal(sourceCode.lastModificationDate);
+
+    sourceCode.lastModificationDate.set(123);
+    expect(created.info.sourceDate.get()).to.equal(123);
+    expect(element.sourceDate.get()).to.equal(123);
+  });
+
+  it("rejects attribute references that do not resolve to Str", async () => {
+    const source = fixture.node("Numeric source", "sensor");
+    source.info.add_attr("count", 1);
+    await attributeService.createOrUpdateAttrsAndCategories(
+      source,
+      "Technical",
+      { Code: "001" }
+    );
+
+    const response = await request(fixture.app)
+      .post("/api/v2/node")
+      .send({
+        ...body(),
+        attributes: {
+          Linked: {
+            Count: { $modelRef: source._server_id, path: "info.count" },
+          },
+        },
+      })
+      .expect(400);
+
+    expect(response.body.errorType).to.equal("INVALID_REQUEST");
+    await request(fixture.app)
+      .post("/api/v2/node")
+      .send({
+        ...body(),
+        attributes: {
+          Linked: {
+            Date: {
+              $modelRef: source._server_id,
+              path: "attr.Technical.Code.lastModificationDate",
+            },
+          },
+        },
+      })
+      .expect(400);
+    expect(await fixture.room.getChildren("hasSensor")).to.deep.equal([]);
+  });
+
   it("does not create an element when omitted", async () => {
     await request(fixture.app).post("/api/v2/node").send(body()).expect(201);
     const [node] = await fixture.room.getChildren("hasSensor");
@@ -213,6 +357,7 @@ describe("POST /api/v2/node", () => {
       "attr", "attr.Category", "attr.Category.Label.extra", "children",
       "info.__proto__", "info._server_id", "info.constructor",
       "info..name", "info.pointer.value", "attr.Technical.Missing",
+      "attr.Technical.Code.lastModificationDate.extra",
       "", Array(34).fill("info").join("."),
     ]) {
       await request(fixture.app).post("/api/v2/node").send({

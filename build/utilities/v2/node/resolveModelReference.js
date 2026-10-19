@@ -42,7 +42,9 @@ function isModelReferencePath(path) {
             part !== 'model_id') &&
         (parts[0] === 'info' ||
             parts[0] === 'element' ||
-            (parts[0] === 'attr' && parts.length === 3)));
+            (parts[0] === 'attr' &&
+                (parts.length === 3 ||
+                    (parts.length === 4 && parts[3] === 'lastModificationDate')))));
 }
 async function resolveModelReference(node, path) {
     const invalid = () => (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, `$modelRef path "${path}" does not resolve to a Model on node ${node._server_id}`);
@@ -50,7 +52,7 @@ async function resolveModelReference(node, path) {
         throw invalid();
     const [root, ...parts] = path.split('.');
     if (root === 'attr') {
-        const [categoryName, label] = parts;
+        const [categoryName, label, attributeProperty] = parts;
         const categories = await node.getChildren(spinal_env_viewer_plugin_documentation_service_1.NODE_TO_CATEGORY_RELATION);
         const category = categories.find((item) => item.getName().get() === categoryName);
         if (!category)
@@ -59,9 +61,13 @@ async function resolveModelReference(node, path) {
         if (!(attributes instanceof spinal_core_connectorjs_1.Lst))
             throw invalid();
         for (const attribute of attributes) {
-            if (attribute.label.get() === label && attribute.value instanceof spinal_core_connectorjs_1.Model) {
-                return attribute.value;
-            }
+            if (attribute.label.get() !== label)
+                continue;
+            const target = attributeProperty === 'lastModificationDate'
+                ? attribute.lastModificationDate
+                : attribute.value;
+            if (target instanceof spinal_core_connectorjs_1.Model)
+                return target;
         }
         throw invalid();
     }

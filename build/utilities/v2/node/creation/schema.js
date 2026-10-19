@@ -33,7 +33,9 @@ exports.createNodeSchema = zod_1.z.strictObject({
         name: zod_1.z.string().min(1).max(200),
         type: zod_1.z.string().min(1).max(200),
     }), ['id', 'staticId', 'dynamicId']),
-    attributes: zod_1.z.record(zod_1.z.string(), zod_1.z.record(zod_1.z.string(), zod_1.z.string())).optional(),
+    attributes: zod_1.z
+        .record(zod_1.z.string(), zod_1.z.record(zod_1.z.string(), schema_1.attributeValueSchema))
+        .optional(),
     element: schema_1.elementObject.optional(),
     parents: zod_1.z
         .array(zod_1.z.strictObject({

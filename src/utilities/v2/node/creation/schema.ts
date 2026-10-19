@@ -29,7 +29,10 @@ import {
   SPINAL_RELATION_TYPE,
 } from 'spinal-model-graph';
 import { addExtraInfoValidation } from '../../requestParse/addExtraInfoValidation';
-import { elementObject } from '../element/schema';
+import {
+  attributeValueSchema,
+  elementObject,
+} from '../element/schema';
 
 export const createNodeSchema = z.strictObject({
   info: addExtraInfoValidation(
@@ -39,7 +42,9 @@ export const createNodeSchema = z.strictObject({
     }),
     ['id', 'staticId', 'dynamicId']
   ),
-  attributes: z.record(z.string(), z.record(z.string(), z.string())).optional(),
+  attributes: z
+    .record(z.string(), z.record(z.string(), attributeValueSchema))
+    .optional(),
   element: elementObject.optional(),
   parents: z
     .array(

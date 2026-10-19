@@ -59,6 +59,10 @@ module.exports = function (
    *     description: |-
    *       Create a floor under the building in the profile's spatial context.
    *
+   *       ### Info, attributes and model references
+   *
+   *       See `POST /api/v2/node` for more about info, categorized attributes and `$modelRef` usage. Additional info and attribute values may reference Models, including `"self"` for the floor being created. See **`INodeElementModelReference`** for full reference rules. This endpoint assigns the node type and parent automatically and does not accept `element` or `parents`.
+   *
    *       ### Requirements
    *
    *       - A building must exist.

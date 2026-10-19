@@ -23,7 +23,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.elementObject = exports.elementValue = exports.elementKey = void 0;
+exports.modelReferenceSchema = exports.attributeValueSchema = exports.elementObject = exports.elementValue = exports.elementKey = void 0;
 exports.createElement = createElement;
 const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
 const createErrorMsgItem_1 = require("../errorHandler/createErrorMsgItem");
@@ -34,6 +34,8 @@ var schema_1 = require("./element/schema");
 Object.defineProperty(exports, "elementKey", { enumerable: true, get: function () { return schema_1.elementKey; } });
 Object.defineProperty(exports, "elementValue", { enumerable: true, get: function () { return schema_1.elementValue; } });
 Object.defineProperty(exports, "elementObject", { enumerable: true, get: function () { return schema_1.elementObject; } });
+Object.defineProperty(exports, "attributeValueSchema", { enumerable: true, get: function () { return schema_1.attributeValueSchema; } });
+Object.defineProperty(exports, "modelReferenceSchema", { enumerable: true, get: function () { return schema_1.modelReferenceSchema; } });
 async function createElement(data, middleware, profileId, self, build) {
     const nodes = new Map();
     const references = new Map();

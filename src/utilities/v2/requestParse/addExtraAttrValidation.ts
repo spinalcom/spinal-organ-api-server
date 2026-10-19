@@ -23,6 +23,7 @@
  */
 
 import { z } from 'zod';
+import { attributeValueSchema } from '../node/element/schema';
 
 /**
  * Adds extra validation to a Zod object schema to catch all additional fields.
@@ -31,7 +32,7 @@ import { z } from 'zod';
 export function addExtraCatAttrValidation<T extends z.ZodRawShape>(
   schema: z.ZodObject<T>
 ) {
-  return schema.catchall(z.record(z.string(), z.string()));
+  return schema.catchall(z.record(z.string(), attributeValueSchema));
 }
 
 /**
@@ -41,5 +42,5 @@ export function addExtraCatAttrValidation<T extends z.ZodRawShape>(
 export function addExtraAttrValidation<T extends z.ZodRawShape>(
   schema: z.ZodObject<T>
 ) {
-  return schema.catchall(z.string());
+  return schema.catchall(attributeValueSchema);
 }

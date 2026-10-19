@@ -23,10 +23,21 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.elementObject = exports.elementValue = exports.elementKey = void 0;
+exports.elementObject = exports.elementValue = exports.elementKey = exports.attributeValueSchema = exports.modelReferenceSchema = void 0;
 const zod_1 = require("zod");
 const spinal_core_connectorjs_1 = require("spinal-core-connectorjs");
 const resolveModelReference_1 = require("../resolveModelReference");
+exports.modelReferenceSchema = zod_1.z.strictObject({
+    $modelRef: zod_1.z.union([
+        zod_1.z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
+        zod_1.z.literal('self'),
+    ]),
+    path: zod_1.z.string().refine(resolveModelReference_1.isModelReferencePath, 'Invalid $modelRef path'),
+});
+exports.attributeValueSchema = zod_1.z.union([
+    zod_1.z.string(),
+    exports.modelReferenceSchema,
+]);
 exports.elementKey = zod_1.z
     .string()
     .refine((key) => !key.startsWith('_') &&
@@ -39,15 +50,7 @@ exports.elementValue = zod_1.z.lazy(() => zod_1.z.union([
     zod_1.z.boolean(),
     zod_1.z.array(exports.elementValue),
     zod_1.z.preprocess(rejectPrototypeKey, zod_1.z.union([
-        zod_1.z.strictObject({
-            $modelRef: zod_1.z.union([
-                zod_1.z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
-                zod_1.z.literal('self'),
-            ]),
-            path: zod_1.z
-                .string()
-                .refine(resolveModelReference_1.isModelReferencePath, 'Invalid $modelRef path'),
-        }),
+        exports.modelReferenceSchema,
         exports.elementObject,
     ])),
 ]));

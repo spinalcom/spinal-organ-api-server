@@ -368,6 +368,73 @@ describe("PATCH /api/v2/node/:nodeId", () => {
     expect(element.code).to.equal((await category.getElement(true))[0].value);
   });
 
+  for (const initial of [undefined, 42, "Kelvin"]) {
+    it(`treats its own dynamic ID as self with initial unit ${initial}`, async () => {
+      node.info.rem_attr("unit");
+      if (initial !== undefined) node.info.add_attr("unit", initial);
+      const loadsBefore = fixture.loads.length;
+      await request(fixture.app)
+        .patch(path())
+        .send({
+          info: {
+            set: {
+              unitAlias: { $modelRef: node._server_id, path: "info.unit" },
+              unit: "Celsius",
+            },
+          },
+          element: {
+            set: {
+              aliases: [
+                { $modelRef: node._server_id, path: "info.unit" },
+                { code: { $modelRef: node._server_id, path: "attr.Technical.Code" } },
+              ],
+            },
+          },
+          attributes: { set: { Technical: { Code: "001" } } },
+        })
+        .expect(200);
+      const element = await node.getElement(true);
+      const [category] = await node.getChildren(NODE_TO_CATEGORY_RELATION);
+      const [attribute] = await category.getElement(true);
+      expect(node.info.unit.get()).to.equal("Celsius");
+      expect(node.info.unitAlias === node.info.unit).to.equal(true);
+      expect(element.aliases[0] === node.info.unit).to.equal(true);
+      expect(element.aliases[1].code === attribute.value).to.equal(true);
+      expect(fixture.loads.slice(loadsBefore)).to.deep.equal([node._server_id]);
+    });
+  }
+
+  it("stages unchanged branches referenced by its own dynamic ID", async () => {
+    await request(fixture.app)
+      .patch(path())
+      .send({
+        info: {
+          set: { alias: { $modelRef: node._server_id, path: "element" } },
+        },
+      })
+      .expect(200);
+    expect(node.info.alias === await node.getElement(true)).to.equal(true);
+  });
+
+  it("rejects cycles through its own dynamic ID before committing", async () => {
+    const name = node.getName().get();
+    await request(fixture.app)
+      .patch(path())
+      .send({
+        info: {
+          set: {
+            name: "Not committed",
+            a: { $modelRef: node._server_id, path: "info.b" },
+            b: { $modelRef: node._server_id, path: "info.a" },
+          },
+        },
+      })
+      .expect(400);
+    expect(node.getName().get()).to.equal(name);
+    expect(node.info.a === undefined).to.equal(true);
+    expect(node.info.b === undefined).to.equal(true);
+  });
+
   it("resolves forward references inside a replacement object and to updated existing scalars", async () => {
     const unit = node.info.unit;
     await request(fixture.app)

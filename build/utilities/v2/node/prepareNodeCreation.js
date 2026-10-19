@@ -34,9 +34,77 @@ const resolveModelReference_1 = require("./resolveModelReference");
 const createErrorMsgItem_1 = require("../errorHandler/createErrorMsgItem");
 const EApiErrorType_1 = require("../errorHandler/EApiErrorType");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
+const spinal_models_documentation_1 = require("spinal-models-documentation");
 async function prepareNodeCreation(name, type, info, element, attributes, defaults, middleware, profileId) {
     const node = new spinal_model_graph_1.SpinalNode(name, type);
-    await (0, handleSetAttribute_1.handleSetAttribute)(node, attributes, defaults);
+    const attributeReferences = new Map();
+    const stringAttributes = {};
+    for (const [category, values] of Object.entries(attributes ?? {})) {
+        stringAttributes[category] = {};
+        for (const [label, value] of Object.entries(values)) {
+            if (typeof value === 'string') {
+                stringAttributes[category][label] = value;
+            }
+            else {
+                stringAttributes[category][label] = '';
+                attributeReferences.set(JSON.stringify([category, label]), value);
+            }
+        }
+    }
+    await (0, handleSetAttribute_1.handleSetAttribute)(node, stringAttributes, defaults);
+    const resolvedReferences = new Map();
+    const activeReferences = new Set();
+    async function resolveAttributeReference(category, label) {
+        const key = JSON.stringify([category, label]);
+        const resolved = resolvedReferences.get(key);
+        if (resolved)
+            return resolved;
+        const reference = attributeReferences.get(key);
+        if (!reference) {
+            const target = await (0, resolveModelReference_1.resolveModelReference)(node, `attr.${category}.${label}`);
+            if (!(target instanceof spinal_core_connectorjs_1.Str)) {
+                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, `Attribute ${category}.${label} must reference a string Model`);
+            }
+            return target;
+        }
+        if (activeReferences.has(key)) {
+            throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, `Circular attribute reference at ${category}.${label}`);
+        }
+        activeReferences.add(key);
+        try {
+            let target;
+            if (reference.$modelRef === 'self' &&
+                reference.path.startsWith('attr.')) {
+                const [, targetCategory, targetLabel, targetProperty] = reference.path.split('.');
+                if (attributeReferences.has(JSON.stringify([targetCategory, targetLabel]))) {
+                    target = await resolveAttributeReference(targetCategory, targetLabel);
+                    if (targetProperty === 'lastModificationDate') {
+                        target = await (0, resolveModelReference_1.resolveModelReference)(node, reference.path);
+                    }
+                }
+                else {
+                    target = await (0, resolveModelReference_1.resolveModelReference)(node, reference.path);
+                }
+            }
+            else if (reference.$modelRef === 'self') {
+                target = await (0, resolveModelReference_1.resolveModelReference)(node, reference.path);
+            }
+            else {
+                const resolvedNode = await (0, createElement_1.createElement)({ value: reference }, middleware, profileId);
+                target = resolvedNode.value;
+            }
+            if (!(target instanceof spinal_core_connectorjs_1.Str)) {
+                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INVALID_REQUEST, `$modelRef for attribute ${category}.${label} must target a Str`);
+            }
+            const attribute = await findAttribute(node, category, label);
+            attribute.mod_attr('value', target);
+            resolvedReferences.set(key, target);
+            return target;
+        }
+        finally {
+            activeReferences.delete(key);
+        }
+    }
     const rawInfo = { name, type };
     for (const [key, value] of Object.entries(info)) {
         if (value !== undefined)
@@ -66,8 +134,14 @@ async function prepareNodeCreation(name, type, info, element, attributes, defaul
         }
     }
     async function self(path) {
-        if (path.startsWith('attr.'))
+        if (path.startsWith('attr.')) {
+            const [, category, label] = path.split('.');
+            const key = JSON.stringify([category, label]);
+            if (attributeReferences.has(key)) {
+                await resolveAttributeReference(category, label);
+            }
             return (0, resolveModelReference_1.resolveModelReference)(node, path);
+        }
         const parts = path.split('.');
         let value = raw;
         let index = 0;
@@ -107,12 +181,30 @@ async function prepareNodeCreation(name, type, info, element, attributes, defaul
     }
     const result = await (0, createElement_1.createElement)(raw, middleware, profileId, self, (_value, path, resolve) => memo(path, resolve));
     await (0, handleSetInfo_1.handleSetInfo)(node, result.info);
+    for (const key of attributeReferences.keys()) {
+        const [category, label] = JSON.parse(key);
+        await resolveAttributeReference(category, label);
+    }
     if (element !== undefined) {
         // Use the constructor to preserve the normal element-pointer representation.
         const holder = new spinal_model_graph_1.SpinalNode(name, type, result.element);
         node.add_attr('element', holder.element);
     }
     return node;
+}
+async function findAttribute(node, categoryName, label) {
+    const categories = await node.getChildren(spinal_env_viewer_plugin_documentation_service_1.NODE_TO_CATEGORY_RELATION);
+    const category = categories.find((item) => item.getName().get() === categoryName);
+    const attributes = category ? await category.getElement(true) : undefined;
+    if (attributes instanceof spinal_core_connectorjs_1.Lst) {
+        for (const attribute of attributes) {
+            if (attribute instanceof spinal_models_documentation_1.SpinalAttribute &&
+                attribute.label.get() === label) {
+                return attribute;
+            }
+        }
+    }
+    throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.INTERNAL_ERROR, `Created attribute ${categoryName}.${label} could not be found`);
 }
 async function applyPreparedNode(target, prepared) {
     const info = new spinal_core_connectorjs_1.Model();

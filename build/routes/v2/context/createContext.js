@@ -48,10 +48,12 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     description: |-
      *       Creates a `SpinalContext` from the supplied info and adds it to both the root graph and the current profile graph.
      *
-     *       - The request body uses the same info, attributes and optional element fields as `POST /api/v2/node`; `parents` is not accepted.
-     *       - The exact context name must not already exist in either graph. Name matching is case-sensitive.
-     *       - If the profile graph is the root graph, the context is added only once.
-     *       - Writes to the two graphs are not transactional. An error during the second graph write can leave the first write in place.
+     *       - The request body uses the same info, attributes and optional element fields as `POST /api/v2/node`. `parents` is not accepted.
+     *       - The exact context name must not already exist in either profile and root graph. Name matching is case-sensitive.
+     *
+     *       ### Model references (`$modelRef`)
+     *
+     *       Info, element and attribute values may use `$modelRef` syntax, including `"self"` for the context being created. See `POST /api/v2/node` for usage examples and **`INodeElementModelReference`** for the full rules.
      *     requestBody:
      *       required: true
      *       content:

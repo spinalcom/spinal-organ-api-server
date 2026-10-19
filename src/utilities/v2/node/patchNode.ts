@@ -51,6 +51,36 @@ export async function patchNode(
   middleware: ISpinalAPIMiddleware,
   profileId: string
 ): Promise<void> {
+  function normalizeSelfReferences(value: ElementValue): ElementValue {
+    if (typeof value !== 'object') return value;
+    if (Array.isArray(value)) return value.map(normalizeSelfReferences);
+    if (Object.hasOwn(value, '$modelRef')) {
+      return value.$modelRef === node._server_id
+        ? { ...value, $modelRef: 'self' }
+        : value;
+    }
+    return Object.fromEntries(
+      Object.entries(value).map(([key, child]) => [
+        key,
+        normalizeSelfReferences(child),
+      ])
+    );
+  }
+  patch = { ...patch };
+  for (const root of ['info', 'element'] as const) {
+    const operations = patch[root];
+    if (operations?.set) {
+      patch[root] = {
+        ...operations,
+        set: Object.fromEntries(
+          Object.entries(operations.set).map(([path, value]) => [
+            path,
+            normalizeSelfReferences(value),
+          ])
+        ),
+      };
+    }
+  }
   const { selected, fullElement, selectedAttrs } = selectPatchBranches(patch);
 
   const { clone, stageRoot, populateRoots, commit } = createModelStaging();

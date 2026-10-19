@@ -51,6 +51,10 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     description: |-
      *       Create a room under the floor identified by `dynamicFloorId`, using the profile's spatial context.
      *
+     *       ### Info, attributes and model references
+     *
+     *       See `POST /api/v2/node` for more about info, categorized attributes and `$modelRef` usage. Additional info and attribute values may reference Models, including `"self"` for the room being created. See **`INodeElementModelReference`** for full reference rules. This endpoint assigns the node type and uses `dynamicFloorId` to select the parent; it does not accept `element` or `parents`.
+     *
      *       ### Requirements
      *
      *       - A building must exist.

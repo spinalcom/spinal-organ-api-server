@@ -33,6 +33,22 @@ export type ElementValue =
   | ElementValue[]
   | { [key: string]: ElementValue };
 
+export const modelReferenceSchema = z.strictObject({
+  $modelRef: z.union([
+    z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
+    z.literal('self'),
+  ]),
+  path: z.string().refine(isModelReferencePath, 'Invalid $modelRef path'),
+});
+
+export type ModelReference = z.infer<typeof modelReferenceSchema>;
+
+export const attributeValueSchema = z.union([
+  z.string(),
+  modelReferenceSchema,
+]);
+export type AttributeValue = z.infer<typeof attributeValueSchema>;
+
 export const elementKey = z
   .string()
   .refine(
@@ -52,15 +68,7 @@ export const elementValue: z.ZodType<ElementValue> = z.lazy(() =>
     z.preprocess(
       rejectPrototypeKey,
       z.union([
-        z.strictObject({
-          $modelRef: z.union([
-            z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
-            z.literal('self'),
-          ]),
-          path: z
-            .string()
-            .refine(isModelReferencePath, 'Invalid $modelRef path'),
-        }),
+        modelReferenceSchema,
         elementObject,
       ])
     ),
