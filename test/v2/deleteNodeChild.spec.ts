@@ -8,11 +8,13 @@ import {
 } from "./helpers/spatialFixture";
 
 const register = require("../../src/routes/v2/node/deleteNodeChild");
+const registerByName = require("../../src/routes/v2/node/deleteNodeChildByName");
 describe("DELETE exact child relationship membership", () => {
   let fixture: SpatialFixture;
   beforeEach(async () => {
     fixture = await createSpatialFixture();
     register(null, fixture.app, fixture.middleware);
+    registerByName(null, fixture.app, fixture.middleware);
   });
   afterEach(() => fixture.cleanup());
   const path = (
@@ -24,6 +26,70 @@ describe("DELETE exact child relationship membership", () => {
     `/api/v2/node/${parentId}/child-relationships/${type}/${encodeURIComponent(
       name
     )}/children/${childId}`;
+
+  const pathAcrossTypes = (
+    name = "hasSensor",
+    parentId = fixture.room._server_id,
+    childId = fixture.equipment._server_id
+  ) =>
+    `/api/v2/node/${parentId}/child-relationships/${encodeURIComponent(
+      name
+    )}/children/${childId}`;
+
+  it("detaches the child from every supported type with the exact name", async () => {
+    const { room, equipment } = fixture;
+    await room.addChild(equipment, "hasSensor", "PtrLst");
+    await room.addChild(equipment, "hasSensor", "LstPtr");
+    await room.addChild(equipment, "hasSensor", "Ref");
+    await room.addChild(equipment, "monitors", "PtrLst");
+
+    const response = await request(fixture.app)
+      .delete(pathAcrossTypes())
+      .expect(200);
+
+    expect(response.body).to.deep.equal({
+      data: {
+        parentDynamicId: room._server_id,
+        childDynamicId: equipment._server_id,
+        relationName: "hasSensor",
+        relationTypes: ["PtrLst", "LstPtr", "Ref"],
+        status: "detached",
+      },
+    });
+    for (const type of ["PtrLst", "LstPtr", "Ref"]) {
+      expect(
+        await room.children
+          .getElement(type)
+          .getElement("hasSensor")
+          .getChildren()
+      ).to.deep.equal([]);
+    }
+    expect(await room.getChildren("monitors")).to.deep.equal([equipment]);
+
+    const again = await request(fixture.app)
+      .delete(pathAcrossTypes())
+      .expect(200);
+    expect(again.body.data.relationTypes).to.deep.equal([]);
+    expect(again.body.data.status).to.equal("alreadyDetached");
+  });
+
+  it("matches relation names case-sensitively", async () => {
+    await fixture.room.addChild(fixture.equipment, "hasSensor", "PtrLst");
+    const upperCase = await request(fixture.app)
+      .delete(pathAcrossTypes("HASSENSOR"))
+      .expect(200);
+    expect(upperCase.body.data.status).to.equal("alreadyDetached");
+    expect(await fixture.room.getChildren("hasSensor")).to.deep.equal([
+      fixture.equipment,
+    ]);
+
+    await fixture.room.addChild(fixture.equipment, "HASSENSOR", "Ref");
+    const exactUpperCase = await request(fixture.app)
+      .delete(pathAcrossTypes("HASSENSOR"))
+      .expect(200);
+    expect(exactUpperCase.body.data.relationTypes).to.deep.equal(["Ref"]);
+    expect(exactUpperCase.body.data.status).to.equal("detached");
+  });
 
   for (const type of ["PtrLst", "LstPtr", "Ref"]) {
     it(`detaches ${type}, updates reverse links and is idempotent`, async () => {

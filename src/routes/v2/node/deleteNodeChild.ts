@@ -35,6 +35,12 @@ import { getProfileId } from '../../../utilities/requestUtilities';
 import { loadAndValidateNode } from '../../../utilities/loadAndValidateNode';
 import { sendResponseError } from '../../../utilities/v2/errorHandler/sendResponseError';
 
+const RELATION_TYPES = [
+  SPINAL_RELATION_PTR_LST_TYPE,
+  SPINAL_RELATION_LST_PTR_TYPE,
+  SPINAL_RELATION_TYPE,
+] as const;
+
 module.exports = function (
   logger: any,
   app: Express,
@@ -56,6 +62,7 @@ module.exports = function (
    *
    *       - Both nodes must be accessible to the current profile, even when the link is absent.
    *       - `relationType` and `relationName` are required and identify one exact relationship; no regex or OR matching is performed.
+   *       - Relation-name matching is case-sensitive.
    *       - URL-encode the relation name. Encoded slashes require router/proxy support.
    *       - A missing relationship or child membership returns `alreadyDetached` without mutation.
    *       - An empty relationship is retained. Node and relation context memberships are not modified.
@@ -120,11 +127,7 @@ module.exports = function (
       params: z.strictObject({
         parentId: z.coerce.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
         childId: z.coerce.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
-        relationType: z.enum([
-          SPINAL_RELATION_PTR_LST_TYPE,
-          SPINAL_RELATION_LST_PTR_TYPE,
-          SPINAL_RELATION_TYPE,
-        ]),
+        relationType: z.enum(RELATION_TYPES),
         relationName: z.string().refine((name) => name.trim().length > 0, {
           message: 'relationName must not be blank',
         }),
@@ -161,4 +164,5 @@ module.exports = function (
       }
     }
   );
+
 };

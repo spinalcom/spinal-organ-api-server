@@ -1493,6 +1493,7 @@ function routes(
   require('./v2/node/patchNodeById')(logger, app, spinalAPIMiddleware);
   require('./v2/node/addNodeChildren')(logger, app, spinalAPIMiddleware);
   require('./v2/node/deleteNodeChild')(logger, app, spinalAPIMiddleware);
+  require('./v2/node/deleteNodeChildByName')(logger, app, spinalAPIMiddleware);
   require('./v2/node/moveNode')(logger, app, spinalAPIMiddleware);
   require('./v2/node/getNodeChildren')(logger, app, spinalAPIMiddleware);
   require('./v2/node/getNodeChildRelationships')(

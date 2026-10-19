@@ -29679,7 +29679,7 @@
           "node"
         ],
         "summary": "Detach one existing child from an exact relationship",
-        "description": "Removes only the specified parent-to-child link using `SpinalNode.removeChild`.\n\nNeither node is deleted; other links, descendants, info, elements and attributes are preserved.\nGraph-managed modification timestamps may change.\n\n- Both nodes must be accessible to the current profile, even when the link is absent.\n- `relationType` and `relationName` are required and identify one exact relationship; no regex or OR matching is performed.\n- URL-encode the relation name. Encoded slashes require router/proxy support.\n- A missing relationship or child membership returns `alreadyDetached` without mutation.\n- An empty relationship is retained. Node and relation context memberships are not modified.\n- Detachment applies globally across contexts; `contextDynamicId` and all other query parameters are rejected.\n- Only `PtrLst`, `LstPtr` and `Ref` are supported.\n- Writes are not transactional or locked. Concurrent graph changes can cause the operation to fail.",
+        "description": "Removes only the specified parent-to-child link using `SpinalNode.removeChild`.\n\nNeither node is deleted; other links, descendants, info, elements and attributes are preserved.\nGraph-managed modification timestamps may change.\n\n- Both nodes must be accessible to the current profile, even when the link is absent.\n- `relationType` and `relationName` are required and identify one exact relationship; no regex or OR matching is performed.\n- Relation-name matching is case-sensitive.\n- URL-encode the relation name. Encoded slashes require router/proxy support.\n- A missing relationship or child membership returns `alreadyDetached` without mutation.\n- An empty relationship is retained. Node and relation context memberships are not modified.\n- Detachment applies globally across contexts; `contextDynamicId` and all other query parameters are rejected.\n- Only `PtrLst`, `LstPtr` and `Ref` are supported.\n- Writes are not transactional or locked. Concurrent graph changes can cause the operation to fail.",
         "parameters": [
           {
             "$ref": "#/components/parameters/nodeChildrenParentId"
@@ -29859,6 +29859,109 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v2/node/{parentId}/child-relationships/{relationName}/children/{childId}": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "tags": [
+          "node"
+        ],
+        "summary": "Detach a child from every matching relationship",
+        "description": "Removes the specified parent-to-child link from every supported relationship type that has the exact relation name.\n\nNeither node is deleted; other links, descendants, info, elements and attributes are preserved.\nGraph-managed modification timestamps may change.\n\n- Both nodes must be accessible to the current profile, even when no matching link exists.\n- Relation-name matching is exact and case-sensitive; no regex or OR matching is performed.\n- URL-encode the relation name. Encoded slashes require router/proxy support.\n- A missing relationship or child membership returns `alreadyDetached` without mutation.\n- `relationTypes` lists only types from which the child was detached; it is empty when already detached.\n- Empty relationships are retained. Node and relation context memberships are not modified.\n- Detachment applies globally across contexts; `contextDynamicId` and all other query parameters are rejected.\n- Only `PtrLst`, `LstPtr` and `Ref` are supported.\n- Writes are not transactional or locked. Concurrent graph changes can cause the operation to fail.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/nodeChildrenParentId"
+          },
+          {
+            "name": "childId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "relationName",
+            "in": "path",
+            "required": true,
+            "description": "Exact nonblank relation name, matched case-sensitively across supported relation types.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching links detached or already absent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "parentDynamicId",
+                        "childDynamicId",
+                        "relationName",
+                        "relationTypes",
+                        "status"
+                      ],
+                      "properties": {
+                        "parentDynamicId": {
+                          "type": "integer"
+                        },
+                        "childDynamicId": {
+                          "type": "integer"
+                        },
+                        "relationName": {
+                          "type": "string"
+                        },
+                        "relationTypes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "PtrLst",
+                              "LstPtr",
+                              "Ref"
+                            ]
+                          }
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "detached",
+                            "alreadyDetached"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
           }
         }
       }

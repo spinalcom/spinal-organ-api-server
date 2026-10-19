@@ -32,6 +32,11 @@ const spinal_model_graph_1 = require("spinal-model-graph");
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const loadAndValidateNode_1 = require("../../../utilities/loadAndValidateNode");
 const sendResponseError_1 = require("../../../utilities/v2/errorHandler/sendResponseError");
+const RELATION_TYPES = [
+    spinal_model_graph_1.SPINAL_RELATION_PTR_LST_TYPE,
+    spinal_model_graph_1.SPINAL_RELATION_LST_PTR_TYPE,
+    spinal_model_graph_1.SPINAL_RELATION_TYPE,
+];
 module.exports = function (logger, app, middleware) {
     /**
      * @swagger
@@ -49,6 +54,7 @@ module.exports = function (logger, app, middleware) {
      *
      *       - Both nodes must be accessible to the current profile, even when the link is absent.
      *       - `relationType` and `relationName` are required and identify one exact relationship; no regex or OR matching is performed.
+     *       - Relation-name matching is case-sensitive.
      *       - URL-encode the relation name. Encoded slashes require router/proxy support.
      *       - A missing relationship or child membership returns `alreadyDetached` without mutation.
      *       - An empty relationship is retained. Node and relation context memberships are not modified.
@@ -111,11 +117,7 @@ module.exports = function (logger, app, middleware) {
         params: zod_1.z.strictObject({
             parentId: zod_1.z.coerce.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
             childId: zod_1.z.coerce.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
-            relationType: zod_1.z.enum([
-                spinal_model_graph_1.SPINAL_RELATION_PTR_LST_TYPE,
-                spinal_model_graph_1.SPINAL_RELATION_LST_PTR_TYPE,
-                spinal_model_graph_1.SPINAL_RELATION_TYPE,
-            ]),
+            relationType: zod_1.z.enum(RELATION_TYPES),
             relationName: zod_1.z.string().refine((name) => name.trim().length > 0, {
                 message: 'relationName must not be blank',
             }),
