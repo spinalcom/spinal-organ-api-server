@@ -22657,6 +22657,12 @@
                             "type": "object"
                           }
                         },
+                        "MAIL": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
                         "OTHER": {
                           "type": "array",
                           "items": {
