@@ -32,34 +32,9 @@ exports.requestActivity = void 0;
  * @class RequestActivity
  */
 class RequestActivity {
-    constructor() {
-        this.inFlight = 0;
-        this.lastActivityAt = Date.now();
-        this.served = 0;
-        /**
-         * Express middleware counting the requests in flight. Register it first so
-         * that it covers the whole lifecycle of every request.
-         *
-         * @memberof RequestActivity
-         */
-        this.middleware = (req, res, next) => {
-            this.inFlight += 1;
-            this.served += 1;
-            this.lastActivityAt = Date.now();
-            // 'finish' and 'close' can both fire, only count the request out once
-            let ended = false;
-            const onEnd = () => {
-                if (ended)
-                    return;
-                ended = true;
-                this.inFlight -= 1;
-                this.lastActivityAt = Date.now();
-            };
-            res.on('finish', onEnd);
-            res.on('close', onEnd);
-            next();
-        };
-    }
+    inFlight = 0;
+    lastActivityAt = Date.now();
+    served = 0;
     /** number of requests being served right now */
     get pending() {
         return this.inFlight;
@@ -80,6 +55,29 @@ class RequestActivity {
             return 0;
         return Date.now() - this.lastActivityAt;
     }
+    /**
+     * Express middleware counting the requests in flight. Register it first so
+     * that it covers the whole lifecycle of every request.
+     *
+     * @memberof RequestActivity
+     */
+    middleware = (req, res, next) => {
+        this.inFlight += 1;
+        this.served += 1;
+        this.lastActivityAt = Date.now();
+        // 'finish' and 'close' can both fire, only count the request out once
+        let ended = false;
+        const onEnd = () => {
+            if (ended)
+                return;
+            ended = true;
+            this.inFlight -= 1;
+            this.lastActivityAt = Date.now();
+        };
+        res.on('finish', onEnd);
+        res.on('close', onEnd);
+        next();
+    };
 }
 exports.requestActivity = new RequestActivity();
 //# sourceMappingURL=requestActivity.js.map

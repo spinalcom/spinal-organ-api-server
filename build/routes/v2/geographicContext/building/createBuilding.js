@@ -1,0 +1,135 @@
+"use strict";
+/*
+ * Copyright 2026 SpinalCom - www.spinalcom.com
+ *
+ * This file is part of SpinalCore.
+ *
+ * Please read all of the following terms and conditions
+ * of the Software license Agreement ("Agreement")
+ * carefully.
+ *
+ * This Agreement is a legally binding contract between
+ * the Licensee (as defined below) and SpinalCom that
+ * sets forth the terms and conditions that govern your
+ * use of the Program. By installing and/or using the
+ * Program, you agree to abide by all the terms and
+ * conditions stated or referenced herein.
+ *
+ * If you do not agree to abide by these terms and
+ * conditions, do not demonstrate your acceptance and do
+ * not install or use the Program.
+ * You should have received a copy of the license along
+ * with this file. If not, see
+ * <http://resources.spinalcom.com/licenses.pdf>.
+ */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_zod_safe_1 = __importDefault(require("express-zod-safe"));
+const requestUtilities_1 = require("../../../../utilities/requestUtilities");
+const spinal_env_viewer_context_geographic_service_1 = require("spinal-env-viewer-context-geographic-service");
+const prepareNodeCreation_1 = require("../../../../utilities/v2/node/prepareNodeCreation");
+const getNodeData_1 = require("../../../../utilities/v2/node/getNodeData");
+const getBuilding_1 = require("../../../../utilities/v2/geographicContext/getBuilding");
+const createSchemas_1 = require("../../../../utilities/v2/geographicContext/createSchemas");
+const EApiErrorType_1 = require("../../../../utilities/v2/errorHandler/EApiErrorType");
+const createErrorMsgItem_1 = require("../../../../utilities/v2/errorHandler/createErrorMsgItem");
+const sendResponseError_1 = require("../../../../utilities/v2/errorHandler/sendResponseError");
+module.exports = function (logger, app, spinalAPIMiddleware) {
+    /**
+     * @swagger
+     * /api/v2/building:
+     *   post:
+     *     security:
+     *       - bearerAuth:
+     *         - write
+     *     summary: Create the building
+     *     description: |-
+     *       Create the building in the profile's spatial context, creating that context if needed.
+     *
+     *       ### Requirements
+     *
+     *       - No building may already exist; otherwise returns **HTTP 409**.
+     *
+     *       ### Defaults
+     *
+     *       - `Spatial.area`: `"0"`.
+     *       - `Spinal Building Information.Adresse`: `"To configure"`.
+     *       - Supplied values override these defaults.
+     *
+     *       **Response:** all info fields (including nested objects and arrays) and categorized attributes.
+     *     tags:
+     *       - geographicContext
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - info
+     *             properties:
+     *               info:
+     *                 $ref: '#/components/schemas/ICreateNodeInfo'
+     *               attributes:
+     *                 allOf:
+     *                   - $ref: '#/components/schemas/ICreateNodeItemAttr'
+     *                   - $ref: '#/components/schemas/ICreateNodeItemAttrSpatialCat'
+     *                   - type: object
+     *                     properties:
+     *                       'Spinal Building Information':
+     *                         type: object
+     *                         description: Spinal Building Information attribute category of the building
+     *                         properties:
+     *                           Adresse:
+     *                             type: string
+     *                             description: Address of the building
+     *                         additionalProperties:
+     *                           type: string
+     *             example:
+     *               info:
+     *                 name: "Building Name"
+     *                 color: "#FF0000"
+     *                 icon: "building-icon"
+     *               attributes:
+     *                 Spatial:
+     *                   area: "20"
+     *     responses:
+     *       201:
+     *         $ref: '#/components/responses/INodeItemAttrRes'
+     *       400:
+     *         $ref: '#/components/responses/IErrorItemRes400'
+     *       409:
+     *         description: A building already exists in the spatial context.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/IErrorItem'
+     *       500:
+     *         $ref: '#/components/responses/IErrorItemRes500'
+     */
+    app.post('/api/v2/building', (0, express_zod_safe_1.default)({
+        body: createSchemas_1.createBuildingSchema,
+    }), async (req, res) => {
+        try {
+            const profileId = (0, requestUtilities_1.getProfileId)(req);
+            const { geographicContext, building: buildingOld } = await (0, getBuilding_1.getBuildingNode)(spinalAPIMiddleware, profileId, true);
+            if (buildingOld)
+                throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.CONFLICT, 'A building already exists');
+            const { info, attributes } = req.body;
+            const prepared = await (0, prepareNodeCreation_1.prepareNodeCreation)(info.name, spinal_env_viewer_context_geographic_service_1.BUILDING_TYPE, info, undefined, attributes, {
+                'Spinal Building Information': { Adresse: 'To configure' },
+                Spatial: { area: '0' },
+            }, spinalAPIMiddleware, profileId);
+            const newBuilding = await (0, spinal_env_viewer_context_geographic_service_1.addBuilding)(geographicContext, geographicContext, info.name);
+            await (0, prepareNodeCreation_1.applyPreparedNode)(newBuilding, prepared);
+            const resObj = await (0, getNodeData_1.getNodeData)(newBuilding, true, true);
+            return res.status(201).json({ data: resObj });
+        }
+        catch (error) {
+            (0, sendResponseError_1.sendResponseError)(res, error);
+        }
+    });
+};
+//# sourceMappingURL=createBuilding.js.map

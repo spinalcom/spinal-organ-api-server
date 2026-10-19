@@ -1487,6 +1487,72 @@ function routes(
     app,
     spinalAPIMiddleware
   );
+
+  require('./v2/context/createContext')(logger, app, spinalAPIMiddleware);
+  require('./v2/node/createNode')(logger, app, spinalAPIMiddleware);
+  require('./v2/node/getNodeById')(logger, app, spinalAPIMiddleware);
+  require('./v2/node/patchNodeById')(logger, app, spinalAPIMiddleware);
+  require('./v2/node/addNodeChildren')(logger, app, spinalAPIMiddleware);
+  require('./v2/node/deleteNodeChild')(logger, app, spinalAPIMiddleware);
+  require('./v2/node/deleteNodeChildByName')(logger, app, spinalAPIMiddleware);
+  require('./v2/node/moveNode')(logger, app, spinalAPIMiddleware);
+  require('./v2/node/getNodeChildren')(logger, app, spinalAPIMiddleware);
+  require('./v2/node/getNodeChildRelationships')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/node/getNodeParents')(logger, app, spinalAPIMiddleware);
+  require('./v2/node/getNodeParentRelationships')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/geographicContext/building/getBuilding')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/geographicContext/building/createBuilding')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/geographicContext/floor/createFloor')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/geographicContext/floor/getFloor')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/geographicContext/floor/getFloorById')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/geographicContext/room/createRoom')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/geographicContext/room/getRoom')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/geographicContext/room/getRoomById')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/geographicContext/equipment/createEquipment')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
 }
 
 export default routes;
