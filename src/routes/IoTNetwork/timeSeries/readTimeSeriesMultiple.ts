@@ -103,7 +103,9 @@ module.exports = function (
    *         name: bucket
    *         description: >-
    *           Split the interval into sub-intervals of this size and aggregate inside each one.
-   *           Accepts `hour`, `day`, `week` and `month`.
+   *           Accepts `15min`, `hour`, `day`, `week` and `month`. Buckets are half-open [start, end[ and follow
+   *           the server's local time (days at local midnight, weeks on Monday, months on the 1st). Each bucket
+   *           gives `count`, `noData`, the requested measures and, with `twavg`, the `duration` it covers.
    *         required: false
    *         schema:
    *           type: string
@@ -170,9 +172,9 @@ module.exports = function (
           req.query.aggregation as string
         );
 
-        const bucketMs = parseBucketParam(req.query.bucket as string);
+        const bucketUnit = parseBucketParam(req.query.bucket as string);
 
-        if (req.query.aggregation && !normalizedOps && !bucketMs) {
+        if (req.query.aggregation && !normalizedOps && !bucketUnit) {
           return res.status(400).send(
             `Invalid aggregation parameter. Supported values: ${VALID_OPS.join(', ')}, all`
           );
@@ -191,13 +193,13 @@ module.exports = function (
           if (result.status === 'fulfilled') {
             const datas = result.value;
 
-            if (bucketMs) {
+            if (bucketUnit) {
               const bucketOps = normalizedOps
                 ? { basicOps, needsTwavg }
                 : { basicOps: [] as string[], needsTwavg: true };
 
               const buckets = computeBucketedAggregation(
-                datas, intervalStart, intervalEnd, bucketMs,
+                datas, intervalStart, intervalEnd, bucketUnit,
                 bucketOps.basicOps, bucketOps.needsTwavg
               );
               return { dynamicId: ids[index], buckets };

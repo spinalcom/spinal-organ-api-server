@@ -87,7 +87,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         name: bucket
      *         description: >-
      *           Split the interval into sub-intervals of this size and aggregate inside each one.
-     *           Accepts `hour`, `day`, `week` and `month`.
+     *           Accepts `15min`, `hour`, `day`, `week` and `month`. Buckets are half-open [start, end[ and follow
+     *           the server's local time (days at local midnight, weeks on Monday, months on the 1st). Each bucket
+     *           gives `count`, `noData`, the requested measures and, with `twavg`, the `duration` it covers.
      *         required: false
      *         schema:
      *           type: string
@@ -144,8 +146,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             };
             const includeLastBeforeStart = req.query.valueAtBegin == "true" ? true : false;
             const { normalizedOps, basicOps, needsTwavg } = (0, aggregationUtils_1.parseAggregationParam)(req.query.aggregation);
-            const bucketMs = (0, aggregationUtils_1.parseBucketParam)(req.query.bucket);
-            if (req.query.aggregation && !normalizedOps && !bucketMs) {
+            const bucketUnit = (0, aggregationUtils_1.parseBucketParam)(req.query.bucket);
+            if (req.query.aggregation && !normalizedOps && !bucketUnit) {
                 return res.status(400).send(`Invalid aggregation parameter. Supported values: ${aggregationUtils_1.VALID_OPS.join(', ')}, all`);
             }
             const intervalStart = (0, aggregationUtils_1.toTimestamp)(timeSeriesIntervalDate.start);
@@ -155,11 +157,11 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const finalResults = settledResults.map((result, index) => {
                 if (result.status === 'fulfilled') {
                     const datas = result.value;
-                    if (bucketMs) {
+                    if (bucketUnit) {
                         const bucketOps = normalizedOps
                             ? { basicOps, needsTwavg }
                             : { basicOps: [], needsTwavg: true };
-                        const buckets = (0, aggregationUtils_1.computeBucketedAggregation)(datas, intervalStart, intervalEnd, bucketMs, bucketOps.basicOps, bucketOps.needsTwavg);
+                        const buckets = (0, aggregationUtils_1.computeBucketedAggregation)(datas, intervalStart, intervalEnd, bucketUnit, bucketOps.basicOps, bucketOps.needsTwavg);
                         return { dynamicId: ids[index], buckets };
                     }
                     if (normalizedOps) {
