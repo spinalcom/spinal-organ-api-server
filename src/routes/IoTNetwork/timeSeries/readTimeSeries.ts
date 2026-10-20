@@ -28,7 +28,7 @@ import { verifDate } from "../../../utilities/dateFunctions";
 import {
   computeAggregation,
   computeTimeWeightedMean,
-  computeBucketedAggregation,
+  aggregateBucketsFromReader,
   toTimestamp,
   parseAggregationParam,
   parseBucketParam,
@@ -115,7 +115,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *        name: bucket
    *        description: >-
    *          Split the interval into sub-intervals of this size and aggregate inside each one.
-   *          Accepts `hour`, `day`, `week` and `month`.
+   *          Accepts `15min`, `hour`, `day`, `week` and `month`. Buckets are half-open [start, end[ and follow
+   *          the server's local time (days at local midnight, weeks on Monday, months on the 1st). Each bucket
+   *          gives `count`, `noData`, the requested measures and, with `twavg`, the `duration` it covers.
    *        required: false
    *        schema:
    *          type: string
@@ -188,12 +190,10 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
         const intervalStart = toTimestamp(timeSeriesIntervalDate.start);
         const intervalEnd = toTimestamp(timeSeriesIntervalDate.end);
         const includeLastBeforeStart = req.query.valueAtBegin == "true" ? true : false;
-        const datas = await spinalServiceTimeSeries().getData(node.getId().get(), timeSeriesIntervalDate, includeLastBeforeStart)
-
         const aggregationParam = req.query.aggregation as string;
-        const bucketMs = parseBucketParam(req.query.bucket as string);
+        const bucketUnit = parseBucketParam(req.query.bucket as string);
 
-        if (bucketMs) {
+        if (bucketUnit) {
           const { normalizedOps, basicOps, needsTwavg } = aggregationParam
             ? parseAggregationParam(aggregationParam)
             : { normalizedOps: ['twavg'], basicOps: [] as string[], needsTwavg: true };
@@ -204,11 +204,19 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
             );
           }
 
-          const buckets = computeBucketedAggregation(
-            datas, intervalStart, intervalEnd, bucketMs, basicOps, needsTwavg
+          // Read and folded on the fly: the interval is never loaded in memory.
+          const timeSeries = await spinalServiceTimeSeries().getTimeSeries(node.getId().get());
+          if (!timeSeries) throw new Error('endpoint have no timeseries');
+          const readPoints = () => spinalServiceTimeSeries().getFromIntervalTimeGen(
+            timeSeries, timeSeriesIntervalDate.start, timeSeriesIntervalDate.end, includeLastBeforeStart
+          );
+          const buckets = await aggregateBucketsFromReader(
+            readPoints, intervalStart, intervalEnd, bucketUnit, basicOps, needsTwavg
           );
           return res.json({ dynamicId: parseInt(req.params.id, 10), buckets });
         }
+
+        const datas = await spinalServiceTimeSeries().getData(node.getId().get(), timeSeriesIntervalDate, includeLastBeforeStart)
 
         if (aggregationParam) {
           const { normalizedOps, basicOps, needsTwavg } = parseAggregationParam(aggregationParam);
