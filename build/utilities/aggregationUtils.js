@@ -160,11 +160,13 @@ function bucketEdges(start, end, unit) {
  * a point dated before the first bucket (valueAtBegin) only provides the value held at the start.
  */
 class BucketAccumulator {
+    edges;
+    totals;
+    pointBucket = 0; // bucket of the last counted point
+    holdBucket = 0; // bucket where the held value currently is
+    held = null;
     constructor(edges) {
         this.edges = edges;
-        this.pointBucket = 0; // bucket of the last counted point
-        this.holdBucket = 0; // bucket where the held value currently is
-        this.held = null;
         this.totals = edges.slice(1).map(() => ({
             count: 0, sum: 0, min: Infinity, max: -Infinity, timeWeightedSum: 0, heldDuration: 0,
         }));
