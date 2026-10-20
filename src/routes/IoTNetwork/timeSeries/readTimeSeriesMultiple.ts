@@ -26,10 +26,12 @@ import { getProfileId, MULTIPLE_TIMESERIES_IDS_LIMIT, validateArrayRequestLimit 
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 import { verifDate } from '../../../utilities/dateFunctions';
 import { getTimeSeriesData } from '../../../utilities/getTimeSeriesData';
+import { SpinalGraphService, SpinalNode } from 'spinal-env-viewer-graph-service';
+import spinalServiceTimeSeries from '../spinalTimeSeries';
 import {
   computeAggregation,
   computeTimeWeightedMean,
-  computeBucketedAggregation,
+  aggregateBucketsFromReader,
   toTimestamp,
   parseAggregationParam,
   parseBucketParam,
@@ -183,27 +185,36 @@ module.exports = function (
         const intervalStart = toTimestamp(timeSeriesIntervalDate.start);
         const intervalEnd = toTimestamp(timeSeriesIntervalDate.end);
 
-        const promises = ids.map((id) =>
-          getTimeSeriesData(spinalAPIMiddleware, profileId, id, timeSeriesIntervalDate, includeLastBeforeStart)
+        const bucketOps = normalizedOps
+          ? { basicOps, needsTwavg }
+          : { basicOps: [] as string[], needsTwavg: true };
+
+        // With a bucket, each endpoint is read and folded on the fly: the interval is never loaded in memory.
+        const readBuckets = async (id: number) => {
+          const node: SpinalNode<any> = await spinalAPIMiddleware.load(id, profileId);
+          // @ts-ignore
+          SpinalGraphService._addNode(node);
+          const timeSeries = await spinalServiceTimeSeries().getTimeSeries(node.getId().get());
+          if (!timeSeries) throw new Error('endpoint have no timeseries');
+          const readPoints = () => spinalServiceTimeSeries().getFromIntervalTimeGen(
+            timeSeries, timeSeriesIntervalDate.start, timeSeriesIntervalDate.end, includeLastBeforeStart
+          );
+          return aggregateBucketsFromReader(
+            readPoints, intervalStart, intervalEnd, bucketUnit, bucketOps.basicOps, bucketOps.needsTwavg
+          );
+        };
+
+        const promises = ids.map((id) => bucketUnit
+          ? readBuckets(id)
+          : getTimeSeriesData(spinalAPIMiddleware, profileId, id, timeSeriesIntervalDate, includeLastBeforeStart)
         );
 
         const settledResults = await Promise.allSettled(promises);
 
         const finalResults = settledResults.map((result, index) => {
           if (result.status === 'fulfilled') {
-            const datas = result.value;
-
-            if (bucketUnit) {
-              const bucketOps = normalizedOps
-                ? { basicOps, needsTwavg }
-                : { basicOps: [] as string[], needsTwavg: true };
-
-              const buckets = computeBucketedAggregation(
-                datas, intervalStart, intervalEnd, bucketUnit,
-                bucketOps.basicOps, bucketOps.needsTwavg
-              );
-              return { dynamicId: ids[index], buckets };
-            }
+            if (bucketUnit) return { dynamicId: ids[index], buckets: result.value };
+            const datas = result.value as { date: number; value: number }[];
 
             if (normalizedOps) {
               const aggregationResult = computeAggregation(datas, basicOps);
