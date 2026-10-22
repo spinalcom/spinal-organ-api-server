@@ -12390,7 +12390,7 @@
           {
             "in": "query",
             "name": "bucket",
-            "description": "Split the interval into sub-intervals of this size and aggregate inside each one. Accepts `hour`, `day`, `week` and `month`.",
+            "description": "Split the interval into sub-intervals of this size and aggregate inside each one. Accepts `15min`, `hour`, `day`, `week` and `month`. Buckets are half-open [start, end[ and follow the server's local time (days at local midnight, weeks on Monday, months on the 1st). Each bucket gives `count`, `noData`, the requested measures and, with `twavg`, the `duration` it covers.",
             "required": false,
             "schema": {
               "type": "string",
@@ -13103,7 +13103,7 @@
           {
             "in": "query",
             "name": "bucket",
-            "description": "Split the interval into sub-intervals of this size and aggregate inside each one. Accepts `hour`, `day`, `week` and `month`.",
+            "description": "Split the interval into sub-intervals of this size and aggregate inside each one. Accepts `15min`, `hour`, `day`, `week` and `month`. Buckets are half-open [start, end[ and follow the server's local time (days at local midnight, weeks on Monday, months on the 1st). Each bucket gives `count`, `noData`, the requested measures and, with `twavg`, the `duration` it covers.",
             "required": false,
             "schema": {
               "type": "string",
