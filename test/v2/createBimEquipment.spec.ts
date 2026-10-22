@@ -5,6 +5,8 @@ import { attributeService } from 'spinal-env-viewer-plugin-documentation-service
 import {
   EQUIPMENT_RELATION,
   REFERENCE_RELATION,
+  ROOM_RELATION,
+  ROOM_TYPE,
 } from 'spinal-env-viewer-context-geographic-service';
 import {
   createSpatialFixture,
@@ -164,6 +166,46 @@ describe('v2 equipment BIM reuse', () => {
       existing,
     ]);
     expect(fixture.loads).to.include(existing._server_id);
+  });
+  it('moves reused equipment from its other spatial parent', async () => {
+    const file = await bimFile();
+    const context = fixture.node('BIMContext', 'SpinalNode');
+    await file.addChild(context, 'hasBimContext', 'PtrLst');
+    const existing = fixture.node('Original', 'BIMObject');
+    existing.info.add_attr('dbid', 0);
+    await context.addChild(existing, EQUIPMENT_RELATION, 'PtrLst');
+    await fixture.room.addChildInContext(
+      existing,
+      EQUIPMENT_RELATION,
+      'PtrLst',
+      fixture.context
+    );
+    const destination = fixture.node('Other Room', ROOM_TYPE);
+    await fixture.floor.addChildInContext(
+      destination,
+      ROOM_RELATION,
+      'PtrLst',
+      fixture.context
+    );
+
+    const response = await request(fixture.app)
+      .post('/api/v2/equipment')
+      .send({
+        ...payload(file.getId().get()),
+        parentDynamicId: destination._server_id,
+      })
+      .expect(201);
+
+    expect(response.body.data.dynamicId).to.equal(existing._server_id);
+    expect(await fixture.room.getChildren(EQUIPMENT_RELATION)).to.deep.equal([
+      fixture.equipment,
+    ]);
+    expect(await destination.getChildren(EQUIPMENT_RELATION)).to.deep.equal([
+      existing,
+    ]);
+    expect(await context.getChildren(EQUIPMENT_RELATION)).to.deep.equal([
+      existing,
+    ]);
   });
   it('creates a missing dbid under an existing BIMContext', async () => {
     const file = await bimFile();

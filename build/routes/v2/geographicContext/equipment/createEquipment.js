@@ -73,6 +73,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       ### BIM object reuse
      *
      *       When both `info.dbid` and `info.bimFileId` are supplied, reuse an existing equipment in that BIM file with the matching dbid. If none matches, create a new equipment. A missing BIM file returns HTTP 400.
+     *       When reusing an equipment, spatial parent links to other parents in this geographic context are removed before attaching it to the selected parent. A link to the selected parent and the BIMContext link are preserved.
      *
      *       ### Response
      *
@@ -201,6 +202,33 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                     info: { set: info },
                     ...(attributes ? { attributes: { set: attributes } } : {}),
                 }), spinalAPIMiddleware, profileId);
+                if (info.dbid !== undefined && info.bimFileId !== undefined) {
+                    const spatialRelations = [
+                        spinal_env_viewer_context_geographic_service_1.EQUIPMENT_RELATION,
+                        spinal_env_viewer_context_geographic_service_1.REFERENCE_RELATION,
+                        spinal_env_viewer_context_geographic_service_1.REFERENCE_ROOM_RELATION,
+                    ];
+                    const spatialParents = await newEquipment.getParents(spatialRelations);
+                    for (const spatialParent of spatialParents) {
+                        if (spatialParent.getId().get() === parentNode.getId().get() ||
+                            !spatialParent.belongsToContext(geographicContext))
+                            continue;
+                        for (const relationName of spatialRelations) {
+                            for (const relationType of [
+                                spinal_model_graph_1.SPINAL_RELATION_PTR_LST_TYPE,
+                                spinal_model_graph_1.SPINAL_RELATION_LST_PTR_TYPE,
+                            ]) {
+                                const relation = spatialParent.children
+                                    .getElement(relationType)
+                                    ?.getElement(relationName);
+                                if (relation
+                                    ?.getChildrenIds()
+                                    .includes(newEquipment.getId().get()))
+                                    await spatialParent.removeChild(newEquipment, relationName, relationType);
+                            }
+                        }
+                    }
+                }
             }
             else {
                 newEquipment = await (0, prepareNodeCreation_1.prepareNodeCreation)(info.name, spinal_env_viewer_context_geographic_service_1.EQUIPMENT_TYPE, { ...info, virtual: info.virtual ?? false }, undefined, attributes, undefined, spinalAPIMiddleware, profileId);
