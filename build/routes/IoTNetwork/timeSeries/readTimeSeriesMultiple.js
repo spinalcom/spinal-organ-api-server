@@ -22,10 +22,15 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const requestUtilities_1 = require("../../../utilities/requestUtilities");
 const dateFunctions_1 = require("../../../utilities/dateFunctions");
 const getTimeSeriesData_1 = require("../../../utilities/getTimeSeriesData");
+const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
+const spinalTimeSeries_1 = __importDefault(require("../spinalTimeSeries"));
 const aggregationUtils_1 = require("../../../utilities/aggregationUtils");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
@@ -87,7 +92,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *         name: bucket
      *         description: >-
      *           Split the interval into sub-intervals of this size and aggregate inside each one.
-     *           Accepts `hour`, `day`, `week` and `month`.
+     *           Accepts `15min`, `hour`, `day`, `week` and `month`. Buckets are half-open [start, end[ and follow
+     *           the server's local time (days at local midnight, weeks on Monday, months on the 1st). Each bucket
+     *           gives `count`, `noData`, the requested measures and, with `twavg`, the `duration` it covers.
      *         required: false
      *         schema:
      *           type: string
@@ -144,24 +151,35 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             };
             const includeLastBeforeStart = req.query.valueAtBegin == "true" ? true : false;
             const { normalizedOps, basicOps, needsTwavg } = (0, aggregationUtils_1.parseAggregationParam)(req.query.aggregation);
-            const bucketMs = (0, aggregationUtils_1.parseBucketParam)(req.query.bucket);
-            if (req.query.aggregation && !normalizedOps && !bucketMs) {
+            const bucketUnit = (0, aggregationUtils_1.parseBucketParam)(req.query.bucket);
+            if (req.query.aggregation && !normalizedOps && !bucketUnit) {
                 return res.status(400).send(`Invalid aggregation parameter. Supported values: ${aggregationUtils_1.VALID_OPS.join(', ')}, all`);
             }
             const intervalStart = (0, aggregationUtils_1.toTimestamp)(timeSeriesIntervalDate.start);
             const intervalEnd = (0, aggregationUtils_1.toTimestamp)(timeSeriesIntervalDate.end);
-            const promises = ids.map((id) => (0, getTimeSeriesData_1.getTimeSeriesData)(spinalAPIMiddleware, profileId, id, timeSeriesIntervalDate, includeLastBeforeStart));
+            const bucketOps = normalizedOps
+                ? { basicOps, needsTwavg }
+                : { basicOps: [], needsTwavg: true };
+            // With a bucket, each endpoint is read and folded on the fly: the interval is never loaded in memory.
+            const readBuckets = async (id) => {
+                const node = await spinalAPIMiddleware.load(id, profileId);
+                // @ts-ignore
+                spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
+                const timeSeries = await (0, spinalTimeSeries_1.default)().getTimeSeries(node.getId().get());
+                if (!timeSeries)
+                    throw new Error('endpoint have no timeseries');
+                const readPoints = () => (0, spinalTimeSeries_1.default)().getFromIntervalTimeGen(timeSeries, timeSeriesIntervalDate.start, timeSeriesIntervalDate.end, includeLastBeforeStart);
+                return (0, aggregationUtils_1.aggregateBucketsFromReader)(readPoints, intervalStart, intervalEnd, bucketUnit, bucketOps.basicOps, bucketOps.needsTwavg);
+            };
+            const promises = ids.map((id) => bucketUnit
+                ? readBuckets(id)
+                : (0, getTimeSeriesData_1.getTimeSeriesData)(spinalAPIMiddleware, profileId, id, timeSeriesIntervalDate, includeLastBeforeStart));
             const settledResults = await Promise.allSettled(promises);
             const finalResults = settledResults.map((result, index) => {
                 if (result.status === 'fulfilled') {
+                    if (bucketUnit)
+                        return { dynamicId: ids[index], buckets: result.value };
                     const datas = result.value;
-                    if (bucketMs) {
-                        const bucketOps = normalizedOps
-                            ? { basicOps, needsTwavg }
-                            : { basicOps: [], needsTwavg: true };
-                        const buckets = (0, aggregationUtils_1.computeBucketedAggregation)(datas, intervalStart, intervalEnd, bucketMs, bucketOps.basicOps, bucketOps.needsTwavg);
-                        return { dynamicId: ids[index], buckets };
-                    }
                     if (normalizedOps) {
                         const aggregationResult = (0, aggregationUtils_1.computeAggregation)(datas, basicOps);
                         if (needsTwavg) {
