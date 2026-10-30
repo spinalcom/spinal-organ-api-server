@@ -451,6 +451,8 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./v2/geographicContext/room/createRoom')(logger, app, spinalAPIMiddleware);
     require('./v2/geographicContext/room/getRoom')(logger, app, spinalAPIMiddleware);
     require('./v2/geographicContext/room/getRoomById')(logger, app, spinalAPIMiddleware);
+    require('./v2/geographicContext/equipment/getEquipment')(logger, app, spinalAPIMiddleware);
+    require('./v2/geographicContext/equipment/getEquipmentById')(logger, app, spinalAPIMiddleware);
     require('./v2/geographicContext/equipment/createEquipment')(logger, app, spinalAPIMiddleware);
 }
 exports.default = routes;

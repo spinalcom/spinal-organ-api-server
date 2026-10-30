@@ -1548,6 +1548,16 @@ function routes(
     app,
     spinalAPIMiddleware
   );
+  require('./v2/geographicContext/equipment/getEquipment')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/geographicContext/equipment/getEquipmentById')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./v2/geographicContext/equipment/createEquipment')(
     logger,
     app,
