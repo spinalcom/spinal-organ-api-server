@@ -37,8 +37,8 @@ const spinal_agent_monitoring_1 = require("spinal-agent-monitoring");
 // since node 15 a promise rejected without a handler exits the process : one
 // forgotten catch in a route would restart the organ, which then loads
 // everything back from the hub
-process.on('unhandledRejection', (reason) => {
-    console.error('[api-server] unhandled promise rejection, the organ keeps running:', reason);
+process.on("unhandledRejection", (reason) => {
+    console.error("[api-server] unhandled promise rejection, the organ keeps running:", reason);
 });
 function Requests(logger) {
     async function initSpinalHub() {
@@ -81,7 +81,7 @@ function Requests(logger) {
             });
             const io = await spinalAPIMiddleware_1.default.getInstance().runSocketServer(server);
             if (process.env.ENABLE_MONITORING_API == "1" || process.env.ENABLE_MONITORING_API == "true") {
-                return (0, spinal_agent_monitoring_1.registerMonitoringAgent)(api, io, spinalAPIMiddleware.conn, process.env.MONITORING_AGENT_CONFIG_PATH);
+                return (0, spinal_agent_monitoring_1.registerMonitoringAgent)(api, io, spinalAPIMiddleware, process.env.MONITORING_AGENT_CONFIG_PATH);
             }
             return { app: api, io };
         },

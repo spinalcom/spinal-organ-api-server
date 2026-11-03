@@ -1,10 +1,11 @@
-import { Server } from 'http';
-import { FileSystem, type Model, type Ptr, File, type Pbr } from 'spinal-core-connectorjs';
-import type { SpinalGraph } from 'spinal-model-graph';
-import type { IConfig } from './interfaces';
-import type { ISpinalAPIMiddleware } from './interfaces/ISpinalAPIMiddleware';
-import { SpinalIOMiddleware } from './spinalIOMiddleware';
-import { Server as SocketServer } from 'socket.io';
+import { Server } from "http";
+import { FileSystem, type Model, type Ptr, File, type Pbr } from "spinal-core-connectorjs";
+import type { SpinalGraph } from "spinal-model-graph";
+import type { IConfig } from "./interfaces";
+import type { ISpinalAPIMiddleware } from "./interfaces/ISpinalAPIMiddleware";
+import { SpinalIOMiddleware } from "./spinalIOMiddleware";
+import { Server as SocketServer } from "socket.io";
+import { NextFunction, Request, Response } from "express";
 declare class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
     static instance: SpinalAPIMiddleware | null;
     loadedPtr: Map<number, Model>;
@@ -13,6 +14,7 @@ declare class SpinalAPIMiddleware implements ISpinalAPIMiddleware {
     config: IConfig;
     static getInstance(): SpinalAPIMiddleware;
     constructor();
+    checkMonitoringToken(req: Request, res: Response, next: NextFunction): void;
     private geneGraph;
     getGraph(): Promise<SpinalGraph>;
     getProfileGraph(): Promise<SpinalGraph>;

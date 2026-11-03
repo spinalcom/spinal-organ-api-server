@@ -85,7 +85,7 @@ async function runServerRest(server, app, spinalAPIMiddleware, spinalIOMiddlewar
     initApiServer(app, spinalAPIMiddleware, log_body);
     const io = await (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
     if (process.env.ENABLE_MONITORING_API == "1" || process.env.ENABLE_MONITORING_API == "true") {
-        await (0, spinal_agent_monitoring_1.registerMonitoringAgent)(app, io, spinalAPIMiddleware.conn, process.env.MONITORING_AGENT_CONFIG_PATH);
+        await (0, spinal_agent_monitoring_1.registerMonitoringAgent)(app, io, spinalAPIMiddleware, process.env.MONITORING_AGENT_CONFIG_PATH);
     }
     return { app, io };
 }

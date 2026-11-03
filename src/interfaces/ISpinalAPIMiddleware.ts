@@ -22,21 +22,16 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import type { SpinalGraph } from 'spinal-model-graph';
-import type { IConfig } from './IConfig';
-
+import type { SpinalGraph } from "spinal-model-graph";
+import type { IConfig } from "./IConfig";
+import { RequestHandler } from "express";
 export interface ISpinalAPIMiddleware {
-  config: IConfig;
-  conn: spinal.FileSystem;
-  loadedPtr: Map<number, any>;
-  getGraph(): Promise<SpinalGraph>;
-  getProfileGraph(profileId?: string): Promise<SpinalGraph>;
-  load<T extends spinal.Model>(
-    server_id: number,
-    profileId?: string
-  ): Promise<T>;
-  loadPtr<T extends spinal.Model>(
-    ptr: spinal.File<T> | spinal.Ptr<T> | spinal.Pbr<T>,
-    profileId?: string
-  ): Promise<T>;
+	config: IConfig;
+	conn: spinal.FileSystem;
+	loadedPtr: Map<number, any>;
+	getGraph(): Promise<SpinalGraph>;
+	getProfileGraph(profileId?: string): Promise<SpinalGraph>;
+	load<T extends spinal.Model>(server_id: number, profileId?: string): Promise<T>;
+	loadPtr<T extends spinal.Model>(ptr: spinal.File<T> | spinal.Ptr<T> | spinal.Pbr<T>, profileId?: string): Promise<T>;
+	checkMonitoringToken: RequestHandler;
 }
