@@ -37,8 +37,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *     summary: Get everything known about a floor
      *     description: >-
      *       The full read of a floor in one call : its identity, its attribute categories with their
-     *       attributes, its control points, its BMS endpoints with their current values, and `tickets`,
-     *       the tickets declared directly on the floor node.
+     *       attributes, its control points and those of the BMS devices directly under it, its BMS
+     *       endpoints with their current values, and `tickets`, the tickets declared directly on the
+     *       floor node.
      *
      *
      *       Only the tickets of the floor node itself are returned; those declared on its rooms or their

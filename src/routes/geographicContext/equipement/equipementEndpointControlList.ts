@@ -24,11 +24,9 @@
 
 // import spinalAPIMiddleware from '../../../spinalAPIMiddleware';
 import * as express from 'express';
-import { EndPointRoom } from '../interfacesGeoContext'
-import { SpinalContext, SpinalGraphService } from 'spinal-env-viewer-graph-service';
-import { spinalControlPointService } from 'spinal-env-viewer-plugin-control-endpoint-service'
-import { SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
+import type { SpinalNode } from 'spinal-model-graph';
 import { getProfileId } from '../../../utilities/requestUtilities';
+import { getNodeControlEndpointsInfo } from '../../../utilities/getControlEndpointsInfo';
 import { ISpinalAPIMiddleware } from '../../../interfaces';
 
 module.exports = function (logger, app: express.Express, spinalAPIMiddleware: ISpinalAPIMiddleware) {
@@ -41,8 +39,12 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *         - readOnly
    *     summary: List the control endpoints of an equipment
    *     description: >-
-   *       Returns the control points of a piece of equipment, grouped by control-point profile. The node
-   *       must be of type `BIMObject`.
+   *       Returns the control points of a piece of equipment and of the BMS devices directly under it
+   *       (`hasBmsDevice`), grouped by control-point profile. The node must be of type `BIMObject`.
+   *
+   *
+   *       Same response as the generic `/api/v1/node/{id}/control_endpoint_list`, which also accepts
+   *       `includeDetails`.
    *     tags:
    *       - Geographic Context
    *     parameters:
@@ -61,7 +63,20 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *             schema:
    *               type: array
    *               items:
-   *                $ref: '#/components/schemas/EndPointRoom'
+   *                 type: object
+   *                 description: One control-point profile of the equipment or of one of its BMS devices.
+   *                 properties:
+   *                   dynamicId:
+   *                     type: integer
+   *                     format: int64
+   *                     description: Dynamic ID of the equipment (not the profile itself), also for the profiles read from one of its BMS devices.
+   *                   profileName:
+   *                     type: string
+   *                     description: Name of the control-point profile.
+   *                   endpoints:
+   *                     type: array
+   *                     items:
+   *                       $ref: '#/components/schemas/EndPointNode'
    *       400:
    *         description: The node is not a `BIMObject`, or its control points could not be read ("list of endpoints is not loaded").
    *       401:
@@ -72,35 +87,11 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
 
     try {
       const profileId = getProfileId(req);
-      const equipement = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
-      // @ts-ignore
-      SpinalGraphService._addNode(equipement);
+      const equipement: SpinalNode = await spinalAPIMiddleware.load(parseInt(req.params.id, 10), profileId);
       if(!(equipement.getType().get() === "BIMObject")){
-        res.status(400).send("node is not of type BIMObject");
+        return res.status(400).send("node is not of type BIMObject");
       }
-      const profils = await SpinalGraphService.getChildren(equipement.getId().get(), [spinalControlPointService.ROOM_TO_CONTROL_GROUP])
-      const promises = profils.map(async (profile) => {
-      const result = await SpinalGraphService.getChildren(profile.id.get(), [SpinalBmsEndpoint.relationName])
-      const endpoints = await result.map(async (endpoint) => {
-        const realNode = SpinalGraphService.getRealNode(endpoint.id.get())
-        const element = await endpoint.element.load()
-        const currentValue = element.currentValue.get();
-        const unit = element.unit?.get();
-        const saveTimeSeries = element.saveTimeSeries?.get();
-        return {
-          dynamicId: realNode._server_id,
-          staticId: endpoint.id.get(),
-          name: element.name.get(),
-          type: element.type.get(),
-          currentValue: currentValue,
-          unit: unit ,
-          saveTimeSeries: saveTimeSeries
-        };
-      })
-      return { profileName: profile.name.get(), endpoints: await Promise.all(endpoints) }
-    })
-
-      const allNodes = await Promise.all(promises)
+      const allNodes = await getNodeControlEndpointsInfo(equipement)
       res.send(allNodes);
     } catch (error) {
       console.error(error);

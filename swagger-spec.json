@@ -4842,7 +4842,7 @@
           }
         ],
         "summary": "List the control endpoints of a node, grouped by profile",
-        "description": "Returns the control points attached to a node. Control points are grouped into profiles (`hasControlPoints`), so the response is one entry **per profile**, each holding its own `endpoints` array - it is not a flat list of endpoints like `/api/v1/node/{id}/endpoint_list`.\n\nUnlike the BMS endpoint route, this one looks at the direct control-point children of the node only; it does not walk the whole subtree.",
+        "description": "Returns the control points attached to a node. Control points are grouped into profiles (`hasControlPoints`), so the response is one entry **per profile**, each holding its own `endpoints` array - it is not a flat list of endpoints like `/api/v1/node/{id}/endpoint_list`.\n\nUnlike the BMS endpoint route, this one does not walk the whole subtree: it reads the profiles of the node itself, then those of the BMS devices directly under it (`hasBmsDevice`).",
         "tags": [
           "Nodes"
         ],
@@ -4882,7 +4882,7 @@
                       "dynamicId": {
                         "type": "integer",
                         "format": "int64",
-                        "description": "Dynamic ID of the node the profile was read from (the node passed in the request, not the profile itself)."
+                        "description": "Dynamic ID of the node passed in the request (not the profile itself), also for the profiles read from one of its BMS devices."
                       },
                       "profileName": {
                         "type": "string",
@@ -8057,7 +8057,7 @@
           }
         ],
         "summary": "Get everything known about a building",
-        "description": "The full read of a building in one call : its identity, its attribute categories with their attributes, its control points, its BMS endpoints with their current values, and `tickets`, the tickets declared directly on the building node.\n\nOnly the tickets of the building node itself are returned; those declared on its floors, rooms or equipment are not collected. The node must be of type `geographicBuilding`.",
+        "description": "The full read of a building in one call : its identity, its attribute categories with their attributes, its control points and those of the BMS devices directly under it, its BMS endpoints with their current values, and `tickets`, the tickets declared directly on the building node.\n\nOnly the tickets of the building node itself are returned; those declared on its floors, rooms or equipment are not collected. The node must be of type `geographicBuilding`.",
         "tags": [
           "Geographic Context"
         ],
@@ -8152,7 +8152,7 @@
           }
         ],
         "summary": "List the control endpoints of an equipment",
-        "description": "Returns the control points of a piece of equipment, grouped by control-point profile. The node must be of type `BIMObject`.",
+        "description": "Returns the control points of a piece of equipment and of the BMS devices directly under it (`hasBmsDevice`), grouped by control-point profile. The node must be of type `BIMObject`.\n\nSame response as the generic `/api/v1/node/{id}/control_endpoint_list`, which also accepts `includeDetails`.",
         "tags": [
           "Geographic Context"
         ],
@@ -8176,7 +8176,25 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/EndPointRoom"
+                    "type": "object",
+                    "description": "One control-point profile of the equipment or of one of its BMS devices.",
+                    "properties": {
+                      "dynamicId": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Dynamic ID of the equipment (not the profile itself), also for the profiles read from one of its BMS devices."
+                      },
+                      "profileName": {
+                        "type": "string",
+                        "description": "Name of the control-point profile."
+                      },
+                      "endpoints": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/EndPointNode"
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -8452,7 +8470,7 @@
           }
         ],
         "summary": "Get everything known about an equipment",
-        "description": "The full read of a piece of equipment in one call : its identity and BIM identifiers, its attribute categories with their attributes, its control points, its BMS endpoints with their current values, and the groups it belongs to.\n\nThe node must be of type `BIMObject`. This is the equipment counterpart of `/api/v1/room/{id}/read_static_details`, and the heaviest equipment route.",
+        "description": "The full read of a piece of equipment in one call : its identity and BIM identifiers, its attribute categories with their attributes, its control points and those of the BMS devices directly under it, its BMS endpoints with their current values, and the groups it belongs to.\n\nThe node must be of type `BIMObject`. This is the equipment counterpart of `/api/v1/room/{id}/read_static_details`, and the heaviest equipment route.",
         "tags": [
           "Geographic Context"
         ],
@@ -8877,7 +8895,7 @@
           }
         ],
         "summary": "Get everything known about a floor",
-        "description": "The full read of a floor in one call : its identity, its attribute categories with their attributes, its control points, its BMS endpoints with their current values, and `tickets`, the tickets declared directly on the floor node.\n\nOnly the tickets of the floor node itself are returned; those declared on its rooms or their equipment are not collected. The node must be of type `geographicFloor`.",
+        "description": "The full read of a floor in one call : its identity, its attribute categories with their attributes, its control points and those of the BMS devices directly under it, its BMS endpoints with their current values, and `tickets`, the tickets declared directly on the floor node.\n\nOnly the tickets of the floor node itself are returned; those declared on its rooms or their equipment are not collected. The node must be of type `geographicFloor`.",
         "tags": [
           "Geographic Context"
         ],
@@ -9432,7 +9450,7 @@
           }
         ],
         "summary": "Get everything known about a room",
-        "description": "The full read of a room in one call : its identity and display fields, `attributsList` (its attribute categories with their attributes), `controlEndpoint` (its control points), `endpoints` (its BMS endpoints with their current values), `bimObjects` (the BIM objects it holds) and `groupParents` (the floor and the groups it belongs to, the room context aside).\n\nThis is the heaviest room route - it walks all of the above in one pass. Prefer the dedicated routes when you only need one of these lists.\n\nThe node must be of type `geographicRoom`; anything else fails with a 500.",
+        "description": "The full read of a room in one call : its identity and display fields, `attributsList` (its attribute categories with their attributes), `controlEndpoint` (its control points and those of the BMS devices directly under it), `endpoints` (its BMS endpoints with their current values), `bimObjects` (the BIM objects it holds) and `groupParents` (the floor and the groups it belongs to, the room context aside).\n\nThis is the heaviest room route - it walks all of the above in one pass. Prefer the dedicated routes when you only need one of these lists.\n\nThe node must be of type `geographicRoom`; anything else fails with a 500.",
         "tags": [
           "Geographic Context"
         ],
@@ -9547,7 +9565,7 @@
           }
         ],
         "summary": "List the control endpoints of a room, grouped by profile",
-        "description": "Returns the control points of a room, grouped by control-point profile : one entry per profile, each holding its own endpoints with their current values. The node must be of type `geographicRoom`.\n\nSame grouping as the generic `/api/v1/node/{id}/control_endpoint_list`, which also accepts `includeDetails`.",
+        "description": "Returns the control points of a room and of the BMS devices directly under it (`hasBmsDevice`), grouped by control-point profile : one entry per profile, each holding its own endpoints with their current values. The node must be of type `geographicRoom`.\n\nSame response as the generic `/api/v1/node/{id}/control_endpoint_list`, which also accepts `includeDetails`.",
         "tags": [
           "Geographic Context"
         ],
@@ -9571,7 +9589,25 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/EndPointRoom"
+                    "type": "object",
+                    "description": "One control-point profile of the room or of one of its BMS devices.",
+                    "properties": {
+                      "dynamicId": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Dynamic ID of the room (not the profile itself), also for the profiles read from one of its BMS devices."
+                      },
+                      "profileName": {
+                        "type": "string",
+                        "description": "Name of the control-point profile."
+                      },
+                      "endpoints": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/EndPointNode"
+                        }
+                      }
+                    }
                   }
                 }
               }

@@ -5,7 +5,7 @@ import {
 } from 'spinal-env-viewer-graph-service';
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 import { spinalControlPointService } from 'spinal-env-viewer-plugin-control-endpoint-service';
-import { SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
+import { SpinalBmsDevice, SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
 import { getEndpointsInfo, getEndpointsInfoFormat2 } from './getEndpointInfo';
 
 interface IEquipmentInfo {
@@ -351,9 +351,15 @@ async function getEndpoints(node: SpinalNode<any>): Promise<SpinalNode<any>[]> {
 async function getNodeControlEndpoints(
   node: SpinalNode<any>
 ): Promise<INodeControlEndpoint[]> {
-  const profils = await node.getChildren([
-    spinalControlPointService.ROOM_TO_CONTROL_GROUP,
-  ]);
+  const devices = await node.getChildren([SpinalBmsDevice.relationName]);
+  // profiles of the node itself, then those of the BMS devices directly under it
+  const profils = (
+    await Promise.all(
+      [node, ...devices].map((n) =>
+        n.getChildren([spinalControlPointService.ROOM_TO_CONTROL_GROUP])
+      )
+    )
+  ).flat();
   const promises = profils.map(async (profile) => {
     const result = await profile.getChildren([SpinalBmsEndpoint.relationName]);
     const endpoints = await result.map(async (endpoint) => {

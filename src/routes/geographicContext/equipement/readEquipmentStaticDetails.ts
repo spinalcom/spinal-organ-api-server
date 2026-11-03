@@ -42,8 +42,8 @@ module.exports = function (
    *     summary: Get everything known about an equipment
    *     description: >-
    *       The full read of a piece of equipment in one call : its identity and BIM identifiers, its
-   *       attribute categories with their attributes, its control points, its BMS endpoints with their
-   *       current values, and the groups it belongs to.
+   *       attribute categories with their attributes, its control points and those of the BMS devices
+   *       directly under it, its BMS endpoints with their current values, and the groups it belongs to.
    *
    *
    *       The node must be of type `BIMObject`. This is the equipment counterpart of

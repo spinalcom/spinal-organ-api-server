@@ -1,5 +1,9 @@
 # CHANGELOG
 
+# 03-11-2026 -> v1.1.23
+
+- Compacted code for control_endpoint routes and now fetch the control endpoints linked to a potential bmsDevice
+
 # 26-10-2026 -> v1.1.22
 
 - Added API v2 endpoints for generic node creation, reading, patching, moving, and parent/child relationship management, including detaching children by relation name.

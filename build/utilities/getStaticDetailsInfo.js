@@ -241,9 +241,9 @@ async function getEndpoints(node) {
 //   return Promise.all(endpointsInfo);
 // }
 async function getNodeControlEndpoints(node) {
-    const profils = await node.getChildren([
-        spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP,
-    ]);
+    const devices = await node.getChildren([spinal_model_bmsnetwork_1.SpinalBmsDevice.relationName]);
+    // profiles of the node itself, then those of the BMS devices directly under it
+    const profils = (await Promise.all([node, ...devices].map((n) => n.getChildren([spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP])))).flat();
     const promises = profils.map(async (profile) => {
         const result = await profile.getChildren([spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName]);
         const endpoints = await result.map(async (endpoint) => {

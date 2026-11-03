@@ -41,8 +41,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *     summary: Get everything known about a building
    *     description: >-
    *       The full read of a building in one call : its identity, its attribute categories with their
-   *       attributes, its control points, its BMS endpoints with their current values, and `tickets`,
-   *       the tickets declared directly on the building node.
+   *       attributes, its control points and those of the BMS devices directly under it, its BMS
+   *       endpoints with their current values, and `tickets`, the tickets declared directly on the
+   *       building node.
    *
    *
    *       Only the tickets of the building node itself are returned; those declared on its floors,

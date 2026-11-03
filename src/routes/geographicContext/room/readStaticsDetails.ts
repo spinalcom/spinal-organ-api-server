@@ -40,8 +40,8 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *     summary: Get everything known about a room
    *     description: >-
    *       The full read of a room in one call : its identity and display fields, `attributsList` (its
-   *       attribute categories with their attributes), `controlEndpoint` (its control points),
-   *       `endpoints` (its BMS endpoints with their current values), `bimObjects` (the BIM objects it
+   *       attribute categories with their attributes), `controlEndpoint` (its control points and
+   *       those of the BMS devices directly under it), `endpoints` (its BMS endpoints with their current values), `bimObjects` (the BIM objects it
    *       holds) and `groupParents` (the floor and the groups it belongs to, the room context aside).
    *
    *
