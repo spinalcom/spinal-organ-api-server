@@ -20,7 +20,9 @@ import {
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 import { SpinalAttribute } from 'spinal-models-documentation';
 
+import bodyParser from 'body-parser';
 const registerGetRoom = require('../../src/routes/v2/geographicContext/room/getRoom');
+const registerSearchRoom = require('../../src/routes/v2/geographicContext/room/searchRoom');
 
 describe('GET /api/v2/room filters and pagination', () => {
   let app: express.Express;
@@ -65,11 +67,12 @@ describe('GET /api/v2/room filters and pagination', () => {
     await group.addChild(rooms[0], `groupHas${ROOM_TYPE}`, SPINAL_RELATION_PTR_LST_TYPE);
     app = express();
     app.set('query parser', 'extended');
+    app.use(bodyParser.json());
     app.use((req, _res, next) => {
       Object.assign(req, { profileId: 'test-profile' });
       next();
     });
-    registerGetRoom(null, app, {
+    const spinalAPIMiddleware = {
       async getProfileGraph(profileId: string) {
         expect(profileId).to.equal('test-profile');
         graphReads++;
@@ -81,7 +84,9 @@ describe('GET /api/v2/room filters and pagination', () => {
         if (id === 51) return group;
         throw new Error('Parent not found');
       },
-    });
+    };
+    registerGetRoom(null, app, spinalAPIMiddleware);
+    registerSearchRoom(null, app, spinalAPIMiddleware);
   });
 
   after(() => {
@@ -206,6 +211,73 @@ describe('GET /api/v2/room filters and pagination', () => {
     expect(response.body.data[0].attributes.Geometry.Surface.lastModification).to.be.a('number');
   });
 
+  it('lists rooms from several parents, de-duplicates IDs and counts total across parents', async () => {
+    const response = await request(app).get('/api/v2/room').query({
+      'parent-dynamic-id': '51,50,50',
+      filter: JSON.stringify({ 'attributes.Geometry.Surface': '25' }),
+      info: 'name',
+    }).expect(200);
+    expect(response.body.data).to.deep.equal([51, 50].map((parentDynamicId) => ({
+      dynamicId: 900000, parentDynamicId, info: { name: 'Room 0' },
+    })));
+    expect(response.body.total).to.equal(206);
+  });
+
+  it('rejects malformed parent lists before reading the graph', async () => {
+    for (const parentList of ['', '50,', '50,abc', '50,1.5', '0', '50,0']) {
+      await request(app).get('/api/v2/room').query({ 'parent-dynamic-id': parentList }).expect(400);
+    }
+    await request(app).get('/api/v2/room?parent-dynamic-id=50&parent-dynamic-id=51').expect(400);
+  });
+
+  it('searches rooms from several parents with a JSON body', async () => {
+    const response = await request(app).post('/api/v2/room/search').send({
+      parentDynamicIds: [51, 50],
+      filter: { 'attributes.Geometry.Surface': '25' },
+      info: 'name',
+    }).expect(200);
+    expect(response.body).not.to.have.property('data');
+    expect(response.body.groups).to.deep.equal([51, 50].map((parentDynamicId) => ({
+      parentDynamicId,
+      data: [{ dynamicId: 900000, parentDynamicId, info: { name: 'Room 0' } }],
+    })));
+    expect(response.body.total).to.equal(206);
+    expect(response.body.offset).to.equal(0);
+  });
+
+  it('returns a flat data array when groupByParent is false', async () => {
+    const response = await request(app).post('/api/v2/room/search').send({
+      parentDynamicIds: [51, 50],
+      groupByParent: false,
+      filter: { 'attributes.Geometry.Surface': '25' },
+      info: 'name',
+    }).expect(200);
+    expect(response.body).not.to.have.property('groups');
+    expect(response.body.data).to.deep.equal([51, 50].map((parentDynamicId) => ({
+      dynamicId: 900000, parentDynamicId, info: { name: 'Room 0' },
+    })));
+  });
+
+  it('search without parentDynamicIds traverses the building without total', async () => {
+    const response = await request(app).post('/api/v2/room/search').send({ info: 'name' }).expect(200);
+    expect(response.body.groups.flatMap((group: { data: unknown[] }) => group.data)).to.have.length(200);
+    expect(response.body).not.to.have.property('total');
+  });
+
+  it('rejects invalid search bodies', async () => {
+    const bodies: object[] = [
+      { parentDynamicIds: [] },
+      { parentDynamicIds: ['50'] },
+      { parentDynamicIds: [0] },
+      { parentDynamicIds: [50.5] },
+      { parentDynamicIds: Array.from({ length: 51 }, (_, index) => index + 1) },
+      { unknownField: true },
+    ];
+    for (const body of bodies) {
+      await request(app).post('/api/v2/room/search').send(body).expect(400);
+    }
+  });
+
   it('returns an empty page beyond the matching rooms', async () => {
     const response = await request(app).get('/api/v2/room').query({
       'filter[attributes.Geometry.Surface][exists]': 'true',
@@ -245,6 +317,23 @@ describe('GET /api/v2/room filters and pagination', () => {
       await request(app).get('/api/v2/room').query(query).expect(400);
     }
     expect(graphReads).to.equal(readsBefore);
+  });
+
+  it('groups search results by parent in input order and omits empty groups', async () => {
+    const response = await request(app)
+      .post('/api/v2/room/search')
+      .send({
+        parentDynamicIds: [51, 50],
+        groupByParent: true,
+        filter: { 'attributes.Geometry.Surface': { exists: true } },
+        info: 'name',
+      })
+      .expect(200);
+    expect(response.body).to.not.have.property('data');
+    expect(response.body.groups).to.deep.equal([
+      { parentDynamicId: 51, data: [{ dynamicId: 900000, parentDynamicId: 51, info: { name: 'Room 0' } }] },
+      { parentDynamicId: 50, data: [{ dynamicId: 900000, parentDynamicId: 50, info: { name: 'Room 0' } }] },
+    ]);
   });
 
   it('rejects fractional and unsafe offsets in the pagination helper', async () => {

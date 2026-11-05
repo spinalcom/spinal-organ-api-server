@@ -33,14 +33,11 @@ const parseAttributesQuery_1 = require("../../../../utilities/v2/requestParse/pa
 const getNodeData_1 = require("../../../../utilities/v2/node/getNodeData");
 const parseInfoQuery_1 = require("../../../../utilities/v2/requestParse/parseInfoQuery");
 const sendResponseError_1 = require("../../../../utilities/v2/errorHandler/sendResponseError");
-const spinal_env_viewer_context_geographic_service_1 = require("spinal-env-viewer-context-geographic-service");
-const getNodeChildrenFromParentDynId_1 = require("../../../../utilities/v2/node/getNodeChildrenFromParentDynId");
 const parseFilterQuery_1 = require("../../../../utilities/v2/requestParse/parseFilterQuery");
 const filterNodes_1 = require("../../../../utilities/v2/node/filterNodes");
 const getBuilding_1 = require("../../../../utilities/v2/geographicContext/getBuilding");
-const createErrorMsgItem_1 = require("../../../../utilities/v2/errorHandler/createErrorMsgItem");
-const EApiErrorType_1 = require("../../../../utilities/v2/errorHandler/EApiErrorType");
-const getEquipmentInContextIterable_1 = require("../../../../utilities/v2/geographicContext/getEquipmentInContextIterable");
+const findEquipmentNodes_1 = require("../../../../utilities/v2/geographicContext/findEquipmentNodes");
+const parseParentDynIdList_1 = require("../../../../utilities/v2/requestParse/parseParentDynIdList");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -57,6 +54,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       > Running this endpoint without it is **not recommended**, especially for large buildings,
      *       > because it may traverse many floors, rooms and equipment nodes. Filters and the
      *       > 200-item page limit do not guarantee a small traversal.
+     *       >
+     *       > `parent-dynamic-id` accepts a comma-separated list. For a JSON body, use `POST /api/v2/equipment/search`.
      *
      *       ### Scope
      *
@@ -119,7 +118,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             info: zod_1.z.coerce.string().optional(),
             attributes: zod_1.z.coerce.string().optional(),
             'add-attributes-modification-date': zod_1.z.stringbool().optional(),
-            'parent-dynamic-id': zod_1.z.coerce.number().min(1).optional(),
+            'parent-dynamic-id': parseParentDynIdList_1.parentDynamicIdsQuerySchema.optional(),
             bimObjectType: zod_1.z
                 .enum(['bimobject', 'referenceRoom', 'referenceFloor'])
                 .optional()
@@ -136,53 +135,18 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const parsedAttrQuery = (0, parseAttributesQuery_1.parseAttributesQuery)(attributes);
             const filters = (0, parseFilterQuery_1.parseFilterQuery)(req.query);
             const { offset } = req.query;
-            const { 'parent-dynamic-id': parentDynamicId } = req.query;
+            const { 'parent-dynamic-id': parentDynamicIds } = req.query;
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const { geographicContext, building } = await (0, getBuilding_1.getBuildingNode)(spinalAPIMiddleware, profileId, false);
-            let foundNodes;
             const { bimObjectType } = req.query;
-            if (parentDynamicId) {
-                let relationObj;
-                if (bimObjectType === 'bimobject') {
-                    relationObj = {
-                        relationName: spinal_env_viewer_context_geographic_service_1.EQUIPMENT_RELATION,
-                        parentType: spinal_env_viewer_context_geographic_service_1.ROOM_TYPE,
-                        context: geographicContext,
-                    };
-                }
-                else if (bimObjectType === 'referenceRoom') {
-                    relationObj = {
-                        relationName: spinal_env_viewer_context_geographic_service_1.REFERENCE_ROOM_RELATION,
-                        parentType: spinal_env_viewer_context_geographic_service_1.ROOM_TYPE,
-                    };
-                }
-                else if (bimObjectType === 'referenceFloor') {
-                    relationObj = {
-                        relationName: spinal_env_viewer_context_geographic_service_1.REFERENCE_RELATION,
-                        parentType: spinal_env_viewer_context_geographic_service_1.FLOOR_TYPE,
-                        context: geographicContext,
-                    };
-                }
-                if (!relationObj)
-                    throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'No valid relation found for the given bimObjectType');
-                const nodes = await (0, getNodeChildrenFromParentDynId_1.getNodeChildrenFromParentDynId)(spinalAPIMiddleware, parentDynamicId, profileId, spinal_env_viewer_context_geographic_service_1.EQUIPMENT_TYPE, [
-                    relationObj,
-                    {
-                        relationName: `groupHas${spinal_env_viewer_context_geographic_service_1.EQUIPMENT_TYPE}`,
-                        parentType: `${spinal_env_viewer_context_geographic_service_1.EQUIPMENT_TYPE}Group`,
-                    },
-                ]);
-                foundNodes = nodes.map((node) => ({
-                    node,
-                    parentId: parentDynamicId,
-                }));
-            }
-            else {
-                if (!building) {
-                    throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'No building found in database');
-                }
-                foundNodes = (0, getEquipmentInContextIterable_1.getEquipmentInContextIterable)(geographicContext, building, bimObjectType);
-            }
+            const foundNodes = await (0, findEquipmentNodes_1.findEquipmentNodes)({
+                spinalAPIMiddleware,
+                profileId,
+                geographicContext,
+                building,
+                bimObjectType,
+                parentDynamicIds,
+            });
             const page = await (0, filterNodes_1.filterNodes)(foundNodes, filters, offset);
             const equipmentData = await Promise.all(page.map(({ node, parentId }) => (0, getNodeData_1.getNodeData)(node, parsedInfoQuery, parsedAttrQuery, addAttributesModificationDate, parentId)));
             return res

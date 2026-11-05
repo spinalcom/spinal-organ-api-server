@@ -31,25 +31,11 @@ import { parseAttributesQuery } from '../../../../utilities/v2/requestParse/pars
 import { getNodeData } from '../../../../utilities/v2/node/getNodeData';
 import { parseInfoQuery } from '../../../../utilities/v2/requestParse/parseInfoQuery';
 import { sendResponseError } from '../../../../utilities/v2/errorHandler/sendResponseError';
-import {
-  ROOM_TYPE,
-  FLOOR_TYPE,
-  EQUIPMENT_TYPE,
-  EQUIPMENT_RELATION,
-  REFERENCE_ROOM_RELATION,
-  REFERENCE_RELATION,
-} from 'spinal-env-viewer-context-geographic-service';
-import {
-  getNodeChildrenFromParentDynId,
-  type IParentChildRelation,
-} from '../../../../utilities/v2/node/getNodeChildrenFromParentDynId';
 import { parseFilterQuery } from '../../../../utilities/v2/requestParse/parseFilterQuery';
 import { filterNodes } from '../../../../utilities/v2/node/filterNodes';
-import type { SpinalNode } from 'spinal-model-graph';
 import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
-import { createErrorMsgItem } from '../../../../utilities/v2/errorHandler/createErrorMsgItem';
-import { EApiErrorType } from '../../../../utilities/v2/errorHandler/EApiErrorType';
-import { getEquipmentInContextIterable } from '../../../../utilities/v2/geographicContext/getEquipmentInContextIterable';
+import { findEquipmentNodes } from '../../../../utilities/v2/geographicContext/findEquipmentNodes';
+import { parentDynamicIdsQuerySchema } from '../../../../utilities/v2/requestParse/parseParentDynIdList';
 
 module.exports = function (
   logger: any,
@@ -71,6 +57,8 @@ module.exports = function (
    *       > Running this endpoint without it is **not recommended**, especially for large buildings,
    *       > because it may traverse many floors, rooms and equipment nodes. Filters and the
    *       > 200-item page limit do not guarantee a small traversal.
+   *       >
+   *       > `parent-dynamic-id` accepts a comma-separated list. For a JSON body, use `POST /api/v2/equipment/search`.
    *
    *       ### Scope
    *
@@ -135,7 +123,7 @@ module.exports = function (
         info: z.coerce.string().optional(),
         attributes: z.coerce.string().optional(),
         'add-attributes-modification-date': z.stringbool().optional(),
-        'parent-dynamic-id': z.coerce.number().min(1).optional(),
+        'parent-dynamic-id': parentDynamicIdsQuerySchema.optional(),
         bimObjectType: z
           .enum(['bimobject', 'referenceRoom', 'referenceFloor'])
           .optional()
@@ -156,73 +144,22 @@ module.exports = function (
         const parsedAttrQuery = parseAttributesQuery(attributes);
         const filters = parseFilterQuery(req.query);
         const { offset } = req.query;
-        const { 'parent-dynamic-id': parentDynamicId } = req.query;
+        const { 'parent-dynamic-id': parentDynamicIds } = req.query;
         const profileId = getProfileId(req);
         const { geographicContext, building } = await getBuildingNode(
           spinalAPIMiddleware,
           profileId,
           false
         );
-        let foundNodes:
-          | Iterable<{ node: SpinalNode; parentId: number }>
-          | AsyncIterable<{ node: SpinalNode; parentId: number }>;
         const { bimObjectType } = req.query;
-        if (parentDynamicId) {
-          let relationObj: IParentChildRelation | undefined;
-          if (bimObjectType === 'bimobject') {
-            relationObj = {
-              relationName: EQUIPMENT_RELATION,
-              parentType: ROOM_TYPE,
-              context: geographicContext,
-            };
-          } else if (bimObjectType === 'referenceRoom') {
-            relationObj = {
-              relationName: REFERENCE_ROOM_RELATION,
-              parentType: ROOM_TYPE,
-            };
-          } else if (bimObjectType === 'referenceFloor') {
-            relationObj = {
-              relationName: REFERENCE_RELATION,
-              parentType: FLOOR_TYPE,
-              context: geographicContext,
-            };
-          }
-          if (!relationObj)
-            throw createErrorMsgItem(
-              EApiErrorType.ERROR_DATABASE,
-              'No valid relation found for the given bimObjectType'
-            );
-
-          const nodes = await getNodeChildrenFromParentDynId(
-            spinalAPIMiddleware,
-            parentDynamicId,
-            profileId,
-            EQUIPMENT_TYPE,
-            [
-              relationObj,
-              {
-                relationName: `groupHas${EQUIPMENT_TYPE}`,
-                parentType: `${EQUIPMENT_TYPE}Group`,
-              },
-            ]
-          );
-          foundNodes = nodes.map((node) => ({
-            node,
-            parentId: parentDynamicId,
-          }));
-        } else {
-          if (!building) {
-            throw createErrorMsgItem(
-              EApiErrorType.ERROR_DATABASE,
-              'No building found in database'
-            );
-          }
-          foundNodes = getEquipmentInContextIterable(
-            geographicContext,
-            building,
-            bimObjectType
-          );
-        }
+        const foundNodes = await findEquipmentNodes({
+          spinalAPIMiddleware,
+          profileId,
+          geographicContext,
+          building,
+          bimObjectType,
+          parentDynamicIds,
+        });
 
         const page = await filterNodes(foundNodes, filters, offset);
         const equipmentData = await Promise.all(

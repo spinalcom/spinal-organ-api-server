@@ -1502,6 +1502,7 @@ function routes(
     app,
     spinalAPIMiddleware
   );
+  require('./v2/node/searchNodeChildren')(logger, app, spinalAPIMiddleware);
   require('./v2/node/getNodeParents')(logger, app, spinalAPIMiddleware);
   require('./v2/node/getNodeParentRelationships')(
     logger,
@@ -1543,12 +1544,22 @@ function routes(
     app,
     spinalAPIMiddleware
   );
+  require('./v2/geographicContext/room/searchRoom')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
   require('./v2/geographicContext/room/getRoomById')(
     logger,
     app,
     spinalAPIMiddleware
   );
   require('./v2/geographicContext/equipment/getEquipment')(
+    logger,
+    app,
+    spinalAPIMiddleware
+  );
+  require('./v2/geographicContext/equipment/searchEquipment')(
     logger,
     app,
     spinalAPIMiddleware

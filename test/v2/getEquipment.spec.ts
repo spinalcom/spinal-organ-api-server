@@ -24,7 +24,10 @@ import {
 import { NODE_TO_CATEGORY_RELATION } from 'spinal-env-viewer-plugin-documentation-service';
 import { SpinalAttribute } from 'spinal-models-documentation';
 
+import bodyParser from 'body-parser';
+
 const registerGetEquipment = require('../../src/routes/v2/geographicContext/equipment/getEquipment');
+const registerSearchEquipment = require('../../src/routes/v2/geographicContext/equipment/searchEquipment');
 
 describe('GET /api/v2/equipment filters and pagination', () => {
   let app: express.Express;
@@ -85,11 +88,12 @@ describe('GET /api/v2/equipment filters and pagination', () => {
 
     app = express();
     app.set('query parser', 'extended');
+    app.use(bodyParser.json());
     app.use((req, _res, next) => {
       Object.assign(req, { profileId: 'equipment-profile' });
       next();
     });
-    registerGetEquipment(null, app, {
+    const spinalAPIMiddleware = {
       async getProfileGraph(profileId: string) {
         expect(profileId).to.equal('equipment-profile');
         graphReads++;
@@ -101,7 +105,9 @@ describe('GET /api/v2/equipment filters and pagination', () => {
         if (!node) throw new Error('Parent not found');
         return node;
       },
-    });
+    };
+    registerGetEquipment(null, app, spinalAPIMiddleware);
+    registerSearchEquipment(null, app, spinalAPIMiddleware);
   });
 
   after(() => {
@@ -130,6 +136,75 @@ describe('GET /api/v2/equipment filters and pagination', () => {
     expect(response.body.data).to.deep.equal([910002, 910003].map((parentDynamicId) => ({
       dynamicId: 920000, parentDynamicId, info: { name: 'Equipment 0' },
     })));
+  });
+
+  it('lists equipment from several parents, de-duplicates IDs and keeps input order', async () => {
+    const response = await request(app).get('/api/v2/equipment').query({
+      'parent-dynamic-id': '910003,910002,910003',
+      filter: JSON.stringify({ 'attributes.Geometry.Surface': '25' }),
+      info: 'name',
+    }).expect(200);
+    expect(response.body.data).to.deep.equal([910003, 910002].map((parentDynamicId) => ({
+      dynamicId: 920000, parentDynamicId, info: { name: 'Equipment 0' },
+    })));
+    expect(response.body.total).to.be.a('number');
+  });
+
+  it('rejects malformed parent lists before reading the graph', async () => {
+    const reads = graphReads;
+    for (const parentList of ['', '910002,', '910002,abc', '910002,1.5', '0', '910002,0']) {
+      await request(app).get('/api/v2/equipment').query({ 'parent-dynamic-id': parentList }).expect(400);
+    }
+    await request(app).get('/api/v2/equipment?parent-dynamic-id=910002&parent-dynamic-id=910003').expect(400);
+    expect(graphReads).to.equal(reads);
+  });
+
+  it('searches equipment from several parents with a JSON body', async () => {
+    const response = await request(app).post('/api/v2/equipment/search').send({
+      parentDynamicIds: [910003, 910002],
+      filter: { 'attributes.Geometry.Surface': '25' },
+      info: 'name',
+    }).expect(200);
+    expect(response.body).not.to.have.property('data');
+    expect(response.body.groups).to.deep.equal([910003, 910002].map((parentDynamicId) => ({
+      parentDynamicId,
+      data: [{ dynamicId: 920000, parentDynamicId, info: { name: 'Equipment 0' } }],
+    })));
+    expect(response.body.offset).to.equal(0);
+    expect(response.body.total).to.be.a('number');
+  });
+
+  it('returns a flat data array when groupByParent is false', async () => {
+    const response = await request(app).post('/api/v2/equipment/search').send({
+      parentDynamicIds: [910003, 910002],
+      groupByParent: false,
+      filter: { 'attributes.Geometry.Surface': '25' },
+      info: 'name',
+    }).expect(200);
+    expect(response.body).not.to.have.property('groups');
+    expect(response.body.data).to.deep.equal([910003, 910002].map((parentDynamicId) => ({
+      dynamicId: 920000, parentDynamicId, info: { name: 'Equipment 0' },
+    })));
+  });
+
+  it('search without parentDynamicIds traverses the building without total', async () => {
+    const response = await request(app).post('/api/v2/equipment/search').send({ info: 'name' }).expect(200);
+    expect(response.body.groups.flatMap((group: { data: unknown[] }) => group.data)).to.have.length(200);
+    expect(response.body).not.to.have.property('total');
+  });
+
+  it('rejects invalid equipment search bodies', async () => {
+    const bodies: object[] = [
+      { parentDynamicIds: [] },
+      { parentDynamicIds: ['910002'] },
+      { parentDynamicIds: [0] },
+      { parentDynamicIds: [910002.5] },
+      { parentDynamicIds: Array.from({ length: 51 }, (_, index) => index + 1) },
+      { unknownField: true },
+    ];
+    for (const body of bodies) {
+      await request(app).post('/api/v2/equipment/search').send(body).expect(400);
+    }
   });
 
   it('paginates the context iterable across room boundaries', async () => {

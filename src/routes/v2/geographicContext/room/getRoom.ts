@@ -31,17 +31,11 @@ import { parseAttributesQuery } from '../../../../utilities/v2/requestParse/pars
 import { getNodeData } from '../../../../utilities/v2/node/getNodeData';
 import { parseInfoQuery } from '../../../../utilities/v2/requestParse/parseInfoQuery';
 import { sendResponseError } from '../../../../utilities/v2/errorHandler/sendResponseError';
-import {
-  ROOM_RELATION,
-  ROOM_TYPE,
-  FLOOR_TYPE,
-} from 'spinal-env-viewer-context-geographic-service';
-import { getNodeChildrenFromParentDynId } from '../../../../utilities/v2/node/getNodeChildrenFromParentDynId';
+import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
+import { findRoomNodes } from '../../../../utilities/v2/geographicContext/findRoomNodes';
 import { parseFilterQuery } from '../../../../utilities/v2/requestParse/parseFilterQuery';
 import { filterNodes } from '../../../../utilities/v2/node/filterNodes';
-import type { SpinalNode } from 'spinal-model-graph';
-import { getBuildingNode } from '../../../../utilities/v2/geographicContext/getBuilding';
-import { getRoomInContextIterable } from '../../../../utilities/v2/geographicContext/getRoomInContextIterable';
+import { parentDynamicIdsQuerySchema } from '../../../../utilities/v2/requestParse/parseParentDynIdList';
 import { createErrorMsgItem } from '../../../../utilities/v2/errorHandler/createErrorMsgItem';
 import { EApiErrorType } from '../../../../utilities/v2/errorHandler/EApiErrorType';
 
@@ -65,6 +59,8 @@ module.exports = function (
    *       > Running this endpoint without it is **not recommended**, especially for large buildings,
    *       > because it may traverse many floors and rooms. Filters and the 200-item page limit
    *       > do not guarantee a small traversal.
+   *       >
+   *       > `parent-dynamic-id` accepts a comma-separated list. For a JSON body, use `POST /api/v2/room/search`.
    *
    *       ### Scope
    *
@@ -113,7 +109,7 @@ module.exports = function (
         info: z.coerce.string().optional(),
         attributes: z.coerce.string().optional(),
         'add-attributes-modification-date': z.stringbool().optional(),
-        'parent-dynamic-id': z.coerce.number().min(1).optional(),
+        'parent-dynamic-id': parentDynamicIdsQuerySchema.optional(),
         filter: z
           .union([z.record(z.string(), z.unknown()), z.string()])
           .optional(),
@@ -130,47 +126,20 @@ module.exports = function (
         const parsedAttrQuery = parseAttributesQuery(attributes);
         const filters = parseFilterQuery(req.query);
         const { offset } = req.query;
-        const { 'parent-dynamic-id': parentDynamicId } = req.query;
+        const { 'parent-dynamic-id': parentDynamicIds } = req.query;
         const profileId = getProfileId(req);
         const { geographicContext, building } = await getBuildingNode(
           spinalAPIMiddleware,
           profileId,
           false
         );
-        let roomFound:
-          | Iterable<{ node: SpinalNode; parentId: number }>
-          | AsyncIterable<{ node: SpinalNode; parentId: number }>;
-        if (parentDynamicId) {
-          const roomNodes = await getNodeChildrenFromParentDynId(
-            spinalAPIMiddleware,
-            parentDynamicId,
-            profileId,
-            ROOM_TYPE,
-            [
-              {
-                relationName: ROOM_RELATION,
-                parentType: FLOOR_TYPE,
-                context: geographicContext,
-              },
-              {
-                relationName: `groupHas${ROOM_TYPE}`,
-                parentType: `${ROOM_TYPE}Group`,
-              },
-            ]
-          );
-          roomFound = roomNodes.map((node) => ({
-            node,
-            parentId: parentDynamicId,
-          }));
-        } else {
-          if (!building) {
-            throw createErrorMsgItem(
-              EApiErrorType.ERROR_DATABASE,
-              'No building found in database'
-            );
-          }
-          roomFound = getRoomInContextIterable(geographicContext, building);
-        }
+        const roomFound = await findRoomNodes({
+          spinalAPIMiddleware,
+          profileId,
+          geographicContext,
+          building,
+          parentDynamicIds,
+        });
 
         const page = await filterNodes(roomFound, filters, offset);
         const roomData = await Promise.all(

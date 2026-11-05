@@ -30,16 +30,18 @@
  *       name: parent-dynamic-id
  *       required: false
  *       description: |-
- *         Restrict results to direct children of an existing parent loaded using the current profile.
+ *         - Restrict results to direct children of one or more existing parents loaded using the current profile.
+ *           Pass a comma-separated list (for example `132456,132457`, up to 50 IDs; duplicates are ignored).
+ *           Each item's `parentDynamicId` identifies the parent it came from.
  *
- *         - **Room lists:** `geographicFloor` or `geographicRoomGroup`.
- *         - **Equipment lists:** `geographicRoom`, `geographicFloor` (floor references only),
- *           or `BIMObjectGroup`.
- *         - **Without this parameter:** traverse the profile's building.
- *         - A valid but unsupported parent type returns an empty list.
- *       example: 132456
+ *           - **Room lists:** `geographicFloor` or `geographicRoomGroup`.
+ *           - **Equipment lists:** `geographicRoom`, `geographicFloor` (floor references only),
+ *             or `BIMObjectGroup`.
+ *           - **Without this parameter:** traverse the profile's building.
+ *           - A valid but unsupported parent type returns no items for that parent.
+ *       example: '132456,132457'
  *       schema:
- *         type: integer
- *         minimum: 1
+ *         type: string
+ *         pattern: '^\s*[1-9]\d*(\s*,\s*[1-9]\d*)*\s*$'
  */
 //# sourceMappingURL=paramParentDynId.js.map

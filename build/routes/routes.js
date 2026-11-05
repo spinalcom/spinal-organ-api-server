@@ -441,6 +441,7 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./v2/node/moveNode')(logger, app, spinalAPIMiddleware);
     require('./v2/node/getNodeChildren')(logger, app, spinalAPIMiddleware);
     require('./v2/node/getNodeChildRelationships')(logger, app, spinalAPIMiddleware);
+    require('./v2/node/searchNodeChildren')(logger, app, spinalAPIMiddleware);
     require('./v2/node/getNodeParents')(logger, app, spinalAPIMiddleware);
     require('./v2/node/getNodeParentRelationships')(logger, app, spinalAPIMiddleware);
     require('./v2/geographicContext/building/getBuilding')(logger, app, spinalAPIMiddleware);
@@ -450,8 +451,10 @@ function routes(logger, app, spinalAPIMiddleware) {
     require('./v2/geographicContext/floor/getFloorById')(logger, app, spinalAPIMiddleware);
     require('./v2/geographicContext/room/createRoom')(logger, app, spinalAPIMiddleware);
     require('./v2/geographicContext/room/getRoom')(logger, app, spinalAPIMiddleware);
+    require('./v2/geographicContext/room/searchRoom')(logger, app, spinalAPIMiddleware);
     require('./v2/geographicContext/room/getRoomById')(logger, app, spinalAPIMiddleware);
     require('./v2/geographicContext/equipment/getEquipment')(logger, app, spinalAPIMiddleware);
+    require('./v2/geographicContext/equipment/searchEquipment')(logger, app, spinalAPIMiddleware);
     require('./v2/geographicContext/equipment/getEquipmentById')(logger, app, spinalAPIMiddleware);
     require('./v2/geographicContext/equipment/createEquipment')(logger, app, spinalAPIMiddleware);
 }

@@ -33,14 +33,11 @@ const parseAttributesQuery_1 = require("../../../../utilities/v2/requestParse/pa
 const getNodeData_1 = require("../../../../utilities/v2/node/getNodeData");
 const parseInfoQuery_1 = require("../../../../utilities/v2/requestParse/parseInfoQuery");
 const sendResponseError_1 = require("../../../../utilities/v2/errorHandler/sendResponseError");
-const spinal_env_viewer_context_geographic_service_1 = require("spinal-env-viewer-context-geographic-service");
-const getNodeChildrenFromParentDynId_1 = require("../../../../utilities/v2/node/getNodeChildrenFromParentDynId");
+const getBuilding_1 = require("../../../../utilities/v2/geographicContext/getBuilding");
+const findRoomNodes_1 = require("../../../../utilities/v2/geographicContext/findRoomNodes");
 const parseFilterQuery_1 = require("../../../../utilities/v2/requestParse/parseFilterQuery");
 const filterNodes_1 = require("../../../../utilities/v2/node/filterNodes");
-const getBuilding_1 = require("../../../../utilities/v2/geographicContext/getBuilding");
-const getRoomInContextIterable_1 = require("../../../../utilities/v2/geographicContext/getRoomInContextIterable");
-const createErrorMsgItem_1 = require("../../../../utilities/v2/errorHandler/createErrorMsgItem");
-const EApiErrorType_1 = require("../../../../utilities/v2/errorHandler/EApiErrorType");
+const parseParentDynIdList_1 = require("../../../../utilities/v2/requestParse/parseParentDynIdList");
 module.exports = function (logger, app, spinalAPIMiddleware) {
     /**
      * @swagger
@@ -57,6 +54,8 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       > Running this endpoint without it is **not recommended**, especially for large buildings,
      *       > because it may traverse many floors and rooms. Filters and the 200-item page limit
      *       > do not guarantee a small traversal.
+     *       >
+     *       > `parent-dynamic-id` accepts a comma-separated list. For a JSON body, use `POST /api/v2/room/search`.
      *
      *       ### Scope
      *
@@ -103,7 +102,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             info: zod_1.z.coerce.string().optional(),
             attributes: zod_1.z.coerce.string().optional(),
             'add-attributes-modification-date': zod_1.z.stringbool().optional(),
-            'parent-dynamic-id': zod_1.z.coerce.number().min(1).optional(),
+            'parent-dynamic-id': parseParentDynIdList_1.parentDynamicIdsQuerySchema.optional(),
             filter: zod_1.z
                 .union([zod_1.z.record(zod_1.z.string(), zod_1.z.unknown()), zod_1.z.string()])
                 .optional(),
@@ -116,33 +115,16 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
             const parsedAttrQuery = (0, parseAttributesQuery_1.parseAttributesQuery)(attributes);
             const filters = (0, parseFilterQuery_1.parseFilterQuery)(req.query);
             const { offset } = req.query;
-            const { 'parent-dynamic-id': parentDynamicId } = req.query;
+            const { 'parent-dynamic-id': parentDynamicIds } = req.query;
             const profileId = (0, requestUtilities_1.getProfileId)(req);
             const { geographicContext, building } = await (0, getBuilding_1.getBuildingNode)(spinalAPIMiddleware, profileId, false);
-            let roomFound;
-            if (parentDynamicId) {
-                const roomNodes = await (0, getNodeChildrenFromParentDynId_1.getNodeChildrenFromParentDynId)(spinalAPIMiddleware, parentDynamicId, profileId, spinal_env_viewer_context_geographic_service_1.ROOM_TYPE, [
-                    {
-                        relationName: spinal_env_viewer_context_geographic_service_1.ROOM_RELATION,
-                        parentType: spinal_env_viewer_context_geographic_service_1.FLOOR_TYPE,
-                        context: geographicContext,
-                    },
-                    {
-                        relationName: `groupHas${spinal_env_viewer_context_geographic_service_1.ROOM_TYPE}`,
-                        parentType: `${spinal_env_viewer_context_geographic_service_1.ROOM_TYPE}Group`,
-                    },
-                ]);
-                roomFound = roomNodes.map((node) => ({
-                    node,
-                    parentId: parentDynamicId,
-                }));
-            }
-            else {
-                if (!building) {
-                    throw (0, createErrorMsgItem_1.createErrorMsgItem)(EApiErrorType_1.EApiErrorType.ERROR_DATABASE, 'No building found in database');
-                }
-                roomFound = (0, getRoomInContextIterable_1.getRoomInContextIterable)(geographicContext, building);
-            }
+            const roomFound = await (0, findRoomNodes_1.findRoomNodes)({
+                spinalAPIMiddleware,
+                profileId,
+                geographicContext,
+                building,
+                parentDynamicIds,
+            });
             const page = await (0, filterNodes_1.filterNodes)(roomFound, filters, offset);
             const roomData = await Promise.all(page.map(({ node, parentId }) => (0, getNodeData_1.getNodeData)(node, parsedInfoQuery, parsedAttrQuery, addAttributesModificationDate, parentId)));
             return res.status(200).json({

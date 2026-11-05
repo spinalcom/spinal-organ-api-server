@@ -24,6 +24,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getNodeChildrenFromParentDynId = getNodeChildrenFromParentDynId;
+exports.getNodeChildrenFromParentDynIds = getNodeChildrenFromParentDynIds;
 const loadAndValidateNode_1 = require("../../loadAndValidateNode");
 async function getNodeChildrenFromParentDynId(spinalAPIMiddleware, parentDynamicId, profileId, childrenType, relations) {
     const parentNode = await (0, loadAndValidateNode_1.loadAndValidateNode)(spinalAPIMiddleware, parentDynamicId, profileId);
@@ -40,5 +41,12 @@ async function getNodeChildrenFromParentDynId(spinalAPIMiddleware, parentDynamic
         }
     }
     return [];
+}
+async function getNodeChildrenFromParentDynIds(spinalAPIMiddleware, parentDynamicIds, profileId, childrenType, relations) {
+    const perParent = await Promise.all(parentDynamicIds.map(async (parentId) => {
+        const nodes = await getNodeChildrenFromParentDynId(spinalAPIMiddleware, parentId, profileId, childrenType, relations);
+        return nodes.map((node) => ({ node, parentId }));
+    }));
+    return perParent.flat();
 }
 //# sourceMappingURL=getNodeChildrenFromParentDynId.js.map

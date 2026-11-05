@@ -23,7 +23,7 @@
  */
 
 import type { ISpinalAPIMiddleware } from '../../../interfaces';
-import type { SpinalContext } from 'spinal-model-graph';
+import type { SpinalContext, SpinalNode } from 'spinal-model-graph';
 import { loadAndValidateNode } from '../../loadAndValidateNode';
 
 export interface IParentChildRelation {
@@ -59,4 +59,26 @@ export async function getNodeChildrenFromParentDynId(
     }
   }
   return [];
+}
+
+export async function getNodeChildrenFromParentDynIds(
+  spinalAPIMiddleware: ISpinalAPIMiddleware,
+  parentDynamicIds: number[],
+  profileId: string,
+  childrenType: string,
+  relations: IParentChildRelation[]
+): Promise<{ node: SpinalNode; parentId: number }[]> {
+  const perParent = await Promise.all(
+    parentDynamicIds.map(async (parentId) => {
+      const nodes = await getNodeChildrenFromParentDynId(
+        spinalAPIMiddleware,
+        parentId,
+        profileId,
+        childrenType,
+        relations
+      );
+      return nodes.map((node) => ({ node, parentId }));
+    })
+  );
+  return perParent.flat();
 }
