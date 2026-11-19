@@ -107,7 +107,9 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *        name: bucket
      *        description: >-
      *          Split the interval into sub-intervals of this size and aggregate inside each one.
-     *          Accepts `hour`, `day`, `week` and `month`.
+     *          Accepts `15min`, `hour`, `day`, `week` and `month`. Buckets are half-open [start, end[ and follow
+     *          the server's local time (days at local midnight, weeks on Monday, months on the 1st). Each bucket
+     *          gives `count`, `noData`, the requested measures and, with `twavg`, the `duration` it covers.
      *        required: false
      *        schema:
      *          type: string
@@ -177,19 +179,24 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
                 const intervalStart = (0, aggregationUtils_1.toTimestamp)(timeSeriesIntervalDate.start);
                 const intervalEnd = (0, aggregationUtils_1.toTimestamp)(timeSeriesIntervalDate.end);
                 const includeLastBeforeStart = req.query.valueAtBegin == "true" ? true : false;
-                const datas = await (0, spinalTimeSeries_1.default)().getData(node.getId().get(), timeSeriesIntervalDate, includeLastBeforeStart);
                 const aggregationParam = req.query.aggregation;
-                const bucketMs = (0, aggregationUtils_1.parseBucketParam)(req.query.bucket);
-                if (bucketMs) {
+                const bucketUnit = (0, aggregationUtils_1.parseBucketParam)(req.query.bucket);
+                if (bucketUnit) {
                     const { normalizedOps, basicOps, needsTwavg } = aggregationParam
                         ? (0, aggregationUtils_1.parseAggregationParam)(aggregationParam)
                         : { normalizedOps: ['twavg'], basicOps: [], needsTwavg: true };
                     if (aggregationParam && !normalizedOps) {
                         return res.status(400).send(`Invalid aggregation parameter. Supported values: ${aggregationUtils_1.VALID_OPS.join(', ')}, all`);
                     }
-                    const buckets = (0, aggregationUtils_1.computeBucketedAggregation)(datas, intervalStart, intervalEnd, bucketMs, basicOps, needsTwavg);
+                    // Read and folded on the fly: the interval is never loaded in memory.
+                    const timeSeries = await (0, spinalTimeSeries_1.default)().getTimeSeries(node.getId().get());
+                    if (!timeSeries)
+                        throw new Error('endpoint have no timeseries');
+                    const readPoints = () => (0, spinalTimeSeries_1.default)().getFromIntervalTimeGen(timeSeries, timeSeriesIntervalDate.start, timeSeriesIntervalDate.end, includeLastBeforeStart);
+                    const buckets = await (0, aggregationUtils_1.aggregateBucketsFromReader)(readPoints, intervalStart, intervalEnd, bucketUnit, basicOps, needsTwavg);
                     return res.json({ dynamicId: parseInt(req.params.id, 10), buckets });
                 }
+                const datas = await (0, spinalTimeSeries_1.default)().getData(node.getId().get(), timeSeriesIntervalDate, includeLastBeforeStart);
                 if (aggregationParam) {
                     const { normalizedOps, basicOps, needsTwavg } = (0, aggregationUtils_1.parseAggregationParam)(aggregationParam);
                     if (!normalizedOps) {

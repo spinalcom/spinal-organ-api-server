@@ -33,6 +33,11 @@ const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
 const config_1 = __importDefault(require("./config"));
 const spinalIOMiddleware_1 = require("./spinalIOMiddleware");
 class SpinalAPIMiddleware {
+    static instance = null;
+    loadedPtr = new Map();
+    conn;
+    iteratorGraph;
+    config = config_1.default;
     // singleton class
     static getInstance() {
         if (SpinalAPIMiddleware.instance === null) {
@@ -41,8 +46,6 @@ class SpinalAPIMiddleware {
         return SpinalAPIMiddleware.instance;
     }
     constructor() {
-        this.loadedPtr = new Map();
-        this.config = config_1.default;
         // connection string to connect to spinalhub
         const protocol = this.config.spinalConnector.protocol ? this.config.spinalConnector.protocol : "http";
         const host = this.config.spinalConnector.host + (this.config.spinalConnector.port ? `:${this.config.spinalConnector.port}` : "");
@@ -137,6 +140,5 @@ class SpinalAPIMiddleware {
         throw new Error("Connection timed out");
     }
 }
-SpinalAPIMiddleware.instance = null;
 exports.default = SpinalAPIMiddleware;
 //# sourceMappingURL=spinalAPIMiddleware.js.map

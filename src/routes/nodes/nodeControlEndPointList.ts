@@ -47,8 +47,9 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *       `/api/v1/node/{id}/endpoint_list`.
    *
    *
-   *       Unlike the BMS endpoint route, this one looks at the direct control-point children of the
-   *       node only; it does not walk the whole subtree.
+   *       Unlike the BMS endpoint route, this one does not walk the whole subtree: it reads the
+   *       profiles of the node itself, then those of the BMS devices directly under it
+   *       (`hasBmsDevice`).
    *     tags:
    *      - Nodes
    *     parameters:
@@ -82,7 +83,7 @@ module.exports = function (logger, app: express.Express, spinalAPIMiddleware: IS
    *                   dynamicId:
    *                     type: integer
    *                     format: int64
-   *                     description: Dynamic ID of the node the profile was read from (the node passed in the request, not the profile itself).
+   *                     description: Dynamic ID of the node passed in the request (not the profile itself), also for the profiles read from one of its BMS devices.
    *                   profileName:
    *                     type: string
    *                     description: Name of the control-point profile.

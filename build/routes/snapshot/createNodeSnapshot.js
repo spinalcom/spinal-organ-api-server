@@ -35,7 +35,7 @@ module.exports = function (logger, app, spinalAPIMiddleware) {
      *       - bearerAuth:
      *         - readOnly
      *     summary: Snapshot the nodes currently loaded in the FileSystem
-     *     description: Walks FileSystem._objects and writes the dynamic id (_server_id) of every loaded node into a file, so that they can be preloaded later on. The file location defaults to snapshots/nodes.json and is overridable with the SNAPSHOT_FILE environment variable.
+     *     description: Walks the models loaded in the FileSystem and writes the dynamic id (_server_id) of every loaded node into a file, so that they can be preloaded later on. The file location defaults to snapshots/nodes.json and is overridable with the SNAPSHOT_FILE environment variable.
      *     tags:
      *      - Snapshot
      *     responses:

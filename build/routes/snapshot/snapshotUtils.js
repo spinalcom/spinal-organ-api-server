@@ -52,8 +52,30 @@ function getSnapshotFilePath() {
     return (0, path_1.isAbsolute)(configured) ? configured : (0, path_1.resolve)(process.cwd(), configured);
 }
 /**
- * Walks `FileSystem._objects` and writes the `_server_id` of every SpinalNode
- * it holds into the snapshot file. The file is meant to be replayed later on
+ * Calls callback for every model loaded in the FileSystem, with its server id.
+ *
+ * From spinal-core-connectorjs 2.5.27, `FileSystem._objects` is a proxy over
+ * the model table : `Object.keys` on it builds a string per model, which runs
+ * the organ out of memory on a big digital twin (11M models), and V8 caps it
+ * at 2^23 keys anyway. `FileSystem.forEachModel` walks the table directly.
+ * Older connectors don't have it and hold a plain object, walked with
+ * `Object.keys` as before.
+ *
+ * @param {ModelCallback} callback
+ */
+function forEachLoadedModel(callback) {
+    const fileSystem = spinal_core_connectorjs_1.FileSystem;
+    if (typeof fileSystem.forEachModel === 'function') {
+        fileSystem.forEachModel(callback);
+        return;
+    }
+    const objects = spinal_core_connectorjs_1.FileSystem._objects;
+    for (const key of Object.keys(objects))
+        callback(objects[key], Number(key));
+}
+/**
+ * Walks the models loaded in the FileSystem and writes the `_server_id` of
+ * every SpinalNode into the snapshot file. The file is meant to be replayed later on
  * to warm up the FileSystem cache, so it is written to a temporary file then
  * renamed : a reader never sees a half written snapshot.
  *
@@ -67,19 +89,20 @@ async function writeNodeSnapshot() {
     const startedAt = Date.now();
     const filePath = getSnapshotFilePath();
     const tmpPath = `${filePath}.tmp`;
-    // Take the keys once : the FileSystem keeps loading objects while we run.
-    const objects = spinal_core_connectorjs_1.FileSystem._objects;
-    const keys = Object.keys(objects);
+    // Collect the ids in one synchronous walk : the FileSystem keeps loading
+    // objects while we write the file.
     const serverIds = [];
-    for (const key of keys) {
-        if (objects[key] instanceof spinal_model_graph_1.SpinalNode)
-            serverIds.push(Number(key));
-    }
+    let objectCount = 0;
+    forEachLoadedModel((model, serverId) => {
+        objectCount += 1;
+        if (model instanceof spinal_model_graph_1.SpinalNode)
+            serverIds.push(serverId);
+    });
     const meta = {
         version: SNAPSHOT_VERSION,
         createdAt: new Date(startedAt).toISOString(),
         digitalTwinPath: config_1.default.file.path ?? null,
-        objectCount: keys.length,
+        objectCount,
         nodeCount: serverIds.length,
     };
     await fs_1.promises.mkdir((0, path_1.dirname)(filePath), { recursive: true });

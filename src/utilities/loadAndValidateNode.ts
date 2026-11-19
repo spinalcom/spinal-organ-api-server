@@ -24,6 +24,8 @@
 
 import type { ISpinalAPIMiddleware } from '../interfaces/ISpinalAPIMiddleware';
 import { SpinalNode } from 'spinal-model-graph';
+import { createErrorMsgItem } from './v2/errorHandler/createErrorMsgItem';
+import { EApiErrorType } from './v2/errorHandler/EApiErrorType';
 
 export async function loadAndValidateNodeMultiple(
   spinalAPIMiddleware: ISpinalAPIMiddleware,
@@ -32,8 +34,8 @@ export async function loadAndValidateNodeMultiple(
   nodeType?: string
 ): Promise<{ successful: SpinalNode[]; failedServerIds: number[] }> {
   if (!Array.isArray(serverIds))
-    throw createErrorResponse(
-      400,
+    throw createErrorMsgItem(
+      EApiErrorType.INVALID_REQUEST,
       `Invalid input: serverIds should be an array of numbers`
     );
 
@@ -76,14 +78,20 @@ export async function loadAndValidateNode(
     (typeof serverId === 'number' && isNaN(serverId)) ||
     (typeof serverId === 'string' && isNaN(Number(serverId)))
   )
-    throw createErrorResponse(400, `Invalid dynamicId: ${serverId}`);
+    throw createErrorMsgItem(
+      EApiErrorType.INVALID_REQUEST,
+      `Invalid dynamicId: ${serverId}`
+    );
 
   const node = await safeLoadNode(spinalAPIMiddleware, serverId, profileId);
   if (!(node instanceof SpinalNode))
-    throw createErrorResponse(400, `Node ${serverId} is not a SpinalNode`);
+    throw createErrorMsgItem(
+      EApiErrorType.INVALID_LOAD_NODE_TYPE,
+      `Node ${serverId} is not a SpinalNode`
+    );
   if (nodeType && node.info?.type?.get() !== nodeType)
-    throw createErrorResponse(
-      400,
+    throw createErrorMsgItem(
+      EApiErrorType.INVALID_LOAD_NODE_TYPE,
       `Node ${serverId} is not of type ${nodeType}`
     );
   return node;
@@ -97,10 +105,9 @@ async function safeLoadNode(
   try {
     return await spinalAPIMiddleware.load<SpinalNode>(serverId, profileId);
   } catch (error) {
-    throw createErrorResponse(404, `Error : Loading node ${serverId} failed`);
+    throw createErrorMsgItem(
+      EApiErrorType.INVALID_LOAD_NODE_TYPE,
+      `Error : Loading node ${serverId} failed`
+    );
   }
-}
-
-function createErrorResponse(code: number, message: string) {
-  return { code, message };
 }

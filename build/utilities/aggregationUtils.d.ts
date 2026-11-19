@@ -21,51 +21,47 @@ export interface BucketResult {
     noData: boolean;
     [key: string]: string | number | boolean | null | undefined;
 }
+export type BucketUnit = '15min' | 'hour' | 'day' | 'week' | 'month';
+export declare function parseBucketParam(bucket: string | undefined): BucketUnit | null;
+/** Bucket boundaries from `start` to `end`: [start, b1, b2, …, end]. */
+export declare function bucketEdges(start: number, end: number, unit: BucketUnit): number[];
 /**
- * Parse the ?bucket query parameter and return the bucket size in milliseconds,
- * or 'month' for calendar-month bucketing.
- * Supported formats: "hour", "day", "week", "month" (case-insensitive).
- *
- * Returns null if the parameter is absent or invalid.
- *
- * Returns the bucket size in milliseconds if valid.
+ * Folds date-ordered points into buckets in a single pass.
+ * Time-weighted mean: a value holds from its point until the next point (step function), like computeTimeWeightedMean;
+ * a point dated before the first bucket (valueAtBegin) only provides the value held at the start.
  */
-export declare function parseBucketParam(bucket: string | undefined): number | 'month' | null;
-/**
- * Generate calendar-month bucket boundaries between start and end.
- * Each full month runs from the 1st at 00:00 UTC to the 1st of the next month.
- * The first and last buckets may be partial if start/end are not on the 1st.
- */
-export declare function generateMonthBuckets(start: number, end: number): {
-    bucketStart: number;
-    bucketEnd: number;
-}[];
-/**
- * Split the interval [start, end] into sub-intervals of size `bucketMs`
- * and compute the time-weighted average for each bucket.
- *
- * The full sorted dataset is passed in so that `computeTimeWeightedMean`
- * can pick up the last known value before each bucket start.
- *
- * @deprecated Use computeBucketedAggregation instead.
- */
-export declare function computeBucketedTimeWeightedMean(datas: {
-    date: number;
-    value: number;
-}[], start: number, end: number, bucketMs: number | 'month'): BucketResult[];
-/**
- * Split the interval [start, end] into sub-intervals of size `bucketMs`
- * (or calendar months when bucketMs === 'month') and compute the requested
- * aggregation operations for each bucket.
- *
- * @param datas       — full (unsorted) dataset
- * @param start       — interval start (ms epoch)
- * @param end         — interval end   (ms epoch)
- * @param bucketMs    — bucket width in milliseconds, or 'month' for calendar months
- * @param basicOps    — array of basic operations: 'sum' | 'min' | 'max' | 'avg'
- * @param needsTwavg  — whether to compute the time-weighted average
- */
+export declare class BucketAccumulator {
+    private readonly edges;
+    private readonly totals;
+    private pointBucket;
+    private holdBucket;
+    private held;
+    constructor(edges: number[]);
+    /** Adds a point; returns false if it is older than the previous one (the caller must sort and start over). */
+    add(point: {
+        date: number;
+        value: number;
+    }): boolean;
+    results(basicOps: string[], needsTwavg: boolean): BucketResult[];
+    private count;
+    /** Spreads the held value from its date up to `until` over the buckets it crosses. */
+    private holdUntil;
+}
+/** Buckets for points already in memory (any order). */
 export declare function computeBucketedAggregation(datas: {
     date: number;
     value: number;
-}[], start: number, end: number, bucketMs: number | 'month', basicOps?: string[], needsTwavg?: boolean): BucketResult[];
+}[], start: number, end: number, unit: BucketUnit, basicOps?: string[], needsTwavg?: boolean): BucketResult[];
+export declare function computeBucketedTimeWeightedMean(datas: {
+    date: number;
+    value: number;
+}[], start: number, end: number, unit: BucketUnit): BucketResult[];
+/**
+ * Buckets read straight from the archive, without loading the whole interval. `readPoints` opens a new read each
+ * time it is called: if the archive returns days out of order (history inserted afterwards), the interval is read
+ * again into memory and sorted.
+ */
+export declare function aggregateBucketsFromReader(readPoints: () => Promise<AsyncIterable<{
+    date: number;
+    value: number;
+}>>, start: number, end: number, unit: BucketUnit, basicOps?: string[], needsTwavg?: boolean): Promise<BucketResult[]>;

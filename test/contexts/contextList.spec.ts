@@ -22,43 +22,39 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { describe, before, it } from 'mocha';
-const chai = require('chai');
-const chaiHttp = require('chai-http')
-import Request from '../../src/index';
-chai.should();
-chai.use(chaiHttp);
-
+import { expect } from 'chai';
+import request from 'supertest';
+import {
+  createContextFixture,
+  type ContextFixture,
+} from './contextFixture';
 
 describe('Contexts requests', function () {
-  describe('Get context list', function () {
-    it('It should get al the contexts', (done) => {
-      console.log(Request);
-      done()
-    })
-  })
-})
+  let fixture: ContextFixture;
+  beforeEach(async () => {
+    fixture = await createContextFixture();
+  });
+  afterEach(() => fixture.cleanup());
 
-// describe("User Service Unit Tests", function () {
-//   describe("Save User functionality", function () {
-//     it("should successfully add a user if the number of users in the DB with the same profiled is zero", async function () {
-//       const profileId = 1;
-//       const name = "Akshay";
-//       const dob = "2020-12-12";
-//       const experience = [{ years: 2, organizationName: "ABCD" }];
-//       const returnedUser = await saveUser({
-//         profileId, 
-//         name,
-//         dob,
-//         experience,
-//       });
-//       expect(returnedUser.name).to.equal(name);
-//       expect(returnedUser.dob.toString()).to.equal((new Date(dob)).toString());
-//       experience.map((exp, index) => {
-//         expect(returnedUser.experience[index].years).to.equal(exp.years);
-//         expect(returnedUser.experience[index].organizationName).to.equal(exp.organizationName);
-//       })
-//     });
-//     it("should throw an error if the number of users with the same profileId is not zero", async function () { });
-//   });
-// });
+  describe('Get context list', function () {
+    it('returns the contexts reachable by the profile without a hub connection', async () => {
+      fixture.context.info.add_attr({
+        color: '#FF0000',
+        icon: 'context-icon',
+      });
+      const response = await request(fixture.app)
+        .get('/api/v1/context/list')
+        .expect(200);
+
+      expect(response.body).to.deep.equal([{
+        dynamicId: fixture.context._server_id,
+        staticId: fixture.context.getId().get(),
+        name: fixture.context.getName().get(),
+        type: fixture.context.getType().get(),
+        color: '#FF0000',
+        icon: 'context-icon',
+      }]);
+      expect(fixture.graphReads).to.equal(1);
+    });
+  });
+});

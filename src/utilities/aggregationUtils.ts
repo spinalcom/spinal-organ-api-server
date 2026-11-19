@@ -141,6 +141,11 @@ export function parseAggregationParam(aggregationParam: string | undefined): {
 export { VALID_OPS };
 
 // ── Bucketing support ──
+//
+// A bucket is the half-open interval [start, end[: a point dated exactly on a boundary belongs to the next bucket.
+// Boundaries follow the server's local time (TZ): days start at local midnight (23 h / 25 h on DST days), months on
+// the 1st. Points are read once, in date order, and folded into their bucket as they arrive: memory depends on the
+// number of buckets only, whatever the sampling rate of the sensor.
 
 export interface BucketResult {
   start: string;
@@ -150,163 +155,170 @@ export interface BucketResult {
   [key: string]: string | number | boolean | null | undefined;
 }
 
-/**
- * Parse the ?bucket query parameter and return the bucket size in milliseconds,
- * or 'month' for calendar-month bucketing.
- * Supported formats: "hour", "day", "week", "month" (case-insensitive).
- * 
- * Returns null if the parameter is absent or invalid.
- * 
- * Returns the bucket size in milliseconds if valid.
- */
-export function parseBucketParam(bucket: string | undefined): number | 'month' | null {
+export type BucketUnit = '15min' | 'hour' | 'day' | 'week' | 'month';
+
+const MINUTE_MS = 60 * 1000;
+const HOUR_MS = 60 * MINUTE_MS;
+
+export function parseBucketParam(bucket: string | undefined): BucketUnit | null {
   if (!bucket) return null;
   const unit = bucket.trim().toLowerCase();
+  return ['15min', 'hour', 'day', 'week', 'month'].includes(unit) ? (unit as BucketUnit) : null;
+}
 
-  switch (unit) {
-    case 'hour':  return 60 * 60 * 1000;
-    case 'day':   return 24 * 60 * 60 * 1000;
-    case 'week':  return 7 * 24 * 60 * 60 * 1000;
-    case 'month': return 'month';
-    default:      return null;
+/** First bucket boundary strictly after `time`. */
+function nextBoundary(time: number, unit: BucketUnit): number {
+  // ponytail: hours and quarters are counted in UTC, which matches local boundaries for whole-hour time zones
+  // (Europe/Paris); a half-hour time zone would need local arithmetic here.
+  if (unit === '15min') return Math.floor(time / (15 * MINUTE_MS)) * 15 * MINUTE_MS + 15 * MINUTE_MS;
+  if (unit === 'hour') return Math.floor(time / HOUR_MS) * HOUR_MS + HOUR_MS;
+
+  const date = new Date(time);
+  if (unit === 'month') return new Date(date.getFullYear(), date.getMonth() + 1, 1).getTime();
+  const daysToAdd = unit === 'week' ? 7 - ((date.getDay() + 6) % 7) : 1; // weeks start on Monday
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + daysToAdd).getTime();
+}
+
+/** Bucket boundaries from `start` to `end`: [start, b1, b2, …, end]. */
+export function bucketEdges(start: number, end: number, unit: BucketUnit): number[] {
+  const edges = [start];
+  for (let boundary = nextBoundary(start, unit); boundary < end; boundary = nextBoundary(boundary, unit)) {
+    edges.push(boundary);
   }
+  if (end > start) edges.push(end);
+  return edges;
+}
+
+interface BucketTotals {
+  count: number;
+  sum: number;
+  min: number;
+  max: number;
+  timeWeightedSum: number; // Σ value × duration during which the value held
+  heldDuration: number;    // Σ duration
 }
 
 /**
- * Generate calendar-month bucket boundaries between start and end.
- * Each full month runs from the 1st at 00:00 UTC to the 1st of the next month.
- * The first and last buckets may be partial if start/end are not on the 1st.
+ * Folds date-ordered points into buckets in a single pass.
+ * Time-weighted mean: a value holds from its point until the next point (step function), like computeTimeWeightedMean;
+ * a point dated before the first bucket (valueAtBegin) only provides the value held at the start.
  */
-export function generateMonthBuckets(
-  start: number,
-  end: number
-): { bucketStart: number; bucketEnd: number }[] {
-  const buckets: { bucketStart: number; bucketEnd: number }[] = [];
-  const startDate = new Date(start);
+export class BucketAccumulator {
+  private readonly totals: BucketTotals[];
+  private pointBucket = 0; // bucket of the last counted point
+  private holdBucket = 0;  // bucket where the held value currently is
+  private held: { date: number; value: number } | null = null;
 
-  // Determine the first month boundary after start
-  let cursor: Date;
-  if (
-    startDate.getUTCDate() === 1 &&
-    startDate.getUTCHours() === 0 &&
-    startDate.getUTCMinutes() === 0 &&
-    startDate.getUTCSeconds() === 0 &&
-    startDate.getUTCMilliseconds() === 0
-  ) {
-    cursor = new Date(start);
-  } else {
-    cursor = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth() + 1, 1));
-    if (cursor.getTime() > end) {
-      buckets.push({ bucketStart: start, bucketEnd: end });
-      return buckets;
-    }
-    buckets.push({ bucketStart: start, bucketEnd: cursor.getTime() });
+  constructor(private readonly edges: number[]) {
+    this.totals = edges.slice(1).map(() => ({
+      count: 0, sum: 0, min: Infinity, max: -Infinity, timeWeightedSum: 0, heldDuration: 0,
+    }));
   }
 
-  // Full calendar months
-  while (cursor.getTime() < end) {
-    const nextMonth = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1));
-    buckets.push({
-      bucketStart: cursor.getTime(),
-      bucketEnd: Math.min(nextMonth.getTime(), end),
+  /** Adds a point; returns false if it is older than the previous one (the caller must sort and start over). */
+  add(point: { date: number; value: number }): boolean {
+    if (this.held && point.date < this.held.date) return false;
+    this.holdUntil(point.date);
+    this.count(point);
+    this.held = point;
+    return true;
+  }
+
+  results(basicOps: string[], needsTwavg: boolean): BucketResult[] {
+    this.holdUntil(this.edges[this.edges.length - 1]);
+    return this.totals.map((t, i) => {
+      const hasData = t.count > 0;
+      const entry: BucketResult = {
+        start: new Date(this.edges[i]).toISOString(),
+        end: new Date(this.edges[i + 1]).toISOString(),
+        count: t.count,
+        noData: !hasData,
+      };
+      for (const op of basicOps) {
+        if (!hasData) entry[op] = null;
+        else if (op === 'sum') entry.sum = t.sum;
+        else if (op === 'min') entry.min = t.min;
+        else if (op === 'max') entry.max = t.max;
+        else if (op === 'avg') entry.avg = t.sum / t.count;
+      }
+      if (needsTwavg) {
+        entry.twavg = hasData && t.heldDuration > 0 ? t.timeWeightedSum / t.heldDuration : null;
+        entry.duration = hasData ? t.heldDuration : 0; // weight to combine twavg of several buckets
+      }
+      return entry;
     });
-    cursor = nextMonth;
   }
 
-  return buckets;
+  private count(point: { date: number; value: number }): void {
+    const last = this.edges.length - 1;
+    if (point.date < this.edges[0] || point.date >= this.edges[last]) return;
+    while (point.date >= this.edges[this.pointBucket + 1]) this.pointBucket++;
+    const t = this.totals[this.pointBucket];
+    t.count++;
+    t.sum += point.value;
+    if (point.value < t.min) t.min = point.value;
+    if (point.value > t.max) t.max = point.value;
+  }
+
+  /** Spreads the held value from its date up to `until` over the buckets it crosses. */
+  private holdUntil(until: number): void {
+    if (!this.held) return;
+    const last = this.edges.length - 1;
+    let from = Math.max(this.held.date, this.edges[0]);
+    const to = Math.min(until, this.edges[last]);
+    while (from < to) {
+      while (from >= this.edges[this.holdBucket + 1]) this.holdBucket++;
+      const stop = Math.min(to, this.edges[this.holdBucket + 1]);
+      this.totals[this.holdBucket].timeWeightedSum += this.held.value * (stop - from);
+      this.totals[this.holdBucket].heldDuration += stop - from;
+      from = stop;
+    }
+  }
 }
 
-/**
- * Split the interval [start, end] into sub-intervals of size `bucketMs`
- * and compute the time-weighted average for each bucket.
- *
- * The full sorted dataset is passed in so that `computeTimeWeightedMean`
- * can pick up the last known value before each bucket start.
- *
- * @deprecated Use computeBucketedAggregation instead.
- */
-export function computeBucketedTimeWeightedMean(
-  datas: { date: number; value: number }[],
-  start: number,
-  end: number,
-  bucketMs: number | 'month'
-): BucketResult[] {
-  return computeBucketedAggregation(datas, start, end, bucketMs, [], true);
-}
-
-/**
- * Split the interval [start, end] into sub-intervals of size `bucketMs`
- * (or calendar months when bucketMs === 'month') and compute the requested
- * aggregation operations for each bucket.
- *
- * @param datas       — full (unsorted) dataset
- * @param start       — interval start (ms epoch)
- * @param end         — interval end   (ms epoch)
- * @param bucketMs    — bucket width in milliseconds, or 'month' for calendar months
- * @param basicOps    — array of basic operations: 'sum' | 'min' | 'max' | 'avg'
- * @param needsTwavg  — whether to compute the time-weighted average
- */
+/** Buckets for points already in memory (any order). */
 export function computeBucketedAggregation(
   datas: { date: number; value: number }[],
   start: number,
   end: number,
-  bucketMs: number | 'month',
+  unit: BucketUnit,
   basicOps: string[] = [],
   needsTwavg: boolean = true
 ): BucketResult[] {
-  const results: BucketResult[] = [];
-  const sorted = [...datas].sort((a, b) => a.date - b.date);
+  const accumulator = new BucketAccumulator(bucketEdges(start, end, unit));
+  for (const point of [...datas].sort((a, b) => a.date - b.date)) accumulator.add(point);
+  return accumulator.results(basicOps, needsTwavg);
+}
 
-  // Generate bucket intervals
-  let intervals: { bucketStart: number; bucketEnd: number }[];
+export function computeBucketedTimeWeightedMean(
+  datas: { date: number; value: number }[],
+  start: number,
+  end: number,
+  unit: BucketUnit
+): BucketResult[] {
+  return computeBucketedAggregation(datas, start, end, unit, [], true);
+}
 
-  if (bucketMs === 'month') {
-    intervals = generateMonthBuckets(start, end);
-  } else {
-    intervals = [];
-    let bs = start;
-    while (bs < end) {
-      const be = Math.min(bs + bucketMs, end);
-      intervals.push({ bucketStart: bs, bucketEnd: be });
-      bs = be;
+/**
+ * Buckets read straight from the archive, without loading the whole interval. `readPoints` opens a new read each
+ * time it is called: if the archive returns days out of order (history inserted afterwards), the interval is read
+ * again into memory and sorted.
+ */
+export async function aggregateBucketsFromReader(
+  readPoints: () => Promise<AsyncIterable<{ date: number; value: number }>>,
+  start: number,
+  end: number,
+  unit: BucketUnit,
+  basicOps: string[] = [],
+  needsTwavg: boolean = true
+): Promise<BucketResult[]> {
+  const accumulator = new BucketAccumulator(bucketEdges(start, end, unit));
+  for await (const point of await readPoints()) {
+    if (!accumulator.add(point)) {
+      const all: { date: number; value: number }[] = [];
+      for await (const p of await readPoints()) all.push(p);
+      return computeBucketedAggregation(all, start, end, unit, basicOps, needsTwavg);
     }
   }
-
-  for (const { bucketStart, bucketEnd } of intervals) {
-    // Points strictly inside this bucket (for basic aggregations)
-    const bucketPoints = sorted.filter(p => p.date > bucketStart && p.date <= bucketEnd);
-
-    const hasData = bucketPoints.length > 0;
-
-    const entry: BucketResult = {
-      start: new Date(bucketStart).toISOString(),
-      end: new Date(bucketEnd).toISOString(),
-      count: bucketPoints.length,
-      noData: !hasData,
-    };
-
-    // Basic aggregations (sum, min, max, avg) — null when no real data
-    if (basicOps.length > 0) {
-      if (hasData) {
-        const agg = computeAggregation(bucketPoints, basicOps);
-        for (const op of basicOps) {
-          entry[op] = agg[op] ?? null;
-        }
-      } else {
-        for (const op of basicOps) {
-          entry[op] = null;
-        }
-      }
-    }
-
-    if (needsTwavg) {
-      entry.twavg = hasData
-        ? computeTimeWeightedMean(sorted, bucketStart, bucketEnd)
-        : null;
-    }
-
-    results.push(entry);
-  }
-
-  return results;
+  return accumulator.results(basicOps, needsTwavg);
 }

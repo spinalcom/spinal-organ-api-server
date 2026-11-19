@@ -11,7 +11,7 @@ export interface ISnapshotMeta {
     createdAt: string;
     /** path of the digital twin the organ is connected to */
     digitalTwinPath: string | null;
-    /** number of entries held by `FileSystem._objects` when the snapshot ran */
+    /** number of models loaded in the FileSystem when the snapshot ran */
     objectCount: number;
     /** number of those entries that are SpinalNode (what the file contains) */
     nodeCount: number;
@@ -50,8 +50,8 @@ export interface ISnapshotResult extends ISnapshotMeta {
  */
 export declare function getSnapshotFilePath(): string;
 /**
- * Walks `FileSystem._objects` and writes the `_server_id` of every SpinalNode
- * it holds into the snapshot file. The file is meant to be replayed later on
+ * Walks the models loaded in the FileSystem and writes the `_server_id` of
+ * every SpinalNode into the snapshot file. The file is meant to be replayed later on
  * to warm up the FileSystem cache, so it is written to a temporary file then
  * renamed : a reader never sees a half written snapshot.
  *

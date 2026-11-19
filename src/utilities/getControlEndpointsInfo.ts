@@ -26,7 +26,8 @@ import { SpinalGraphService } from 'spinal-env-viewer-graph-service';
 import { spinalControlPointService } from 'spinal-env-viewer-plugin-control-endpoint-service';
 import { attributeService } from 'spinal-env-viewer-plugin-documentation-service';
 import { childrensNode } from './corseChildrenAndParentNode';
-import { SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
+import { SpinalBmsDevice, SpinalBmsEndpoint } from 'spinal-model-bmsnetwork';
+import type { SpinalNode } from 'spinal-model-graph';
 import type { ISpinalAPIMiddleware } from '../interfaces';
 import type { Relation } from '../routes/interface/Relation';
 
@@ -36,12 +37,32 @@ async function getControlEndpointsInfo(
   dynamicId: number,
   includeDetails = false
 ) {
-  const node = await spinalAPIMiddleware.load(dynamicId, profilId);
+  const node: SpinalNode = await spinalAPIMiddleware.load(dynamicId, profilId);
+  return getNodeControlEndpointsInfo(node, includeDetails);
+}
+
+// same as getControlEndpointsInfo, for a node the caller has already loaded
+async function getNodeControlEndpointsInfo(
+  node: SpinalNode,
+  includeDetails = false
+) {
   // @ts-ignore
   SpinalGraphService._addNode(node);
-  const profils = await SpinalGraphService.getChildren(node.getId().get(), [
-    spinalControlPointService.ROOM_TO_CONTROL_GROUP,
+  const nodeId = node.getId().get();
+  const devices = await SpinalGraphService.getChildren(nodeId, [
+    SpinalBmsDevice.relationName,
   ]);
+  // profiles of the node itself, then those of the BMS devices directly under it
+  const profils = (
+    await Promise.all(
+      [nodeId, ...devices.map((device) => device.id.get())].map((id) =>
+        SpinalGraphService.getChildren(id, [
+          spinalControlPointService.ROOM_TO_CONTROL_GROUP,
+        ])
+      )
+    )
+  ).flat();
+
   const promises = profils.map(async (profile) => {
     const result = await SpinalGraphService.getChildren(profile.id.get(), [
       SpinalBmsEndpoint.relationName,
@@ -90,7 +111,7 @@ async function getControlEndpointsInfo(
       };
     });
     return {
-      dynamicId: dynamicId,
+      dynamicId: node._server_id,
       profileName: profile.name.get(),
       endpoints: await Promise.all(endpoints),
     };
@@ -99,5 +120,5 @@ async function getControlEndpointsInfo(
   return await Promise.all(promises);
 }
 
-export { getControlEndpointsInfo };
+export { getControlEndpointsInfo, getNodeControlEndpointsInfo };
 export default getControlEndpointsInfo;

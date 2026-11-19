@@ -22,173 +22,171 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 // // import spinalAPIMiddleware from '../../spinalAPIMiddleware';
 const BIM_FILE_CONTEXT_NAME = 'BimFileContext';
 const BIM_FILE_CONTEXT_RELATION = 'hasBimFile';
 const BIM_FILE_RELATION = 'hasBimContext';
 const BIM_CONTEXT_RELATION = 'hasBimObject';
-module.exports = (_a = class BimObjectUtils {
-        constructor() {
-            this.context = null;
-        }
-        static getInstance(spinalAPIMiddleware) {
-            this.spinalAPIMiddleware = spinalAPIMiddleware;
-            return typeof _a.instance !== 'undefined'
-                ? _a.instance
-                : (_a.instance = new _a());
-        }
-        getContext() {
-            if (this.context)
-                return this.context;
-            this.context = new Promise(async (resolve) => {
-                const graph = await _a.spinalAPIMiddleware.getGraph();
-                resolve(graph.getContext(BIM_FILE_CONTEXT_NAME));
-            });
+module.exports = class BimObjectUtils {
+    context = null;
+    static instance = undefined;
+    static spinalAPIMiddleware;
+    constructor() { }
+    static getInstance(spinalAPIMiddleware) {
+        this.spinalAPIMiddleware = spinalAPIMiddleware;
+        return typeof BimObjectUtils.instance !== 'undefined'
+            ? BimObjectUtils.instance
+            : (BimObjectUtils.instance = new BimObjectUtils());
+    }
+    getContext() {
+        if (this.context)
             return this.context;
+        this.context = new Promise(async (resolve) => {
+            const graph = await BimObjectUtils.spinalAPIMiddleware.getGraph();
+            resolve(graph.getContext(BIM_FILE_CONTEXT_NAME));
+        });
+        return this.context;
+    }
+    async getBimFile(bimFileId) {
+        const context = await this.getContext();
+        const bimFiles = await context.getChildren([
+            BIM_FILE_CONTEXT_RELATION,
+        ]);
+        for (const bimFile of bimFiles) {
+            if (bimFile._server_id === bimFileId ||
+                bimFile.getId().get() === bimFileId) {
+                return bimFile;
+            }
         }
-        async getBimFile(bimFileId) {
-            const context = await this.getContext();
-            const bimFiles = await context.getChildren([
-                BIM_FILE_CONTEXT_RELATION,
-            ]);
-            for (const bimFile of bimFiles) {
-                if (bimFile._server_id === bimFileId ||
-                    bimFile.getId().get() === bimFileId) {
-                    return bimFile;
+        return undefined;
+    }
+    async getBimObjects(bimFileNode, dbIds) {
+        const res = [];
+        const bimContexts = await bimFileNode.getChildren([BIM_FILE_RELATION]);
+        for (const bimContext of bimContexts) {
+            // eslint-disable-next-line no-await-in-loop
+            const bimObjects = await bimContext.getChildren([BIM_CONTEXT_RELATION]);
+            bimObjects.reduce((acc, bimObject) => {
+                if (dbIds.includes(bimObject.info.dbid.get()))
+                    acc.push(bimObject);
+                return acc;
+            }, res);
+        }
+        return res;
+    }
+    async getBimObjectsNodeInfo(bimObjects) {
+        const result = [];
+        for (const node of bimObjects) {
+            const childrens_list = this.childrensNode(node);
+            // eslint-disable-next-line no-await-in-loop
+            const parents_list = await this.parentsNode(node);
+            const data = {
+                dynamicId: node._server_id,
+                staticId: node.getId().get(),
+                name: node.getName().get(),
+                type: node.getType().get(),
+                children_relation_list: childrens_list,
+                parent_relation_list: parents_list,
+            };
+            this.copyAttrInObj(data, node, 'externalId');
+            this.copyAttrInObj(data, node, 'dbid');
+            this.copyAttrInObj(data, node, 'bimFileId');
+            this.copyAttrInObj(data, node, 'version');
+            result.push(data);
+        }
+        return result;
+    }
+    async getBimObjectsInfo(bimFileId, dbids) {
+        const bimFileNode = await this.getBimFile(bimFileId);
+        if (!bimFileNode)
+            return {
+                model: {
+                    name: 'BimFileId not found',
+                    staticId: typeof bimFileId === 'string' ? bimFileId : 'undefined',
+                    type: 'undefined',
+                    dynamicId: typeof bimFileId === 'number' ? bimFileId : NaN,
+                },
+                bimObjects: [],
+                notFound: dbids,
+            };
+        try {
+            const bimObjects = await this.getBimObjects(bimFileNode, dbids);
+            const bimObjectsInfo = await this.getBimObjectsNodeInfo(bimObjects);
+            const model = {
+                dynamicId: bimFileNode._server_id,
+                staticId: bimFileNode.getId().get(),
+                name: bimFileNode.getName().get(),
+                type: bimFileNode.getType().get(),
+            };
+            const notFound = dbids.reduce((acc, dbid) => {
+                for (const bimObject of bimObjects) {
+                    if (typeof bimObject.info.dbid !== 'undefined' &&
+                        bimObject.info.dbid.get() === dbid) {
+                        return acc;
+                    }
                 }
-            }
-            return undefined;
+                acc.push(dbid);
+                return acc;
+            }, []);
+            return {
+                model,
+                bimObjects: bimObjectsInfo,
+                notFound,
+            };
         }
-        async getBimObjects(bimFileNode, dbIds) {
-            const res = [];
-            const bimContexts = await bimFileNode.getChildren([BIM_FILE_RELATION]);
-            for (const bimContext of bimContexts) {
-                // eslint-disable-next-line no-await-in-loop
-                const bimObjects = await bimContext.getChildren([BIM_CONTEXT_RELATION]);
-                bimObjects.reduce((acc, bimObject) => {
-                    if (dbIds.includes(bimObject.info.dbid.get()))
-                        acc.push(bimObject);
-                    return acc;
-                }, res);
-            }
-            return res;
+        catch (e) {
+            console.error(e);
+            throw 'Internal server error';
         }
-        async getBimObjectsNodeInfo(bimObjects) {
-            const result = [];
-            for (const node of bimObjects) {
-                const childrens_list = this.childrensNode(node);
-                // eslint-disable-next-line no-await-in-loop
-                const parents_list = await this.parentsNode(node);
-                const data = {
+    }
+    copyAttrInObj(target, node, string) {
+        if (typeof node.info[string] !== 'undefined') {
+            Object.assign(target, { [string]: node.info[string].get() });
+        }
+    }
+    childrensNode(node) {
+        const childs = node.children;
+        const res = [];
+        // childrens relation course
+        for (const [, relationTypeMap] of childs) {
+            for (const [, relation] of relationTypeMap) {
+                const child = {
+                    dynamicId: relation._server_id,
+                    staticId: relation.getId().get(),
+                    name: relation.getName().get(),
+                    children_number: relation.getNbChildren(),
+                };
+                res.push(child);
+            }
+        }
+        return res;
+    }
+    async parentsNode(node) {
+        const parents = node.parents;
+        const auxtab = [];
+        let res = [];
+        for (const [, ptrList] of parents) {
+            for (let i = 0; i < ptrList.length; i++) {
+                if (!ptrList[i].info.pointedId?.get()) {
+                    continue;
+                }
+                auxtab.push(ptrList[i].load());
+            }
+        }
+        res = await Promise.all(auxtab).then((values) => {
+            return values.map((node) => {
+                return {
                     dynamicId: node._server_id,
                     staticId: node.getId().get(),
                     name: node.getName().get(),
-                    type: node.getType().get(),
-                    children_relation_list: childrens_list,
-                    parent_relation_list: parents_list,
+                    children_number: node.getNbChildren(),
                 };
-                this.copyAttrInObj(data, node, 'externalId');
-                this.copyAttrInObj(data, node, 'dbid');
-                this.copyAttrInObj(data, node, 'bimFileId');
-                this.copyAttrInObj(data, node, 'version');
-                result.push(data);
-            }
-            return result;
-        }
-        async getBimObjectsInfo(bimFileId, dbids) {
-            const bimFileNode = await this.getBimFile(bimFileId);
-            if (!bimFileNode)
-                return {
-                    model: {
-                        name: 'BimFileId not found',
-                        staticId: typeof bimFileId === 'string' ? bimFileId : 'undefined',
-                        type: 'undefined',
-                        dynamicId: typeof bimFileId === 'number' ? bimFileId : NaN,
-                    },
-                    bimObjects: [],
-                    notFound: dbids,
-                };
-            try {
-                const bimObjects = await this.getBimObjects(bimFileNode, dbids);
-                const bimObjectsInfo = await this.getBimObjectsNodeInfo(bimObjects);
-                const model = {
-                    dynamicId: bimFileNode._server_id,
-                    staticId: bimFileNode.getId().get(),
-                    name: bimFileNode.getName().get(),
-                    type: bimFileNode.getType().get(),
-                };
-                const notFound = dbids.reduce((acc, dbid) => {
-                    for (const bimObject of bimObjects) {
-                        if (typeof bimObject.info.dbid !== 'undefined' &&
-                            bimObject.info.dbid.get() === dbid) {
-                            return acc;
-                        }
-                    }
-                    acc.push(dbid);
-                    return acc;
-                }, []);
-                return {
-                    model,
-                    bimObjects: bimObjectsInfo,
-                    notFound,
-                };
-            }
-            catch (e) {
-                console.error(e);
-                throw 'Internal server error';
-            }
-        }
-        copyAttrInObj(target, node, string) {
-            if (typeof node.info[string] !== 'undefined') {
-                Object.assign(target, { [string]: node.info[string].get() });
-            }
-        }
-        childrensNode(node) {
-            const childs = node.children;
-            const res = [];
-            // childrens relation course
-            for (const [, relationTypeMap] of childs) {
-                for (const [, relation] of relationTypeMap) {
-                    const child = {
-                        dynamicId: relation._server_id,
-                        staticId: relation.getId().get(),
-                        name: relation.getName().get(),
-                        children_number: relation.getNbChildren(),
-                    };
-                    res.push(child);
-                }
-            }
-            return res;
-        }
-        async parentsNode(node) {
-            const parents = node.parents;
-            const auxtab = [];
-            let res = [];
-            for (const [, ptrList] of parents) {
-                for (let i = 0; i < ptrList.length; i++) {
-                    if (!ptrList[i].info.pointedId?.get()) {
-                        continue;
-                    }
-                    auxtab.push(ptrList[i].load());
-                }
-            }
-            res = await Promise.all(auxtab).then((values) => {
-                return values.map((node) => {
-                    return {
-                        dynamicId: node._server_id,
-                        staticId: node.getId().get(),
-                        name: node.getName().get(),
-                        children_number: node.getNbChildren(),
-                    };
-                });
             });
-            return res;
-        }
-    },
-    _a.instance = undefined,
-    _a);
+        });
+        return res;
+    }
+};
 /**
  * @swagger
  * components:

@@ -24,6 +24,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getControlEndpointsInfo = getControlEndpointsInfo;
+exports.getNodeControlEndpointsInfo = getNodeControlEndpointsInfo;
 const spinal_env_viewer_graph_service_1 = require("spinal-env-viewer-graph-service");
 const spinal_env_viewer_plugin_control_endpoint_service_1 = require("spinal-env-viewer-plugin-control-endpoint-service");
 const spinal_env_viewer_plugin_documentation_service_1 = require("spinal-env-viewer-plugin-documentation-service");
@@ -31,11 +32,20 @@ const corseChildrenAndParentNode_1 = require("./corseChildrenAndParentNode");
 const spinal_model_bmsnetwork_1 = require("spinal-model-bmsnetwork");
 async function getControlEndpointsInfo(spinalAPIMiddleware, profilId, dynamicId, includeDetails = false) {
     const node = await spinalAPIMiddleware.load(dynamicId, profilId);
+    return getNodeControlEndpointsInfo(node, includeDetails);
+}
+// same as getControlEndpointsInfo, for a node the caller has already loaded
+async function getNodeControlEndpointsInfo(node, includeDetails = false) {
     // @ts-ignore
     spinal_env_viewer_graph_service_1.SpinalGraphService._addNode(node);
-    const profils = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(node.getId().get(), [
-        spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP,
+    const nodeId = node.getId().get();
+    const devices = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(nodeId, [
+        spinal_model_bmsnetwork_1.SpinalBmsDevice.relationName,
     ]);
+    // profiles of the node itself, then those of the BMS devices directly under it
+    const profils = (await Promise.all([nodeId, ...devices.map((device) => device.id.get())].map((id) => spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(id, [
+        spinal_env_viewer_plugin_control_endpoint_service_1.spinalControlPointService.ROOM_TO_CONTROL_GROUP,
+    ])))).flat();
     const promises = profils.map(async (profile) => {
         const result = await spinal_env_viewer_graph_service_1.SpinalGraphService.getChildren(profile.id.get(), [
             spinal_model_bmsnetwork_1.SpinalBmsEndpoint.relationName,
@@ -75,7 +85,7 @@ async function getControlEndpointsInfo(spinalAPIMiddleware, profilId, dynamicId,
             };
         });
         return {
-            dynamicId: dynamicId,
+            dynamicId: node._server_id,
             profileName: profile.name.get(),
             endpoints: await Promise.all(endpoints),
         };
