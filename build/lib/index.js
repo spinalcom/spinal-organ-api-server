@@ -46,7 +46,7 @@ const express_fileupload_1 = __importDefault(require("express-fileupload"));
 const path_1 = __importDefault(require("path"));
 // import * as fileUpload from 'express-fileupload';
 // import * as path from 'path';
-const { version: API_SERVER_VERSION } = require('../../package.json');
+const { version: API_SERVER_VERSION } = require("../../package.json");
 const routes_1 = __importDefault(require("../routes/routes"));
 const api_server_1 = require("../api-server");
 const spinal_organ_api_pubsub_1 = require("spinal-organ-api-pubsub");
@@ -58,12 +58,13 @@ __exportStar(require("../preloadingScript/snapshotPreloader"), exports);
 __exportStar(require("../preloadingScript/requestActivity"), exports);
 __exportStar(require("../routes/snapshot/snapshotUtils"), exports);
 __exportStar(require("../utilities/workHours"), exports);
+const spinal_agent_monitoring_1 = require("spinal-agent-monitoring");
 function initApiServer(app, spinalAPIMiddleware, log_body = false) {
     // first in the chain : it measures the whole lifecycle of every request, and
     // the snapshot preloader uses it to only work while the organ is idle
     app.use(requestActivity_1.requestActivity.middleware);
     app.use((req, res, next) => {
-        res.setHeader('X-API-Version', API_SERVER_VERSION);
+        res.setHeader("X-API-Version", API_SERVER_VERSION);
         next();
     });
     app.use((0, express_fileupload_1.default)({ createParentPath: true }));
@@ -71,9 +72,9 @@ function initApiServer(app, spinalAPIMiddleware, log_body = false) {
     app.use((0, api_server_1.createLogRequestLifecycle)(log_body));
     //useLogger(app, log_body);
     (0, swagger_1.initSwagger)(app);
-    app.get('/logo.png', (req, res) => {
-        res.sendFile('spinalcore.png', {
-            root: path_1.default.resolve(__dirname + '../../../uploads'),
+    app.get("/logo.png", (req, res) => {
+        res.sendFile("spinalcore.png", {
+            root: path_1.default.resolve(__dirname + "../../../uploads"),
         });
     });
     (0, routes_1.default)({}, app, spinalAPIMiddleware);
@@ -81,6 +82,9 @@ function initApiServer(app, spinalAPIMiddleware, log_body = false) {
 async function runServerRest(server, app, spinalAPIMiddleware, spinalIOMiddleware, log_body = false) {
     initApiServer(app, spinalAPIMiddleware, log_body);
     const io = await (0, spinal_organ_api_pubsub_1.runSocketServer)(server, spinalIOMiddleware);
+    if (process.env.ENABLE_MONITORING_API == "1" || process.env.ENABLE_MONITORING_API == "true") {
+        await (0, spinal_agent_monitoring_1.registerMonitoringAgent)(app, io, spinalAPIMiddleware, process.env.MONITORING_AGENT_CONFIG_PATH);
+    }
     return { app, io };
 }
 __exportStar(require("../interfaces"), exports);

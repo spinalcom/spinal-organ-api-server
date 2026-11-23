@@ -32,18 +32,19 @@ const spinalAPIMiddleware_1 = __importDefault(require("./spinalAPIMiddleware"));
 const swagger_1 = require("./swagger");
 const spinal_lib_organ_monitoring_1 = __importDefault(require("spinal-lib-organ-monitoring"));
 const runPreloading_1 = require("./preloadingScript/runPreloading");
-const preload_config = require('../preload_config');
+const preload_config = require("../preload_config");
+const spinal_agent_monitoring_1 = require("spinal-agent-monitoring");
 // since node 15 a promise rejected without a handler exits the process : one
 // forgotten catch in a route would restart the organ, which then loads
 // everything back from the hub
-process.on('unhandledRejection', (reason) => {
-    console.error('[api-server] unhandled promise rejection, the organ keeps running:', reason);
+process.on("unhandledRejection", (reason) => {
+    console.error("[api-server] unhandled promise rejection, the organ keeps running:", reason);
 });
 function Requests(logger) {
     async function initSpinalHub() {
         const spinalAPIMiddleware = spinalAPIMiddleware_1.default.getInstance();
         await spinalAPIMiddleware.getGraph();
-        console.log('graph loaded successfully.');
+        console.log("graph loaded successfully.");
         return spinalAPIMiddleware;
     }
     function initApiServer(spinalAPIMiddleware) {
@@ -51,8 +52,8 @@ function Requests(logger) {
         // TODO add swagger specs here for external documentation and for the organ to ask for it
         (0, swagger_1.initSwagger)(api);
         // serve logo.png file
-        api.get('/logo.png', (req, res) => {
-            res.sendFile('spinalcore.png', { root: process.cwd() + '/uploads' });
+        api.get("/logo.png", (req, res) => {
+            res.sendFile("spinalcore.png", { root: process.cwd() + "/uploads" });
         });
         return api;
     }
@@ -65,12 +66,12 @@ function Requests(logger) {
             // Automatic API route call logic : the preloading picks its strategy
             // from the time of day and from whether a node snapshot is available
             // (see runPreloading).
-            if (process.env.PRELOAD_SCRIPT === '1') {
-                await (0, runPreloading_1.runPreloading)(spinalAPIMiddleware, 'any', preload_config);
+            if (process.env.PRELOAD_SCRIPT === "1") {
+                await (0, runPreloading_1.runPreloading)(spinalAPIMiddleware, "any", preload_config);
             }
             const server = api.listen(port, async () => {
                 if (!process.env.DISABLE_MONITORING) {
-                    console.log('Monitoring service is enabled');
+                    console.log("Monitoring service is enabled");
                     spinal_lib_organ_monitoring_1.default.init(spinalAPIMiddleware.conn, process.env.ORGAN_NAME, process.env.ORGAN_TYPE, process.env.SPINALHUB_IP, parseInt(process.env.REQUESTS_PORT));
                 }
                 console.log(`\nApi server is listening at 0.0.0.0:${port}`);
@@ -78,7 +79,10 @@ function Requests(logger) {
                 console.log(`  swagger-ui :\thttp://localhost:${port}/spinalcom-api-docs`);
                 console.log(`  redoc :\thttp://localhost:${port}/spinalcom-api-redoc-docs`);
             });
-            return spinalAPIMiddleware_1.default.getInstance().runSocketServer(server);
+            const io = await spinalAPIMiddleware_1.default.getInstance().runSocketServer(server);
+            if (process.env.ENABLE_MONITORING_API == "1" || process.env.ENABLE_MONITORING_API == "true") {
+                return (0, spinal_agent_monitoring_1.registerMonitoringAgent)(api, io, spinalAPIMiddleware, process.env.MONITORING_AGENT_CONFIG_PATH);
+            }
         },
         getSwaggerDocs: swagger_1.getSwaggerDocs,
     };

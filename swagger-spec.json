@@ -2315,6 +2315,104 @@
           }
         }
       },
+      "ICreateNodeElement": {
+        "type": "object",
+        "description": "Create a generic Model from this object. The node retains its element pointer.\n\n- Nested values can reference a Model on an existing SpinalNode with `{ \"$modelRef\": 7890123, \"path\": \"info.name\" }`.\n- Use `{ \"$modelRef\": \"self\", \"path\": \"info.unit\" }` to share a Model from the node being created. Forward references work across info and element regardless of field order; self attribute paths can target supplied or default categorized values.\n- Missing self paths, circular dependencies and ancestor embedding return HTTP 400 before attachment. Self does not load a node by dynamic ID.\n\n**The current profile must have access to the target SpinalNode specified by `$modelRef`.**\n\n- References are loaded using the current profile and assigned directly as Model attributes, not copied or wrapped in additional pointers. When used as an attribute value, the referenced Model must be a `Str`.\n- Keys must not start with an underscore, shadow Model members, or equal `$modelRef` on an ordinary object.\n- The root element must be an ordinary object, not a reference.",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/INodeElementValue"
+        },
+        "not": {
+          "required": [
+            "$modelRef"
+          ]
+        },
+        "example": {
+          "value": 21.5,
+          "enabled": true,
+          "device": {
+            "$modelRef": 7890123,
+            "path": "info.name"
+          },
+          "metadata": {
+            "unit": "Celsius"
+          },
+          "samples": [
+            20,
+            21.5
+          ]
+        }
+      },
+      "INodeElementModelReference": {
+        "type": "object",
+        "description": "Share an existing SpinalCore Model instead of copying its JSON value.\nA reference object contains exactly two properties: `$modelRef` and `path`.\n\n### Choosing a target\n\n- `{ \"$modelRef\": 7890123, \"path\": \"info.name\" }` selects the name Model of an existing node. Use its numeric **dynamic ID**, not its static ID or a quoted numeric string. The node must be accessible to the current profile.\n- `{ \"$modelRef\": \"self\", \"path\": \"info.name\" }` selects the name Model of the node being created; no ID or additional node load is needed.\n- Place references in additional info fields, nested element objects or arrays, or directly as categorized attribute values. Required creation fields such as `info.name` and `info.type` still require strings; the root `element` must remain an ordinary object.\n\n### Paths\n\n| Path | Selected Model |\n| --- | --- |\n| `info.name` | Node name (`Str`) |\n| `info.metadata.unit` | Nested info field |\n| `element` | Whole existing element |\n| `element.samples.0` | First entry of an element array (zero-based index) |\n| `attr.Technical.Code` | Categorized attribute value (`Str`) |\n| `attr.Technical.Code.lastModificationDate` | Categorized attribute modification date (`Val`) |\n\n### Sharing behavior\n\n- This is a shared Model, not a computed expression or a lookup performed on every read. Updating that Model in place is visible through every reference to it; replacing it with another Model does not retarget existing references.\n- For example, an attribute pointing to `self` / `info.name` reflects a subsequent PATCH that sets the node's name.\n- API responses serialize the selected value, not the `$modelRef` request object.\n- Referencing an attribute value does not automatically share its modification date. To expose the same date, add a separate info or element field referencing `attr.Technical.Code.lastModificationDate`.\n- Attribute destinations accept only `Str` targets. A modification-date `Val`, number, object or array Model cannot be used as an attribute value (HTTP 400).\n\nMissing paths, invalid target types and circular self dependencies return HTTP 400. Paths and the literal `\"self\"` are case-sensitive.",
+        "additionalProperties": false,
+        "required": [
+          "$modelRef",
+          "path"
+        ],
+        "properties": {
+          "$modelRef": {
+            "oneOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "self"
+                ]
+              }
+            ],
+            "description": "Dynamic ID of an existing SpinalNode accessible to the current profile, or \"self\" for the node being created. Self references resolve in memory and do not require a dynamic ID."
+          },
+          "path": {
+            "type": "string",
+            "description": "Model to share from the target node. Supports `info.name`, nested paths like `info.metadata.unit`, `element` or `element.samples.0`, and `attr.Category.Label` for the categorized attribute's value Model. Use `attr.Category.Label.lastModificationDate` to share that attribute's modification-date Model.\n\n- `info.id`, its alias `info.staticId`, and their descendant paths are forbidden. Referencing the whole `info` Model is also forbidden because it contains the node ID. Invalid paths return HTTP 400.\n- Paths are case-sensitive, limited to 32 segments, and cannot traverse internal members or nested pointers.\n- Category and label names containing dots cannot be addressed. Missing elements, categories, attributes or paths return HTTP 400. Resolving a missing element never creates it.\n- `attr.Category.Label.lastModificationDate` shares the attribute's modification-date `Val` Model; `attr.Category.Label` still refers to the value Model.\n- References share the selected Model, not a copy. Repeated node/path pairs share the same resolved instance; each target node is loaded once per object creation.",
+            "example": "info.name"
+          }
+        },
+        "example": {
+          "$modelRef": 7890123,
+          "path": "info.name"
+        }
+      },
+      "INodeElementValue": {
+        "description": "Recursive non-null JSON value. Numbers must be finite; object keys must follow the Model attribute naming restrictions.",
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/INodeElementValue"
+            }
+          },
+          {
+            "type": "object",
+            "description": "Ordinary object; keys cannot equal $modelRef, start with an underscore or shadow Model members.",
+            "not": {
+              "required": [
+                "$modelRef"
+              ]
+            },
+            "additionalProperties": {
+              "$ref": "#/components/schemas/INodeElementValue"
+            }
+          },
+          {
+            "$ref": "#/components/schemas/INodeElementModelReference"
+          }
+        ]
+      },
       "ICreateNodeInfo": {
         "type": "object",
         "description": "Information about the node to create. Additional scalar, object and array fields are accepted, including nested { \"$modelRef\": nodeDynamicId, \"path\": \"info.name\" } references. The current profile must have access to the target SpinalNode specified by $modelRef. Use { \"$modelRef\": \"self\", \"path\": \"info.unit\" } to share a Model from the node being created, including forward references. Supplied and default categorized values can be targeted with attr.Category.Label. Use attr.Category.Label.lastModificationDate to target an attribute's modification-date Model. Self does not require a dynamic ID. Missing self paths, circular dependencies and ancestor embedding return HTTP 400 before attachment. Paths support info fields, element and attr.Category.Label (the attribute value Model) or attr.Category.Label.lastModificationDate; references share the selected Model. The whole info Model, info.id, info.staticId and descendants of those ID fields are forbidden. Missing or invalid paths return HTTP 400. Null and reserved Model member names are not supported. Info keys starting with `_` are forbidden at every nesting level, including objects inside arrays; invalid keys return HTTP 400. IDs and node type are assigned by the server; id, staticId, type and dynamicId are forbidden.",
@@ -2449,567 +2547,6 @@
         "example": {
           "errorType": "INTERNAL_ERROR",
           "message": "An unexpected error occurred"
-        }
-      },
-      "INodeItem": {
-        "type": "object",
-        "required": [
-          "dynamicId"
-        ],
-        "properties": {
-          "dynamicId": {
-            "type": "number",
-            "description": "Runtime database ID used by dynamic-ID request parameters. Distinct from info.staticId."
-          },
-          "parentDynamicId": {
-            "description": "Parent dynamic ID returned by room and equipment list endpoints, including building-wide traversal. For group requests this is the group ID.",
-            "type": "number"
-          },
-          "info": {
-            "$ref": "#/components/schemas/INodeItemInfo"
-          },
-          "attributes": {
-            "$ref": "#/components/schemas/INodeItemAttr"
-          },
-          "element": {
-            "description": "Serialized element data when requested on endpoints supporting the element query. Null if the node has no element; omitted when not requested. Nested pointers are represented as objects with a $ptr dynamic ID (or null).",
-            "nullable": true,
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "array",
-                "items": {}
-              },
-              {
-                "type": "object",
-                "additionalProperties": true
-              }
-            ]
-          }
-        },
-        "example": {
-          "dynamicId": 1000123,
-          "parentDynamicId": 1000456,
-          "info": {
-            "staticId": "abc123",
-            "name": "Node Name",
-            "type": "Node Type",
-            "color": "#FFFFFF",
-            "directModificationDate": 1627849200000
-          },
-          "attributes": {
-            "categoryName1_without_add-attributes-modification-date": {
-              "attributeName1": "example value"
-            },
-            "categoryName2_with_add-attributes-modification-date": {
-              "attributeName2": {
-                "value": "example value",
-                "lastModification": 1627849200000
-              }
-            }
-          }
-        }
-      },
-      "INodeItemAttr": {
-        "type": "object",
-        "description": "Attributes of the node item categorized by category name",
-        "additionalProperties": {
-          "$ref": "#/components/schemas/INodeItemAttrCat"
-        }
-      },
-      "INodeItemAttrCat": {
-        "type": "object",
-        "description": "Attribute category containing individual attributes.",
-        "additionalProperties": {
-          "description": "Value of the attribute. Depending on the `add-attributes-modification-date` flag, either as a string or an object with its value and last modification date.",
-          "oneOf": [
-            {
-              "type": "string",
-              "description": "Attribute value as a string"
-            },
-            {
-              "type": "object",
-              "description": "Attribute value along with its last modification date",
-              "$ref": "#/components/schemas/INodeItemAttrCatAttrAndDate"
-            }
-          ]
-        }
-      },
-      "INodeItemAttrCatAttrAndDate": {
-        "type": "object",
-        "description": "Attribute value and its last modification date, when requested.",
-        "properties": {
-          "value": {
-            "type": "string"
-          },
-          "lastModification": {
-            "type": "number",
-            "description": "Unix timestamp in milliseconds. Omitted if unavailable on the stored attribute."
-          }
-        },
-        "example": {
-          "value": "example value",
-          "lastModification": 1627849200000
-        }
-      },
-      "INodeItemInfo": {
-        "description": "Information about the node item",
-        "type": "object",
-        "properties": {
-          "staticId": {
-            "type": "string",
-            "description": "Static ID of the node (unique id from the database)"
-          },
-          "name": {
-            "type": "string",
-            "description": "Name of the node"
-          },
-          "type": {
-            "type": "string",
-            "description": "Type of the node"
-          },
-          "color": {
-            "type": "string",
-            "description": "Color of the node must be in hexadecimal format (e.g.,"
-          },
-          "directModificationDate": {
-            "type": "number",
-            "description": "Unix timestamp in milliseconds of the node's direct modification date."
-          }
-        },
-        "additionalProperties": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "number"
-            },
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "object",
-              "additionalProperties": true
-            },
-            {
-              "type": "array",
-              "items": {}
-            }
-          ]
-        }
-      },
-      "INodeItemInfoPropVirtual": {
-        "type": "object",
-        "properties": {
-          "virtual": {
-            "type": "boolean",
-            "description": "status of the node (virtual or not)",
-            "default": false
-          }
-        }
-      },
-      "INodeParentAttachment": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "parentDynamicId",
-          "relationName"
-        ],
-        "properties": {
-          "parentDynamicId": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 9007199254740991,
-            "description": "Dynamic ID of an existing parent SpinalNode."
-          },
-          "relationName": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Non-blank relation name. Surrounding whitespace is trimmed."
-          },
-          "relationType": {
-            "type": "string",
-            "enum": [
-              "PtrLst",
-              "LstPtr",
-              "Ref"
-            ],
-            "default": "PtrLst"
-          },
-          "contextDynamicId": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 9007199254740991,
-            "description": "Optional dynamic ID of a SpinalContext. Uses addChildInContext when supplied."
-          }
-        }
-      },
-      "INodeParentAttachmentError": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/IErrorItem"
-          },
-          {
-            "type": "object",
-            "required": [
-              "index",
-              "parent"
-            ],
-            "properties": {
-              "index": {
-                "type": "integer",
-                "minimum": 0,
-                "description": "Zero-based position of the failed entry in parents."
-              },
-              "parent": {
-                "$ref": "#/components/schemas/INodeParentAttachment"
-              }
-            }
-          }
-        ]
-      },
-      "INodeAttachmentFailure": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/IErrorItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "errors": {
-                "type": "array",
-                "description": "Per-entry failures when no attachment succeeded.",
-                "items": {
-                  "$ref": "#/components/schemas/INodeParentAttachmentError"
-                }
-              }
-            }
-          }
-        ]
-      },
-      "ICreateNodeElement": {
-        "type": "object",
-        "description": "Create a generic Model from this object. The node retains its element pointer.\n\n- Nested values can reference a Model on an existing SpinalNode with `{ \"$modelRef\": 7890123, \"path\": \"info.name\" }`.\n- Use `{ \"$modelRef\": \"self\", \"path\": \"info.unit\" }` to share a Model from the node being created. Forward references work across info and element regardless of field order; self attribute paths can target supplied or default categorized values.\n- Missing self paths, circular dependencies and ancestor embedding return HTTP 400 before attachment. Self does not load a node by dynamic ID.\n\n**The current profile must have access to the target SpinalNode specified by `$modelRef`.**\n\n- References are loaded using the current profile and assigned directly as Model attributes, not copied or wrapped in additional pointers. When used as an attribute value, the referenced Model must be a `Str`.\n- Keys must not start with an underscore, shadow Model members, or equal `$modelRef` on an ordinary object.\n- The root element must be an ordinary object, not a reference.",
-        "additionalProperties": {
-          "$ref": "#/components/schemas/INodeElementValue"
-        },
-        "not": {
-          "required": [
-            "$modelRef"
-          ]
-        },
-        "example": {
-          "value": 21.5,
-          "enabled": true,
-          "device": {
-            "$modelRef": 7890123,
-            "path": "info.name"
-          },
-          "metadata": {
-            "unit": "Celsius"
-          },
-          "samples": [
-            20,
-            21.5
-          ]
-        }
-      },
-      "INodeElementModelReference": {
-        "type": "object",
-        "description": "Share an existing SpinalCore Model instead of copying its JSON value.\nA reference object contains exactly two properties: `$modelRef` and `path`.\n\n### Choosing a target\n\n- `{ \"$modelRef\": 7890123, \"path\": \"info.name\" }` selects the name Model of an existing node. Use its numeric **dynamic ID**, not its static ID or a quoted numeric string. The node must be accessible to the current profile.\n- `{ \"$modelRef\": \"self\", \"path\": \"info.name\" }` selects the name Model of the node being created; no ID or additional node load is needed.\n- Place references in additional info fields, nested element objects or arrays, or directly as categorized attribute values. Required creation fields such as `info.name` and `info.type` still require strings; the root `element` must remain an ordinary object.\n\n### Paths\n\n| Path | Selected Model |\n| --- | --- |\n| `info.name` | Node name (`Str`) |\n| `info.metadata.unit` | Nested info field |\n| `element` | Whole existing element |\n| `element.samples.0` | First entry of an element array (zero-based index) |\n| `attr.Technical.Code` | Categorized attribute value (`Str`) |\n| `attr.Technical.Code.lastModificationDate` | Categorized attribute modification date (`Val`) |\n\n### Sharing behavior\n\n- This is a shared Model, not a computed expression or a lookup performed on every read. Updating that Model in place is visible through every reference to it; replacing it with another Model does not retarget existing references.\n- For example, an attribute pointing to `self` / `info.name` reflects a subsequent PATCH that sets the node's name.\n- API responses serialize the selected value, not the `$modelRef` request object.\n- Referencing an attribute value does not automatically share its modification date. To expose the same date, add a separate info or element field referencing `attr.Technical.Code.lastModificationDate`.\n- Attribute destinations accept only `Str` targets. A modification-date `Val`, number, object or array Model cannot be used as an attribute value (HTTP 400).\n\nMissing paths, invalid target types and circular self dependencies return HTTP 400. Paths and the literal `\"self\"` are case-sensitive.",
-        "additionalProperties": false,
-        "required": [
-          "$modelRef",
-          "path"
-        ],
-        "properties": {
-          "$modelRef": {
-            "oneOf": [
-              {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 9007199254740991
-              },
-              {
-                "type": "string",
-                "enum": [
-                  "self"
-                ]
-              }
-            ],
-            "description": "Dynamic ID of an existing SpinalNode accessible to the current profile, or \"self\" for the node being created. Self references resolve in memory and do not require a dynamic ID."
-          },
-          "path": {
-            "type": "string",
-            "description": "Model to share from the target node. Supports `info.name`, nested paths like `info.metadata.unit`, `element` or `element.samples.0`, and `attr.Category.Label` for the categorized attribute's value Model. Use `attr.Category.Label.lastModificationDate` to share that attribute's modification-date Model.\n\n- `info.id`, its alias `info.staticId`, and their descendant paths are forbidden. Referencing the whole `info` Model is also forbidden because it contains the node ID. Invalid paths return HTTP 400.\n- Paths are case-sensitive, limited to 32 segments, and cannot traverse internal members or nested pointers.\n- Category and label names containing dots cannot be addressed. Missing elements, categories, attributes or paths return HTTP 400. Resolving a missing element never creates it.\n- `attr.Category.Label.lastModificationDate` shares the attribute's modification-date `Val` Model; `attr.Category.Label` still refers to the value Model.\n- References share the selected Model, not a copy. Repeated node/path pairs share the same resolved instance; each target node is loaded once per object creation.",
-            "example": "info.name"
-          }
-        },
-        "example": {
-          "$modelRef": 7890123,
-          "path": "info.name"
-        }
-      },
-      "INodeElementValue": {
-        "description": "Recursive non-null JSON value. Numbers must be finite; object keys must follow the Model attribute naming restrictions.",
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "number"
-          },
-          {
-            "type": "boolean"
-          },
-          {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/INodeElementValue"
-            }
-          },
-          {
-            "type": "object",
-            "description": "Ordinary object; keys cannot equal $modelRef, start with an underscore or shadow Model members.",
-            "not": {
-              "required": [
-                "$modelRef"
-              ]
-            },
-            "additionalProperties": {
-              "$ref": "#/components/schemas/INodeElementValue"
-            }
-          },
-          {
-            "$ref": "#/components/schemas/INodeElementModelReference"
-          }
-        ]
-      },
-      "INodeChildAttachment": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "childDynamicId",
-          "relationName"
-        ],
-        "properties": {
-          "childDynamicId": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 9007199254740991
-          },
-          "relationName": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Non-blank relation name; surrounding whitespace is trimmed."
-          },
-          "relationType": {
-            "type": "string",
-            "enum": [
-              "PtrLst",
-              "LstPtr",
-              "Ref"
-            ],
-            "default": "PtrLst"
-          },
-          "contextDynamicId": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 9007199254740991,
-            "description": "Optional SpinalContext dynamic ID; uses addChildInContext when supplied."
-          }
-        }
-      },
-      "INodeChildAttachmentResult": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/INodeChildAttachment"
-          },
-          {
-            "type": "object",
-            "required": [
-              "index",
-              "parentDynamicId",
-              "status"
-            ],
-            "properties": {
-              "index": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "parentDynamicId": {
-                "type": "integer"
-              },
-              "status": {
-                "type": "string",
-                "enum": [
-                  "attached",
-                  "alreadyAttached"
-                ]
-              }
-            }
-          }
-        ]
-      },
-      "INodeChildAttachmentError": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/IErrorItem"
-          },
-          {
-            "type": "object",
-            "required": [
-              "index",
-              "child"
-            ],
-            "properties": {
-              "index": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "child": {
-                "$ref": "#/components/schemas/INodeChildAttachment"
-              }
-            }
-          }
-        ]
-      },
-      "INodeChildrenFailure": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/IErrorItem"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "errors": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/INodeChildAttachmentError"
-                }
-              }
-            }
-          }
-        ]
-      },
-      "IPatchNode": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "info": {
-            "$ref": "#/components/schemas/IPatchModelFields"
-          },
-          "element": {
-            "$ref": "#/components/schemas/IPatchModelFields"
-          },
-          "attributes": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "set": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  }
-                }
-              },
-              "remove": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "category",
-                    "label"
-                  ],
-                  "properties": {
-                    "category": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "label": {
-                      "type": "string",
-                      "minLength": 1
-                    }
-                  }
-                }
-              },
-              "rename": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "category",
-                    "from",
-                    "to"
-                  ],
-                  "properties": {
-                    "category": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "from": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "to": {
-                      "type": "string",
-                      "minLength": 1
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "IPatchModelFields": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "set": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/INodeElementValue"
-            }
-          },
-          "remove": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "rename": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "from",
-                "to"
-              ],
-              "properties": {
-                "from": {
-                  "type": "string"
-                },
-                "to": {
-                  "type": "string"
-                }
-              }
-            }
-          }
         }
       },
       "IMoveNodeLink": {
@@ -3176,74 +2713,137 @@
             }
           }
         ]
-      }
-    },
-    "parameters": {
-      "paramParentDynId": {
-        "in": "query",
-        "name": "parent-dynamic-id",
-        "required": false,
-        "description": "Restrict results to direct children of an existing parent loaded using the current profile.\n\n- **Room lists:** `geographicFloor` or `geographicRoomGroup`.\n- **Equipment lists:** `geographicRoom`, `geographicFloor` (floor references only),\n  or `BIMObjectGroup`.\n- **Without this parameter:** traverse the profile's building.\n- A valid but unsupported parent type returns an empty list.",
-        "example": 132456,
-        "schema": {
-          "type": "integer",
-          "minimum": 1
-        }
       },
-      "queryAddAttributesModificationDate": {
-        "in": "query",
-        "name": "add-attributes-modification-date",
-        "required": false,
-        "description": "Return selected attributes as objects containing value and lastModification instead of plain strings. lastModification is a Unix timestamp in milliseconds when available. Has no effect when attributes are not requested.",
-        "schema": {
-          "type": "boolean",
-          "default": false
-        }
-      },
-      "queryAttributes": {
-        "in": "query",
-        "name": "attributes",
-        "required": false,
-        "description": "Select categorized attributes for the response. Does not affect filtering.\n\n- `true` will include all attributes from all categories.\n- `false` or omitting the parameter will include no attributes.\n- A comma-separated list like `Spatial/area,Spatial/volume,OtherCategories`. Inputting only the category will include all the attributes within that category.\n- Missing attributes and empty categories are omitted. Names are case-sensitive.",
-        "schema": {
-          "type": "string"
-        },
-        "examples": {
-          "missing": {
-            "summary": "--",
-            "value": ""
+      "INodeChildAttachment": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "childDynamicId",
+          "relationName"
+        ],
+        "properties": {
+          "childDynamicId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
           },
-          "all": {
-            "summary": "All attributes in all categories",
-            "value": "true"
+          "relationName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Non-blank relation name; surrounding whitespace is trimmed."
           },
-          "none": {
-            "summary": "Omit attributes from the response",
-            "value": "false"
+          "relationType": {
+            "type": "string",
+            "enum": [
+              "PtrLst",
+              "LstPtr",
+              "Ref"
+            ],
+            "default": "PtrLst"
           },
-          "category": {
-            "summary": "All attributes in one category",
-            "value": "Spatial"
-          },
-          "selected": {
-            "summary": "Selected attributes in one category",
-            "value": "Spatial/area,Spatial/volume"
-          },
-          "mixed": {
-            "summary": "Selected attributes and a complete category",
-            "value": "Spatial/area,Technical/Code,OtherCategories"
+          "contextDynamicId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "description": "Optional SpinalContext dynamic ID; uses addChildInContext when supplied."
           }
         }
       },
-      "queryFilter": {
-        "in": "query",
-        "name": "filter",
-        "style": "deepObject",
-        "explode": true,
-        "description": "All conditions are combined using **AND**. Filtering runs before pagination,\nindependently of the requested `info` and `attributes`.\n\n#### Equivalent URL formats\n\n- Brackets: `filter[info.virtual][eq]=false`\n- JSON operators: `filter[info.virtual]={\"eq\":\"false\"}`\n- Full JSON: `filter={\"info.virtual\":{\"eq\":\"false\"}}`\n- Default equality: `filter[info.virtual]=false`\n\nURL-encode JSON values when constructing URLs manually.\n\n#### Fields and operators\n\n- Fields: `info.key`, `attributes.category.attribute`, `dynamicId`, `server_id`.\n- `info.staticId` maps to the model's `info.id`.\n- `dynamicId` and `server_id` both refer to the node's dynamic ID.\n- Operators: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `exists`.\n- Scalar values default to **`eq`**.\n- Numeric comparisons require finite numbers, including for numeric attribute strings.\n- Equality preserves strings such as `\"001\"` and uses the stored type for numeric/boolean info.\n\n#### Existence checks\n\n- `\"exists\": true`: the value is present, including `\"\"`, `false` and `0`.\n- `\"exists\": false`: the field is missing or undefined.\n- A missing category also makes its attributes absent.\n- Missing fields never match `eq`, `ne` or numeric comparisons.\n\n#### Value restrictions\n\n- Only scalar info fields are exposed.\n- Null and arrays are invalid filter values.\n- Strings starting with `{` or `[` are interpreted as JSON operator objects.\n  Use explicit `eq` to compare literal strings starting with those characters.",
-        "schema": {
-          "type": "object",
-          "additionalProperties": {
+      "INodeChildAttachmentResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/INodeChildAttachment"
+          },
+          {
+            "type": "object",
+            "required": [
+              "index",
+              "parentDynamicId",
+              "status"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "parentDynamicId": {
+                "type": "integer"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "attached",
+                  "alreadyAttached"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "INodeChildAttachmentError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/IErrorItem"
+          },
+          {
+            "type": "object",
+            "required": [
+              "index",
+              "child"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "child": {
+                "$ref": "#/components/schemas/INodeChildAttachment"
+              }
+            }
+          }
+        ]
+      },
+      "INodeChildrenFailure": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/IErrorItem"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "errors": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/INodeChildAttachmentError"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "INodeItem": {
+        "type": "object",
+        "required": [
+          "dynamicId"
+        ],
+        "properties": {
+          "dynamicId": {
+            "type": "number",
+            "description": "Runtime database ID used by dynamic-ID request parameters. Distinct from info.staticId."
+          },
+          "parentDynamicId": {
+            "description": "Parent dynamic ID returned by room and equipment list endpoints, including building-wide traversal. For group requests this is the group ID.",
+            "type": "number"
+          },
+          "info": {
+            "$ref": "#/components/schemas/INodeItemInfo"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/INodeItemAttr"
+          },
+          "element": {
+            "description": "Serialized element data when requested on endpoints supporting the element query. Null if the node has no element; omitted when not requested. Nested pointers are represented as objects with a $ptr dynamic ID (or null).",
+            "nullable": true,
             "oneOf": [
               {
                 "type": "string"
@@ -3255,298 +2855,325 @@
                 "type": "boolean"
               },
               {
+                "type": "array",
+                "items": {}
+              },
+              {
                 "type": "object",
-                "additionalProperties": {
-                  "oneOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "boolean"
-                    }
-                  ]
-                }
+                "additionalProperties": true
               }
             ]
           }
         },
-        "examples": {
-          "equality": {
-            "summary": "Explicit equality on a boolean info field",
-            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.virtual][eq]=false`",
-            "value": {
-              "info.virtual": {
-                "eq": false
-              }
-            }
+        "example": {
+          "dynamicId": 1000123,
+          "parentDynamicId": 1000456,
+          "info": {
+            "staticId": "abc123",
+            "name": "Node Name",
+            "type": "Node Type",
+            "color": "#FFFFFF",
+            "directModificationDate": 1627849200000
           },
-          "defaultEquality": {
-            "summary": "Scalar values default to equality",
-            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.name][eq]='Room A'&filter[info.virtual][eq]=false`",
-            "value": {
-              "info.name": "Room A",
-              "info.virtual": false
-            }
-          },
-          "range": {
-            "summary": "Attribute numeric range (AND)",
-            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[attributes.Spatial.area][gte]=20&filter[attributes.Spatial.area][lt]=100`",
-            "value": {
-              "attributes.Spatial.area": {
-                "gte": 20,
-                "lt": 100
-              }
-            }
-          },
-          "exists": {
-            "summary": "Require one field and exclude nodes with another",
-            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.bimFileId][exists]=true&filter[attributes.Technical.Code][exists]=false`",
-            "value": {
-              "info.bimFileId": {
-                "exists": true
-              },
-              "attributes.Technical.Code": {
-                "exists": false
-              }
-            }
-          },
-          "notEqual": {
-            "summary": "Exclude a name (missing names do not match)",
-            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.name][ne]='Unassigned'`",
-            "value": {
-              "info.name": {
-                "ne": "Unassigned"
-              }
-            }
-          },
-          "combined": {
-            "summary": "Combine info, attribute and dynamic ID conditions",
-            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.virtual][eq]=false&filter[attributes.Technical.Code][eq]='001'&filter[dynamicId][gt]=1000000`",
-            "value": {
-              "info.virtual": false,
-              "attributes.Technical.Code": {
-                "eq": "001"
-              },
-              "dynamicId": {
-                "gt": 1000000
+          "attributes": {
+            "categoryName1_without_add-attributes-modification-date": {
+              "attributeName1": "example value"
+            },
+            "categoryName2_with_add-attributes-modification-date": {
+              "attributeName2": {
+                "value": "example value",
+                "lastModification": 1627849200000
               }
             }
           }
         }
       },
-      "queryInfo": {
-        "in": "query",
-        "name": "info",
-        "required": false,
-        "description": "Select fields from `node.info` for the response. Does not affect filtering.\n\n- `true` or an empty value includes all info fields, including nested objects and arrays.\n- `false` omits the `info` property entirely.\n- Omitting the parameter uses the default fields (`staticId,name,type,color,icon,virtual,bimFileId,dbid`) if they are present in the node.\n- A comma-separated list like `staticId,name` will include only the `staticId` and `name` fields.\n- Dot paths select nested fields and zero-based array indexes, for example `metadata.unit,samples.0`. The selected structure is preserved; unselected earlier array entries are `null`.\n- `staticId` maps to the model's info.id; `id` is accepted as an alias in field lists.\n\nMissing fields are omitted. Directly embedded Models are traversed, including `$modelRef` data; nested pointers return `{ \"$ptr\": dynamicId }` without loading.\n\n- Cycles, non-finite numbers, depth greater than 32, more than 10000 visited Models, or arrays longer than 10000 produce HTTP 500.\n- Dot paths cannot address literal dots in field names. Internal Model members are not selectable.\n- The top-level `dynamicId` is always returned.",
-        "schema": {
-          "type": "string"
-        },
-        "examples": {
-          "all": {
-            "summary": "All info, including objects and arrays",
-            "value": "true"
-          },
-          "none": {
-            "summary": "Omit info from the response",
-            "value": "false"
-          },
-          "selected": {
-            "summary": "Static ID, name and type",
-            "value": "staticId,name,type"
-          },
-          "nested": {
-            "summary": "Selected nested fields",
-            "value": "name,metadata.unit,metadata.device.value"
-          },
-          "array": {
-            "summary": "First sample and a field in the second sample",
-            "value": "samples.0,samples.1.value"
-          }
+      "INodeItemAttr": {
+        "type": "object",
+        "description": "Attributes of the node item categorized by category name",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/INodeItemAttrCat"
         }
       },
-      "queryOffset": {
-        "in": "query",
-        "name": "offset",
-        "description": "Number of matching nodes to skip **after filtering**.\n\n- Must be a non-negative safe integer.\n- Pages contain at most **200 items**.\n- Use `0`, `200`, `400`, etc. for successive pages.\n- An offset beyond the matches returns `data: []`.",
-        "schema": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991,
-          "default": 0
-        }
-      },
-      "queryElement": {
-        "in": "query",
-        "name": "element",
-        "required": false,
-        "description": "Select data from the SpinalNode element.\n\n- `true` or an empty value returns the whole element.\n- Omitting the parameter or using `false` omits the element without loading it.\n- A comma-separated list of dot paths selects fields, preserving their structure (for example `value,metadata.unit,samples.0`).\n- Array indexes are zero-based; unselected earlier entries appear as `null`.\n- A missing element returns `null` without creating one. Missing fields are omitted.\n- Directly embedded Models are traversed. Nested pointers return `{ \"$ptr\": dynamicId }` without loading their targets; unset pointer IDs are `null`.\n- Dot paths cannot address field names containing dots. Internal Model members are not selectable.\n- Cycles, non-finite numbers, depth greater than 32, more than 10000 visited Models, or arrays longer than 10000 produce HTTP 500.",
-        "schema": {
-          "type": "string"
-        },
-        "examples": {
-          "all": {
-            "summary": "Return the whole element",
-            "value": "true"
-          },
-          "selected": {
-            "summary": "Selected fields, nested fields and an array entry",
-            "value": "value,metadata.unit,samples.0"
-          },
-          "omitted": {
-            "summary": "Omit the element without loading it",
-            "value": "false"
-          }
-        }
-      },
-      "nodeRelationsNodeId": {
-        "in": "path",
-        "name": "nodeId",
-        "required": true,
-        "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        }
-      },
-      "nodeParentsContext": {
-        "in": "query",
-        "name": "contextDynamicId",
-        "description": "Optional accessible SpinalContext. The queried child, incoming relation and returned parent must belong to it. Relation pointers are loaded to check membership; parents of unrelated relations are not fetched.",
-        "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        }
-      },
-      "nodeChildrenParentId": {
-        "in": "path",
-        "name": "parentId",
-        "required": true,
-        "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        }
-      },
-      "nodeChildrenRelationType": {
-        "in": "query",
-        "name": "relationType",
-        "description": "Restrict relation type. Omitted means all supported types.",
-        "schema": {
-          "type": "string",
-          "enum": [
-            "PtrLst",
-            "LstPtr",
-            "Ref"
+      "INodeItemAttrCat": {
+        "type": "object",
+        "description": "Attribute category containing individual attributes.",
+        "additionalProperties": {
+          "description": "Value of the attribute. Depending on the `add-attributes-modification-date` flag, either as a string or an object with its value and last modification date.",
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Attribute value as a string"
+            },
+            {
+              "type": "object",
+              "description": "Attribute value along with its last modification date",
+              "$ref": "#/components/schemas/INodeItemAttrCatAttrAndDate"
+            }
           ]
         }
       },
-      "nodeChildrenRelationName": {
-        "in": "query",
-        "name": "relationName",
-        "description": "Comma-separated exact relation names matched with OR across selected types. Whitespace is trimmed; empty names are rejected. Omitted means all names.",
-        "example": "hasSensor,hasDocument",
-        "schema": {
-          "type": "string",
-          "minLength": 1
-        }
-      },
-      "nodeChildrenContext": {
-        "in": "query",
-        "name": "contextDynamicId",
-        "description": "Optional accessible SpinalContext. Both relation and child must belong to it. Works without relationName; only direct children of this parent are returned. Relations outside the context are skipped before fetching their children.",
-        "schema": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        }
-      }
-    },
-    "responses": {
-      "IErrorItemRes400": {
-        "description": "Bad request - Invalid input or parameters",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/IErrorItem"
-            }
+      "INodeItemAttrCatAttrAndDate": {
+        "type": "object",
+        "description": "Attribute value and its last modification date, when requested.",
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "lastModification": {
+            "type": "number",
+            "description": "Unix timestamp in milliseconds. Omitted if unavailable on the stored attribute."
           }
+        },
+        "example": {
+          "value": "example value",
+          "lastModification": 1627849200000
         }
       },
-      "IErrorItemRes500": {
-        "description": "Internal server error",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/IErrorItem"
-            }
+      "INodeItemInfo": {
+        "description": "Information about the node item",
+        "type": "object",
+        "properties": {
+          "staticId": {
+            "type": "string",
+            "description": "Static ID of the node (unique id from the database)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the node"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of the node"
+          },
+          "color": {
+            "type": "string",
+            "description": "Color of the node must be in hexadecimal format (e.g.,"
+          },
+          "directModificationDate": {
+            "type": "number",
+            "description": "Unix timestamp in milliseconds of the node's direct modification date."
           }
-        }
-      },
-      "INodeItemAttrMultiRes": {
-        "description": "Nodes retrieved successfully.",
-        "content": {
-          "application/json": {
-            "schema": {
+        },
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
               "type": "object",
-              "required": [
-                "data"
-              ],
-              "properties": {
-                "data": {
-                  "type": "array",
-                  "description": "Retrieved nodes. Room and equipment lists return at most 200 items; floor lists are not paginated.",
-                  "items": {
-                    "$ref": "#/components/schemas/INodeItem"
-                  }
-                },
-                "offset": {
-                  "type": "integer",
-                  "description": "Requested number of matching nodes skipped. Returned by paginated room and equipment lists."
-                },
-                "total": {
-                  "type": "integer",
-                  "description": "Number of eligible children before filtering when a parent-dynamic-id is supplied. Omitted for building-wide traversal and floor lists. This is not a count of filter matches."
-                },
-                "errors": {
-                  "type": "array",
-                  "description": "List of errors encountered during the request.",
-                  "items": {
-                    "$ref": "#/components/schemas/IErrorItem"
-                  }
+              "additionalProperties": true
+            },
+            {
+              "type": "array",
+              "items": {}
+            }
+          ]
+        }
+      },
+      "INodeParentAttachment": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "parentDynamicId",
+          "relationName"
+        ],
+        "properties": {
+          "parentDynamicId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "description": "Dynamic ID of an existing parent SpinalNode."
+          },
+          "relationName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Non-blank relation name. Surrounding whitespace is trimmed."
+          },
+          "relationType": {
+            "type": "string",
+            "enum": [
+              "PtrLst",
+              "LstPtr",
+              "Ref"
+            ],
+            "default": "PtrLst"
+          },
+          "contextDynamicId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "description": "Optional dynamic ID of a SpinalContext. Uses addChildInContext when supplied."
+          }
+        }
+      },
+      "INodeParentAttachmentError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/IErrorItem"
+          },
+          {
+            "type": "object",
+            "required": [
+              "index",
+              "parent"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Zero-based position of the failed entry in parents."
+              },
+              "parent": {
+                "$ref": "#/components/schemas/INodeParentAttachment"
+              }
+            }
+          }
+        ]
+      },
+      "INodeAttachmentFailure": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/IErrorItem"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "errors": {
+                "type": "array",
+                "description": "Per-entry failures when no attachment succeeded.",
+                "items": {
+                  "$ref": "#/components/schemas/INodeParentAttachmentError"
                 }
               }
             }
           }
-        }
+        ]
       },
-      "INodeItemAttrRes": {
-        "description": "Node retrieved or created successfully.",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "required": [
-                "data"
-              ],
-              "properties": {
-                "data": {
+      "IPatchNode": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "info": {
+            "$ref": "#/components/schemas/IPatchModelFields"
+          },
+          "element": {
+            "$ref": "#/components/schemas/IPatchModelFields"
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "set": {
+                "type": "object",
+                "additionalProperties": {
                   "type": "object",
-                  "$ref": "#/components/schemas/INodeItem"
-                },
-                "error": {
-                  "type": "array",
-                  "description": "Group-link failures after successful creation. The created node is retained. Omitted when there are no link errors.",
-                  "items": {
-                    "$ref": "#/components/schemas/IErrorItem"
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              },
+              "remove": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "category",
+                    "label"
+                  ],
+                  "properties": {
+                    "category": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "rename": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "category",
+                    "from",
+                    "to"
+                  ],
+                  "properties": {
+                    "category": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "from": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "to": {
+                      "type": "string",
+                      "minLength": 1
+                    }
                   }
                 }
               }
             }
+          }
+        }
+      },
+      "IPatchModelFields": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "set": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/INodeElementValue"
+            }
+          },
+          "remove": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rename": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "from",
+                "to"
+              ],
+              "properties": {
+                "from": {
+                  "type": "string"
+                },
+                "to": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "INodeItemInfoPropVirtual": {
+        "type": "object",
+        "properties": {
+          "virtual": {
+            "type": "boolean",
+            "description": "status of the node (virtual or not)",
+            "default": false
           }
         }
       }
@@ -3725,6 +3352,379 @@
           "data": {},
           "offset": 0,
           "total": 0
+        }
+      }
+    },
+    "parameters": {
+      "nodeRelationsNodeId": {
+        "in": "path",
+        "name": "nodeId",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "nodeParentsContext": {
+        "in": "query",
+        "name": "contextDynamicId",
+        "description": "Optional accessible SpinalContext. The queried child, incoming relation and returned parent must belong to it. Relation pointers are loaded to check membership; parents of unrelated relations are not fetched.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "nodeChildrenParentId": {
+        "in": "path",
+        "name": "parentId",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "nodeChildrenRelationType": {
+        "in": "query",
+        "name": "relationType",
+        "description": "Restrict relation type. Omitted means all supported types.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "PtrLst",
+            "LstPtr",
+            "Ref"
+          ]
+        }
+      },
+      "nodeChildrenRelationName": {
+        "in": "query",
+        "name": "relationName",
+        "description": "Comma-separated exact relation names matched with OR across selected types. Whitespace is trimmed; empty names are rejected. Omitted means all names.",
+        "example": "hasSensor,hasDocument",
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "nodeChildrenContext": {
+        "in": "query",
+        "name": "contextDynamicId",
+        "description": "Optional accessible SpinalContext. Both relation and child must belong to it. Works without relationName; only direct children of this parent are returned. Relations outside the context are skipped before fetching their children.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "paramParentDynId": {
+        "in": "query",
+        "name": "parent-dynamic-id",
+        "required": false,
+        "description": "- Restrict results to direct children of one or more existing parents loaded using the current profile.\n  Pass a comma-separated list (for example `132456,132457`, up to 50 IDs; duplicates are ignored).\n  Each item's `parentDynamicId` identifies the parent it came from.\n\n  - **Room lists:** `geographicFloor` or `geographicRoomGroup`.\n  - **Equipment lists:** `geographicRoom`, `geographicFloor` (floor references only),\n    or `BIMObjectGroup`.\n  - **Without this parameter:** traverse the profile's building.\n  - A valid but unsupported parent type returns no items for that parent.",
+        "example": "132456,132457",
+        "schema": {
+          "type": "string",
+          "pattern": "^\\s*[1-9]\\d*(\\s*,\\s*[1-9]\\d*)*\\s*$"
+        }
+      },
+      "queryAddAttributesModificationDate": {
+        "in": "query",
+        "name": "add-attributes-modification-date",
+        "required": false,
+        "description": "Return selected attributes as objects containing value and lastModification instead of plain strings. lastModification is a Unix timestamp in milliseconds when available. Has no effect when attributes are not requested.",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "queryAttributes": {
+        "in": "query",
+        "name": "attributes",
+        "required": false,
+        "description": "Select categorized attributes for the response. Does not affect filtering.\n\n- `true` will include all attributes from all categories.\n- `false` or omitting the parameter will include no attributes.\n- A comma-separated list like `Spatial/area,Spatial/volume,OtherCategories`. Inputting only the category will include all the attributes within that category.\n- Missing attributes and empty categories are omitted. Names are case-sensitive.",
+        "schema": {
+          "type": "string"
+        },
+        "examples": {
+          "missing": {
+            "summary": "--",
+            "value": ""
+          },
+          "all": {
+            "summary": "All attributes in all categories",
+            "value": "true"
+          },
+          "none": {
+            "summary": "Omit attributes from the response",
+            "value": "false"
+          },
+          "category": {
+            "summary": "All attributes in one category",
+            "value": "Spatial"
+          },
+          "selected": {
+            "summary": "Selected attributes in one category",
+            "value": "Spatial/area,Spatial/volume"
+          },
+          "mixed": {
+            "summary": "Selected attributes and a complete category",
+            "value": "Spatial/area,Technical/Code,OtherCategories"
+          }
+        }
+      },
+      "queryElement": {
+        "in": "query",
+        "name": "element",
+        "required": false,
+        "description": "Select data from the SpinalNode element.\n\n- `true` or an empty value returns the whole element.\n- Omitting the parameter or using `false` omits the element without loading it.\n- A comma-separated list of dot paths selects fields, preserving their structure (for example `value,metadata.unit,samples.0`).\n- Array indexes are zero-based; unselected earlier entries appear as `null`.\n- A missing element returns `null` without creating one. Missing fields are omitted.\n- Directly embedded Models are traversed. Nested pointers return `{ \"$ptr\": dynamicId }` without loading their targets; unset pointer IDs are `null`.\n- Dot paths cannot address field names containing dots. Internal Model members are not selectable.\n- Cycles, non-finite numbers, depth greater than 32, more than 10000 visited Models, or arrays longer than 10000 produce HTTP 500.",
+        "schema": {
+          "type": "string"
+        },
+        "examples": {
+          "all": {
+            "summary": "Return the whole element",
+            "value": "true"
+          },
+          "selected": {
+            "summary": "Selected fields, nested fields and an array entry",
+            "value": "value,metadata.unit,samples.0"
+          },
+          "omitted": {
+            "summary": "Omit the element without loading it",
+            "value": "false"
+          }
+        }
+      },
+      "queryFilter": {
+        "in": "query",
+        "name": "filter",
+        "style": "deepObject",
+        "explode": true,
+        "description": "All conditions are combined using **AND**. Filtering runs before pagination,\nindependently of the requested `info` and `attributes`.\n\n#### Equivalent URL formats\n\n- Brackets: `filter[info.virtual][eq]=false`\n- JSON operators: `filter[info.virtual]={\"eq\":\"false\"}`\n- Full JSON: `filter={\"info.virtual\":{\"eq\":\"false\"}}`\n- Default equality: `filter[info.virtual]=false`\n\nURL-encode JSON values when constructing URLs manually.\n\n#### Fields and operators\n\n- Fields: `info.key`, `attributes.category.attribute`, `dynamicId`, `server_id`.\n- `info.staticId` maps to the model's `info.id`.\n- `dynamicId` and `server_id` both refer to the node's dynamic ID.\n- Operators: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `exists`.\n- Scalar values default to **`eq`**.\n- Numeric comparisons require finite numbers, including for numeric attribute strings.\n- Equality preserves strings such as `\"001\"` and uses the stored type for numeric/boolean info.\n\n#### Existence checks\n\n- `\"exists\": true`: the value is present, including `\"\"`, `false` and `0`.\n- `\"exists\": false`: the field is missing or undefined.\n- A missing category also makes its attributes absent.\n- Missing fields never match `eq`, `ne` or numeric comparisons.\n\n#### Value restrictions\n\n- Only scalar info fields are exposed.\n- Null and arrays are invalid filter values.\n- Strings starting with `{` or `[` are interpreted as JSON operator objects.\n  Use explicit `eq` to compare literal strings starting with those characters.",
+        "schema": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "examples": {
+          "equality": {
+            "summary": "Explicit equality on a boolean info field",
+            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.virtual][eq]=false`",
+            "value": {
+              "info.virtual": {
+                "eq": false
+              }
+            }
+          },
+          "defaultEquality": {
+            "summary": "Scalar values default to equality",
+            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.name][eq]='Room A'&filter[info.virtual][eq]=false`",
+            "value": {
+              "info.name": "Room A",
+              "info.virtual": false
+            }
+          },
+          "range": {
+            "summary": "Attribute numeric range (AND)",
+            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[attributes.Spatial.area][gte]=20&filter[attributes.Spatial.area][lt]=100`",
+            "value": {
+              "attributes.Spatial.area": {
+                "gte": 20,
+                "lt": 100
+              }
+            }
+          },
+          "exists": {
+            "summary": "Require one field and exclude nodes with another",
+            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.bimFileId][exists]=true&filter[attributes.Technical.Code][exists]=false`",
+            "value": {
+              "info.bimFileId": {
+                "exists": true
+              },
+              "attributes.Technical.Code": {
+                "exists": false
+              }
+            }
+          },
+          "notEqual": {
+            "summary": "Exclude a name (missing names do not match)",
+            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.name][ne]='Unassigned'`",
+            "value": {
+              "info.name": {
+                "ne": "Unassigned"
+              }
+            }
+          },
+          "combined": {
+            "summary": "Combine info, attribute and dynamic ID conditions",
+            "description": "Swagger UI will render the filter parameter as a nested object editor. The example is equivalent to:\n`?filter[info.virtual][eq]=false&filter[attributes.Technical.Code][eq]='001'&filter[dynamicId][gt]=1000000`",
+            "value": {
+              "info.virtual": false,
+              "attributes.Technical.Code": {
+                "eq": "001"
+              },
+              "dynamicId": {
+                "gt": 1000000
+              }
+            }
+          }
+        }
+      },
+      "queryInfo": {
+        "in": "query",
+        "name": "info",
+        "required": false,
+        "description": "Select fields from `node.info` for the response. Does not affect filtering.\n\n- `true` or an empty value includes all info fields, including nested objects and arrays.\n- `false` omits the `info` property entirely.\n- Omitting the parameter uses the default fields (`staticId,name,type,color,icon,virtual,bimFileId,dbid`) if they are present in the node.\n- A comma-separated list like `staticId,name` will include only the `staticId` and `name` fields.\n- Dot paths select nested fields and zero-based array indexes, for example `metadata.unit,samples.0`. The selected structure is preserved; unselected earlier array entries are `null`.\n- `staticId` maps to the model's info.id; `id` is accepted as an alias in field lists.\n\nMissing fields are omitted. Directly embedded Models are traversed, including `$modelRef` data; nested pointers return `{ \"$ptr\": dynamicId }` without loading.\n\n- Cycles, non-finite numbers, depth greater than 32, more than 10000 visited Models, or arrays longer than 10000 produce HTTP 500.\n- Dot paths cannot address literal dots in field names. Internal Model members are not selectable.\n- The top-level `dynamicId` is always returned.",
+        "schema": {
+          "type": "string"
+        },
+        "examples": {
+          "all": {
+            "summary": "All info, including objects and arrays",
+            "value": "true"
+          },
+          "none": {
+            "summary": "Omit info from the response",
+            "value": "false"
+          },
+          "selected": {
+            "summary": "Static ID, name and type",
+            "value": "staticId,name,type"
+          },
+          "nested": {
+            "summary": "Selected nested fields",
+            "value": "name,metadata.unit,metadata.device.value"
+          },
+          "array": {
+            "summary": "First sample and a field in the second sample",
+            "value": "samples.0,samples.1.value"
+          }
+        }
+      },
+      "queryOffset": {
+        "in": "query",
+        "name": "offset",
+        "description": "Number of matching nodes to skip **after filtering**.\n\n- Must be a non-negative safe integer.\n- Pages contain at most **200 items**.\n- Use `0`, `200`, `400`, etc. for successive pages.\n- An offset beyond the matches returns `data: []`.",
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "default": 0
+        }
+      }
+    },
+    "responses": {
+      "IErrorItemRes400": {
+        "description": "Bad request - Invalid input or parameters",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/IErrorItem"
+            }
+          }
+        }
+      },
+      "IErrorItemRes500": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/IErrorItem"
+            }
+          }
+        }
+      },
+      "INodeItemAttrMultiRes": {
+        "description": "Nodes retrieved successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "data"
+              ],
+              "properties": {
+                "data": {
+                  "type": "array",
+                  "description": "Retrieved nodes. Room and equipment lists return at most 200 items; floor lists are not paginated.",
+                  "items": {
+                    "$ref": "#/components/schemas/INodeItem"
+                  }
+                },
+                "offset": {
+                  "type": "integer",
+                  "description": "Requested number of matching nodes skipped. Returned by paginated room and equipment lists."
+                },
+                "total": {
+                  "type": "integer",
+                  "description": "Number of eligible children before filtering when a parent-dynamic-id is supplied. Omitted for building-wide traversal and floor lists. This is not a count of filter matches."
+                },
+                "errors": {
+                  "type": "array",
+                  "description": "List of errors encountered during the request.",
+                  "items": {
+                    "$ref": "#/components/schemas/IErrorItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "INodeItemAttrRes": {
+        "description": "Node retrieved or created successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "data"
+              ],
+              "properties": {
+                "data": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/INodeItem"
+                },
+                "error": {
+                  "type": "array",
+                  "description": "Group-link failures after successful creation. The created node is retained. Omitted when there are no link errors.",
+                  "items": {
+                    "$ref": "#/components/schemas/IErrorItem"
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -22666,7 +22666,7 @@
             ]
           }
         ],
-        "description": "Returns analysis algorithms grouped by category. Each algorithm contains its stable name, a display label, description, cross-cutting search tags, inputs (each input slot has a name, accepted types, description, required flag and optional variadic flag), output type, and parameters. The `run` function is not serialized. Pass ?locale=fr to get French label/description/input/parameter text (each field falls back to English when untranslated).",
+        "description": "Returns the block catalog — the analysis algorithms grouped by category, in display order. `data` maps each category id to its algorithms; `meta.categories` gives the categories in the same order with their display label, description and number of algorithms. Each algorithm contains its stable name, a display label, description, category id, search keywords (synonyms to match when searching — never shown), inputs (each input slot has a name, accepted types, description, required flag and optional variadic flag), output type, and parameters (name, type, description, required flag, and when relevant the allowed `options`, the `default` used when left empty, and a `multiline` flag for long text). The `run` function is not serialized. Pass ?locale=fr to get French category and algorithm text (each field falls back to English when untranslated).",
         "summary": "Gets analysis algorithms grouped by category",
         "tags": [
           "Analysis"
@@ -22696,48 +22696,11 @@
                   "properties": {
                     "data": {
                       "type": "object",
-                      "properties": {
-                        "NUMBER": {
-                          "type": "array",
-                          "items": {
-                            "type": "object"
-                          }
-                        },
-                        "NODE": {
-                          "type": "array",
-                          "items": {
-                            "type": "object"
-                          }
-                        },
-                        "FLOW_CONTROL": {
-                          "type": "array",
-                          "items": {
-                            "type": "object"
-                          }
-                        },
-                        "REGISTER": {
-                          "type": "array",
-                          "items": {
-                            "type": "object"
-                          }
-                        },
-                        "EXCEL": {
-                          "type": "array",
-                          "items": {
-                            "type": "object"
-                          }
-                        },
-                        "MAIL": {
-                          "type": "array",
-                          "items": {
-                            "type": "object"
-                          }
-                        },
-                        "OTHER": {
-                          "type": "array",
-                          "items": {
-                            "type": "object"
-                          }
+                      "description": "Category id → its algorithms, keyed in display order.",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
                         }
                       }
                     },
@@ -22746,6 +22709,27 @@
                       "properties": {
                         "count": {
                           "type": "integer"
+                        },
+                        "categories": {
+                          "type": "array",
+                          "description": "The categories in display order.",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "count": {
+                                "type": "integer"
+                              }
+                            }
+                          }
                         },
                         "analysisModuleVersion": {
                           "type": "string"
@@ -26233,7 +26217,7 @@
           }
         ],
         "summary": "Snapshot the nodes currently loaded in the FileSystem",
-        "description": "Walks FileSystem._objects and writes the dynamic id (_server_id) of every loaded node into a file, so that they can be preloaded later on. The file location defaults to snapshots/nodes.json and is overridable with the SNAPSHOT_FILE environment variable.",
+        "description": "Walks the models loaded in the FileSystem and writes the dynamic id (_server_id) of every loaded node into a file, so that they can be preloaded later on. The file location defaults to snapshots/nodes.json and is overridable with the SNAPSHOT_FILE environment variable.",
         "tags": [
           "Snapshot"
         ],
@@ -28266,6 +28250,116 @@
         }
       }
     },
+    "/api/v2/context": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "tags": [
+          "context"
+        ],
+        "summary": "Create a context in the root and profile graphs",
+        "description": "Creates a `SpinalContext` from the supplied info and adds it to both the root graph and the current profile graph.\n\n- The request body uses the same info, attributes and optional element fields as `POST /api/v2/node`. `parents` is not accepted.\n- The exact context name must not already exist in either profile and root graph. Name matching is case-sensitive.\n\n### Model references (`$modelRef`)\n\nInfo, element and attribute values may use `$modelRef` syntax, including `\"self\"` for the context being created. See `POST /api/v2/node` for usage examples and **`INodeElementModelReference`** for the full rules.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "info"
+                ],
+                "properties": {
+                  "info": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "type": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      }
+                    },
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/INodeElementValue"
+                    }
+                  },
+                  "attributes": {
+                    "$ref": "#/components/schemas/ICreateNodeItemAttr"
+                  },
+                  "element": {
+                    "$ref": "#/components/schemas/ICreateNodeElement"
+                  }
+                }
+              },
+              "example": {
+                "info": {
+                  "name": "Energy Analysis",
+                  "type": "Analysis"
+                },
+                "attributes": {
+                  "Settings": {
+                    "enabled": "true"
+                  }
+                },
+                "element": {
+                  "unit": "kWh"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Context created and added to both graphs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/INodeItem"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "409": {
+            "description": "A context with the exact name already exists in the root or profile graph.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IErrorItem"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      }
+    },
     "/api/v2/building": {
       "post": {
         "security": [
@@ -28387,6 +28481,312 @@
         "responses": {
           "200": {
             "$ref": "#/components/responses/INodeItemAttrRes"
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      }
+    },
+    "/api/v2/equipment": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Create equipment",
+        "description": "Create a BIMObject under a room, or a reference object under a room or floor.\n\n### Info, attributes and model references\n\nSee `POST /api/v2/node` for more about info, categorized attributes and `$modelRef` usage. Additional info and attribute values may reference Models. See **`INodeElementModelReference`** for full reference rules. This endpoint assigns the node type and uses `parentDynamicId` to select the parent; it does not accept `element` or `parents`.\n\n### Requirements\n\n- A building must exist in the profile's spatial context.\n- Names must be unique among children of the selected equipment/reference relation.\n- Regular equipment requires a room parent.\n- With `isRefObject=true`, the parent may be a room or a floor.\n- New equipment/reference attachments use `PtrLst`. Existing `PtrLst` or `LstPtr` links to a reused BIM object are retained without migration or duplicate attachment.\n\n### Defaults\n\n- `virtual`: `false`.\n- No default attributes are added.\n\n### BIM object reuse\n\nWhen both `info.dbid` and `info.bimFileId` are supplied, reuse an existing equipment in that BIM file with the matching dbid. If none matches, create a new equipment. A missing BIM file returns HTTP 400.\nWhen reusing an equipment, spatial parent links to other parents in this geographic context are removed before attaching it to the selected parent. A link to the selected parent and the BIMContext link are preserved.\n\n### Response\n\n- Returns all info (including nested objects and arrays) and attributes.\n- Optional group linking happens after creation. Failures **do not roll back** the equipment.",
+        "tags": [
+          "geographicContext"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "parentDynamicId",
+                  "info"
+                ],
+                "properties": {
+                  "parentDynamicId": {
+                    "type": "number",
+                    "description": "Dynamic ID of a geographicRoom parent, or a geographicFloor parent when isRefObject=true.",
+                    "minimum": 1
+                  },
+                  "isRefObject": {
+                    "type": "boolean",
+                    "description": "Use a room reference relation or floor reference relation instead of the regular equipment relation.",
+                    "default": false
+                  },
+                  "info": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ICreateNodeInfo"
+                      },
+                      {
+                        "$ref": "#/components/schemas/INodeItemInfoPropVirtual"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "dbid": {
+                            "type": "number",
+                            "description": "Numeric dbid of the equipment for use in the APS Viewer."
+                          },
+                          "externalId": {
+                            "type": "string",
+                            "description": "External ID of the equipment from Revit."
+                          },
+                          "bimFileId": {
+                            "type": "string",
+                            "description": "Static ID of the BIM file to which the equipment belongs."
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "attributes": {
+                    "$ref": "#/components/schemas/ICreateNodeItemAttr"
+                  },
+                  "linkToGroups": {
+                    "$ref": "#/components/schemas/ICreateNodeLinkToGroups"
+                  }
+                },
+                "example": {
+                  "parentDynamicId": 123456789,
+                  "info": {
+                    "name": "equipment Name",
+                    "color": "#FF0000",
+                    "icon": "room-icon",
+                    "dbid": 123,
+                    "externalId": "external-id",
+                    "bimFileId": "123-abc-123-abc-456789"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/INodeItemAttrRes"
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "409": {
+            "description": "An equipment with the same name already exists for the selected parent and relation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IErrorItem"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve equipment",
+        "description": "Retrieve equipment from the profile's building or from a supplied parent.\n\n> **Performance recommendation:** provide `parent-dynamic-id`.\n> Running this endpoint without it is **not recommended**, especially for large buildings,\n> because it may traverse many floors, rooms and equipment nodes. Filters and the\n> 200-item page limit do not guarantee a small traversal.\n>\n> `parent-dynamic-id` accepts a comma-separated list. For a JSON body, use `POST /api/v2/equipment/search`.\n\n### Scope\n\n- `bimobject`: regular equipment under a `geographicRoom`.\n- `referenceRoom`: reference objects under a `geographicRoom`.\n- `referenceFloor`: reference objects under a `geographicFloor`.\n- A `BIMObjectGroup` parent supports every `bimObjectType`.\n\n### Filtering and pagination\n\n- All filter conditions use **AND**.\n- Filtering runs **before** `offset` and output projection.\n- Returns at most **200 matching items**. Use `offset=200` for the second page.\n\n### Response\n\n- Each item includes `parentDynamicId`.\n- Equipment linked to multiple rooms may appear once per room.\n- With a parent parameter, `total` counts eligible children **before filtering**.\n- `total` is omitted for building-wide traversal.\n\n### Example\n\n```http\nGET /api/v2/equipment?parent-dynamic-id=132456&filter[attributes.Geometry.Surface][exists]=true&offset=0\n```",
+        "tags": [
+          "geographicContext"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/queryInfo"
+          },
+          {
+            "$ref": "#/components/parameters/queryAttributes"
+          },
+          {
+            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
+          },
+          {
+            "$ref": "#/components/parameters/paramParentDynId"
+          },
+          {
+            "in": "query",
+            "name": "bimObjectType",
+            "description": "Select the **relation to traverse**, not a different node type:\n\n- `bimobject`: regular room equipment (default).\n- `referenceRoom`: room reference objects.\n- `referenceFloor`: floor reference objects.\n\nIgnored when the supplied parent is a `BIMObjectGroup`.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bimobject",
+                "referenceRoom",
+                "referenceFloor"
+              ],
+              "default": "bimobject"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/queryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/queryOffset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/INodeItemAttrMultiRes"
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      }
+    },
+    "/api/v2/equipment/{equipmentId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve equipment by its dynamic ID",
+        "description": "Load a `BIMObject` using its dynamic ID and the current profile.\n\n- **Supported objects:** regular equipment and reference objects.\n- **Output:** select fields using `info` and `attributes`.\n- **Error:** returns HTTP 400 if loading fails or the node is not a `BIMObject`.",
+        "tags": [
+          "geographicContext"
+        ],
+        "parameters": [
+          {
+            "name": "equipmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "$ref": "#/components/parameters/queryInfo"
+          },
+          {
+            "$ref": "#/components/parameters/queryAttributes"
+          },
+          {
+            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/INodeItemAttrRes"
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      }
+    },
+    "/api/v2/equipment/search": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Search equipment",
+        "description": "Same behaviour as `GET /api/v2/equipment`, with options sent in a JSON body.\nUse this endpoint when the list of parents is too long for a query string.\n\n- `parentDynamicIds` is an array of 1 to 50 parent dynamic IDs. Duplicates are ignored.\n- Omit `parentDynamicIds` to traverse the profile's building (not recommended for large buildings).\n- Filters use **AND**, run **before** `offset`, and return at most **200 matching items**.\n- Each item includes `parentDynamicId`.\n- With `parentDynamicIds`, `total` counts eligible children **before filtering** across all parents.\n- With `groupByParent: true`, the response returns `groups` instead of `data`: one entry per parent that has items in the page, in parent input order. Paging is still global, so a parent's items can continue on the next page. An equipment item linked to two parents appears in both groups.",
+        "tags": [
+          "geographicContext"
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "info": {
+                    "type": "string",
+                    "description": "Same format as the `info` query parameter.",
+                    "example": "name,type"
+                  },
+                  "attributes": {
+                    "type": "string",
+                    "description": "Same format as the `attributes` query parameter."
+                  },
+                  "addAttributesModificationDate": {
+                    "type": "boolean"
+                  },
+                  "parentDynamicIds": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 50,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "example": [
+                      132456,
+                      132457
+                    ]
+                  },
+                  "bimObjectType": {
+                    "type": "string",
+                    "enum": [
+                      "bimobject",
+                      "referenceRoom",
+                      "referenceFloor"
+                    ],
+                    "default": "bimobject"
+                  },
+                  "filter": {
+                    "type": "object",
+                    "description": "Same filter object as the `filter` query parameter.",
+                    "example": {
+                      "attributes.Geometry.Surface": {
+                        "exists": true
+                      }
+                    }
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0
+                  },
+                  "groupByParent": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Return `groups` (one per parent) by default. Set to `false` to get a flat `data` array."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/INodeItemAttrMultiRes"
           },
           "400": {
             "$ref": "#/components/responses/IErrorItemRes400"
@@ -28669,7 +29069,7 @@
           }
         ],
         "summary": "Retrieve rooms",
-        "description": "Retrieve rooms from the floors of the profile's building or from a supplied parent.\n\n> **Performance recommendation:** provide `parent-dynamic-id`.\n> Running this endpoint without it is **not recommended**, especially for large buildings,\n> because it may traverse many floors and rooms. Filters and the 200-item page limit\n> do not guarantee a small traversal.\n\n### Scope\n\n- Without `parent-dynamic-id`: traverse the building's floors.\n- With `parent-dynamic-id`: retrieve direct children of a `geographicFloor` or `geographicRoomGroup`.\n- `groupHasgeographicRoom` is a relation name, not a node type.\n\n### Filtering and pagination\n\n- All filter conditions use **AND**.\n- Filtering runs **before** `offset` and output projection.\n- Returns at most **200 matching rooms**. Use `offset=200` for the second page.\n\n### Response\n\n- Each item includes `parentDynamicId`, even without a parent parameter.\n- With a parent parameter, `total` counts eligible children **before filtering**.\n- `total` is omitted for building-wide traversal.\n\n### Example\n\n```http\nGET /api/v2/room?parent-dynamic-id=132456&filter[attributes.Spatial.area][exists]=true&offset=0\n```",
+        "description": "Retrieve rooms from the floors of the profile's building or from a supplied parent.\n\n> **Performance recommendation:** provide `parent-dynamic-id`.\n> Running this endpoint without it is **not recommended**, especially for large buildings,\n> because it may traverse many floors and rooms. Filters and the 200-item page limit\n> do not guarantee a small traversal.\n>\n> `parent-dynamic-id` accepts a comma-separated list. For a JSON body, use `POST /api/v2/room/search`.\n\n### Scope\n\n- Without `parent-dynamic-id`: traverse the building's floors.\n- With `parent-dynamic-id`: retrieve direct children of a `geographicFloor` or `geographicRoomGroup`.\n- `groupHasgeographicRoom` is a relation name, not a node type.\n\n### Filtering and pagination\n\n- All filter conditions use **AND**.\n- Filtering runs **before** `offset` and output projection.\n- Returns at most **200 matching rooms**. Use `offset=200` for the second page.\n\n### Response\n\n- Each item includes `parentDynamicId`, even without a parent parameter.\n- With a parent parameter, `total` counts eligible children **before filtering**.\n- `total` is omitted for building-wide traversal.\n\n### Example\n\n```http\nGET /api/v2/room?parent-dynamic-id=132456&filter[attributes.Spatial.area][exists]=true&offset=0\n```",
         "tags": [
           "geographicContext"
         ],
@@ -28753,113 +29153,8 @@
         }
       }
     },
-    "/api/v2/equipment": {
+    "/api/v2/room/search": {
       "post": {
-        "security": [
-          {
-            "bearerAuth": [
-              "write"
-            ]
-          }
-        ],
-        "summary": "Create equipment",
-        "description": "Create a BIMObject under a room, or a reference object under a room or floor.\n\n### Info, attributes and model references\n\nSee `POST /api/v2/node` for more about info, categorized attributes and `$modelRef` usage. Additional info and attribute values may reference Models. See **`INodeElementModelReference`** for full reference rules. This endpoint assigns the node type and uses `parentDynamicId` to select the parent; it does not accept `element` or `parents`.\n\n### Requirements\n\n- A building must exist in the profile's spatial context.\n- Names must be unique among children of the selected equipment/reference relation.\n- Regular equipment requires a room parent.\n- With `isRefObject=true`, the parent may be a room or a floor.\n- New equipment/reference attachments use `PtrLst`. Existing `PtrLst` or `LstPtr` links to a reused BIM object are retained without migration or duplicate attachment.\n\n### Defaults\n\n- `virtual`: `false`.\n- No default attributes are added.\n\n### BIM object reuse\n\nWhen both `info.dbid` and `info.bimFileId` are supplied, reuse an existing equipment in that BIM file with the matching dbid. If none matches, create a new equipment. A missing BIM file returns HTTP 400.\nWhen reusing an equipment, spatial parent links to other parents in this geographic context are removed before attaching it to the selected parent. A link to the selected parent and the BIMContext link are preserved.\n\n### Response\n\n- Returns all info (including nested objects and arrays) and attributes.\n- Optional group linking happens after creation. Failures **do not roll back** the equipment.",
-        "tags": [
-          "geographicContext"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "parentDynamicId",
-                  "info"
-                ],
-                "properties": {
-                  "parentDynamicId": {
-                    "type": "number",
-                    "description": "Dynamic ID of a geographicRoom parent, or a geographicFloor parent when isRefObject=true.",
-                    "minimum": 1
-                  },
-                  "isRefObject": {
-                    "type": "boolean",
-                    "description": "Use a room reference relation or floor reference relation instead of the regular equipment relation.",
-                    "default": false
-                  },
-                  "info": {
-                    "allOf": [
-                      {
-                        "$ref": "#/components/schemas/ICreateNodeInfo"
-                      },
-                      {
-                        "$ref": "#/components/schemas/INodeItemInfoPropVirtual"
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "dbid": {
-                            "type": "number",
-                            "description": "Numeric dbid of the equipment for use in the APS Viewer."
-                          },
-                          "externalId": {
-                            "type": "string",
-                            "description": "External ID of the equipment from Revit."
-                          },
-                          "bimFileId": {
-                            "type": "string",
-                            "description": "Static ID of the BIM file to which the equipment belongs."
-                          }
-                        }
-                      }
-                    ]
-                  },
-                  "attributes": {
-                    "$ref": "#/components/schemas/ICreateNodeItemAttr"
-                  },
-                  "linkToGroups": {
-                    "$ref": "#/components/schemas/ICreateNodeLinkToGroups"
-                  }
-                },
-                "example": {
-                  "parentDynamicId": 123456789,
-                  "info": {
-                    "name": "equipment Name",
-                    "color": "#FF0000",
-                    "icon": "room-icon",
-                    "dbid": 123,
-                    "externalId": "external-id",
-                    "bimFileId": "123-abc-123-abc-456789"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "$ref": "#/components/responses/INodeItemAttrRes"
-          },
-          "400": {
-            "$ref": "#/components/responses/IErrorItemRes400"
-          },
-          "409": {
-            "description": "An equipment with the same name already exists for the selected parent and relation.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IErrorItem"
-                }
-              }
-            }
-          },
-          "500": {
-            "$ref": "#/components/responses/IErrorItemRes500"
-          }
-        }
-      },
-      "get": {
         "security": [
           {
             "bearerAuth": [
@@ -28867,417 +29162,71 @@
             ]
           }
         ],
-        "summary": "Retrieve equipment",
-        "description": "Retrieve equipment from the profile's building or from a supplied parent.\n\n> **Performance recommendation:** provide `parent-dynamic-id`.\n> Running this endpoint without it is **not recommended**, especially for large buildings,\n> because it may traverse many floors, rooms and equipment nodes. Filters and the\n> 200-item page limit do not guarantee a small traversal.\n\n### Scope\n\n- `bimobject`: regular equipment under a `geographicRoom`.\n- `referenceRoom`: reference objects under a `geographicRoom`.\n- `referenceFloor`: reference objects under a `geographicFloor`.\n- A `BIMObjectGroup` parent supports every `bimObjectType`.\n\n### Filtering and pagination\n\n- All filter conditions use **AND**.\n- Filtering runs **before** `offset` and output projection.\n- Returns at most **200 matching items**. Use `offset=200` for the second page.\n\n### Response\n\n- Each item includes `parentDynamicId`.\n- Equipment linked to multiple rooms may appear once per room.\n- With a parent parameter, `total` counts eligible children **before filtering**.\n- `total` is omitted for building-wide traversal.\n\n### Example\n\n```http\nGET /api/v2/equipment?parent-dynamic-id=132456&filter[attributes.Geometry.Surface][exists]=true&offset=0\n```",
+        "summary": "Search rooms",
+        "description": "Same behaviour as `GET /api/v2/room`, with options sent in a JSON body.\nUse this endpoint when the list of parents is too long for a query string.\n\n- `parentDynamicIds` is an array of 1 to 50 parent dynamic IDs (`geographicFloor` or `geographicRoomGroup`). Duplicates are ignored.\n- Omit `parentDynamicIds` to traverse the profile's building floors (not recommended for large buildings).\n- Filters use **AND**, run **before** `offset`, and return at most **200 matching rooms**.\n- Each item includes `parentDynamicId`.\n- With `parentDynamicIds`, `total` counts eligible children **before filtering** across all parents.\n- With `groupByParent: true`, the response returns `groups` instead of `data`: one entry per parent that has items in the page, in parent input order. Paging is still global, so a parent's items can continue on the next page. A room linked to two parents appears in both groups.",
         "tags": [
           "geographicContext"
         ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/queryInfo"
-          },
-          {
-            "$ref": "#/components/parameters/queryAttributes"
-          },
-          {
-            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
-          },
-          {
-            "$ref": "#/components/parameters/paramParentDynId"
-          },
-          {
-            "in": "query",
-            "name": "bimObjectType",
-            "description": "Select the **relation to traverse**, not a different node type:\n\n- `bimobject`: regular room equipment (default).\n- `referenceRoom`: room reference objects.\n- `referenceFloor`: floor reference objects.\n\nIgnored when the supplied parent is a `BIMObjectGroup`.",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "bimobject",
-                "referenceRoom",
-                "referenceFloor"
-              ],
-              "default": "bimobject"
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "info": {
+                    "type": "string",
+                    "description": "Same format as the `info` query parameter.",
+                    "example": "name,type"
+                  },
+                  "attributes": {
+                    "type": "string",
+                    "description": "Same format as the `attributes` query parameter."
+                  },
+                  "addAttributesModificationDate": {
+                    "type": "boolean"
+                  },
+                  "parentDynamicIds": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 50,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "example": [
+                      132456,
+                      132457
+                    ]
+                  },
+                  "filter": {
+                    "type": "object",
+                    "description": "Same filter object as the `filter` query parameter.",
+                    "example": {
+                      "attributes.Spatial.area": {
+                        "exists": true
+                      }
+                    }
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0
+                  },
+                  "groupByParent": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Return `groups` (one per parent) by default. Set to `false` to get a flat `data` array."
+                  }
+                }
+              }
             }
-          },
-          {
-            "$ref": "#/components/parameters/queryFilter"
-          },
-          {
-            "$ref": "#/components/parameters/queryOffset"
           }
-        ],
+        },
         "responses": {
           "200": {
             "$ref": "#/components/responses/INodeItemAttrMultiRes"
-          },
-          "400": {
-            "$ref": "#/components/responses/IErrorItemRes400"
-          },
-          "500": {
-            "$ref": "#/components/responses/IErrorItemRes500"
-          }
-        }
-      }
-    },
-    "/api/v2/equipment/{equipmentId}": {
-      "get": {
-        "security": [
-          {
-            "bearerAuth": [
-              "read"
-            ]
-          }
-        ],
-        "summary": "Retrieve equipment by its dynamic ID",
-        "description": "Load a `BIMObject` using its dynamic ID and the current profile.\n\n- **Supported objects:** regular equipment and reference objects.\n- **Output:** select fields using `info` and `attributes`.\n- **Error:** returns HTTP 400 if loading fails or the node is not a `BIMObject`.",
-        "tags": [
-          "geographicContext"
-        ],
-        "parameters": [
-          {
-            "name": "equipmentId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "minimum": 1
-            }
-          },
-          {
-            "$ref": "#/components/parameters/queryInfo"
-          },
-          {
-            "$ref": "#/components/parameters/queryAttributes"
-          },
-          {
-            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/INodeItemAttrRes"
-          },
-          "400": {
-            "$ref": "#/components/responses/IErrorItemRes400"
-          },
-          "500": {
-            "$ref": "#/components/responses/IErrorItemRes500"
-          }
-        }
-      }
-    },
-    "/api/v2/node": {
-      "post": {
-        "security": [
-          {
-            "bearerAuth": [
-              "write"
-            ]
-          }
-        ],
-        "summary": "Create a node and attach it to parents",
-        "description": "Create one `SpinalNode` with a caller-supplied name and type.\n\n### Parents and relations\n\n- Supply at least one entry in `parents`. All entries attach the **same node**.\n- Each entry requires `parentDynamicId` and `relationName`.\n- `relationType` defaults to `PtrLst`; `LstPtr` and `Ref` are also supported.\n- With `contextDynamicId`, load a `SpinalContext` and use `addChildInContext`.\n- Without a context, use `addChild`.\n- Parents and contexts are loaded using the current profile.\n\n### Info (required)\n\n- Supply `info.name` and `info.type` as nonempty strings of at most 200 characters. This endpoint does not impose name uniqueness.\n- Additional fields accept strings, finite numbers, booleans, nested objects and arrays. `null` is not supported.\n- Additional field values, including values nested in objects or arrays, may use `$modelRef` syntax. See **Model references (`$modelRef`)** below.\n- `name` and `type` must remain strings, not reference objects. IDs (`id`, `staticId`, `dynamicId`) are assigned by the server and cannot be supplied.\n- Keys must not start with `_` or shadow Model members at any nesting level, including objects inside arrays.\n\n### Attributes (optional)\n\n- Group values by category and label: `\"attributes\": { \"Spatial\": { \"area\": \"20\" } }`. Plain values must be strings, not numbers or booleans.\n- A value under a category and label may use `$modelRef` syntax instead of a string. See **Model references (`$modelRef`)** below for the target-type constraint and sharing behavior.\n- If omitted, no default attributes are added.\n\n### Element (optional)\n\n- Supply an object directly in `element` to create a generic SpinalCore `Model`.\n- Values may be strings, finite numbers, booleans, nested objects or arrays. `null` is not supported.\n- Object keys must not start with `_` or shadow Model members (for example `get`, `set`, `constructor`, `model_id`).\n- Values nested in the element's objects or arrays may use `$modelRef` syntax. See **Model references (`$modelRef`)** below. The root element must remain an ordinary object.\n- The newly created element Model is passed to the SpinalNode constructor, which keeps it behind the node's element pointer.\n- If omitted, no element is created by this endpoint.\n- The response remains `INodeItem`; element contents are not included.\n\n### Model references (`$modelRef`)\n\nShare a Model rather than copy its value in info, element or attribute values:\n\n- Existing node: `{ \"$modelRef\": 7890123, \"path\": \"info.name\" }`. The current profile must have access to the target node.\n- Node being created: `{ \"$modelRef\": \"self\", \"path\": \"info.name\" }`. Forward references are supported.\n- Attribute value: `{ \"$modelRef\": 7890123, \"path\": \"attr.Technical.Code\" }`.\n- Attribute modification date (in info or element): `{ \"$modelRef\": 7890123, \"path\": \"attr.Technical.Code.lastModificationDate\" }`.\n\nAttribute destinations require a `Str` target. References are resolved before parent attachment; invalid paths, incompatible targets and circular dependencies return HTTP 400.\n\nSee **`INodeElementModelReference`** in the schemas for the full syntax, supported paths, modification-date references and sharing behavior.\n\n### Results\n\n- **201:** at least one attachment succeeded. Returns the node with all info and attributes.\n- Successful attachments are retained when others fail.\n- Failed entries are reported in `error`, including their zero-based index and requested parent/relation.\n- **400:** invalid input, or all attachments failed due to invalid parents or contexts.\n- **500:** unexpected failure; also used when all attachments fail and an internal error occurred.",
-        "tags": [
-          "node"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "info",
-                  "parents"
-                ],
-                "properties": {
-                  "info": {
-                    "type": "object",
-                    "required": [
-                      "name",
-                      "type"
-                    ],
-                    "description": "Info fields, including nested objects, arrays and $modelRef values. Keys starting with an underscore are forbidden at every nesting level, including objects inside arrays (HTTP 400). IDs (id, staticId, dynamicId) are assigned by the server and cannot be supplied.",
-                    "properties": {
-                      "name": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "type": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
-                    },
-                    "additionalProperties": {
-                      "$ref": "#/components/schemas/INodeElementValue"
-                    }
-                  },
-                  "attributes": {
-                    "$ref": "#/components/schemas/ICreateNodeItemAttr"
-                  },
-                  "element": {
-                    "$ref": "#/components/schemas/ICreateNodeElement"
-                  },
-                  "parents": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                      "$ref": "#/components/schemas/INodeParentAttachment"
-                    }
-                  }
-                }
-              },
-              "example": {
-                "info": {
-                  "name": "My sensor",
-                  "type": "sensor"
-                },
-                "attributes": {
-                  "Technical": {
-                    "Code": "001"
-                  }
-                },
-                "element": {
-                  "value": 21.5,
-                  "unit": "Celsius",
-                  "enabled": true,
-                  "code": {
-                    "$modelRef": "self",
-                    "path": "attr.Technical.Code"
-                  },
-                  "device": {
-                    "$modelRef": 7890123,
-                    "path": "info.name"
-                  }
-                },
-                "parents": [
-                  {
-                    "parentDynamicId": 1234567,
-                    "relationName": "hasSensor",
-                    "contextDynamicId": 6543210
-                  },
-                  {
-                    "parentDynamicId": 1234568,
-                    "relationName": "hasSensor",
-                    "relationType": "PtrLst"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Node created with at least one successful parent attachment.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/INodeItem"
-                    },
-                    "error": {
-                      "type": "array",
-                      "description": "Failed attachments. Omitted if all attachments succeeded.",
-                      "items": {
-                        "$ref": "#/components/schemas/INodeParentAttachmentError"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request, inaccessible or invalid referenced element, or no parent attachment succeeded. When all attachments fail, errors contains the per-entry failures.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/INodeAttachmentFailure"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Unexpected error, or all attachments failed with at least one internal error.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/INodeAttachmentFailure"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v2/node/{nodeId}": {
-      "get": {
-        "security": [
-          {
-            "bearerAuth": [
-              "read"
-            ]
-          }
-        ],
-        "summary": "Retrieve a node by its dynamic ID",
-        "description": "Load any `SpinalNode` using its dynamic ID and the current profile.\nNo geographic type or parent relation is required.\n\n### Output\n\n- Returns `{ data: INodeItem }`, without traversing children.\n- Select fields using `info` and `attributes`.\n- Omitting `info` returns the default info projection; `info=false` omits info and `info=true` returns all info, including nested objects and arrays. Use dot paths such as `info=metadata.unit,samples.0` to select nested values.\n- Attributes are omitted by default. Use `attributes=true` for all attributes, or select categories/attributes.\n- Element contents are omitted unless requested with `element`.\n\n### Element selection\n\n- `element=true` returns the whole element; omitted or `false` does not load it.\n- Select comma-separated dot paths, for example `element=value,metadata.unit,samples.0`.\n- Selected paths preserve their structure. Array indexes are zero-based; unselected earlier entries appear as `null`.\n- A missing element returns `element: null` without creating one. Missing fields are omitted.\n- Directly embedded Models are traversed; nested pointers are not loaded and return `{ \"$ptr\": dynamicId }` (or `null` for an unset pointer ID).\n- Dot paths cannot address field names containing dots. Internal Model members are not selectable.\n- Cycles, non-finite numbers, serialization exceeding depth 32 or 10000 visited Models, or arrays longer than 10000 return HTTP 500. Select narrower paths to avoid unrelated branches.\n\n### Errors\n\n- **400:** invalid request, loading failure, or the loaded model is not a `SpinalNode`.\n- **500:** unexpected internal error.",
-        "tags": [
-          "node"
-        ],
-        "parameters": [
-          {
-            "name": "nodeId",
-            "in": "path",
-            "required": true,
-            "description": "Dynamic ID of the SpinalNode.",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
-            "$ref": "#/components/parameters/queryInfo"
-          },
-          {
-            "$ref": "#/components/parameters/queryAttributes"
-          },
-          {
-            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
-          },
-          {
-            "$ref": "#/components/parameters/queryElement"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Requested node with the selected info and attributes.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/INodeItem"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/IErrorItemRes400"
-          },
-          "500": {
-            "$ref": "#/components/responses/IErrorItemRes500"
-          }
-        }
-      },
-      "patch": {
-        "security": [
-          {
-            "bearerAuth": [
-              "write"
-            ]
-          }
-        ],
-        "tags": [
-          "node"
-        ],
-        "summary": "Update node info, element and categorized attributes",
-        "description": "Omitted sections are unchanged. Use `set`, `remove` and `rename` operations.\n\n### Operations\n\n- Info and element paths use dot notation; missing intermediate objects are created by `set`.\n- Assigned objects and arrays replace the entire field. Array indexes must exist; resizing and entry removal/rename are not supported.\n- Renaming an object field preserves its Model and must stay in the same parent object. Attribute renames preserve the attribute and its value Model.\n- Missing rename sources and occupied destinations are errors. Missing remove targets are ignored.\n- Overlapping operations are rejected. Source-equals-destination renames are no-ops.\n\n### Protected fields and references\n\n- IDs (`info.id`, `info.staticId`, `info.dynamicId` and the top-level `dynamicId`) are immutable.\n- `info.type` and `info.name` can be set to nonempty strings, but cannot be removed or renamed.\n- Underscore-prefixed and reserved Model keys are forbidden.\n- Compatible scalar Models are updated in place, which affects other nodes sharing those Models.\n\n### Model references (`$modelRef`)\n\n- Values in `info.set` and `element.set`, including nested objects and arrays, may use `$modelRef` syntax. See `POST /api/v2/node` for examples and **`INodeElementModelReference`** for reference syntax and path restrictions.\n- `\"self\"` and a numeric `$modelRef` equal to this node's dynamic ID resolve against the final staged patch state, without an additional node load. Forward references are supported; cycles are rejected.\n- Other node IDs select existing persisted Models and require access through the current profile.\n- `attributes.set` accepts strings only; it does not accept `$modelRef` objects.\n\n### Staging and response\n\n- Validation and reference resolution run on staged data before writes. Writes are not a database transaction and do not lock concurrent requests.\n- Staging selects top-level info/element branches touched by operations or self references, then recursively clones those branches.\n- A name-only update does not load the element or attribute categories. Attribute staging selects needed categories and labels.\n- Whole-element self references require staging the complete element. Response projections may independently load additional data.\n- Returns the same projections and defaults as GET node by ID.",
-        "parameters": [
-          {
-            "name": "nodeId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
-            "$ref": "#/components/parameters/queryInfo"
-          },
-          {
-            "$ref": "#/components/parameters/queryAttributes"
-          },
-          {
-            "$ref": "#/components/parameters/queryElement"
-          },
-          {
-            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/IPatchNode"
-              },
-              "example": {
-                "info": {
-                  "set": {
-                    "name": "Updated sensor",
-                    "type": "sensor",
-                    "metadata.unit": "Celsius"
-                  }
-                },
-                "element": {
-                  "set": {
-                    "value": 22.5,
-                    "unit": {
-                      "$modelRef": "self",
-                      "path": "info.metadata.unit"
-                    }
-                  },
-                  "remove": [
-                    "obsoleteField"
-                  ]
-                },
-                "attributes": {
-                  "rename": [
-                    {
-                      "category": "Technical",
-                      "from": "OldCode",
-                      "to": "Code"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Updated node with selected response projections.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/INodeItem"
-                    }
-                  }
-                }
-              }
-            }
           },
           "400": {
             "$ref": "#/components/responses/IErrorItemRes400"
@@ -29470,6 +29419,544 @@
                     },
                     "total": {
                       "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      }
+    },
+    "/api/v2/node": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "summary": "Create a node and attach it to parents",
+        "description": "Create one `SpinalNode` with a caller-supplied name and type.\n\n### Parents and relations\n\n- Supply at least one entry in `parents`. All entries attach the **same node**.\n- Each entry requires `parentDynamicId` and `relationName`.\n- `relationType` defaults to `PtrLst`; `LstPtr` and `Ref` are also supported.\n- With `contextDynamicId`, load a `SpinalContext` and use `addChildInContext`.\n- Without a context, use `addChild`.\n- Parents and contexts are loaded using the current profile.\n\n### Info (required)\n\n- Supply `info.name` and `info.type` as nonempty strings of at most 200 characters. This endpoint does not impose name uniqueness.\n- Additional fields accept strings, finite numbers, booleans, nested objects and arrays. `null` is not supported.\n- Additional field values, including values nested in objects or arrays, may use `$modelRef` syntax. See **Model references (`$modelRef`)** below.\n- `name` and `type` must remain strings, not reference objects. IDs (`id`, `staticId`, `dynamicId`) are assigned by the server and cannot be supplied.\n- Keys must not start with `_` or shadow Model members at any nesting level, including objects inside arrays.\n\n### Attributes (optional)\n\n- Group values by category and label: `\"attributes\": { \"Spatial\": { \"area\": \"20\" } }`. Plain values must be strings, not numbers or booleans.\n- A value under a category and label may use `$modelRef` syntax instead of a string. See **Model references (`$modelRef`)** below for the target-type constraint and sharing behavior.\n- If omitted, no default attributes are added.\n\n### Element (optional)\n\n- Supply an object directly in `element` to create a generic SpinalCore `Model`.\n- Values may be strings, finite numbers, booleans, nested objects or arrays. `null` is not supported.\n- Object keys must not start with `_` or shadow Model members (for example `get`, `set`, `constructor`, `model_id`).\n- Values nested in the element's objects or arrays may use `$modelRef` syntax. See **Model references (`$modelRef`)** below. The root element must remain an ordinary object.\n- The newly created element Model is passed to the SpinalNode constructor, which keeps it behind the node's element pointer.\n- If omitted, no element is created by this endpoint.\n- The response remains `INodeItem`; element contents are not included.\n\n### Model references (`$modelRef`)\n\nShare a Model rather than copy its value in info, element or attribute values:\n\n- Existing node: `{ \"$modelRef\": 7890123, \"path\": \"info.name\" }`. The current profile must have access to the target node.\n- Node being created: `{ \"$modelRef\": \"self\", \"path\": \"info.name\" }`. Forward references are supported.\n- Attribute value: `{ \"$modelRef\": 7890123, \"path\": \"attr.Technical.Code\" }`.\n- Attribute modification date (in info or element): `{ \"$modelRef\": 7890123, \"path\": \"attr.Technical.Code.lastModificationDate\" }`.\n\nAttribute destinations require a `Str` target. References are resolved before parent attachment; invalid paths, incompatible targets and circular dependencies return HTTP 400.\n\nSee **`INodeElementModelReference`** in the schemas for the full syntax, supported paths, modification-date references and sharing behavior.\n\n### Results\n\n- **201:** at least one attachment succeeded. Returns the node with all info and attributes.\n- Successful attachments are retained when others fail.\n- Failed entries are reported in `error`, including their zero-based index and requested parent/relation.\n- **400:** invalid input, or all attachments failed due to invalid parents or contexts.\n- **500:** unexpected failure; also used when all attachments fail and an internal error occurred.",
+        "tags": [
+          "node"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "info",
+                  "parents"
+                ],
+                "properties": {
+                  "info": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "description": "Info fields, including nested objects, arrays and $modelRef values. Keys starting with an underscore are forbidden at every nesting level, including objects inside arrays (HTTP 400). IDs (id, staticId, dynamicId) are assigned by the server and cannot be supplied.",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "type": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      }
+                    },
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/INodeElementValue"
+                    }
+                  },
+                  "attributes": {
+                    "$ref": "#/components/schemas/ICreateNodeItemAttr"
+                  },
+                  "element": {
+                    "$ref": "#/components/schemas/ICreateNodeElement"
+                  },
+                  "parents": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "$ref": "#/components/schemas/INodeParentAttachment"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "info": {
+                  "name": "My sensor",
+                  "type": "sensor"
+                },
+                "attributes": {
+                  "Technical": {
+                    "Code": "001"
+                  }
+                },
+                "element": {
+                  "value": 21.5,
+                  "unit": "Celsius",
+                  "enabled": true,
+                  "code": {
+                    "$modelRef": "self",
+                    "path": "attr.Technical.Code"
+                  },
+                  "device": {
+                    "$modelRef": 7890123,
+                    "path": "info.name"
+                  }
+                },
+                "parents": [
+                  {
+                    "parentDynamicId": 1234567,
+                    "relationName": "hasSensor",
+                    "contextDynamicId": 6543210
+                  },
+                  {
+                    "parentDynamicId": 1234568,
+                    "relationName": "hasSensor",
+                    "relationType": "PtrLst"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Node created with at least one successful parent attachment.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/INodeItem"
+                    },
+                    "error": {
+                      "type": "array",
+                      "description": "Failed attachments. Omitted if all attachments succeeded.",
+                      "items": {
+                        "$ref": "#/components/schemas/INodeParentAttachmentError"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, inaccessible or invalid referenced element, or no parent attachment succeeded. When all attachments fail, errors contains the per-entry failures.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/INodeAttachmentFailure"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected error, or all attachments failed with at least one internal error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/INodeAttachmentFailure"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/node/{parentId}/child-relationships/{relationType}/{relationName}/children/{childId}": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "tags": [
+          "node"
+        ],
+        "summary": "Detach one existing child from an exact relationship",
+        "description": "Removes only the specified parent-to-child link using `SpinalNode.removeChild`.\n\nNeither node is deleted; other links, descendants, info, elements and attributes are preserved.\nGraph-managed modification timestamps may change.\n\n- Both nodes must be accessible to the current profile, even when the link is absent.\n- `relationType` and `relationName` are required and identify one exact relationship; no regex or OR matching is performed.\n- Relation-name matching is case-sensitive.\n- URL-encode the relation name. Encoded slashes require router/proxy support.\n- A missing relationship or child membership returns `alreadyDetached` without mutation.\n- An empty relationship is retained. Node and relation context memberships are not modified.\n- Detachment applies globally across contexts; `contextDynamicId` and all other query parameters are rejected.\n- Only `PtrLst`, `LstPtr` and `Ref` are supported.\n- Writes are not transactional or locked. Concurrent graph changes can cause the operation to fail.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/nodeChildrenParentId"
+          },
+          {
+            "name": "childId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "relationType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PtrLst",
+                "LstPtr",
+                "Ref"
+              ]
+            }
+          },
+          {
+            "name": "relationName",
+            "in": "path",
+            "required": true,
+            "description": "One exact nonblank relation name.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Link detached or already absent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "parentDynamicId",
+                        "childDynamicId",
+                        "relationType",
+                        "relationName",
+                        "status"
+                      ],
+                      "properties": {
+                        "parentDynamicId": {
+                          "type": "integer"
+                        },
+                        "childDynamicId": {
+                          "type": "integer"
+                        },
+                        "relationType": {
+                          "type": "string",
+                          "enum": [
+                            "PtrLst",
+                            "LstPtr",
+                            "Ref"
+                          ]
+                        },
+                        "relationName": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "detached",
+                            "alreadyDetached"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      }
+    },
+    "/api/v2/node/{parentId}/child-relationships/{relationName}/children/{childId}": {
+      "delete": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "tags": [
+          "node"
+        ],
+        "summary": "Detach a child from every matching relationship",
+        "description": "Removes the specified parent-to-child link from every supported relationship type that has the exact relation name.\n\nNeither node is deleted; other links, descendants, info, elements and attributes are preserved.\nGraph-managed modification timestamps may change.\n\n- Both nodes must be accessible to the current profile, even when no matching link exists.\n- Relation-name matching is exact and case-sensitive; no regex or OR matching is performed.\n- URL-encode the relation name. Encoded slashes require router/proxy support.\n- A missing relationship or child membership returns `alreadyDetached` without mutation.\n- `relationTypes` lists only types from which the child was detached; it is empty when already detached.\n- Empty relationships are retained. Node and relation context memberships are not modified.\n- Detachment applies globally across contexts; `contextDynamicId` and all other query parameters are rejected.\n- Only `PtrLst`, `LstPtr` and `Ref` are supported.\n- Writes are not transactional or locked. Concurrent graph changes can cause the operation to fail.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/nodeChildrenParentId"
+          },
+          {
+            "name": "childId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "relationName",
+            "in": "path",
+            "required": true,
+            "description": "Exact nonblank relation name, matched case-sensitively across supported relation types.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching links detached or already absent.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "parentDynamicId",
+                        "childDynamicId",
+                        "relationName",
+                        "relationTypes",
+                        "status"
+                      ],
+                      "properties": {
+                        "parentDynamicId": {
+                          "type": "integer"
+                        },
+                        "childDynamicId": {
+                          "type": "integer"
+                        },
+                        "relationName": {
+                          "type": "string"
+                        },
+                        "relationTypes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "PtrLst",
+                              "LstPtr",
+                              "Ref"
+                            ]
+                          }
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "detached",
+                            "alreadyDetached"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      }
+    },
+    "/api/v2/node/{nodeId}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": [
+              "read"
+            ]
+          }
+        ],
+        "summary": "Retrieve a node by its dynamic ID",
+        "description": "Load any `SpinalNode` using its dynamic ID and the current profile.\nNo geographic type or parent relation is required.\n\n### Output\n\n- Returns `{ data: INodeItem }`, without traversing children.\n- Select fields using `info` and `attributes`.\n- Omitting `info` returns the default info projection; `info=false` omits info and `info=true` returns all info, including nested objects and arrays. Use dot paths such as `info=metadata.unit,samples.0` to select nested values.\n- Attributes are omitted by default. Use `attributes=true` for all attributes, or select categories/attributes.\n- Element contents are omitted unless requested with `element`.\n\n### Element selection\n\n- `element=true` returns the whole element; omitted or `false` does not load it.\n- Select comma-separated dot paths, for example `element=value,metadata.unit,samples.0`.\n- Selected paths preserve their structure. Array indexes are zero-based; unselected earlier entries appear as `null`.\n- A missing element returns `element: null` without creating one. Missing fields are omitted.\n- Directly embedded Models are traversed; nested pointers are not loaded and return `{ \"$ptr\": dynamicId }` (or `null` for an unset pointer ID).\n- Dot paths cannot address field names containing dots. Internal Model members are not selectable.\n- Cycles, non-finite numbers, serialization exceeding depth 32 or 10000 visited Models, or arrays longer than 10000 return HTTP 500. Select narrower paths to avoid unrelated branches.\n\n### Errors\n\n- **400:** invalid request, loading failure, or the loaded model is not a `SpinalNode`.\n- **500:** unexpected internal error.",
+        "tags": [
+          "node"
+        ],
+        "parameters": [
+          {
+            "name": "nodeId",
+            "in": "path",
+            "required": true,
+            "description": "Dynamic ID of the SpinalNode.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "$ref": "#/components/parameters/queryInfo"
+          },
+          {
+            "$ref": "#/components/parameters/queryAttributes"
+          },
+          {
+            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
+          },
+          {
+            "$ref": "#/components/parameters/queryElement"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requested node with the selected info and attributes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/INodeItem"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/IErrorItemRes400"
+          },
+          "500": {
+            "$ref": "#/components/responses/IErrorItemRes500"
+          }
+        }
+      },
+      "patch": {
+        "security": [
+          {
+            "bearerAuth": [
+              "write"
+            ]
+          }
+        ],
+        "tags": [
+          "node"
+        ],
+        "summary": "Update node info, element and categorized attributes",
+        "description": "Omitted sections are unchanged. Use `set`, `remove` and `rename` operations.\n\n### Operations\n\n- Info and element paths use dot notation; missing intermediate objects are created by `set`.\n- Assigned objects and arrays replace the entire field. Array indexes must exist; resizing and entry removal/rename are not supported.\n- Renaming an object field preserves its Model and must stay in the same parent object. Attribute renames preserve the attribute and its value Model.\n- Missing rename sources and occupied destinations are errors. Missing remove targets are ignored.\n- Overlapping operations are rejected. Source-equals-destination renames are no-ops.\n\n### Protected fields and references\n\n- IDs (`info.id`, `info.staticId`, `info.dynamicId` and the top-level `dynamicId`) are immutable.\n- `info.type` and `info.name` can be set to nonempty strings, but cannot be removed or renamed.\n- Underscore-prefixed and reserved Model keys are forbidden.\n- Compatible scalar Models are updated in place, which affects other nodes sharing those Models.\n\n### Model references (`$modelRef`)\n\n- Values in `info.set` and `element.set`, including nested objects and arrays, may use `$modelRef` syntax. See `POST /api/v2/node` for examples and **`INodeElementModelReference`** for reference syntax and path restrictions.\n- `\"self\"` and a numeric `$modelRef` equal to this node's dynamic ID resolve against the final staged patch state, without an additional node load. Forward references are supported; cycles are rejected.\n- Other node IDs select existing persisted Models and require access through the current profile.\n- `attributes.set` accepts strings only; it does not accept `$modelRef` objects.\n\n### Staging and response\n\n- Validation and reference resolution run on staged data before writes. Writes are not a database transaction and do not lock concurrent requests.\n- Staging selects top-level info/element branches touched by operations or self references, then recursively clones those branches.\n- A name-only update does not load the element or attribute categories. Attribute staging selects needed categories and labels.\n- Whole-element self references require staging the complete element. Response projections may independently load additional data.\n- Returns the same projections and defaults as GET node by ID.",
+        "parameters": [
+          {
+            "name": "nodeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "$ref": "#/components/parameters/queryInfo"
+          },
+          {
+            "$ref": "#/components/parameters/queryAttributes"
+          },
+          {
+            "$ref": "#/components/parameters/queryElement"
+          },
+          {
+            "$ref": "#/components/parameters/queryAddAttributesModificationDate"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IPatchNode"
+              },
+              "example": {
+                "info": {
+                  "set": {
+                    "name": "Updated sensor",
+                    "type": "sensor",
+                    "metadata.unit": "Celsius"
+                  }
+                },
+                "element": {
+                  "set": {
+                    "value": 22.5,
+                    "unit": {
+                      "$modelRef": "self",
+                      "path": "info.metadata.unit"
+                    }
+                  },
+                  "remove": [
+                    "obsoleteField"
+                  ]
+                },
+                "attributes": {
+                  "rename": [
+                    {
+                      "category": "Technical",
+                      "from": "OldCode",
+                      "to": "Code"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated node with selected response projections.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/INodeItem"
                     }
                   }
                 }
@@ -29782,119 +30269,6 @@
         }
       }
     },
-    "/api/v2/node/{parentId}/child-relationships/{relationType}/{relationName}/children/{childId}": {
-      "delete": {
-        "security": [
-          {
-            "bearerAuth": [
-              "write"
-            ]
-          }
-        ],
-        "tags": [
-          "node"
-        ],
-        "summary": "Detach one existing child from an exact relationship",
-        "description": "Removes only the specified parent-to-child link using `SpinalNode.removeChild`.\n\nNeither node is deleted; other links, descendants, info, elements and attributes are preserved.\nGraph-managed modification timestamps may change.\n\n- Both nodes must be accessible to the current profile, even when the link is absent.\n- `relationType` and `relationName` are required and identify one exact relationship; no regex or OR matching is performed.\n- Relation-name matching is case-sensitive.\n- URL-encode the relation name. Encoded slashes require router/proxy support.\n- A missing relationship or child membership returns `alreadyDetached` without mutation.\n- An empty relationship is retained. Node and relation context memberships are not modified.\n- Detachment applies globally across contexts; `contextDynamicId` and all other query parameters are rejected.\n- Only `PtrLst`, `LstPtr` and `Ref` are supported.\n- Writes are not transactional or locked. Concurrent graph changes can cause the operation to fail.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/nodeChildrenParentId"
-          },
-          {
-            "name": "childId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
-            "name": "relationType",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "PtrLst",
-                "LstPtr",
-                "Ref"
-              ]
-            }
-          },
-          {
-            "name": "relationName",
-            "in": "path",
-            "required": true,
-            "description": "One exact nonblank relation name.",
-            "schema": {
-              "type": "string",
-              "minLength": 1
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Link detached or already absent.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "required": [
-                        "parentDynamicId",
-                        "childDynamicId",
-                        "relationType",
-                        "relationName",
-                        "status"
-                      ],
-                      "properties": {
-                        "parentDynamicId": {
-                          "type": "integer"
-                        },
-                        "childDynamicId": {
-                          "type": "integer"
-                        },
-                        "relationType": {
-                          "type": "string",
-                          "enum": [
-                            "PtrLst",
-                            "LstPtr",
-                            "Ref"
-                          ]
-                        },
-                        "relationName": {
-                          "type": "string"
-                        },
-                        "status": {
-                          "type": "string",
-                          "enum": [
-                            "detached",
-                            "alreadyDetached"
-                          ]
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/IErrorItemRes400"
-          },
-          "500": {
-            "$ref": "#/components/responses/IErrorItemRes500"
-          }
-        }
-      }
-    },
     "/api/v2/node/{nodeId}/move": {
       "post": {
         "security": [
@@ -29979,194 +30353,121 @@
         }
       }
     },
-    "/api/v2/node/{parentId}/child-relationships/{relationName}/children/{childId}": {
-      "delete": {
-        "security": [
-          {
-            "bearerAuth": [
-              "write"
-            ]
-          }
-        ],
-        "tags": [
-          "node"
-        ],
-        "summary": "Detach a child from every matching relationship",
-        "description": "Removes the specified parent-to-child link from every supported relationship type that has the exact relation name.\n\nNeither node is deleted; other links, descendants, info, elements and attributes are preserved.\nGraph-managed modification timestamps may change.\n\n- Both nodes must be accessible to the current profile, even when no matching link exists.\n- Relation-name matching is exact and case-sensitive; no regex or OR matching is performed.\n- URL-encode the relation name. Encoded slashes require router/proxy support.\n- A missing relationship or child membership returns `alreadyDetached` without mutation.\n- `relationTypes` lists only types from which the child was detached; it is empty when already detached.\n- Empty relationships are retained. Node and relation context memberships are not modified.\n- Detachment applies globally across contexts; `contextDynamicId` and all other query parameters are rejected.\n- Only `PtrLst`, `LstPtr` and `Ref` are supported.\n- Writes are not transactional or locked. Concurrent graph changes can cause the operation to fail.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/nodeChildrenParentId"
-          },
-          {
-            "name": "childId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          },
-          {
-            "name": "relationName",
-            "in": "path",
-            "required": true,
-            "description": "Exact nonblank relation name, matched case-sensitively across supported relation types.",
-            "schema": {
-              "type": "string",
-              "minLength": 1
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Matching links detached or already absent.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "type": "object",
-                      "required": [
-                        "parentDynamicId",
-                        "childDynamicId",
-                        "relationName",
-                        "relationTypes",
-                        "status"
-                      ],
-                      "properties": {
-                        "parentDynamicId": {
-                          "type": "integer"
-                        },
-                        "childDynamicId": {
-                          "type": "integer"
-                        },
-                        "relationName": {
-                          "type": "string"
-                        },
-                        "relationTypes": {
-                          "type": "array",
-                          "items": {
-                            "type": "string",
-                            "enum": [
-                              "PtrLst",
-                              "LstPtr",
-                              "Ref"
-                            ]
-                          }
-                        },
-                        "status": {
-                          "type": "string",
-                          "enum": [
-                            "detached",
-                            "alreadyDetached"
-                          ]
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/IErrorItemRes400"
-          },
-          "500": {
-            "$ref": "#/components/responses/IErrorItemRes500"
-          }
-        }
-      }
-    },
-    "/api/v2/context": {
+    "/api/v2/node/children/search": {
       "post": {
         "security": [
           {
             "bearerAuth": [
-              "write"
+              "read"
             ]
           }
         ],
+        "summary": "List distinct direct children of several parents",
+        "description": "Batch version of `GET /api/v2/node/{parentId}/children`, with options sent in a JSON body.\n\n- `parentIds` is required: an array of 1 to 50 parent dynamic IDs. Duplicate IDs are ignored.\n- Relation type/name and context selectors restrict traversal, as on GET children. `relationNames` is an array here, not a comma-separated string.\n- Children are deduplicated **per parent**. A child under two parents appears once under each, with its own `parentDynamicId`.\n- Filters use **AND**, run **before** `offset`, and return at most **200 matching items** per page.\n- Parents are processed in input order; any load failure fails the whole request.\n- `total` is the number of items returned in this page.",
         "tags": [
-          "context"
+          "node"
         ],
-        "summary": "Create a context in the root and profile graphs",
-        "description": "Creates a `SpinalContext` from the supplied info and adds it to both the root graph and the current profile graph.\n\n- The request body uses the same info, attributes and optional element fields as `POST /api/v2/node`. `parents` is not accepted.\n- The exact context name must not already exist in either profile and root graph. Name matching is case-sensitive.\n\n### Model references (`$modelRef`)\n\nInfo, element and attribute values may use `$modelRef` syntax, including `\"self\"` for the context being created. See `POST /api/v2/node` for usage examples and **`INodeElementModelReference`** for the full rules.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "additionalProperties": false,
                 "required": [
-                  "info"
+                  "parentIds"
                 ],
+                "additionalProperties": false,
                 "properties": {
-                  "info": {
-                    "type": "object",
-                    "required": [
-                      "name",
-                      "type"
-                    ],
-                    "properties": {
-                      "name": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "type": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      }
+                  "parentIds": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 50,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1
                     },
-                    "additionalProperties": {
-                      "$ref": "#/components/schemas/INodeElementValue"
-                    }
+                    "example": [
+                      132456,
+                      132457
+                    ]
+                  },
+                  "relationType": {
+                    "type": "string",
+                    "enum": [
+                      "PtrLst",
+                      "LstPtr",
+                      "Ref"
+                    ]
+                  },
+                  "relationNames": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "hasEquipment"
+                    ]
+                  },
+                  "contextDynamicId": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "info": {
+                    "type": "string",
+                    "description": "Same format as the `info` query parameter.",
+                    "example": "name,type"
                   },
                   "attributes": {
-                    "$ref": "#/components/schemas/ICreateNodeItemAttr"
+                    "type": "string",
+                    "description": "Same format as the `attributes` query parameter."
                   },
                   "element": {
-                    "$ref": "#/components/schemas/ICreateNodeElement"
+                    "type": "string",
+                    "description": "Same format as the `element` query parameter."
+                  },
+                  "addAttributesModificationDate": {
+                    "type": "boolean"
+                  },
+                  "filter": {
+                    "type": "object",
+                    "description": "Same filter object as the `filter` query parameter.",
+                    "example": {
+                      "attributes.Geometry.Surface": {
+                        "exists": true
+                      }
+                    }
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0
                   }
-                }
-              },
-              "example": {
-                "info": {
-                  "name": "Energy Analysis",
-                  "type": "Analysis"
-                },
-                "attributes": {
-                  "Settings": {
-                    "enabled": "true"
-                  }
-                },
-                "element": {
-                  "unit": "kWh"
                 }
               }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "Context created and added to both graphs.",
+          "200": {
+            "description": "Child nodes retrieved successfully.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": [
-                    "data"
-                  ],
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/INodeItem"
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/INodeItem"
+                      }
+                    },
+                    "offset": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "description": "Number of items in this page (after filters and offset)."
                     }
                   }
                 }
@@ -30175,16 +30476,6 @@
           },
           "400": {
             "$ref": "#/components/responses/IErrorItemRes400"
-          },
-          "409": {
-            "description": "A context with the exact name already exists in the root or profile graph.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IErrorItem"
-                }
-              }
-            }
           },
           "500": {
             "$ref": "#/components/responses/IErrorItemRes500"

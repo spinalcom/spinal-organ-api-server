@@ -25,9 +25,9 @@ npm link
 
 Explaination of the commands:
 
-- `npm i -g` : install the package globally for your current version of node , if you switch version of node with nvm for example, you will need to re-install the package.
+-   `npm i -g` : install the package globally for your current version of node , if you switch version of node with nvm for example, you will need to re-install the package.
 
-- `npm link` : create a symbolic link in the global node_modules folder to the current package. This way, you can use the package as if it was installed globally.
+-   `npm link` : create a symbolic link in the global node_modules folder to the current package. This way, you can use the package as if it was installed globally.
 
 For more information about spinalcom-utils, visit the [documentation](https://github.com/spinalcom/spinalcom-utils/blob/master/README.md)
 
@@ -70,6 +70,10 @@ BIM_FILE_LOCAL_PATH="../../nerve-center/memory/viewerForgeFiles"   #OPTIONAL
 # Set BIM_FILE_CACHE_MAXAGE=0 (or remove it) to disable caching.
 BIM_FILE_CACHE_MAXAGE=31536000    #OPTIONAL
 # BIM_FILE_CACHE_IMMUTABLE=1   # default on when a max-age is set; set to 0 to drop `immutable`
+
+#AGENT_MONITORING
+ENABLE_MONITORING_API="" # accept 1 | 0 | true | false, enable/disable monitoring api routes
+MONITORING_AGENT_CONFIG_PATH="" # Path of monitoring agent config file
 ```
 
 you can disable monitoring if you add the `DISABLE_MONITORING` in the .env file
@@ -78,22 +82,20 @@ you can disable monitoring if you add the `DISABLE_MONITORING` in the .env file
 DISABLE_MONITORING="true"                     # If not Commented will not enable monitoring
 ````
 
-
-
 ## Preloading : work hours and the node snapshot
 
 `PRELOAD_SCRIPT="1"` enables preloading, and the time of day the organ starts at
 decides how it preloads :
 
-- **outside the work hours** : the preloading script runs as before, blocking,
-  before the server starts listening (fill `preload_config.js`).
-- **during the work hours, with a snapshot** : the preloading script is
-  skipped, the server listens right away, and the nodes of the last snapshot
-  are loaded back progressively, a batch at a time, during the idle time
-  between requests.
-- **during the work hours, without a snapshot** (no file yet, or one that
-  cannot be read) : nothing to load back, so the preloading script runs as if
-  outside the work hours.
+-   **outside the work hours** : the preloading script runs as before, blocking,
+    before the server starts listening (fill `preload_config.js`).
+-   **during the work hours, with a snapshot** : the preloading script is
+    skipped, the server listens right away, and the nodes of the last snapshot
+    are loaded back progressively, a batch at a time, during the idle time
+    between requests.
+-   **during the work hours, without a snapshot** (no file yet, or one that
+    cannot be read) : nothing to load back, so the preloading script runs as if
+    outside the work hours.
 
 When nodes fail to load, the run logs them grouped by reason, with a few ids
 each, and writes the full list next to the snapshot

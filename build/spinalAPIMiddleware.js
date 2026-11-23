@@ -47,13 +47,8 @@ class SpinalAPIMiddleware {
     }
     constructor() {
         // connection string to connect to spinalhub
-        const protocol = this.config.spinalConnector.protocol
-            ? this.config.spinalConnector.protocol
-            : 'http';
-        const host = this.config.spinalConnector.host +
-            (this.config.spinalConnector.port
-                ? `:${this.config.spinalConnector.port}`
-                : '');
+        const protocol = this.config.spinalConnector.protocol ? this.config.spinalConnector.protocol : "http";
+        const host = this.config.spinalConnector.host + (this.config.spinalConnector.port ? `:${this.config.spinalConnector.port}` : "");
         const login = `${this.config.spinalConnector.user}:${this.config.spinalConnector.password}`;
         const connect_opt = `${protocol}://${login}@${host}/`;
         console.log(`start connect to hub: ${protocol}://${host}/`);
@@ -62,6 +57,9 @@ class SpinalAPIMiddleware {
         // get the Model from the spinalhub, "onLoadSuccess" and "onLoadError" are 2
         // callback function.
         this.iteratorGraph = this.geneGraph();
+    }
+    checkMonitoringToken(req, res, next) {
+        next();
     }
     async *geneGraph() {
         try {
@@ -85,9 +83,9 @@ class SpinalAPIMiddleware {
     }
     async load(server_id) {
         if (!server_id) {
-            return Promise.reject('Invalid serverId');
+            return Promise.reject("Invalid serverId");
         }
-        if (typeof spinal_core_connectorjs_1.FileSystem._objects[server_id] !== 'undefined') {
+        if (typeof spinal_core_connectorjs_1.FileSystem._objects[server_id] !== "undefined") {
             // @ts-ignore
             return Promise.resolve(spinal_core_connectorjs_1.FileSystem._objects[server_id]);
         }
@@ -100,12 +98,12 @@ class SpinalAPIMiddleware {
     }
     async loadPtr(ptr) {
         if (!ptr)
-            throw new Error('Invalid ptr');
+            throw new Error("Invalid ptr");
         if (ptr instanceof spinal_core_connectorjs_1.File)
             return this.loadPtr(ptr._ptr);
         const server_id = ptr.data.value;
         if (!server_id)
-            throw new Error('Invalid serverId');
+            throw new Error("Invalid serverId");
         if (this.loadedPtr.has(server_id)) {
             return this.loadedPtr.get(server_id);
         }
@@ -139,7 +137,7 @@ class SpinalAPIMiddleware {
             }
             await new Promise((resolve) => setTimeout(resolve, 200));
         }
-        throw new Error('Connection timed out');
+        throw new Error("Connection timed out");
     }
 }
 exports.default = SpinalAPIMiddleware;

@@ -22,66 +22,62 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { Application } from 'express';
-import { Server } from 'http';
-import { initSwagger } from '../swagger';
-import { ISpinalAPIMiddleware } from '../interfaces';
-import fileUpload from 'express-fileupload';
-import path from 'path';
+import { Application } from "express";
+import { Server } from "http";
+import { initSwagger } from "../swagger";
+import { ISpinalAPIMiddleware } from "../interfaces";
+import fileUpload from "express-fileupload";
+import path from "path";
 // import * as fileUpload from 'express-fileupload';
 // import * as path from 'path';
 
-const { version: API_SERVER_VERSION } = require('../../package.json');
-import routes from '../routes/routes';
-import { createLogRequestLifecycle } from '../api-server';
-import { runSocketServer, ISpinalIOMiddleware } from 'spinal-organ-api-pubsub';
-import { requestActivity } from '../preloadingScript/requestActivity';
-export * from '../routes/geographicContext/viewInfo_func';
-export * from '../preloadingScript/preloadingScript';
-export * from '../preloadingScript/runPreloading';
-export * from '../preloadingScript/snapshotPreloader';
-export * from '../preloadingScript/requestActivity';
-export * from '../routes/snapshot/snapshotUtils';
-export * from '../utilities/workHours';
+const { version: API_SERVER_VERSION } = require("../../package.json");
+import routes from "../routes/routes";
+import { createLogRequestLifecycle } from "../api-server";
+import { runSocketServer, ISpinalIOMiddleware } from "spinal-organ-api-pubsub";
+import { requestActivity } from "../preloadingScript/requestActivity";
+export * from "../routes/geographicContext/viewInfo_func";
+export * from "../preloadingScript/preloadingScript";
+export * from "../preloadingScript/runPreloading";
+export * from "../preloadingScript/snapshotPreloader";
+export * from "../preloadingScript/requestActivity";
+export * from "../routes/snapshot/snapshotUtils";
+export * from "../utilities/workHours";
+import { registerMonitoringAgent } from "spinal-agent-monitoring";
 
-function initApiServer(
-  app: Application,
-  spinalAPIMiddleware: ISpinalAPIMiddleware,
-  log_body = false
-) {
-  // first in the chain : it measures the whole lifecycle of every request, and
-  // the snapshot preloader uses it to only work while the organ is idle
-  app.use(requestActivity.middleware);
-  app.use((req, res, next) => {
-    res.setHeader('X-API-Version', API_SERVER_VERSION);
-    next();
-  });
-  app.use(fileUpload({ createParentPath: true }));
-  // app.use(logRequestLifecycle);
-  app.use(createLogRequestLifecycle(log_body));
-  //useLogger(app, log_body);
+function initApiServer(app: Application, spinalAPIMiddleware: ISpinalAPIMiddleware, log_body = false) {
+	// first in the chain : it measures the whole lifecycle of every request, and
+	// the snapshot preloader uses it to only work while the organ is idle
+	app.use(requestActivity.middleware);
+	app.use((req, res, next) => {
+		res.setHeader("X-API-Version", API_SERVER_VERSION);
+		next();
+	});
+	app.use(fileUpload({ createParentPath: true }));
+	// app.use(logRequestLifecycle);
+	app.use(createLogRequestLifecycle(log_body));
+	//useLogger(app, log_body);
 
-  initSwagger(app);
+	initSwagger(app);
 
-  app.get('/logo.png', (req, res) => {
-    res.sendFile('spinalcore.png', {
-      root: path.resolve(__dirname + '../../../uploads'),
-    });
-  });
+	app.get("/logo.png", (req, res) => {
+		res.sendFile("spinalcore.png", {
+			root: path.resolve(__dirname + "../../../uploads"),
+		});
+	});
 
-  routes({}, app, spinalAPIMiddleware);
+	routes({}, app, spinalAPIMiddleware);
 }
 
-export async function runServerRest(
-  server: Server,
-  app: Application,
-  spinalAPIMiddleware: ISpinalAPIMiddleware,
-  spinalIOMiddleware: ISpinalIOMiddleware,
-  log_body = false
-) {
-  initApiServer(app, spinalAPIMiddleware, log_body);
-  const io = await runSocketServer(server as any, spinalIOMiddleware);
-  return { app, io };
+export async function runServerRest(server: Server, app: Application, spinalAPIMiddleware: ISpinalAPIMiddleware, spinalIOMiddleware: ISpinalIOMiddleware, log_body = false) {
+	initApiServer(app, spinalAPIMiddleware, log_body);
+	const io = await runSocketServer(server as any, spinalIOMiddleware);
+
+	if (process.env.ENABLE_MONITORING_API == "1" || process.env.ENABLE_MONITORING_API == "true") {
+		await registerMonitoringAgent(app, io, spinalAPIMiddleware, process.env.MONITORING_AGENT_CONFIG_PATH);
+	}
+
+	return { app, io };
 }
 
-export * from '../interfaces';
+export * from "../interfaces";
